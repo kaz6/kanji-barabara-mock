@@ -23,11 +23,14 @@ h1{font-size:17px;margin:0 0 2px;font-weight:700}
 .cds{margin-left:auto;font-size:12px;color:var(--sub);font-variant-numeric:tabular-nums}
 .basket{display:grid;grid-template-columns:repeat(10,1fr);gap:4px}
 .slot{aspect-ratio:1;background:var(--slot);border-radius:4px}
+.slot.held{background:transparent;outline:1px dashed var(--dim);outline-offset:-1px;cursor:pointer}
 .tile{aspect-ratio:1;position:relative;background:var(--tile);border:1px solid var(--line);border-radius:4px;
   display:flex;align-items:center;justify-content:center;font-family:var(--kanji);font-size:clamp(20px,5.4vw,32px);
   cursor:pointer;user-select:none;padding:0;color:var(--ink)}
 .tile:hover{border-color:var(--ink)}
 .tile.part{background:#f1ede4;color:#4a463f}
+.tile.junk{background:#d6d1c6;color:#8a8478;cursor:default}
+.tile.junk:hover{border-color:var(--line)}
 .tile.new{border-color:var(--accent);border-width:2px}
 .tile .mk{position:absolute;top:1px;right:3px;font:10px/1.2 system-ui,sans-serif;color:var(--accent);letter-spacing:-1px}
 .tile .orig{position:absolute;bottom:1px;left:3px;font:10px/1 system-ui,sans-serif;color:var(--sub)}
@@ -41,33 +44,44 @@ h1{font-size:17px;margin:0 0 2px;font-weight:700}
   .me .tile{font-size:32px}
   .tile .mk{font-size:11px}
 }
-/* 台 */
-.stage{background:#fff;border:1px solid var(--line);border-radius:6px;padding:12px;margin:14px 0}
-.row{display:flex;gap:6px;min-height:70px;align-items:center}
-.row .tile{width:64px;font-size:40px;flex:none}
+/* 台（高さを固定する。KJ-002 の1） */
+.stage{position:relative;background:#fff;border:1px solid var(--line);border-radius:6px;padding:12px;margin:14px 0}
+.row{display:flex;gap:6px;height:72px;align-items:center;overflow-x:auto;overflow-y:hidden}
+.row .tile{width:64px;height:64px;font-size:40px;flex:none}
 .row .empty{color:var(--dim);font-size:13px}
-.info{min-height:24px;margin:8px 0 10px;font-size:14px}
+.info{height:46px;margin:6px 0 8px;font-size:14px;line-height:23px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .info .w{font-family:var(--kanji);font-size:18px}
 .info .no{color:var(--sub)}
+.info .rev{color:var(--accent);font-weight:700}
 .ops{display:flex;flex-wrap:wrap;gap:6px}
 button.op{font:inherit;font-size:14px;padding:8px 12px;border:1px solid var(--ink);background:#fff;color:var(--ink);border-radius:4px;cursor:pointer;min-width:64px}
 button.op:disabled{border-color:var(--line);color:var(--dim);cursor:default}
 button.op.throw{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
 button.op.throw:disabled{background:#fff;border-color:var(--line);color:var(--dim);font-weight:400}
-.cdv{font-variant-numeric:tabular-nums;font-size:12px}
-.choices{display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.cdv{display:inline-block;width:2.2em;text-align:left;font-variant-numeric:tabular-nums;font-size:12px}
+/* 選ぶ札（同音・くっつけて2通り）は台の下に重ねて出す。カゴを押し下げない */
+.choices{display:none;position:absolute;left:-1px;right:-1px;top:calc(100% - 4px);z-index:5;background:#fff;border:1px solid var(--line);border-radius:0 0 6px 6px;padding:8px 12px;box-shadow:0 6px 14px rgba(0,0,0,.12)}
 .choices.on{display:block}
 .choices .g{margin:4px 0;display:flex;flex-wrap:wrap;align-items:center;gap:4px}
 .choices .g span{font-size:12px;color:var(--sub);min-width:64px}
 .choices button{font-family:var(--kanji);font-size:22px;width:44px;height:44px;border:1px solid var(--line);background:var(--tile);border-radius:4px;cursor:pointer}
-/* 記録 */
+/* 上の帯・設定・ログ */
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
+.msgline{height:24px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px}
+.msg{font-weight:700}
+.msg.win{color:var(--ok)} .msg.lose{color:var(--accent)}
+.note{color:var(--sub);font-size:12px}
+.panel{display:none;background:#fff;border:1px solid var(--line);border-radius:6px;padding:10px 12px;margin:8px 0}
+.panel.on{display:block}
+.panel fieldset{border:0;margin:0 0 8px;padding:0}
+.panel legend{font-weight:700;font-size:14px;padding:0}
+.panel label{display:block;font-size:14px;margin:2px 0}
+.panel textarea{width:100%;height:220px;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;border:1px solid var(--line);border-radius:4px;padding:6px;white-space:pre;resize:vertical}
+/* 投げた言葉 */
 .log{font-size:13px;margin:0;padding:0;list-style:none;max-height:180px;overflow:auto}
 .log li{padding:3px 0;color:var(--sub)}
 .log li .w{font-family:var(--kanji);font-size:16px;color:var(--ink)}
 .log li.me .who{color:var(--ink)}
-.bar{display:flex;gap:8px;align-items:center;margin:8px 0}
-.msg{font-weight:700}
-.msg.win{color:var(--ok)} .msg.lose{color:var(--accent)}
 details{margin-top:22px;border-top:1px solid var(--line);padding-top:10px}
 summary{cursor:pointer;font-weight:700}
 details p,details li{font-size:13px;color:#3d3a34}
@@ -88,8 +102,21 @@ details ul{padding-left:18px}
 
   <div class="bar">
     <button class="op" id="start">はじめる</button>
-    <span class="msg" id="msg"></span>
+    <button class="op" id="bSettings">設定</button>
+    <button class="op" id="bLog">ログ</button>
+    <button class="op" id="bCopyEnd" hidden>ログをコピー</button>
   </div>
+  <div class="msgline"><span class="msg" id="msg"></span> <span class="note" id="nowSettings"></span></div>
+
+  <section class="panel" id="settingsPanel">
+    <div id="settingsForm"></div>
+    <p class="note">変えた設定は、次に「はじめる／もう一度」を押したときから効く。この端末に覚えておく。</p>
+  </section>
+
+  <section class="panel" id="logPanel">
+    <textarea id="logText" readonly></textarea>
+    <div class="bar"><button class="op" id="bCopy">コピー</button><span class="note" id="copyMsg"></span></div>
+  </section>
 
   <section class="side cpu">
     <div class="side-head"><b>CPU</b><span class="count" id="cpuCount"></span><span class="cds" id="cpuCds"></span></div>
@@ -118,219 +145,181 @@ details ul{padding-left:18px}
 
   <section class="side">
     <div class="side-head"><b>投げた言葉</b><span class="count">（二人とも二度と投げられない）</span></div>
-    <ul class="log" id="log"></ul>
+    <ul class="log" id="thrown"></ul>
   </section>
 
   <details>
     <summary>しくみ</summary>
     <ul>
-      <li>札をタップすると台に並ぶ（並べた順が左から）。台の札をタップするとカゴに戻る。</li>
+      <li>札をタップすると台に並ぶ（並べた順が左から）。台の札、またはカゴの点線のマスをタップするとカゴに戻る。</li>
       <li><b>投げる</b>：台の札が辞書の語（1〜4字）か、N5 の字1字なら投げられる。部品だけでは投げられない。一度投げた言葉は二人とも二度と投げられない。</li>
       <li><b>届き方</b>：1〜2字は字のまま。3字は各字を一段割って。4字は二段まで割って届く（割れない字はそのまま）。</li>
-      <li><b>割る</b>：台の1枚を部品表で一段だけ割る。<b>くっつける</b>：台の2枚を、左→右の順でくっつける（上＝卜一、下＝一卜 のように順が効く）。</li>
+      <li><b>割る</b>：台の1枚を部品表で一段だけ割る。<b>くっつける</b>：台の2枚を、左→右の順でくっつける（上＝卜一、下＝一卜 のように順が効く）。逆に並べたときは「並べる順が逆」と出る。十・口 のように2通りの字になるときは選ぶ。</li>
       <li><b>反転</b>（印：反）対義の字に。10 秒待ち。<b>巡り</b>（印：巡）曜日・方角・数を1つ先へ。3 秒待ち。<b>同音</b>（印：音）同じ読みの字から好きなものを選ぶ。20 秒待ち。待ち時間は操作ごとで、二人は別々。</li>
       <li>人・食・言・示 を左に置いてくっつけられるときは、亻・飠・訁・礻 の形で見せる（札はもとの字のまま）。</li>
       <li>カゴは 20 マス。あふれたら負け。カゴが空になったら袋から 6 枚。最初の手は袋から 6 枚（同じ字は 2 枚まで）。</li>
       <li>特別な語（天上天下）を投げると1字ずつ大きく出る。</li>
+      <li><b>設定</b>（試し用）：できた語の行き先（投げる／消える／消えて相手に ■）、時間で落ちてくる、CPU の間隔。■ は割れず、くっつけられず、投げられない札。</li>
+      <li><b>ログ</b>：一手ごとの記録。上の「ログ」で見てコピーできる。終わったら「ログをコピー」が出る。</li>
     </ul>
     <p class="credit">データ：JMdict・KANJIDIC2（© Electronic Dictionary Research and Development Group, EDRDG。CC BY-SA 3.0。<a href="https://www.edrdg.org/edrdg/licence.html">ライセンス</a>）。jamdict-data 経由で取り込み、語・字・読みを抜き出して加工しています。N5 の字は KANJIDIC2 の旧4級（103字）で代用。</p>
   </details>
 </main>
 <div id="fx"><div class="who" id="fxWho"></div><div id="fxChars" style="display:flex;gap:2vw"></div></div>
 
+<script src="js/core.js"></script>
 <script>
 "use strict";
-const FILES=["kanji","words","readings","parts","antonyms","cycles","radical_forms","special","rules"];
+const K=window.KJ;
 const D={};
-let G=null; // ゲームの状態
+let T=null, G=null; // 表・ゲームの状態
+let row=[];         // 台に並べた札の id（左から）
+let lastTried="";
 const $=id=>document.getElementById(id);
-const now=()=>performance.now()/1000;
-const rnd=a=>a[Math.floor(Math.random()*a.length)];
-function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+const clock=()=>performance.now()/1000;
 
-// ---------- 表を引く ----------
-let N5,WORDS,JOIN,INV,NEXT,HOMO,SPECIAL,COMMON_WORDS;
-function index(){
-  N5=new Set(D.kanji.kanji.map(k=>k.c));
-  WORDS=new Map(D.words.words.map(w=>[w.w,w]));
-  JOIN=new Map(Object.entries(D.parts.parts).map(([k,[a,b]])=>[a+b,k]));
-  INV=new Map(); for(const [a,b] of D.antonyms.pairs){INV.set(a,b);INV.set(b,a)}
-  NEXT=new Map(); for(const cy of D.cycles.cycles){const c=cy.chars;c.forEach((x,i)=>{if(!NEXT.has(x))NEXT.set(x,c[(i+1)%c.length])})}
-  HOMO=new Map(); for(const g of D.readings.same_reading_groups){for(const c of g.chars){if(!HOMO.has(c))HOMO.set(c,[]);HOMO.get(c).push(g)}}
-  SPECIAL=new Map(D.special.special.map(s=>[s.w,s]));
-  COMMON_WORDS=D.words.words.filter(w=>w.common&&w.w.length>=2);
+// ---------- 設定（試し用） ----------
+const SKEY="kj-mock-settings";
+function loadSettings(){try{return K.normalizeSettings(JSON.parse(localStorage.getItem(SKEY)||"{}"))}catch(e){return K.normalizeSettings({})}}
+let settings=loadSettings();
+function buildSettingsForm(){
+  const box=$("settingsForm");box.innerHTML="";
+  for(const [k,def] of Object.entries(K.SETTINGS)){
+    const fs=document.createElement("fieldset");
+    fs.innerHTML=`<legend>${def.name}</legend>`;
+    for(const [v,label] of Object.entries(def.opts)){
+      const l=document.createElement("label");
+      const extra=k==="cpuPace"&&D.rules?`（${D.rules.cpu.pace[v][0]}〜${D.rules.cpu.pace[v][1]}秒）`:k==="drop"&&v==="on"&&D.rules?`：${D.rules.drop_every_sec}秒ごと`:"";
+      l.innerHTML=`<input type="radio" name="s_${k}" value="${v}"${settings[k]===v?" checked":""}> ${label}${extra}${v===def.def?"　← 初期値":""}`;
+      l.querySelector("input").onchange=()=>{settings[k]=v;try{localStorage.setItem(SKEY,JSON.stringify(settings))}catch(e){}};
+      fs.appendChild(l);
+    }
+    box.appendChild(fs);
+  }
 }
-const splitOnce=c=>D.parts.parts[c]||[c];
-const isN5=c=>N5.has(c);
-function delivered(text){
-  const cs=[...text];
-  if(cs.length<=2) return cs;
-  const one=cs.flatMap(splitOnce);
-  return cs.length===3?one:one.flatMap(splitOnce);
-}
-function throwable(text){
-  if(!text) return {ok:false,why:""};
-  if(G.used.has(text)) return {ok:false,why:"投げ済み"};
-  if(WORDS.has(text)||(text.length===1&&isN5(text))) return {ok:true};
-  if(text.length===1) return {ok:false,why:"部品は投げられない"};
-  return {ok:false,why:"辞書にない"};
-}
-const homoChars=c=>[...new Set((HOMO.get(c)||[]).flatMap(g=>g.chars))].filter(x=>x!==c);
+$("bSettings").onclick=()=>$("settingsPanel").classList.toggle("on");
 
-// ---------- 状態 ----------
-let uid=0;
-const card=(c,fresh)=>({id:++uid,c,t:now(),fresh:!!fresh});
-function makeBag(){return shuffle([...N5,...N5])} // 同じ字は2枚まで
-function player(name){
-  const bag=makeBag();
-  return {name,bag,cards:bag.splice(0,D.rules.start_hand).map(c=>card(c)),cd:{invert:0,cycle:0,homophone:0},lastSpecial:null};
+// ---------- ログ ----------
+function refreshLogPanel(){if($("logPanel").classList.contains("on"))$("logText").value=G?G.logText():"（まだはじめていない）"}
+$("bLog").onclick=()=>{$("logPanel").classList.toggle("on");refreshLogPanel()};
+function copyLog(){
+  if(!G)return;
+  const text=G.logText(),m=$("copyMsg");
+  const fallback=()=>{$("logPanel").classList.add("on");const ta=$("logText");ta.value=text;ta.focus();ta.select();
+    let ok=false;try{ok=document.execCommand("copy")}catch(e){}
+    m.textContent=ok?"コピーした":"選んである文字を手でコピーしてください"};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(()=>{m.textContent="コピーした";$("msg").dataset.copied="1";flashCopied()},fallback);
+  else fallback();
 }
+function flashCopied(){const b=$("bCopyEnd");if(!b.hidden){b.textContent="コピーした";setTimeout(()=>b.textContent="ログをコピー",1500)}}
+$("bCopy").onclick=copyLog;$("bCopyEnd").onclick=copyLog;
+
+// ---------- はじめる ----------
+let cpuTimer=null;
 function start(){
-  G={me:player("あなた"),cpu:player("CPU"),row:[],used:new Set(),log:[],over:false};
+  clearTimeout(cpuTimer);
+  G=K.createGame(D,T,settings,{now:clock});
+  row=[];lastTried="";
   $("msg").textContent="";$("msg").className="msg";
-  $("log").innerHTML="";
+  $("bCopyEnd").hidden=true;
+  $("nowSettings").textContent="今の設定："+K.settingsLabel(D,G.settings).map(x=>x.split("=")[1]).join("／");
   hideChoices();
   scheduleCpu();
   render();
 }
-const ready=(p,k)=>now()>=p.cd[k];
-function useCd(p,k){p.cd[k]=now()+D.rules.cooldown_sec[k]}
-function refill(p){
-  if(p.cards.length===0){
-    if(p.bag.length<D.rules.refill_when_empty) p.bag.push(...makeBag());
-    p.cards.push(...p.bag.splice(0,D.rules.refill_when_empty).map(c=>card(c)));
+$("start").onclick=()=>{$("start").textContent="もう一度";start()};
+function scheduleCpu(){cpuTimer=setTimeout(()=>{if(!G||G.over)return;G.cpuTurn();afterChange();if(!G.over)scheduleCpu()},G.cpuDelay()*1000)}
+function drain(){
+  while(G.events.length){
+    const e=G.events.shift();
+    if(e.type==="fx")showFx(e.who,e.text);
+    if(e.type==="over")end(e.winner);
   }
 }
-function replaceCards(p,ids,chars){ // ids の位置に chars を入れる（台の並びも保つ）
-  const pos=p.cards.findIndex(x=>x.id===ids[0]);
-  p.cards=p.cards.filter(x=>!ids.includes(x.id));
-  const nc=chars.map(c=>card(c));
-  p.cards.splice(Math.max(0,pos),0,...nc);
-  return nc;
-}
-
-// ---------- 操作（人と CPU で共通） ----------
-function doSplit(p,ids){const c=byId(p,ids[0]).c;return replaceCards(p,ids,splitOnce(c))}
-function doJoin(p,ids){const a=byId(p,ids[0]).c,b=byId(p,ids[1]).c;return replaceCards(p,ids,[JOIN.get(a+b)])}
-function doInvert(p,ids){useCd(p,"invert");return replaceCards(p,ids,[INV.get(byId(p,ids[0]).c)])}
-function doCycle(p,ids){useCd(p,"cycle");return replaceCards(p,ids,[NEXT.get(byId(p,ids[0]).c)])}
-function doHomo(p,ids,to){useCd(p,"homophone");return replaceCards(p,ids,[to])}
-function doThrow(p,ids){
-  const text=ids.map(i=>byId(p,i).c).join("");
-  const q=p===G.me?G.cpu:G.me;
-  p.cards=p.cards.filter(x=>!ids.includes(x.id));
-  G.used.add(text);
-  const pieces=delivered(text);
-  q.cards.push(...pieces.map(c=>card(c,true)));
-  const w=WORDS.get(text);
-  addLog(p,text,w,pieces);
-  // 特別な語・つながる相手（D-015）
-  const prev=p.lastSpecial&&SPECIAL.get(p.lastSpecial);
-  if(prev&&prev.next.includes(text)) showFx(p,p.lastSpecial+text);
-  else if(SPECIAL.has(text)) showFx(p,text);
-  p.lastSpecial=SPECIAL.has(text)?text:null;
-  refill(p);
-  if(q.cards.length>D.rules.basket_size) end(p);
-}
-const byId=(p,id)=>p.cards.find(x=>x.id===id);
 function end(winner){
-  G.over=true;clearTimeout(G.cpuTimer);
+  clearTimeout(cpuTimer);
   const m=$("msg");
   if(winner===G.me){m.textContent="勝ち。CPU のカゴがあふれた";m.className="msg win"}
-  else{m.textContent="負け。カゴがあふれた";m.className="msg lose"}
+  else if(winner===G.cpu){m.textContent="負け。カゴがあふれた";m.className="msg lose"}
+  else{m.textContent="引き分け。二人ともあふれた";m.className="msg"}
+  $("bCopyEnd").hidden=false;
 }
+function afterChange(){drain();render();refreshLogPanel()}
 
 // ---------- 人の操作 ----------
-function rowCards(){return G.row.map(id=>byId(G.me,id)).filter(Boolean)}
-function rowText(){return rowCards().map(x=>x.c).join("")}
-function tapBasket(id){if(G.over)return;G.row.push(id);hideChoices();render()}
-function tapRow(id){if(G.over)return;G.row=G.row.filter(x=>x!==id);hideChoices();render()}
-function afterOp(newCards){G.row=newCards?newCards.map(x=>x.id):[];hideChoices();render()}
-$("bThrow").onclick=()=>{if(throwable(rowText()).ok){doThrow(G.me,[...G.row]);G.row=[];hideChoices();render()}};
-$("bSplit").onclick=()=>afterOp(doSplit(G.me,G.row));
-$("bJoin").onclick=()=>afterOp(doJoin(G.me,G.row));
-$("bInvert").onclick=()=>afterOp(doInvert(G.me,G.row));
-$("bCycle").onclick=()=>afterOp(doCycle(G.me,G.row));
-$("bBack").onclick=()=>{G.row=[];hideChoices();render()};
+const rowCards=()=>row.map(id=>G.byId(G.me,id)).filter(Boolean);
+const rowText=()=>rowCards().map(x=>x.c).join("");
+function rowState(){
+  const rc=rowCards(),text=rowText(),th=K.throwable(T,G.used,text);
+  const pair=rc.length===2?[rc[0].c,rc[1].c]:null;
+  const joins=pair?K.joinResults(T,...pair):[];
+  const reversed=pair?K.joinReversed(T,...pair):false;
+  return {rc,text,th,joins,reversed};
+}
+// 並べたのに、投げも・くっつけもできないままやめた並びを「ためした」に残す（R-018）
+function noteTried(){
+  const s=rowState();
+  if(s.rc.length<2||s.th.ok||s.joins.length)return;
+  const why=s.reversed?"並べる順が逆":s.th.why;
+  const key=s.text+"|"+why;if(key===lastTried)return;lastTried=key;
+  G.tried(G.me,s.rc.map(x=>x.c),why);
+}
+function tapBasket(id){if(G.over)return;row.push(id);lastTried="";hideChoices();render()}
+function tapRow(id){if(G.over)return;noteTried();row=row.filter(x=>x!==id);hideChoices();afterChange()}
+function afterOp(res){if(res&&res.ok){row=res.cards?res.cards.map(x=>x.id):[];lastTried=""}hideChoices();afterChange()}
+$("bThrow").onclick=()=>afterOp(G.throw(G.me,[...row]));
+$("bSplit").onclick=()=>afterOp(G.split(G.me,row));
+$("bJoin").onclick=()=>{
+  const s=rowState();
+  if(s.joins.length>1){showChoices([{label:"できる字",chars:s.joins,pick:x=>afterOp(G.join(G.me,row,x))}]);return}
+  afterOp(G.join(G.me,row));
+};
+$("bInvert").onclick=()=>afterOp(G.invert(G.me,row));
+$("bCycle").onclick=()=>afterOp(G.cycle(G.me,row));
+$("bBack").onclick=()=>{noteTried();row=[];hideChoices();afterChange()};
 $("bHomo").onclick=()=>{
-  const c=rowText(),box=$("choices");box.innerHTML="";
-  for(const g of HOMO.get(c)||[]){
+  const c=rowText();
+  showChoices((T.HOMO.get(c)||[]).map(g=>({label:`${g.type==="on"?"音":"訓"}：${g.reading}`,chars:g.chars.filter(x=>x!==c),
+    pick:x=>{if(G.ready(G.me,"homophone")&&rowText()===c)afterOp(G.homophone(G.me,row,x))}})));
+};
+function showChoices(groups){
+  const box=$("choices");box.innerHTML="";
+  for(const g of groups){
     const d=document.createElement("div");d.className="g";
-    d.innerHTML=`<span>${g.type==="on"?"音":"訓"}：${g.reading}</span>`;
-    for(const x of g.chars){if(x===c)continue;const b=document.createElement("button");b.textContent=x;
-      b.onclick=()=>{if(ready(G.me,"homophone")&&rowText()===c)afterOp(doHomo(G.me,G.row,x))};d.appendChild(b)}
+    d.innerHTML=`<span>${g.label}</span>`;
+    for(const x of g.chars){const b=document.createElement("button");b.textContent=x;b.onclick=()=>g.pick(x);d.appendChild(b)}
     box.appendChild(d);
   }
   box.classList.add("on");
-};
+}
 function hideChoices(){$("choices").classList.remove("on")}
-$("start").onclick=()=>{$("start").textContent="もう一度";start()};
-
-// ---------- CPU（1段階） ----------
-function scheduleCpu(){
-  const r=D.rules.cpu;
-  G.cpuTimer=setTimeout(cpuTurn,(r.think_min_sec+Math.random()*(r.think_max_sec-r.think_min_sec))*1000);
-}
-function pickIds(p,text){ // text を作る札の id を探す
-  const pool=[...p.cards],ids=[];
-  for(const ch of text){const i=pool.findIndex(x=>x.c===ch);if(i<0)return null;ids.push(pool[i].id);pool.splice(i,1)}
-  return ids;
-}
-function cpuTurn(){
-  if(G.over)return;
-  const p=G.cpu,r=D.rules.cpu,full=p.cards.length>=D.rules.basket_size-4;
-  const act=()=>{
-    // 1. 手持ちで作れる語をときどき投げる（長い語ほど選ぶ）
-    if(full||Math.random()<r.throw_chance){
-      const ws=COMMON_WORDS.filter(w=>!G.used.has(w.w)&&pickIds(p,w.w));
-      if(ws.length){const L=Math.max(...ws.map(w=>w.w.length));const w=rnd(ws.filter(x=>x.w.length===L));doThrow(p,pickIds(p,w.w));return}
-    }
-    // 2. くっつけて N5 の字にする（なければ中継ぎの部品でも）
-    const joins=[];
-    for(const a of p.cards)for(const b of p.cards){if(a!==b&&JOIN.has(a.c+b.c))joins.push([a,b,JOIN.get(a.c+b.c)])}
-    const good=joins.filter(j=>isN5(j[2]));
-    if(good.length||joins.length){const j=rnd(good.length?good:joins);doJoin(p,[j[0].id,j[1].id]);return}
-    // 3. 字を1字で投げる（カゴが埋まってきたら必ず）
-    const singles=p.cards.filter(x=>isN5(x.c)&&!G.used.has(x.c));
-    if(singles.length&&(full||Math.random()<0.4)){doThrow(p,[rnd(singles).id]);return}
-    // 4. 巡り・反転でようすを見る
-    const cyc=p.cards.filter(x=>NEXT.has(x.c));
-    if(cyc.length&&ready(p,"cycle")&&Math.random()<0.5){doCycle(p,[rnd(cyc).id]);return}
-    const inv=p.cards.filter(x=>INV.has(x.c));
-    if(inv.length&&ready(p,"invert")&&Math.random()<0.3){doInvert(p,[rnd(inv).id]);return}
-  };
-  act();
-  render();
-  if(!G.over)scheduleCpu();
-}
 
 // ---------- 描画 ----------
-function marks(c){let m="";if(INV.has(c))m+="反";if(NEXT.has(c))m+="巡";if(HOMO.has(c))m+="音";return m}
 function tileEl(x,{onClick,shown}={}){
-  const b=document.createElement(onClick?"button":"div");
-  b.className="tile"+(isN5(x.c)?"":" part")+(x.fresh&&now()-x.t<1.5?" new":"");
+  const junk=x.c===K.GARBAGE;
+  const b=document.createElement(onClick&&!junk?"button":"div");
+  b.className="tile"+(junk?" junk":K.isN5(T,x.c)?"":" part")+(x.fresh&&clock()-x.t<1.5?" new":"");
   b.textContent=shown||x.c;
-  const m=marks(x.c);
+  const m=K.marks(T,x.c);
   if(m){const s=document.createElement("span");s.className="mk";s.textContent=m;b.appendChild(s)}
   if(shown&&shown!==x.c){const s=document.createElement("span");s.className="orig";s.textContent=x.c;b.appendChild(s)}
-  if(onClick)b.onclick=onClick;
-  b.title=x.c;
+  if(onClick&&!junk)b.onclick=onClick;
+  b.title=junk?"おじゃま札（使えない）":x.c;
   return b;
 }
 function renderBasket(el,p,interactive){
   el.innerHTML="";
-  const inRow=interactive?new Set(G.row):new Set();
-  for(const x of p.cards){if(!inRow.has(x.id))el.appendChild(tileEl(x,interactive?{onClick:()=>tapBasket(x.id)}:{}))}
-  for(let i=0;i<Math.max(D.rules.basket_size,p.cards.length)-(p.cards.length-inRow.size);i++){
-    const s=document.createElement("div");s.className="slot";
-    if(i<inRow.size)s.style.outline="1px dashed var(--dim)"; // 台に出している札のマス
-    el.appendChild(s);
+  const inRow=interactive?new Set(row):new Set();
+  for(const x of p.cards){
+    if(inRow.has(x.id)){const s=document.createElement("div");s.className="slot held";s.title=x.c;s.onclick=()=>tapRow(x.id);el.appendChild(s);continue} // 台に出した札のマスはそのまま残す
+    el.appendChild(tileEl(x,interactive?{onClick:()=>tapBasket(x.id)}:{}));
   }
+  for(let i=p.cards.length;i<D.rules.basket_size;i++){const s=document.createElement("div");s.className="slot";el.appendChild(s)}
 }
-function cdText(p,k){const t=p.cd[k]-now();return t>0?Math.ceil(t)+"s":""}
+function cdText(p,k){const t=G.cdLeft(p,k);return t>0?Math.ceil(t)+"s":""}
 function render(){
   if(!G)return;
-  G.row=G.row.filter(id=>byId(G.me,id));
+  row=row.filter(id=>G.byId(G.me,id));
   renderBasket($("cpuBasket"),G.cpu,false);
   renderBasket($("meBasket"),G.me,true);
   for(const [el,p] of [[$("meCount"),G.me],[$("cpuCount"),G.cpu]]){
@@ -338,55 +327,64 @@ function render(){
     el.className="count"+(p.cards.length>=D.rules.basket_size-3?" warn":"");
   }
   // 台
-  const row=$("row");row.innerHTML="";
-  const rc=rowCards();
-  if(!rc.length){row.innerHTML='<span class="empty">カゴの札をタップして台に並べる</span>'}
-  const joinable=rc.length===2&&JOIN.has(rc[0].c+rc[1].c);
-  rc.forEach((x,i)=>{
-    const shown=(i===0&&joinable&&D.radical_forms.left[x.c])||null;
-    row.appendChild(tileEl({...x,fresh:false},{onClick:()=>tapRow(x.id),shown}));
+  const rowEl=$("row");rowEl.innerHTML="";
+  const s=rowState();
+  if(!s.rc.length)rowEl.innerHTML='<span class="empty">カゴの札をタップして台に並べる</span>';
+  s.rc.forEach((x,i)=>{
+    const shown=(i===0&&s.joins.length&&D.radical_forms.left[x.c])||null;
+    rowEl.appendChild(tileEl({...x,fresh:false},{onClick:()=>tapRow(x.id),shown}));
   });
-  const text=rowText(),th=throwable(text),w=WORDS.get(text);
-  const info=$("info");
-  if(!text)info.innerHTML="";
-  else if(w)info.innerHTML=`<span class="w">${text}</span> ${w.kana}${w.yoji?"（四字熟語）":""} — ${w.en.join(" / ")}${th.ok?"":` <span class="no">（${th.why}）</span>`}`;
-  else if(th.ok&&D.readings.readings[text]){const r=D.readings.readings[text];info.innerHTML=`<span class="w">${text}</span> ${[...r.on,...r.kun].slice(0,6).join("・")}`}
-  else info.innerHTML=th.ok?`<span class="w">${text}</span>`:`<span class="no">${th.why}</span>`;
+  const w=T.WORDS.get(s.text),info=$("info");
+  const rev=s.reversed?' <span class="rev">並べる順が逆</span>':"";
+  if(!s.text)info.innerHTML="";
+  else if(w)info.innerHTML=`<span class="w">${s.text}</span> ${w.kana}${w.yoji?"（四字熟語）":""} — ${w.en.join(" / ")}${s.th.ok?"":` <span class="no">（${s.th.why}）</span>`}${rev}`;
+  else if(s.reversed)info.innerHTML=rev.trim();
+  else if(s.th.ok&&D.readings.readings[s.text]){const r=D.readings.readings[s.text];info.innerHTML=`<span class="w">${s.text}</span> ${[...r.on,...r.kun].slice(0,6).join("・")}`}
+  else if(s.joins.length)info.innerHTML=`くっつけると ${s.joins.join(" か ")}`;
+  else info.innerHTML=s.th.ok?`<span class="w">${s.text}</span>`:`<span class="no">${s.th.why}</span>`;
+  renderThrown();
   renderOps();
 }
 function renderOps(){
-  const rc=rowCards(),text=rowText(),th=throwable(text);
-  const joinable=rc.length===2&&JOIN.has(rc[0].c+rc[1].c);
-  const one=rc.length===1?rc[0].c:null,me=G.me,live=!G.over;
+  const s=rowState(),one=s.rc.length===1?s.rc[0].c:null,me=G.me,live=!G.over;
   const cds=[["反転","invert"],["巡り","cycle"],["同音","homophone"]].map(([n,k])=>cdText(G.cpu,k)&&`${n} ${cdText(G.cpu,k)}`).filter(Boolean);
   $("cpuCds").textContent=cds.length?"待ち："+cds.join("・"):"";
-  $("bThrow").disabled=!(live&&th.ok);
-  $("bSplit").disabled=!(live&&one&&D.parts.parts[one]);
-  $("bJoin").disabled=!(live&&joinable);
-  $("bInvert").disabled=!(live&&one&&INV.has(one)&&ready(me,"invert"));
-  $("bCycle").disabled=!(live&&one&&NEXT.has(one)&&ready(me,"cycle"));
-  $("bHomo").disabled=!(live&&one&&HOMO.has(one)&&ready(me,"homophone"));
-  $("bBack").disabled=!rc.length;
+  $("bThrow").disabled=!(live&&s.th.ok);
+  $("bSplit").disabled=!(live&&one&&K.canSplit(T,one));
+  $("bJoin").disabled=!(live&&s.joins.length);
+  $("bInvert").disabled=!(live&&one&&T.INV.has(one)&&G.ready(me,"invert"));
+  $("bCycle").disabled=!(live&&one&&T.NEXT.has(one)&&G.ready(me,"cycle"));
+  $("bHomo").disabled=!(live&&one&&T.HOMO.has(one)&&G.ready(me,"homophone"));
+  $("bBack").disabled=!s.rc.length;
   $("cdInvert").textContent=cdText(me,"invert");
   $("cdCycle").textContent=cdText(me,"cycle");
   $("cdHomo").textContent=cdText(me,"homophone");
 }
-function addLog(p,text,w,pieces){
-  const li=document.createElement("li");li.className=p===G.me?"me":"";
-  li.innerHTML=`<span class="who">${p.name}</span>：<span class="w">${text}</span> ${w?w.kana:""} → ${pieces.join(" ")}`;
-  $("log").prepend(li);
+function renderThrown(){
+  const ul=$("thrown"),items=G.log.filter(e=>e.op==="投げる");
+  if(ul.childElementCount===items.length)return;
+  ul.innerHTML="";
+  for(const e of items.slice().reverse()){
+    const text=e.from.join(""),w=T.WORDS.get(text);
+    const li=document.createElement("li");li.className=e.who===G.me.name?"me":"";
+    li.innerHTML=`<span class="who">${e.who}</span>：<span class="w">${text}</span> ${w?w.kana:""} → ${e.to.length?e.to.join(" "):"（"+e.note+"）"}`;
+    ul.appendChild(li);
+  }
 }
-function showFx(p,text){
-  const fx=$("fx"),box=$("fxChars");box.innerHTML="";$("fxWho").textContent=p.name;
+function showFx(who,text){
+  const fx=$("fx"),box=$("fxChars");box.innerHTML="";$("fxWho").textContent=who;
   fx.classList.add("on");
   [...text].forEach((c,i)=>{const s=document.createElement("div");s.className="c";s.textContent=c;box.appendChild(s);
     setTimeout(()=>s.classList.add("in"),180+i*380)});
   clearTimeout(showFx.t);showFx.t=setTimeout(()=>fx.classList.remove("on"),400+text.length*380+900);
 }
-setInterval(()=>{if(G&&!G.over)renderOps()},250);
+setInterval(()=>{if(!G||G.over)return;if(G.tick())afterChange();else renderOps()},250);
 
-Promise.all(FILES.map(f=>fetch(`data/${f}.json`).then(r=>r.json()).then(j=>D[f]=j)))
-  .then(()=>{index();$("msg").textContent=`字 ${N5.size}・語 ${WORDS.size}`})
+window.__KJ={get game(){return G},get row(){return row},get tables(){return T},data:D,render}; // ブラウザのテスト用
+
+Promise.all(K.FILES.map(f=>fetch(`data/${f}.json`).then(r=>r.json()).then(j=>D[f]=j)))
+  .then(()=>{T=K.makeTables(D);buildSettingsForm();$("msg").textContent=`字 ${T.N5.size}・語 ${T.WORDS.size}`;
+    $("nowSettings").textContent="設定："+K.settingsLabel(D,settings).map(x=>x.split("=")[1]).join("／")})
   .catch(e=>{$("msg").textContent="データを読めませんでした（file:// では開けません。Pages かローカルのサーバーで開いてください）"});
 </script>
 </body>
