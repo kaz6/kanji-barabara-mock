@@ -4,7 +4,7 @@
 
 ## 現在の進捗
 
-- 公開リポジトリ kaz6/kanji-barabara-mock に push した。Pages はセッションの権限では有効にできず、作者が設定画面から有効にする
+- 公開リポジトリ kaz6/kanji-barabara-mock に push した。Pages は作者が設定画面から main の /（ルート）で有効にした（2026-11-20）。公開 URL：https://kaz6.github.io/kanji-barabara-mock/
 - data/ を作った
   - 辞書から生成：kanji.json（103字）・words.json（1,985語。四字熟語35・よく使う652）・readings.json（同じ読みの組61）
   - 手作り：parts.json・antonyms.json・cycles.json・radical_forms.json・special.json・rules.json
