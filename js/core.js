@@ -143,10 +143,58 @@
     g.cdLeft = (p, k) => Math.max(0, p.cd[k] - now());
     const useCd = (p, k) => { p.cd[k] = now() + R.cooldown_sec[k]; };
 
+    const QUIET = new Set(["ためした", "終わり", "動けない", "動ける"]);
     function addLog(who, op, from, to, note) {
       g.log.push({ t: g.elapsed(), who, op, from: from || [], to: to || [], me: g.me.cards.length, cpu: g.cpu.cards.length, note: note || "" });
+      if (!QUIET.has(op)) checkStuck();
     }
     g.addLog = addLog;
+
+    // ---------- 動けない（KJ-002 追記。R-023） ----------
+    // 手札をそのまま並べて投げられる語（N5 の1字か辞書の語、投げ済みでない）が1つも無い状態
+    g.throwableInHand = (p) => {
+      const cs = p.cards.map((x) => x.c).filter((c) => c !== GARBAGE);
+      const have = {};
+      for (const c of cs) have[c] = (have[c] || 0) + 1;
+      for (const c of Object.keys(have)) if (isN5(T, c) && !g.used.has(c)) return c;
+      for (const w of T.WORDS.values()) {
+        if (g.used.has(w.w)) continue;
+        const need = {};
+        let ok = true;
+        for (const c of w.w) { need[c] = (need[c] || 0) + 1; if (!have[c] || need[c] > have[c]) { ok = false; break; } }
+        if (ok) return w.w;
+      }
+      return null;
+    };
+    // 投げる以外で使える手（待ち時間は残りの秒数を添える）
+    g.movesInHand = (p) => {
+      const cs = p.cards.map((x) => x.c);
+      const out = [];
+      if (cs.some((c) => canSplit(T, c))) out.push("割る");
+      if (p.cards.some((a) => p.cards.some((b) => a !== b && joinResults(T, a.c, b.c).length))) out.push("くっつける");
+      for (const [name, k, ok] of [["反転", "invert", (c) => T.INV.has(c)], ["巡り", "cycle", (c) => T.NEXT.has(c)], ["同音", "homophone", (c) => T.HOMO.has(c)]]) {
+        if (!cs.some(ok)) continue;
+        const left = g.cdLeft ? g.cdLeft(p, k) : 0;
+        out.push(left > 0 ? `${name}（待ち ${Math.ceil(left)}秒）` : name);
+      }
+      return out;
+    };
+    function checkStuck() {
+      if (!g.me || !g.cpu || g.over) return;
+      for (const p of [g.me, g.cpu]) {
+        if (!p.cards.length) continue; // 空のカゴはすぐ袋から補充される
+        const w = g.throwableInHand(p);
+        if (!w && !p.stuck) {
+          p.stuck = true;
+          const mv = g.movesInHand(p);
+          g.log.push({ t: g.elapsed(), who: p.name, op: "動けない", from: p.cards.map((x) => x.c), to: [], me: g.me.cards.length, cpu: g.cpu.cards.length,
+            note: "投げられる語なし。使える手：" + (mv.length ? mv.join("・") : "なし") });
+        } else if (w && p.stuck) {
+          p.stuck = false;
+          g.log.push({ t: g.elapsed(), who: p.name, op: "動ける", from: p.cards.map((x) => x.c), to: [], me: g.me.cards.length, cpu: g.cpu.cards.length, note: "投げられる語：" + w });
+        }
+      }
+    }
     addLog("—", "はじめ", [], [], "最初の手 " + g.me.cards.map((x) => x.c).join("") + " / " + g.cpu.cards.map((x) => x.c).join(""));
 
     function cardsOf(p, ids) {
@@ -312,6 +360,7 @@
         `# 決まり カゴ=${R.basket_size} 最初の手=${R.start_hand} 同じ字は袋に${R.same_char_max_in_start}枚 空なら${R.refill_when_empty}枚`,
         `# 決まり 待ち時間 反転=${R.cooldown_sec.invert}秒 巡り=${R.cooldown_sec.cycle}秒 同音=${R.cooldown_sec.homophone}秒`,
         `# 決まり CPU 語を投げる割合=${R.cpu.throw_chance} 落ちてくる間隔=${R.drop_every_sec}秒（設定があり のときだけ）`,
+        "# 手 はじめ・割る・くっつける・反転・巡り・同音・投げる・ためした・落ちてくる・補充・動けない（投げられる語が手札に無くなった。使った札＝その時の手札）・動ける（無くなった状態から戻った）・終わり",
         "# データ " + FILES.map((f) => `${f}=${D[f].version}`).join(" "),
         `# 字 ${T.N5.size}・語 ${T.WORDS.size}`,
         "秒\tどちら\t手\t使った札\tできた札\tあなたのカゴ\tCPUのカゴ\tメモ",

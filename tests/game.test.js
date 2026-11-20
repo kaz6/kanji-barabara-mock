@@ -257,3 +257,37 @@ test("ログ：書き出しの頭に設定と決まりを全部書く", () => {
   assert.match(head, /はじめた時刻 2026-11-20 18:00:00/);
   assert.match(text, /秒\tどちら\t手\t使った札\tできた札\tあなたのカゴ\tCPUのカゴ\tメモ/);
 });
+
+test("動けない：相手の手札が 古 だけで 古 を投げると、相手は動けない と残る（R-023）", () => {
+  const g = newGame();
+  setHand(g, g.cpu, "古");
+  g.clock.t += 2;
+  const ids = setHand(g, g.me, "古山");
+  assert.ok(g.throw(g.me, [ids[0]]).ok);
+  const e = g.log.find((x) => x.op === "動けない" && x.who === "CPU");
+  assert.ok(e, "CPU の 動けない がある");
+  assert.equal(e.t, 2);
+  assert.deepEqual(e.from, ["古", "古"]);
+  assert.match(e.note, /投げられる語なし。使える手：割る・反転/);
+  assert.equal(g.log.filter((x) => x.op === "動けない" && x.who === "CPU").length, 1, "続くあいだは1回だけ");
+  // 反転して 新 になれば戻る
+  g.clock.t += 1;
+  assert.ok(g.invert(g.cpu, [g.cpu.cards[0].id]).ok);
+  const back = g.log.find((x) => x.op === "動ける" && x.who === "CPU");
+  assert.ok(back);
+  assert.match(back.note, /投げられる語：新/);
+});
+
+test("動けない：投げられる語があるあいだは残さない。■ だけでも動けない", () => {
+  const g = newGame({ dest: "garbage" });
+  setHand(g, g.cpu, "");
+  assert.ok(g.throw(g.me, setHand(g, g.me, "休日")).ok);
+  assert.equal(g.log.filter((x) => x.op === "動けない" && x.who === "あなた").length, 0, "補充された手札には投げられる字がある");
+  const e = g.log.find((x) => x.op === "動けない" && x.who === "CPU");
+  assert.deepEqual(e.from, ["■", "■"]);
+  assert.match(e.note, /使える手：なし/);
+});
+
+test("動けない：ログの頭に手の説明がある", () => {
+  assert.match(newGame().logText(), /# 手 .*動けない（投げられる語が手札に無くなった/);
+});
