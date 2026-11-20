@@ -23,9 +23,9 @@ function seeded(seed) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
-function newGame(settings, seed = 1) {
+function newGame(seed = 1) {
   const clock = { t: 1000 };
-  const g = K.createGame(D, T, settings || {}, { now: () => clock.t, rand: seeded(seed), date: () => new Date(2026, 10, 20, 18, 0, 0) });
+  const g = K.createGame(D, T, { now: () => clock.t, rand: seeded(seed), date: () => new Date(2026, 10, 20, 18, 0, 0) });
   g.clock = clock;
   return g;
 }

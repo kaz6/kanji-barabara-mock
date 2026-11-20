@@ -1,6 +1,6 @@
 # kanji-barabara-mock（漢字版（仮）の最初のモック）
 
-漢字の札を割る・くっつける・反転・巡り・同音で組み替え、字や語にして相手に投げる対 CPU のモック。字は JLPT N5 相当だけ。
+漢字の手札を割る・くっつける・反転・巡り・同音で組み替え、言葉にして放ち、点を競う対 CPU のモック（役づくりの競争。KJ-003）。字は JLPT N5 相当だけ。
 
 - 遊ぶ：https://kaz6.github.io/kanji-barabara-mock/
 - 設計の記録：[docs/DECISION_LOG.md](docs/DECISION_LOG.md)・[docs/SESSION_STATE.md](docs/SESSION_STATE.md)
