@@ -1,5 +1,6 @@
 /* 漢字版（仮）モックの遊びの決まり。画面（DOM）には触らない。
-   ブラウザでは window.KJ、Node では require("./js/core.js") で使う（tests/ から）。 */
+   ブラウザでは window.KJ、Node では require("./js/core.js") で使う（tests/ から）。
+   KJ-003：「役づくりの競争」（D-017・D-018）。手札で言葉を作って放つと点が入り、場から字を取れる */
 (function (root, factory) {
   const api = factory();
   if (typeof module !== "undefined" && module.exports) module.exports = api;
@@ -7,52 +8,13 @@
 })(typeof self !== "undefined" ? self : this, function () {
   "use strict";
 
-  const GARBAGE = "■"; // おじゃま札（R-019）
   const FILES = ["kanji", "words", "readings", "parts", "antonyms", "cycles", "radical_forms", "special", "rules"];
-
-  // ---------- 試し用の切り替え（KJ-002）。初期値は KJ-001 の形 ----------
-  const SETTINGS = {
-    dest: {
-      name: "できた語の行き先",
-      def: "throw",
-      opts: {
-        throw: "投げる（相手に部品が届く）",
-        vanish: "消える（相手には何も起きない）",
-        garbage: "消えて、相手におじゃま札 ■ が字数ぶん落ちる",
-      },
-    },
-    drop: {
-      name: "時間で落ちてくる",
-      def: "off",
-      opts: { off: "なし", on: "あり（一定の秒数ごとに、二人とも袋から1枚）" },
-    },
-    cpuPace: {
-      name: "CPU の間隔",
-      def: "normal",
-      opts: { normal: "ふつう", slow: "ゆっくり" },
-    },
-  };
-  function normalizeSettings(s) {
-    const out = {};
-    for (const [k, def] of Object.entries(SETTINGS)) {
-      out[k] = s && Object.prototype.hasOwnProperty.call(def.opts, s[k]) ? s[k] : def.def;
-    }
-    return out;
-  }
-  function settingsLabel(D, s) {
-    const r = D.rules;
-    const pace = r.cpu.pace[s.cpuPace];
-    return [
-      `${SETTINGS.dest.name}=${SETTINGS.dest.opts[s.dest]}`,
-      `${SETTINGS.drop.name}=${s.drop === "on" ? `あり（${r.drop_every_sec}秒ごとに二人とも1枚）` : "なし"}`,
-      `${SETTINGS.cpuPace.name}=${SETTINGS.cpuPace.opts[s.cpuPace]}（${pace[0]}〜${pace[1]}秒）`,
-    ];
-  }
 
   // ---------- 表を引く ----------
   function makeTables(D) {
     const T = {};
     T.N5 = new Set(D.kanji.kanji.map((k) => k.c));
+    T.JOUYOU = new Set(D.parts.jouyou || []); // N5 の外でも「字」として見せる（KJ-003）
     T.WORDS = new Map(D.words.words.map((w) => [w.w, w]));
     T.JOIN = new Map(); // "左右" → [できる字…]（十口 は 古・田 の2つ。R-016）
     for (const [k, [a, b]] of Object.entries(D.parts.parts)) {
@@ -77,8 +39,11 @@
     return T;
   }
   const isN5 = (T, c) => T.N5.has(c);
+  // 画面で「字」として見せるか（N5 か常用漢字）。部品の見た目にしない
+  const isChar = (T, c) => T.N5.has(c) || T.JOUYOU.has(c);
   const splitOnce = (T, c) => T.parts[c] || [c];
   const canSplit = (T, c) => !!T.parts[c];
+  // 部品にバラして届く形（D-003・D-004）。KJ-003 の遊びでは使わない（消すかは作者が決める）
   function delivered(T, text) {
     const cs = [...text];
     if (cs.length <= 2) return cs;
@@ -86,15 +51,26 @@
     return cs.length === 3 ? one : one.flatMap((c) => splitOnce(T, c));
   }
   const joinResults = (T, a, b) => T.JOIN.get(a + b) || [];
-  // 逆に並べればくっつく（順番の決まりは変えない。表示だけ。KJ-002 の4）
+  // 逆に並べればくっつく（順番の決まりは変えない。表示だけ）
   const joinReversed = (T, a, b) => joinResults(T, a, b).length === 0 && joinResults(T, b, a).length > 0;
-  function throwable(T, used, text) {
+  // 放てるか：words.json の語（1〜4字）か、N5 の1字。一度放った言葉は二人とも使えない（D-005）
+  function releasable(T, used, text) {
     if (!text) return { ok: false, why: "" };
-    if (text.includes(GARBAGE)) return { ok: false, why: "■ は使えない" };
-    if (used.has(text)) return { ok: false, why: "投げ済み" };
+    if (used.has(text)) return { ok: false, why: "放った言葉" };
     if (T.WORDS.has(text) || ([...text].length === 1 && isN5(T, text))) return { ok: true };
-    if ([...text].length === 1) return { ok: false, why: "部品は投げられない" };
+    if ([...text].length === 1) return { ok: false, why: "部品は放てない" };
     return { ok: false, why: "辞書にない" };
+  }
+  // 役の点数（R-026）。1字1・2字3・3字6・4字12、四字熟語の印つきは倍、特別な語はさらに倍
+  function scoreOf(D, T, text) {
+    const S = D.rules.score;
+    const n = [...text].length;
+    let pts = S.by_length[String(n)] || 0;
+    const parts = [`${n}字${pts}`];
+    const w = T.WORDS.get(text);
+    if (w && w.yoji) { pts *= S.yoji_mult; parts.push(`四字熟語×${S.yoji_mult}`); }
+    if (T.SPECIAL.has(text)) { pts *= S.special_mult; parts.push(`特別な語×${S.special_mult}`); }
+    return { pts, how: parts.join("・") };
   }
   const homoChars = (T, c) => [...new Set((T.HOMO.get(c) || []).flatMap((g) => g.chars))].filter((x) => x !== c);
   function marks(T, c) {
@@ -104,56 +80,76 @@
     if (T.HOMO.has(c)) m += "音";
     return m;
   }
+  // ログの頭に書く仮置きの値
+  function rulesLabel(D) {
+    const R = D.rules, S = R.score;
+    return [
+      `場=${R.field_size}枚 最初の手札=${R.start_hand}枚 手札の上限=${R.hand_max}枚 山=N5 の字を${R.same_char_in_deck}枚ずつ（尽きたら足す）`,
+      `点数 ${Object.entries(S.by_length).map(([n, p]) => `${n}字${p}`).join("・")} 四字熟語×${S.yoji_mult} 特別な語×${S.special_mult}`,
+      `放ったら 放った字数×${R.take_per_char}枚を場から選んで取れる。放った言葉は消える（相手には届かない）`,
+      `引き直し ${R.redraw.cost}点で手札を全部入れ替え（${R.start_hand}枚）。${R.redraw.cost}点ない人は${R.redraw.free_wait_sec}秒待って0点で`,
+      `勝ち 先に${R.win.score}点、または${R.win.time_limit_sec / 60}分で点の多い方（同点は引き分け）`,
+      `待ち時間 反転=${R.cooldown_sec.invert}秒 巡り=${R.cooldown_sec.cycle}秒 同音=${R.cooldown_sec.homophone}秒（その人の操作ごと）`,
+      `CPU ${R.cpu.interval_sec[0]}〜${R.cpu.interval_sec[1]}秒に1回動く`,
+    ];
+  }
 
   // ---------- 遊び ----------
   // env: { now: () => 秒, rand: () => 0..1, date: () => Date }
-  function createGame(D, T, settings, env) {
+  function createGame(D, T, env) {
     env = env || {};
     const now = env.now || (() => Date.now() / 1000);
     const rand = env.rand || Math.random;
-    const s = normalizeSettings(settings);
     const R = D.rules;
     let uid = 0;
-    const g = { D, T, settings: s, log: [], events: [], used: new Set(), over: false, winner: null, startedAt: (env.date || (() => new Date()))() };
+    const g = { D, T, log: [], events: [], used: new Set(), over: false, winner: null, startedAt: (env.date || (() => new Date()))() };
     const t0 = now();
     g.now = now;
     g.elapsed = () => now() - t0;
-    g.nextDrop = s.drop === "on" ? t0 + R.drop_every_sec : Infinity;
+    g.endsAt = t0 + R.win.time_limit_sec;
+    g.timeLeft = () => Math.max(0, g.endsAt - now());
 
     const card = (c, fresh) => ({ id: ++uid, c, t: now(), fresh: !!fresh });
     function shuffle(a) {
       for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
       return a;
     }
-    const makeBag = () => { const out = []; for (let i = 0; i < R.same_char_max_in_start; i++) out.push(...T.N5); return shuffle(out); };
-    function draw(p, n) {
-      if (p.bag.length < n) p.bag.push(...makeBag());
-      return p.bag.splice(0, n);
+    const fullSet = () => { const out = []; for (let i = 0; i < R.same_char_in_deck; i++) out.push(...T.N5); return out; };
+    g.deck = shuffle(fullSet());
+    function draw(n) {
+      const out = [];
+      for (let i = 0; i < n; i++) {
+        if (!g.deck.length) g.deck.push(...shuffle(fullSet())); // 山が尽きたら足す
+        out.push(g.deck.shift());
+      }
+      return out;
     }
     function player(key, name) {
-      const p = { key, name, bag: makeBag(), cards: [], cd: { invert: 0, cycle: 0, homophone: 0 }, lastSpecial: null };
-      p.cards = draw(p, R.start_hand).map((c) => card(c));
-      return p;
+      return { key, name, cards: draw(R.start_hand).map((c) => card(c)), cd: { invert: 0, cycle: 0, homophone: 0 },
+        score: 0, takes: 0, redrawAt: null, lastSpecial: null, stuck: false };
     }
     g.me = player("me", "あなた");
     g.cpu = player("cpu", "CPU");
+    g.field = draw(R.field_size).map((c) => card(c));
     g.opp = (p) => (p === g.me ? g.cpu : g.me);
     g.byId = (p, id) => p.cards.find((x) => x.id === id);
     g.ready = (p, k) => now() >= p.cd[k];
     g.cdLeft = (p, k) => Math.max(0, p.cd[k] - now());
+    g.redrawLeft = (p) => (p.redrawAt === null ? 0 : Math.max(0, p.redrawAt - now()));
     const useCd = (p, k) => { p.cd[k] = now() + R.cooldown_sec[k]; };
 
     const QUIET = new Set(["ためした", "終わり", "動けない", "動ける"]);
-    function addLog(who, op, from, to, note) {
-      g.log.push({ t: g.elapsed(), who, op, from: from || [], to: to || [], me: g.me.cards.length, cpu: g.cpu.cards.length, note: note || "" });
+    function addLog(who, op, from, to, pts, note) {
+      g.log.push({ t: g.elapsed(), who, op, from: from || [], to: to || [], pts: pts || 0,
+        meScore: g.me.score, cpuScore: g.cpu.score, me: g.me.cards.length, cpu: g.cpu.cards.length, note: note || "" });
       if (!QUIET.has(op)) checkStuck();
     }
     g.addLog = addLog;
 
-    // ---------- 動けない（KJ-002 追記。R-023） ----------
-    // 手札をそのまま並べて投げられる語（N5 の1字か辞書の語、投げ済みでない）が1つも無い状態
-    g.throwableInHand = (p) => {
-      const cs = p.cards.map((x) => x.c).filter((c) => c !== GARBAGE);
+    // ---------- 動けない（R-023 を KJ-003 に合わせた） ----------
+    // 手札をそのまま並べて放てる言葉（N5 の1字か辞書の語、放っていないもの）が1つも無い状態
+    g.releasableInHand = (p) => {
+      const cs = p.cards.map((x) => x.c);
       const have = {};
       for (const c of cs) have[c] = (have[c] || 0) + 1;
       for (const c of Object.keys(have)) if (isN5(T, c) && !g.used.has(c)) return c;
@@ -166,36 +162,38 @@
       }
       return null;
     };
-    // 投げる以外で使える手（待ち時間は残りの秒数を添える）
+    // 放つ以外で使える手（待ち時間は残りの秒数を添える）
     g.movesInHand = (p) => {
       const cs = p.cards.map((x) => x.c);
       const out = [];
-      if (cs.some((c) => canSplit(T, c))) out.push("割る");
+      if (cs.some((c) => canSplit(T, c)) && cs.length < R.hand_max) out.push("割る");
       if (p.cards.some((a) => p.cards.some((b) => a !== b && joinResults(T, a.c, b.c).length))) out.push("くっつける");
       for (const [name, k, ok] of [["反転", "invert", (c) => T.INV.has(c)], ["巡り", "cycle", (c) => T.NEXT.has(c)], ["同音", "homophone", (c) => T.HOMO.has(c)]]) {
         if (!cs.some(ok)) continue;
-        const left = g.cdLeft ? g.cdLeft(p, k) : 0;
+        const left = g.cdLeft(p, k);
         out.push(left > 0 ? `${name}（待ち ${Math.ceil(left)}秒）` : name);
       }
+      out.push(p.score >= R.redraw.cost ? `引き直し（${R.redraw.cost}点）` : `引き直し（${R.redraw.free_wait_sec}秒待つ）`);
       return out;
     };
     function checkStuck() {
       if (!g.me || !g.cpu || g.over) return;
       for (const p of [g.me, g.cpu]) {
-        if (!p.cards.length) continue; // 空のカゴはすぐ袋から補充される
-        const w = g.throwableInHand(p);
+        const w = g.releasableInHand(p);
         if (!w && !p.stuck) {
           p.stuck = true;
-          const mv = g.movesInHand(p);
-          g.log.push({ t: g.elapsed(), who: p.name, op: "動けない", from: p.cards.map((x) => x.c), to: [], me: g.me.cards.length, cpu: g.cpu.cards.length,
-            note: "投げられる語なし。使える手：" + (mv.length ? mv.join("・") : "なし") });
+          g.log.push({ t: g.elapsed(), who: p.name, op: "動けない", from: p.cards.map((x) => x.c), to: [], pts: 0,
+            meScore: g.me.score, cpuScore: g.cpu.score, me: g.me.cards.length, cpu: g.cpu.cards.length,
+            note: "放てる言葉なし。使える手：" + g.movesInHand(p).join("・") });
         } else if (w && p.stuck) {
           p.stuck = false;
-          g.log.push({ t: g.elapsed(), who: p.name, op: "動ける", from: p.cards.map((x) => x.c), to: [], me: g.me.cards.length, cpu: g.cpu.cards.length, note: "投げられる語：" + w });
+          g.log.push({ t: g.elapsed(), who: p.name, op: "動ける", from: p.cards.map((x) => x.c), to: [], pts: 0,
+            meScore: g.me.score, cpuScore: g.cpu.score, me: g.me.cards.length, cpu: g.cpu.cards.length, note: "放てる言葉：" + w });
         }
       }
     }
-    addLog("—", "はじめ", [], [], "最初の手 " + g.me.cards.map((x) => x.c).join("") + " / " + g.cpu.cards.map((x) => x.c).join(""));
+    addLog("—", "はじめ", [], [], 0,
+      `手札 ${g.me.cards.map((x) => x.c).join("")} / ${g.cpu.cards.map((x) => x.c).join("")}・場 ${g.field.map((x) => x.c).join("")}`);
 
     function cardsOf(p, ids) {
       if (!Array.isArray(ids) || !ids.length || new Set(ids).size !== ids.length) return null;
@@ -217,6 +215,7 @@
       if (!live() || !cs || cs.length !== 1) return fail("1枚だけ");
       const c = cs[0].c;
       if (!canSplit(T, c)) return fail("割れない");
+      if (p.cards.length + 1 > R.hand_max) return fail("手札がいっぱい");
       const nc = replaceCards(p, ids, splitOnce(T, c));
       addLog(p.name, "割る", [c], nc.map((x) => x.c));
       return { ok: true, cards: nc };
@@ -258,122 +257,176 @@
       addLog(p.name, "同音", [c], [to]);
       return { ok: true, cards: nc };
     };
-    g.throw = (p, ids) => {
+
+    // ---------- 放つ（D-017） ----------
+    g.release = (p, ids) => {
       const cs = cardsOf(p, ids);
       if (!live() || !cs) return fail("札がない");
       const text = cs.map((x) => x.c).join("");
-      const th = throwable(T, g.used, text);
-      if (!th.ok) return fail(th.why);
-      const q = g.opp(p);
+      const r = releasable(T, g.used, text);
+      if (!r.ok) return fail(r.why);
+      const { pts, how } = scoreOf(D, T, text);
+      const n = [...text].length;
       p.cards = p.cards.filter((x) => !ids.includes(x.id));
       g.used.add(text);
-      let pieces = [], note;
-      if (s.dest === "throw") { pieces = delivered(T, text); note = "相手に届く"; }
-      else if (s.dest === "garbage") { pieces = [...text].map(() => GARBAGE); note = "消えて相手に ■"; }
-      else note = "消えた";
-      q.cards.push(...pieces.map((c) => card(c, true)));
-      addLog(p.name, "投げる", [...text], pieces, note);
-      // 特別な語・つながる相手（D-015）
+      p.score += pts;
+      p.takes += n * R.take_per_char;
+      addLog(p.name, "放つ", [...text], [], pts, `${how}。場から${n * R.take_per_char}枚取れる`);
+      // 特別な語・つながる相手（D-015）。演出だけ
       const prev = p.lastSpecial && T.SPECIAL.get(p.lastSpecial);
       if (prev && prev.next.includes(text)) g.events.push({ type: "fx", who: p.name, text: p.lastSpecial + text });
       else if (T.SPECIAL.has(text)) g.events.push({ type: "fx", who: p.name, text });
       p.lastSpecial = T.SPECIAL.has(text) ? text : null;
-      g.events.push({ type: "throw", who: p.name, text, pieces });
-      refill(p);
-      checkOver([q]);
-      return { ok: true, text, pieces };
+      g.events.push({ type: "release", who: p.name, text, pts });
+      checkOver();
+      return { ok: true, text, pts };
     };
-    // はじかれた並び（KJ-002 の2）。画面側が「並べたのにやめた」ときに呼ぶ
-    g.tried = (p, chars, why) => { if (live()) addLog(p.name, "ためした", chars, [], why); };
 
-    function refill(p) {
-      if (p.cards.length === 0) {
-        p.cards.push(...draw(p, R.refill_when_empty).map((c) => card(c, true)));
-        addLog(p.name, "補充", [], p.cards.map((x) => x.c), "カゴが空");
+    // ---------- 取る：場の札を手札へ。空いたところは同じ位置に山から出す ----------
+    g.take = (p, fieldId) => {
+      if (!live()) return fail("終わった");
+      if (p.takes <= 0) return fail("取れる枚数がない");
+      if (p.cards.length >= R.hand_max) return fail("手札がいっぱい");
+      const i = g.field.findIndex((x) => x.id === fieldId);
+      if (i < 0) return fail("場にない"); // 相手が先に取った
+      const x = g.field[i];
+      const [nc] = draw(1).map((c) => card(c, true));
+      g.field[i] = nc;
+      const got = card(x.c, true);
+      p.cards.push(got);
+      p.takes -= 1;
+      addLog(p.name, "取る", [x.c], [x.c], 0, `場に ${nc.c} が出た。残り${p.takes}枚取れる`);
+      return { ok: true, card: got, c: x.c };
+    };
+
+    // ---------- 引き直し（D-018） ----------
+    function doRedraw(p, pts, note) {
+      const old = p.cards.map((x) => x.c);
+      g.deck.push(...old);
+      shuffle(g.deck);
+      p.cards = draw(R.start_hand).map((c) => card(c, true));
+      p.redrawAt = null;
+      addLog(p.name, "引き直し", old, p.cards.map((x) => x.c), pts, note);
+    }
+    g.redraw = (p) => {
+      if (!live()) return fail("終わった");
+      if (p.redrawAt !== null) return fail("待っている");
+      if (p.score >= R.redraw.cost) {
+        p.score -= R.redraw.cost;
+        doRedraw(p, -R.redraw.cost, `${R.redraw.cost}点払った`);
+        return { ok: true, paid: R.redraw.cost };
       }
-    }
-    function checkOver(ps) {
-      if (g.over) return;
-      const lost = ps.filter((p) => p.cards.length > R.basket_size);
-      if (!lost.length) return;
+      p.redrawAt = now() + R.redraw.free_wait_sec;
+      addLog(p.name, "引き直し", [], [], 0, `${R.redraw.cost}点ないので${R.redraw.free_wait_sec}秒待つ（待つあいだも動ける）`);
+      return { ok: true, waiting: R.redraw.free_wait_sec };
+    };
+
+    // はじかれた並び。画面側が「並べたのにやめた」ときに呼ぶ
+    g.tried = (p, chars, why) => { if (live()) addLog(p.name, "ためした", chars, [], 0, why); };
+
+    function finish(winner, why) {
       g.over = true;
-      g.winner = lost.length === 2 ? null : g.opp(lost[0]);
-      addLog("—", "終わり", [], [], lost.length === 2 ? "引き分け（二人ともあふれた）" : `${g.winner.name}の勝ち（${lost[0].name}のカゴがあふれた）`);
-      g.events.push({ type: "over", winner: g.winner });
+      g.winner = winner;
+      addLog("—", "終わり", [], [], 0, (winner ? `${winner.name}の勝ち` : "引き分け") + `（${why}）`);
+      g.events.push({ type: "over", winner });
     }
-    // 時間で落ちてくる（KJ-002 の3）。画面が定期的に呼ぶ
+    function checkOver() {
+      if (g.over) return;
+      const hit = [g.me, g.cpu].filter((p) => p.score >= R.win.score);
+      if (hit.length) finish(hit[0], `先に${R.win.score}点`);
+    }
+    // 画面が定期的に呼ぶ：0点の引き直しの待ちと、時間切れ
     g.tick = () => {
+      if (!live()) return false;
       let changed = false;
-      while (live() && now() >= g.nextDrop) {
-        for (const p of [g.me, g.cpu]) p.cards.push(...draw(p, 1).map((c) => card(c, true)));
-        addLog("二人", "落ちてくる", [], [g.me.cards[g.me.cards.length - 1].c, g.cpu.cards[g.cpu.cards.length - 1].c], "あなた・CPU の順");
-        g.nextDrop += R.drop_every_sec;
-        checkOver([g.me, g.cpu]);
+      for (const p of [g.me, g.cpu]) {
+        if (p.redrawAt !== null && now() >= p.redrawAt) { doRedraw(p, 0, `${R.redraw.free_wait_sec}秒待った（0点）`); changed = true; }
+      }
+      if (now() >= g.endsAt) {
+        const a = g.me.score, b = g.cpu.score;
+        finish(a === b ? null : a > b ? g.me : g.cpu, `${R.win.time_limit_sec / 60}分 ${a}対${b}`);
         changed = true;
       }
       return changed;
     };
 
-    // ---------- CPU（1段階。R-009） ----------
-    g.cpuDelay = () => { const [a, b] = R.cpu.pace[s.cpuPace]; return a + rand() * (b - a); };
+    // ---------- CPU（1段階。8〜12秒に1回。速さで強くしない） ----------
+    g.cpuDelay = () => { const [a, b] = R.cpu.interval_sec; return a + rand() * (b - a); };
     const pick = (a) => a[Math.floor(rand() * a.length)];
     function pickIds(p, text) {
       const pool = p.cards.slice(), ids = [];
       for (const ch of text) { const i = pool.findIndex((x) => x.c === ch); if (i < 0) return null; ids.push(pool[i].id); pool.splice(i, 1); }
       return ids;
     }
+    // 場の札で、手札と合わせて語になるものを先に取る。なければ無作為
+    function cpuTakeAll(p) {
+      while (p.takes > 0 && p.cards.length < R.hand_max) {
+        const hand = p.cards.map((x) => x.c);
+        const covers = (have, word) => {
+          const left = have.slice();
+          return [...word].every((ch) => { const i = left.indexOf(ch); if (i < 0) return false; left.splice(i, 1); return true; });
+        };
+        const useful = g.field.filter((f) => T.COMMON_WORDS.some((w) => !g.used.has(w.w) && w.w.includes(f.c) && covers([...hand, f.c], w.w)));
+        const f = pick(useful.length ? useful : g.field);
+        if (!g.take(p, f.id).ok) break;
+      }
+    }
     g.cpuTurn = () => {
       if (!live()) return null;
-      const p = g.cpu, r = R.cpu, full = p.cards.length >= R.basket_size - 4;
-      if (full || rand() < r.throw_chance) {
-        const ws = T.COMMON_WORDS.filter((w) => !g.used.has(w.w) && pickIds(p, w.w));
-        if (ws.length) {
-          const L = Math.max(...ws.map((w) => [...w.w].length));
-          const w = pick(ws.filter((x) => [...x.w].length === L));
-          return g.throw(p, pickIds(p, w.w));
-        }
+      const p = g.cpu;
+      if (p.takes > 0 && p.cards.length < R.hand_max) { cpuTakeAll(p); return { ok: true, op: "取る" }; }
+      const ws = T.COMMON_WORDS.filter((w) => !g.used.has(w.w) && pickIds(p, w.w));
+      if (ws.length) {
+        const best = Math.max(...ws.map((w) => scoreOf(D, T, w.w).pts));
+        const w = pick(ws.filter((x) => scoreOf(D, T, x.w).pts === best));
+        const r = g.release(p, pickIds(p, w.w));
+        if (r.ok) cpuTakeAll(p);
+        return r;
       }
       const joins = [];
       for (const a of p.cards) for (const b of p.cards) {
         if (a !== b) for (const k of joinResults(T, a.c, b.c)) joins.push([a, b, k]);
       }
       const good = joins.filter((j) => isN5(T, j[2]));
-      if (joins.length) { const j = pick(good.length ? good : joins); return g.join(p, [j[0].id, j[1].id], j[2]); }
+      if (good.length) { const j = pick(good); return g.join(p, [j[0].id, j[1].id], j[2]); }
       const singles = p.cards.filter((x) => isN5(T, x.c) && !g.used.has(x.c));
-      if (singles.length && (full || rand() < 0.4)) return g.throw(p, [pick(singles).id]);
+      if (singles.length && rand() < R.cpu.single_release_chance) {
+        const r = g.release(p, [pick(singles).id]);
+        if (r.ok) cpuTakeAll(p);
+        return r;
+      }
+      if (joins.length) { const j = pick(joins); return g.join(p, [j[0].id, j[1].id], j[2]); }
       const cyc = p.cards.filter((x) => T.NEXT.has(x.c));
       if (cyc.length && g.ready(p, "cycle") && rand() < 0.5) return g.cycle(p, [pick(cyc).id]);
       const inv = p.cards.filter((x) => T.INV.has(x.c));
       if (inv.length && g.ready(p, "invert") && rand() < 0.3) return g.invert(p, [pick(inv).id]);
+      if (!singles.length && !ws.length && p.redrawAt === null) return g.redraw(p); // 放てる言葉がない
       return null;
     };
 
-    // ---------- ログの書き出し（KJ-002 の2） ----------
+    // ---------- ログの書き出し ----------
     g.logText = () => {
       const pad = (n) => String(n).padStart(2, "0");
       const d = g.startedAt;
       const ds = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
       const head = [
-        "# 漢字版（仮）モック ログ",
+        "# 漢字版（仮）モック ログ（KJ-003 役づくりの競争）",
         `# はじめた時刻 ${ds}（端末の時計）`,
-        ...settingsLabel(D, s).map((x) => "# 設定 " + x),
-        `# 決まり カゴ=${R.basket_size} 最初の手=${R.start_hand} 同じ字は袋に${R.same_char_max_in_start}枚 空なら${R.refill_when_empty}枚`,
-        `# 決まり 待ち時間 反転=${R.cooldown_sec.invert}秒 巡り=${R.cooldown_sec.cycle}秒 同音=${R.cooldown_sec.homophone}秒`,
-        `# 決まり CPU 語を投げる割合=${R.cpu.throw_chance} 落ちてくる間隔=${R.drop_every_sec}秒（設定があり のときだけ）`,
-        "# 手 はじめ・割る・くっつける・反転・巡り・同音・投げる・ためした・落ちてくる・補充・動けない（投げられる語が手札に無くなった。使った札＝その時の手札）・動ける（無くなった状態から戻った）・終わり",
+        ...rulesLabel(D).map((x) => "# 仮置き " + x),
+        "# 手 はじめ・割る・くっつける・反転・巡り・同音・放つ・取る・引き直し・ためした（並べたのに放てず・くっつけられずにやめた並び）・動けない（放てる言葉が手札に無くなった。使った札＝その時の手札）・動ける・終わり",
+        "# 点＝その手で増えた点（引き直しで払った点はマイナス）",
         "# データ " + FILES.map((f) => `${f}=${D[f].version}`).join(" "),
         `# 字 ${T.N5.size}・語 ${T.WORDS.size}`,
-        "秒\tどちら\t手\t使った札\tできた札\tあなたのカゴ\tCPUのカゴ\tメモ",
+        "秒\tどちら\t手\t使った札\tできた札\t点\tあなたの点\tCPUの点\tあなたの手札\tCPUの手札\tメモ",
       ];
-      const rows = g.log.map((e) => [e.t.toFixed(1), e.who, e.op, e.from.join(" "), e.to.join(" "), e.me, e.cpu, e.note].join("\t"));
+      const rows = g.log.map((e) => [e.t.toFixed(1), e.who, e.op, e.from.join(" "), e.to.join(" "), e.pts, e.meScore, e.cpuScore, e.me, e.cpu, e.note].join("\t"));
       return head.concat(rows).join("\n") + "\n";
     };
     return g;
   }
 
   return {
-    GARBAGE, FILES, SETTINGS, normalizeSettings, settingsLabel,
-    makeTables, isN5, splitOnce, canSplit, delivered, joinResults, joinReversed, throwable, homoChars, marks,
-    createGame,
+    FILES, makeTables, isN5, isChar, splitOnce, canSplit, delivered, joinResults, joinReversed,
+    releasable, scoreOf, homoChars, marks, rulesLabel, createGame,
   };
 });

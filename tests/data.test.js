@@ -91,15 +91,26 @@ test("特別な語：words.json にあり、つながる相手も words.json に
   }
 });
 
-test("決まり：数値がそろっている", () => {
+test("決まり：数値がそろっている（KJ-003 の仮置き）", () => {
   const r = D.rules;
-  for (const k of ["basket_size", "start_hand", "same_char_max_in_start", "refill_when_empty", "drop_every_sec"]) assert.ok(r[k] > 0, k);
+  for (const k of ["field_size", "start_hand", "hand_max", "same_char_in_deck", "take_per_char"]) assert.ok(r[k] > 0, k);
+  assert.ok(r.start_hand <= r.hand_max);
   for (const k of ["invert", "cycle", "homophone"]) assert.ok(r.cooldown_sec[k] > 0, k);
-  for (const k of Object.keys(K.SETTINGS.cpuPace.opts)) {
-    const [a, b] = r.cpu.pace[k];
-    assert.ok(a > 0 && b >= a, k);
+  assert.deepEqual(r.score.by_length, { 1: 1, 2: 3, 3: 6, 4: 12 });
+  assert.equal(r.score.yoji_mult, 2);
+  assert.equal(r.score.special_mult, 2);
+  assert.deepEqual([r.redraw.cost, r.redraw.free_wait_sec], [5, 30]);
+  assert.deepEqual([r.win.score, r.win.time_limit_sec], [50, 300]);
+  const [a, b] = r.cpu.interval_sec;
+  assert.deepEqual([a, b], [8, 12]);
+});
+
+test("字として見せる（jouyou）：N5 の外で、部品表に出てくる字。玉 を含む", () => {
+  const used = new Set(Object.entries(parts).flatMap(([k, v]) => [k, ...v]));
+  for (const c of D.parts.jouyou) {
+    assert.ok(!N5.has(c), `${c} は N5`);
+    assert.ok(used.has(c), `${c} は部品表に出てこない`);
   }
-  assert.deepEqual(r.cpu.pace.normal, [2, 4], "ふつう は KJ-001 の 2〜4秒");
-  assert.deepEqual(r.cpu.pace.slow, [8, 12]);
-  assert.equal(r.drop_every_sec, 8);
+  assert.ok(K.isChar(T, "玉"));
+  assert.ok(!K.isChar(T, "卜"), "卜 は部品の見た目のまま");
 });

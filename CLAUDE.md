@@ -10,9 +10,9 @@
 
 ## 中身の分け方
 
-- `js/core.js`：遊びの決まり（表引き・割る・くっつける・投げる・待ち時間・切り替え・CPU・ログ）。DOM に触らない。ブラウザでは `window.KJ`、Node では `require`
+- `js/core.js`：遊びの決まり（表引き・割る・くっつける・放つ・点数・場から取る・引き直し・待ち時間・勝ち・CPU・ログ）。DOM に触らない。ブラウザでは `window.KJ`、Node では `require`
 - `index.html`：画面だけ。決まりは core.js を呼ぶ
-- `data/rules.json`：数値（カゴ・待ち時間・CPU・落ちてくる間隔）。数値を変えるときはここだけ。変えたら `version` を上げる
+- `data/rules.json`：数値（場・手札・点数・引き直し・勝ち・待ち時間・CPU）。数値を変えるときはここだけ。変えたら `version` を上げる
 - `tests/`：テスト
 
 ## テストの回し方
@@ -23,8 +23,8 @@ npm test
 
 - 中身は `node --test "tests/*.test.js" "tests/*.test.mjs"`（Node 22 以上）
 - `tests/data.test.js`：データの整合（部品表・対義・巡り・偏の形・同じ読み・語・特別な語・決まり）
-- `tests/game.test.js`：割る・くっつける・届き方・投げ済み・待ち時間・あふれ・切り替え・CPU・ログ。時計と乱数は差し替えている（`tests/helpers.js`）
-- `tests/browser.test.mjs`：画面（台に札を置いてもカゴが動かない・並べる順が逆・設定・ログをコピー）。Playwright の Chromium がないと skip になる。skip は「通った」ではない
+- `tests/game.test.js`：割る・くっつける・待ち時間・放つ・点数・使用済み・取る・引き直し・勝ち・CPU・ログ。時計と乱数は差し替えている（`tests/helpers.js`）
+- `tests/browser.test.mjs`：画面（台に札を置いても手札と場が動かない・並べる順が逆・放つ→取る・引き直し・ログをコピー）。Playwright の Chromium がないと skip になる。skip は「通った」ではない
 - 変えたら必ず `npm test` を回し、件数と結果を PR に書く
 
 ## ローカルで開く

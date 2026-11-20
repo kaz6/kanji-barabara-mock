@@ -1,21 +1,31 @@
 {
- "version": "2026-11-20.2",
- "note": "数値は仮置き（D-010・D-013・D-014・R-番号）。drop_every_sec と cpu.pace は KJ-002 の試し用の切り替えで使う",
- "basket_size": 20,
- "start_hand": 6,
- "same_char_max_in_start": 2,
+ "version": "2026-11-21.1",
+ "note": "KJ-003「役づくりの競争」（D-017・D-018）の数値。どれも仮置き（R-025〜）。数値を変えるときはここだけ",
+ "field_size": 6,
+ "start_hand": 8,
+ "hand_max": 12,
+ "same_char_in_deck": 2,
  "cooldown_sec": {
   "invert": 10,
   "cycle": 3,
   "homophone": 20
  },
- "refill_when_empty": 6,
- "drop_every_sec": 8,
+ "score": {
+  "by_length": { "1": 1, "2": 3, "3": 6, "4": 12 },
+  "yoji_mult": 2,
+  "special_mult": 2
+ },
+ "take_per_char": 1,
+ "redraw": {
+  "cost": 5,
+  "free_wait_sec": 30
+ },
+ "win": {
+  "score": 50,
+  "time_limit_sec": 300
+ },
  "cpu": {
-  "pace": {
-   "normal": [2.0, 4.0],
-   "slow": [8.0, 12.0]
-  },
-  "throw_chance": 0.5
+  "interval_sec": [8.0, 12.0],
+  "single_release_chance": 0.4
  }
 }
