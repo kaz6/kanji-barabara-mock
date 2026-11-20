@@ -1,0 +1,892 @@
+{
+ "version": "2026-11-20.1",
+ "level": "N5",
+ "source": "KANJIDIC2 jlpt=4（旧4級。N5 の代用）",
+ "note": "本来は tanos.co.uk の N5 表（D-009）。tools/build_data.py --kanji-list で差し替える",
+ "count": 103,
+ "kanji": [
+  {
+   "c": "日",
+   "strokes": 4,
+   "freq": 1,
+   "en": [
+    "day",
+    "sun"
+   ]
+  },
+  {
+   "c": "一",
+   "strokes": 1,
+   "freq": 2,
+   "en": [
+    "one",
+    "one radical (no.1)"
+   ]
+  },
+  {
+   "c": "国",
+   "strokes": 8,
+   "freq": 3,
+   "en": [
+    "country"
+   ]
+  },
+  {
+   "c": "会",
+   "strokes": 6,
+   "freq": 4,
+   "en": [
+    "meeting",
+    "meet"
+   ]
+  },
+  {
+   "c": "人",
+   "strokes": 2,
+   "freq": 5,
+   "en": [
+    "person"
+   ]
+  },
+  {
+   "c": "年",
+   "strokes": 6,
+   "freq": 6,
+   "en": [
+    "year",
+    "counter for years"
+   ]
+  },
+  {
+   "c": "大",
+   "strokes": 3,
+   "freq": 7,
+   "en": [
+    "large",
+    "big"
+   ]
+  },
+  {
+   "c": "十",
+   "strokes": 2,
+   "freq": 8,
+   "en": [
+    "ten"
+   ]
+  },
+  {
+   "c": "二",
+   "strokes": 2,
+   "freq": 9,
+   "en": [
+    "two",
+    "two radical (no. 7)"
+   ]
+  },
+  {
+   "c": "本",
+   "strokes": 5,
+   "freq": 10,
+   "en": [
+    "book",
+    "present"
+   ]
+  },
+  {
+   "c": "中",
+   "strokes": 4,
+   "freq": 11,
+   "en": [
+    "in",
+    "inside"
+   ]
+  },
+  {
+   "c": "長",
+   "strokes": 8,
+   "freq": 12,
+   "en": [
+    "long",
+    "leader"
+   ]
+  },
+  {
+   "c": "出",
+   "strokes": 5,
+   "freq": 13,
+   "en": [
+    "exit",
+    "leave"
+   ]
+  },
+  {
+   "c": "三",
+   "strokes": 3,
+   "freq": 14,
+   "en": [
+    "three"
+   ]
+  },
+  {
+   "c": "時",
+   "strokes": 10,
+   "freq": 16,
+   "en": [
+    "time",
+    "hour"
+   ]
+  },
+  {
+   "c": "行",
+   "strokes": 6,
+   "freq": 20,
+   "en": [
+    "going",
+    "journey"
+   ]
+  },
+  {
+   "c": "社",
+   "strokes": 7,
+   "freq": 21,
+   "en": [
+    "company",
+    "firm"
+   ]
+  },
+  {
+   "c": "見",
+   "strokes": 7,
+   "freq": 22,
+   "en": [
+    "see",
+    "hopes"
+   ]
+  },
+  {
+   "c": "月",
+   "strokes": 4,
+   "freq": 23,
+   "en": [
+    "month",
+    "moon"
+   ]
+  },
+  {
+   "c": "分",
+   "strokes": 4,
+   "freq": 24,
+   "en": [
+    "part",
+    "minute of time"
+   ]
+  },
+  {
+   "c": "後",
+   "strokes": 9,
+   "freq": 26,
+   "en": [
+    "behind",
+    "back"
+   ]
+  },
+  {
+   "c": "前",
+   "strokes": 9,
+   "freq": 27,
+   "en": [
+    "in front",
+    "before"
+   ]
+  },
+  {
+   "c": "生",
+   "strokes": 5,
+   "freq": 29,
+   "en": [
+    "life",
+    "genuine"
+   ]
+  },
+  {
+   "c": "五",
+   "strokes": 4,
+   "freq": 31,
+   "en": [
+    "five"
+   ]
+  },
+  {
+   "c": "間",
+   "strokes": 12,
+   "freq": 33,
+   "en": [
+    "interval",
+    "space"
+   ]
+  },
+  {
+   "c": "上",
+   "strokes": 3,
+   "freq": 35,
+   "en": [
+    "above",
+    "up"
+   ]
+  },
+  {
+   "c": "東",
+   "strokes": 8,
+   "freq": 37,
+   "en": [
+    "east"
+   ]
+  },
+  {
+   "c": "四",
+   "strokes": 5,
+   "freq": 47,
+   "en": [
+    "four"
+   ]
+  },
+  {
+   "c": "今",
+   "strokes": 4,
+   "freq": 49,
+   "en": [
+    "now"
+   ]
+  },
+  {
+   "c": "新",
+   "strokes": 13,
+   "freq": 51,
+   "en": [
+    "new"
+   ]
+  },
+  {
+   "c": "金",
+   "strokes": 8,
+   "freq": 53,
+   "en": [
+    "gold"
+   ]
+  },
+  {
+   "c": "九",
+   "strokes": 2,
+   "freq": 55,
+   "en": [
+    "nine"
+   ]
+  },
+  {
+   "c": "入",
+   "strokes": 2,
+   "freq": 56,
+   "en": [
+    "enter",
+    "insert"
+   ]
+  },
+  {
+   "c": "立",
+   "strokes": 5,
+   "freq": 58,
+   "en": [
+    "stand up",
+    "rise"
+   ]
+  },
+  {
+   "c": "手",
+   "strokes": 4,
+   "freq": 60,
+   "en": [
+    "hand"
+   ]
+  },
+  {
+   "c": "学",
+   "strokes": 8,
+   "freq": 63,
+   "en": [
+    "study",
+    "learning"
+   ]
+  },
+  {
+   "c": "高",
+   "strokes": 10,
+   "freq": 65,
+   "en": [
+    "tall",
+    "high"
+   ]
+  },
+  {
+   "c": "円",
+   "strokes": 4,
+   "freq": 69,
+   "en": [
+    "circle",
+    "yen"
+   ]
+  },
+  {
+   "c": "子",
+   "strokes": 3,
+   "freq": 72,
+   "en": [
+    "child",
+    "sign of the rat"
+   ]
+  },
+  {
+   "c": "目",
+   "strokes": 5,
+   "freq": 76,
+   "en": [
+    "eye",
+    "class"
+   ]
+  },
+  {
+   "c": "外",
+   "strokes": 5,
+   "freq": 81,
+   "en": [
+    "outside"
+   ]
+  },
+  {
+   "c": "言",
+   "strokes": 7,
+   "freq": 83,
+   "en": [
+    "say",
+    "word"
+   ]
+  },
+  {
+   "c": "八",
+   "strokes": 2,
+   "freq": 92,
+   "en": [
+    "eight",
+    "eight radical (no. 12)"
+   ]
+  },
+  {
+   "c": "六",
+   "strokes": 4,
+   "freq": 93,
+   "en": [
+    "six"
+   ]
+  },
+  {
+   "c": "下",
+   "strokes": 3,
+   "freq": 97,
+   "en": [
+    "below",
+    "down"
+   ]
+  },
+  {
+   "c": "来",
+   "strokes": 7,
+   "freq": 102,
+   "en": [
+    "come",
+    "due"
+   ]
+  },
+  {
+   "c": "気",
+   "strokes": 6,
+   "freq": 113,
+   "en": [
+    "spirit",
+    "mind"
+   ]
+  },
+  {
+   "c": "小",
+   "strokes": 3,
+   "freq": 114,
+   "en": [
+    "little",
+    "small"
+   ]
+  },
+  {
+   "c": "七",
+   "strokes": 2,
+   "freq": 115,
+   "en": [
+    "seven"
+   ]
+  },
+  {
+   "c": "山",
+   "strokes": 3,
+   "freq": 131,
+   "en": [
+    "mountain"
+   ]
+  },
+  {
+   "c": "話",
+   "strokes": 13,
+   "freq": 134,
+   "en": [
+    "tale",
+    "talk"
+   ]
+  },
+  {
+   "c": "多",
+   "strokes": 6,
+   "freq": 139,
+   "en": [
+    "many",
+    "frequent"
+   ]
+  },
+  {
+   "c": "安",
+   "strokes": 6,
+   "freq": 144,
+   "en": [
+    "relax",
+    "cheap"
+   ]
+  },
+  {
+   "c": "女",
+   "strokes": 3,
+   "freq": 151,
+   "en": [
+    "woman",
+    "female"
+   ]
+  },
+  {
+   "c": "北",
+   "strokes": 5,
+   "freq": 153,
+   "en": [
+    "north"
+   ]
+  },
+  {
+   "c": "午",
+   "strokes": 4,
+   "freq": 154,
+   "en": [
+    "noon",
+    "sign of the horse"
+   ]
+  },
+  {
+   "c": "百",
+   "strokes": 6,
+   "freq": 163,
+   "en": [
+    "hundred"
+   ]
+  },
+  {
+   "c": "書",
+   "strokes": 10,
+   "freq": 169,
+   "en": [
+    "write"
+   ]
+  },
+  {
+   "c": "先",
+   "strokes": 6,
+   "freq": 173,
+   "en": [
+    "before",
+    "ahead"
+   ]
+  },
+  {
+   "c": "名",
+   "strokes": 6,
+   "freq": 177,
+   "en": [
+    "name",
+    "noted"
+   ]
+  },
+  {
+   "c": "川",
+   "strokes": 3,
+   "freq": 181,
+   "en": [
+    "stream",
+    "river"
+   ]
+  },
+  {
+   "c": "千",
+   "strokes": 3,
+   "freq": 195,
+   "en": [
+    "thousand"
+   ]
+  },
+  {
+   "c": "道",
+   "strokes": 12,
+   "freq": 207,
+   "en": [
+    "road-way",
+    "street"
+   ]
+  },
+  {
+   "c": "水",
+   "strokes": 4,
+   "freq": 223,
+   "en": [
+    "water"
+   ]
+  },
+  {
+   "c": "半",
+   "strokes": 5,
+   "freq": 224,
+   "en": [
+    "half",
+    "middle"
+   ]
+  },
+  {
+   "c": "男",
+   "strokes": 7,
+   "freq": 240,
+   "en": [
+    "male"
+   ]
+  },
+  {
+   "c": "西",
+   "strokes": 6,
+   "freq": 259,
+   "en": [
+    "west",
+    "Spain"
+   ]
+  },
+  {
+   "c": "電",
+   "strokes": 13,
+   "freq": 268,
+   "en": [
+    "electricity"
+   ]
+  },
+  {
+   "c": "口",
+   "strokes": 3,
+   "freq": 284,
+   "en": [
+    "mouth"
+   ]
+  },
+  {
+   "c": "少",
+   "strokes": 4,
+   "freq": 287,
+   "en": [
+    "few",
+    "little"
+   ]
+  },
+  {
+   "c": "校",
+   "strokes": 10,
+   "freq": 294,
+   "en": [
+    "exam",
+    "school"
+   ]
+  },
+  {
+   "c": "語",
+   "strokes": 14,
+   "freq": 301,
+   "en": [
+    "word",
+    "speech"
+   ]
+  },
+  {
+   "c": "空",
+   "strokes": 8,
+   "freq": 304,
+   "en": [
+    "empty",
+    "sky"
+   ]
+  },
+  {
+   "c": "土",
+   "strokes": 3,
+   "freq": 307,
+   "en": [
+    "soil",
+    "earth"
+   ]
+  },
+  {
+   "c": "木",
+   "strokes": 4,
+   "freq": 317,
+   "en": [
+    "tree",
+    "wood"
+   ]
+  },
+  {
+   "c": "聞",
+   "strokes": 14,
+   "freq": 319,
+   "en": [
+    "hear",
+    "ask"
+   ]
+  },
+  {
+   "c": "食",
+   "strokes": 9,
+   "freq": 328,
+   "en": [
+    "eat",
+    "food"
+   ]
+  },
+  {
+   "c": "車",
+   "strokes": 7,
+   "freq": 333,
+   "en": [
+    "car"
+   ]
+  },
+  {
+   "c": "何",
+   "strokes": 7,
+   "freq": 340,
+   "en": [
+    "what"
+   ]
+  },
+  {
+   "c": "南",
+   "strokes": 9,
+   "freq": 341,
+   "en": [
+    "south"
+   ]
+  },
+  {
+   "c": "足",
+   "strokes": 7,
+   "freq": 343,
+   "en": [
+    "leg",
+    "foot"
+   ]
+  },
+  {
+   "c": "万",
+   "strokes": 3,
+   "freq": 375,
+   "en": [
+    "ten thousand",
+    "10,000"
+   ]
+  },
+  {
+   "c": "店",
+   "strokes": 8,
+   "freq": 378,
+   "en": [
+    "store",
+    "shop"
+   ]
+  },
+  {
+   "c": "毎",
+   "strokes": 6,
+   "freq": 436,
+   "en": [
+    "every"
+   ]
+  },
+  {
+   "c": "白",
+   "strokes": 5,
+   "freq": 483,
+   "en": [
+    "white"
+   ]
+  },
+  {
+   "c": "古",
+   "strokes": 5,
+   "freq": 509,
+   "en": [
+    "old"
+   ]
+  },
+  {
+   "c": "天",
+   "strokes": 4,
+   "freq": 512,
+   "en": [
+    "heavens",
+    "sky"
+   ]
+  },
+  {
+   "c": "買",
+   "strokes": 12,
+   "freq": 520,
+   "en": [
+    "buy"
+   ]
+  },
+  {
+   "c": "週",
+   "strokes": 11,
+   "freq": 540,
+   "en": [
+    "week"
+   ]
+  },
+  {
+   "c": "母",
+   "strokes": 5,
+   "freq": 570,
+   "en": [
+    "mother"
+   ]
+  },
+  {
+   "c": "火",
+   "strokes": 4,
+   "freq": 574,
+   "en": [
+    "fire"
+   ]
+  },
+  {
+   "c": "花",
+   "strokes": 7,
+   "freq": 578,
+   "en": [
+    "flower"
+   ]
+  },
+  {
+   "c": "右",
+   "strokes": 5,
+   "freq": 602,
+   "en": [
+    "right"
+   ]
+  },
+  {
+   "c": "読",
+   "strokes": 14,
+   "freq": 618,
+   "en": [
+    "read"
+   ]
+  },
+  {
+   "c": "友",
+   "strokes": 4,
+   "freq": 622,
+   "en": [
+    "friend"
+   ]
+  },
+  {
+   "c": "左",
+   "strokes": 5,
+   "freq": 630,
+   "en": [
+    "left"
+   ]
+  },
+  {
+   "c": "休",
+   "strokes": 6,
+   "freq": 642,
+   "en": [
+    "rest",
+    "day off"
+   ]
+  },
+  {
+   "c": "父",
+   "strokes": 4,
+   "freq": 646,
+   "en": [
+    "father"
+   ]
+  },
+  {
+   "c": "駅",
+   "strokes": 14,
+   "freq": 724,
+   "en": [
+    "station"
+   ]
+  },
+  {
+   "c": "雨",
+   "strokes": 8,
+   "freq": 950,
+   "en": [
+    "rain"
+   ]
+  },
+  {
+   "c": "飲",
+   "strokes": 12,
+   "freq": 969,
+   "en": [
+    "drink",
+    "smoke"
+   ]
+  },
+  {
+   "c": "魚",
+   "strokes": 11,
+   "freq": 1208,
+   "en": [
+    "fish"
+   ]
+  },
+  {
+   "c": "耳",
+   "strokes": 6,
+   "freq": 1328,
+   "en": [
+    "ear"
+   ]
+  }
+ ]
+}

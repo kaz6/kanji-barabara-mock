@@ -1,0 +1,18 @@
+{
+ "version": "2026-11-20.1",
+ "note": "数値は仮置き（D-010・D-013・D-014・R-番号）",
+ "basket_size": 20,
+ "start_hand": 6,
+ "same_char_max_in_start": 2,
+ "cooldown_sec": {
+  "invert": 10,
+  "cycle": 3,
+  "homophone": 20
+ },
+ "refill_when_empty": 6,
+ "cpu": {
+  "think_min_sec": 2.0,
+  "think_max_sec": 4.0,
+  "throw_chance": 0.5
+ }
+}

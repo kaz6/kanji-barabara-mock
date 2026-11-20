@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>漢字版（仮）モック</title>
+<style>
+:root{
+  --bg:#f6f4ef; --ink:#1d1b18; --sub:#6b665d; --line:#d9d4c9; --tile:#fffdf8;
+  --slot:#ebe7de; --accent:#c8402a; --ok:#2f6b4f; --dim:#a9a397;
+  --kanji:"Hiragino Mincho ProN","Yu Mincho","Noto Serif CJK JP","Noto Serif JP","Source Han Serif JP",serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif}
+main{max-width:760px;margin:0 auto;padding:16px 14px 48px}
+h1{font-size:17px;margin:0 0 2px;font-weight:700}
+.lead{color:var(--sub);font-size:13px;margin:0 0 14px}
+.side{margin:14px 0}
+.side-head{display:flex;align-items:baseline;gap:10px;margin-bottom:6px}
+.side-head b{font-size:15px}
+.count{font-variant-numeric:tabular-nums;color:var(--sub);font-size:13px}
+.count.warn{color:var(--accent);font-weight:700}
+.cds{margin-left:auto;font-size:12px;color:var(--sub);font-variant-numeric:tabular-nums}
+.basket{display:grid;grid-template-columns:repeat(10,1fr);gap:4px}
+.slot{aspect-ratio:1;background:var(--slot);border-radius:4px}
+.tile{aspect-ratio:1;position:relative;background:var(--tile);border:1px solid var(--line);border-radius:4px;
+  display:flex;align-items:center;justify-content:center;font-family:var(--kanji);font-size:clamp(20px,5.4vw,32px);
+  cursor:pointer;user-select:none;padding:0;color:var(--ink)}
+.tile:hover{border-color:var(--ink)}
+.tile.part{background:#f1ede4;color:#4a463f}
+.tile.new{border-color:var(--accent);border-width:2px}
+.tile .mk{position:absolute;top:1px;right:3px;font:10px/1.2 system-ui,sans-serif;color:var(--accent);letter-spacing:-1px}
+.tile .orig{position:absolute;bottom:1px;left:3px;font:10px/1 system-ui,sans-serif;color:var(--sub)}
+.cpu .basket{gap:3px}
+.cpu .tile{font-size:clamp(14px,3.6vw,22px);cursor:default}
+.cpu .tile:hover{border-color:var(--line)}
+.cpu .tile.new{border-color:var(--accent)}
+.cpu .tile .mk{display:none}
+@media (max-width:540px){
+  .me .basket{grid-template-columns:repeat(5,1fr);gap:5px}
+  .me .tile{font-size:32px}
+  .tile .mk{font-size:11px}
+}
+/* 台 */
+.stage{background:#fff;border:1px solid var(--line);border-radius:6px;padding:12px;margin:14px 0}
+.row{display:flex;gap:6px;min-height:70px;align-items:center}
+.row .tile{width:64px;font-size:40px;flex:none}
+.row .empty{color:var(--dim);font-size:13px}
+.info{min-height:24px;margin:8px 0 10px;font-size:14px}
+.info .w{font-family:var(--kanji);font-size:18px}
+.info .no{color:var(--sub)}
+.ops{display:flex;flex-wrap:wrap;gap:6px}
+button.op{font:inherit;font-size:14px;padding:8px 12px;border:1px solid var(--ink);background:#fff;color:var(--ink);border-radius:4px;cursor:pointer;min-width:64px}
+button.op:disabled{border-color:var(--line);color:var(--dim);cursor:default}
+button.op.throw{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+button.op.throw:disabled{background:#fff;border-color:var(--line);color:var(--dim);font-weight:400}
+.cdv{font-variant-numeric:tabular-nums;font-size:12px}
+.choices{display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.choices.on{display:block}
+.choices .g{margin:4px 0;display:flex;flex-wrap:wrap;align-items:center;gap:4px}
+.choices .g span{font-size:12px;color:var(--sub);min-width:64px}
+.choices button{font-family:var(--kanji);font-size:22px;width:44px;height:44px;border:1px solid var(--line);background:var(--tile);border-radius:4px;cursor:pointer}
+/* 記録 */
+.log{font-size:13px;margin:0;padding:0;list-style:none;max-height:180px;overflow:auto}
+.log li{padding:3px 0;color:var(--sub)}
+.log li .w{font-family:var(--kanji);font-size:16px;color:var(--ink)}
+.log li.me .who{color:var(--ink)}
+.bar{display:flex;gap:8px;align-items:center;margin:8px 0}
+.msg{font-weight:700}
+.msg.win{color:var(--ok)} .msg.lose{color:var(--accent)}
+details{margin-top:22px;border-top:1px solid var(--line);padding-top:10px}
+summary{cursor:pointer;font-weight:700}
+details p,details li{font-size:13px;color:#3d3a34}
+details ul{padding-left:18px}
+.credit{color:var(--sub);font-size:12px}
+/* 特別な語の演出 */
+#fx{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(246,244,239,.92);z-index:10;pointer-events:none}
+#fx.on{display:flex}
+#fx .c{font-family:var(--kanji);font-size:min(22vw,150px);line-height:1;opacity:0;transform:scale(1.6);transition:opacity .12s,transform .18s}
+#fx .c.in{opacity:1;transform:scale(1)}
+#fx .who{position:absolute;top:18%;font-size:14px;color:var(--sub)}
+</style>
+</head>
+<body>
+<main>
+  <h1>漢字版（仮）モック</h1>
+  <p class="lead">カゴの札を台に並べて、字や語にして投げる。相手のカゴを 20 マスからあふれさせたら勝ち。</p>
+
+  <div class="bar">
+    <button class="op" id="start">はじめる</button>
+    <span class="msg" id="msg"></span>
+  </div>
+
+  <section class="side cpu">
+    <div class="side-head"><b>CPU</b><span class="count" id="cpuCount"></span><span class="cds" id="cpuCds"></span></div>
+    <div class="basket" id="cpuBasket"></div>
+  </section>
+
+  <section class="stage">
+    <div class="row" id="row"></div>
+    <div class="info" id="info"></div>
+    <div class="ops">
+      <button class="op throw" id="bThrow">投げる</button>
+      <button class="op" id="bSplit">割る</button>
+      <button class="op" id="bJoin">くっつける</button>
+      <button class="op" id="bInvert">反転 <span class="cdv" id="cdInvert"></span></button>
+      <button class="op" id="bCycle">巡り <span class="cdv" id="cdCycle"></span></button>
+      <button class="op" id="bHomo">同音 <span class="cdv" id="cdHomo"></span></button>
+      <button class="op" id="bBack">戻す</button>
+    </div>
+    <div class="choices" id="choices"></div>
+  </section>
+
+  <section class="side me">
+    <div class="side-head"><b>あなた</b><span class="count" id="meCount"></span></div>
+    <div class="basket" id="meBasket"></div>
+  </section>
+
+  <section class="side">
+    <div class="side-head"><b>投げた言葉</b><span class="count">（二人とも二度と投げられない）</span></div>
+    <ul class="log" id="log"></ul>
+  </section>
+
+  <details>
+    <summary>しくみ</summary>
+    <ul>
+      <li>札をタップすると台に並ぶ（並べた順が左から）。台の札をタップするとカゴに戻る。</li>
+      <li><b>投げる</b>：台の札が辞書の語（1〜4字）か、N5 の字1字なら投げられる。部品だけでは投げられない。一度投げた言葉は二人とも二度と投げられない。</li>
+      <li><b>届き方</b>：1〜2字は字のまま。3字は各字を一段割って。4字は二段まで割って届く（割れない字はそのまま）。</li>
+      <li><b>割る</b>：台の1枚を部品表で一段だけ割る。<b>くっつける</b>：台の2枚を、左→右の順でくっつける（上＝卜一、下＝一卜 のように順が効く）。</li>
+      <li><b>反転</b>（印：反）対義の字に。10 秒待ち。<b>巡り</b>（印：巡）曜日・方角・数を1つ先へ。3 秒待ち。<b>同音</b>（印：音）同じ読みの字から好きなものを選ぶ。20 秒待ち。待ち時間は操作ごとで、二人は別々。</li>
+      <li>人・食・言・示 を左に置いてくっつけられるときは、亻・飠・訁・礻 の形で見せる（札はもとの字のまま）。</li>
+      <li>カゴは 20 マス。あふれたら負け。カゴが空になったら袋から 6 枚。最初の手は袋から 6 枚（同じ字は 2 枚まで）。</li>
+      <li>特別な語（天上天下）を投げると1字ずつ大きく出る。</li>
+    </ul>
+    <p class="credit">データ：JMdict・KANJIDIC2（© Electronic Dictionary Research and Development Group, EDRDG。CC BY-SA 3.0。<a href="https://www.edrdg.org/edrdg/licence.html">ライセンス</a>）。jamdict-data 経由で取り込み、語・字・読みを抜き出して加工しています。N5 の字は KANJIDIC2 の旧4級（103字）で代用。</p>
+  </details>
+</main>
+<div id="fx"><div class="who" id="fxWho"></div><div id="fxChars" style="display:flex;gap:2vw"></div></div>
+
+<script>
+"use strict";
+const FILES=["kanji","words","readings","parts","antonyms","cycles","radical_forms","special","rules"];
+const D={};
+let G=null; // ゲームの状態
+const $=id=>document.getElementById(id);
+const now=()=>performance.now()/1000;
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+// ---------- 表を引く ----------
+let N5,WORDS,JOIN,INV,NEXT,HOMO,SPECIAL,COMMON_WORDS;
+function index(){
+  N5=new Set(D.kanji.kanji.map(k=>k.c));
+  WORDS=new Map(D.words.words.map(w=>[w.w,w]));
+  JOIN=new Map(Object.entries(D.parts.parts).map(([k,[a,b]])=>[a+b,k]));
+  INV=new Map(); for(const [a,b] of D.antonyms.pairs){INV.set(a,b);INV.set(b,a)}
+  NEXT=new Map(); for(const cy of D.cycles.cycles){const c=cy.chars;c.forEach((x,i)=>{if(!NEXT.has(x))NEXT.set(x,c[(i+1)%c.length])})}
+  HOMO=new Map(); for(const g of D.readings.same_reading_groups){for(const c of g.chars){if(!HOMO.has(c))HOMO.set(c,[]);HOMO.get(c).push(g)}}
+  SPECIAL=new Map(D.special.special.map(s=>[s.w,s]));
+  COMMON_WORDS=D.words.words.filter(w=>w.common&&w.w.length>=2);
+}
+const splitOnce=c=>D.parts.parts[c]||[c];
+const isN5=c=>N5.has(c);
+function delivered(text){
+  const cs=[...text];
+  if(cs.length<=2) return cs;
+  const one=cs.flatMap(splitOnce);
+  return cs.length===3?one:one.flatMap(splitOnce);
+}
+function throwable(text){
+  if(!text) return {ok:false,why:""};
+  if(G.used.has(text)) return {ok:false,why:"投げ済み"};
+  if(WORDS.has(text)||(text.length===1&&isN5(text))) return {ok:true};
+  if(text.length===1) return {ok:false,why:"部品は投げられない"};
+  return {ok:false,why:"辞書にない"};
+}
+const homoChars=c=>[...new Set((HOMO.get(c)||[]).flatMap(g=>g.chars))].filter(x=>x!==c);
+
+// ---------- 状態 ----------
+let uid=0;
+const card=(c,fresh)=>({id:++uid,c,t:now(),fresh:!!fresh});
+function makeBag(){return shuffle([...N5,...N5])} // 同じ字は2枚まで
+function player(name){
+  const bag=makeBag();
+  return {name,bag,cards:bag.splice(0,D.rules.start_hand).map(c=>card(c)),cd:{invert:0,cycle:0,homophone:0},lastSpecial:null};
+}
+function start(){
+  G={me:player("あなた"),cpu:player("CPU"),row:[],used:new Set(),log:[],over:false};
+  $("msg").textContent="";$("msg").className="msg";
+  $("log").innerHTML="";
+  hideChoices();
+  scheduleCpu();
+  render();
+}
+const ready=(p,k)=>now()>=p.cd[k];
+function useCd(p,k){p.cd[k]=now()+D.rules.cooldown_sec[k]}
+function refill(p){
+  if(p.cards.length===0){
+    if(p.bag.length<D.rules.refill_when_empty) p.bag.push(...makeBag());
+    p.cards.push(...p.bag.splice(0,D.rules.refill_when_empty).map(c=>card(c)));
+  }
+}
+function replaceCards(p,ids,chars){ // ids の位置に chars を入れる（台の並びも保つ）
+  const pos=p.cards.findIndex(x=>x.id===ids[0]);
+  p.cards=p.cards.filter(x=>!ids.includes(x.id));
+  const nc=chars.map(c=>card(c));
+  p.cards.splice(Math.max(0,pos),0,...nc);
+  return nc;
+}
+
+// ---------- 操作（人と CPU で共通） ----------
+function doSplit(p,ids){const c=byId(p,ids[0]).c;return replaceCards(p,ids,splitOnce(c))}
+function doJoin(p,ids){const a=byId(p,ids[0]).c,b=byId(p,ids[1]).c;return replaceCards(p,ids,[JOIN.get(a+b)])}
+function doInvert(p,ids){useCd(p,"invert");return replaceCards(p,ids,[INV.get(byId(p,ids[0]).c)])}
+function doCycle(p,ids){useCd(p,"cycle");return replaceCards(p,ids,[NEXT.get(byId(p,ids[0]).c)])}
+function doHomo(p,ids,to){useCd(p,"homophone");return replaceCards(p,ids,[to])}
+function doThrow(p,ids){
+  const text=ids.map(i=>byId(p,i).c).join("");
+  const q=p===G.me?G.cpu:G.me;
+  p.cards=p.cards.filter(x=>!ids.includes(x.id));
+  G.used.add(text);
+  const pieces=delivered(text);
+  q.cards.push(...pieces.map(c=>card(c,true)));
+  const w=WORDS.get(text);
+  addLog(p,text,w,pieces);
+  // 特別な語・つながる相手（D-015）
+  const prev=p.lastSpecial&&SPECIAL.get(p.lastSpecial);
+  if(prev&&prev.next.includes(text)) showFx(p,p.lastSpecial+text);
+  else if(SPECIAL.has(text)) showFx(p,text);
+  p.lastSpecial=SPECIAL.has(text)?text:null;
+  refill(p);
+  if(q.cards.length>D.rules.basket_size) end(p);
+}
+const byId=(p,id)=>p.cards.find(x=>x.id===id);
+function end(winner){
+  G.over=true;clearTimeout(G.cpuTimer);
+  const m=$("msg");
+  if(winner===G.me){m.textContent="勝ち。CPU のカゴがあふれた";m.className="msg win"}
+  else{m.textContent="負け。カゴがあふれた";m.className="msg lose"}
+}
+
+// ---------- 人の操作 ----------
+function rowCards(){return G.row.map(id=>byId(G.me,id)).filter(Boolean)}
+function rowText(){return rowCards().map(x=>x.c).join("")}
+function tapBasket(id){if(G.over)return;G.row.push(id);hideChoices();render()}
+function tapRow(id){if(G.over)return;G.row=G.row.filter(x=>x!==id);hideChoices();render()}
+function afterOp(newCards){G.row=newCards?newCards.map(x=>x.id):[];hideChoices();render()}
+$("bThrow").onclick=()=>{if(throwable(rowText()).ok){doThrow(G.me,[...G.row]);G.row=[];hideChoices();render()}};
+$("bSplit").onclick=()=>afterOp(doSplit(G.me,G.row));
+$("bJoin").onclick=()=>afterOp(doJoin(G.me,G.row));
+$("bInvert").onclick=()=>afterOp(doInvert(G.me,G.row));
+$("bCycle").onclick=()=>afterOp(doCycle(G.me,G.row));
+$("bBack").onclick=()=>{G.row=[];hideChoices();render()};
+$("bHomo").onclick=()=>{
+  const c=rowText(),box=$("choices");box.innerHTML="";
+  for(const g of HOMO.get(c)||[]){
+    const d=document.createElement("div");d.className="g";
+    d.innerHTML=`<span>${g.type==="on"?"音":"訓"}：${g.reading}</span>`;
+    for(const x of g.chars){if(x===c)continue;const b=document.createElement("button");b.textContent=x;
+      b.onclick=()=>{if(ready(G.me,"homophone")&&rowText()===c)afterOp(doHomo(G.me,G.row,x))};d.appendChild(b)}
+    box.appendChild(d);
+  }
+  box.classList.add("on");
+};
+function hideChoices(){$("choices").classList.remove("on")}
+$("start").onclick=()=>{$("start").textContent="もう一度";start()};
+
+// ---------- CPU（1段階） ----------
+function scheduleCpu(){
+  const r=D.rules.cpu;
+  G.cpuTimer=setTimeout(cpuTurn,(r.think_min_sec+Math.random()*(r.think_max_sec-r.think_min_sec))*1000);
+}
+function pickIds(p,text){ // text を作る札の id を探す
+  const pool=[...p.cards],ids=[];
+  for(const ch of text){const i=pool.findIndex(x=>x.c===ch);if(i<0)return null;ids.push(pool[i].id);pool.splice(i,1)}
+  return ids;
+}
+function cpuTurn(){
+  if(G.over)return;
+  const p=G.cpu,r=D.rules.cpu,full=p.cards.length>=D.rules.basket_size-4;
+  const act=()=>{
+    // 1. 手持ちで作れる語をときどき投げる（長い語ほど選ぶ）
+    if(full||Math.random()<r.throw_chance){
+      const ws=COMMON_WORDS.filter(w=>!G.used.has(w.w)&&pickIds(p,w.w));
+      if(ws.length){const L=Math.max(...ws.map(w=>w.w.length));const w=rnd(ws.filter(x=>x.w.length===L));doThrow(p,pickIds(p,w.w));return}
+    }
+    // 2. くっつけて N5 の字にする（なければ中継ぎの部品でも）
+    const joins=[];
+    for(const a of p.cards)for(const b of p.cards){if(a!==b&&JOIN.has(a.c+b.c))joins.push([a,b,JOIN.get(a.c+b.c)])}
+    const good=joins.filter(j=>isN5(j[2]));
+    if(good.length||joins.length){const j=rnd(good.length?good:joins);doJoin(p,[j[0].id,j[1].id]);return}
+    // 3. 字を1字で投げる（カゴが埋まってきたら必ず）
+    const singles=p.cards.filter(x=>isN5(x.c)&&!G.used.has(x.c));
+    if(singles.length&&(full||Math.random()<0.4)){doThrow(p,[rnd(singles).id]);return}
+    // 4. 巡り・反転でようすを見る
+    const cyc=p.cards.filter(x=>NEXT.has(x.c));
+    if(cyc.length&&ready(p,"cycle")&&Math.random()<0.5){doCycle(p,[rnd(cyc).id]);return}
+    const inv=p.cards.filter(x=>INV.has(x.c));
+    if(inv.length&&ready(p,"invert")&&Math.random()<0.3){doInvert(p,[rnd(inv).id]);return}
+  };
+  act();
+  render();
+  if(!G.over)scheduleCpu();
+}
+
+// ---------- 描画 ----------
+function marks(c){let m="";if(INV.has(c))m+="反";if(NEXT.has(c))m+="巡";if(HOMO.has(c))m+="音";return m}
+function tileEl(x,{onClick,shown}={}){
+  const b=document.createElement(onClick?"button":"div");
+  b.className="tile"+(isN5(x.c)?"":" part")+(x.fresh&&now()-x.t<1.5?" new":"");
+  b.textContent=shown||x.c;
+  const m=marks(x.c);
+  if(m){const s=document.createElement("span");s.className="mk";s.textContent=m;b.appendChild(s)}
+  if(shown&&shown!==x.c){const s=document.createElement("span");s.className="orig";s.textContent=x.c;b.appendChild(s)}
+  if(onClick)b.onclick=onClick;
+  b.title=x.c;
+  return b;
+}
+function renderBasket(el,p,interactive){
+  el.innerHTML="";
+  const inRow=interactive?new Set(G.row):new Set();
+  for(const x of p.cards){if(!inRow.has(x.id))el.appendChild(tileEl(x,interactive?{onClick:()=>tapBasket(x.id)}:{}))}
+  for(let i=0;i<Math.max(D.rules.basket_size,p.cards.length)-(p.cards.length-inRow.size);i++){
+    const s=document.createElement("div");s.className="slot";
+    if(i<inRow.size)s.style.outline="1px dashed var(--dim)"; // 台に出している札のマス
+    el.appendChild(s);
+  }
+}
+function cdText(p,k){const t=p.cd[k]-now();return t>0?Math.ceil(t)+"s":""}
+function render(){
+  if(!G)return;
+  G.row=G.row.filter(id=>byId(G.me,id));
+  renderBasket($("cpuBasket"),G.cpu,false);
+  renderBasket($("meBasket"),G.me,true);
+  for(const [el,p] of [[$("meCount"),G.me],[$("cpuCount"),G.cpu]]){
+    el.textContent=`${p.cards.length} / ${D.rules.basket_size}`;
+    el.className="count"+(p.cards.length>=D.rules.basket_size-3?" warn":"");
+  }
+  // 台
+  const row=$("row");row.innerHTML="";
+  const rc=rowCards();
+  if(!rc.length){row.innerHTML='<span class="empty">カゴの札をタップして台に並べる</span>'}
+  const joinable=rc.length===2&&JOIN.has(rc[0].c+rc[1].c);
+  rc.forEach((x,i)=>{
+    const shown=(i===0&&joinable&&D.radical_forms.left[x.c])||null;
+    row.appendChild(tileEl({...x,fresh:false},{onClick:()=>tapRow(x.id),shown}));
+  });
+  const text=rowText(),th=throwable(text),w=WORDS.get(text);
+  const info=$("info");
+  if(!text)info.innerHTML="";
+  else if(w)info.innerHTML=`<span class="w">${text}</span> ${w.kana}${w.yoji?"（四字熟語）":""} — ${w.en.join(" / ")}${th.ok?"":` <span class="no">（${th.why}）</span>`}`;
+  else if(th.ok&&D.readings.readings[text]){const r=D.readings.readings[text];info.innerHTML=`<span class="w">${text}</span> ${[...r.on,...r.kun].slice(0,6).join("・")}`}
+  else info.innerHTML=th.ok?`<span class="w">${text}</span>`:`<span class="no">${th.why}</span>`;
+  renderOps();
+}
+function renderOps(){
+  const rc=rowCards(),text=rowText(),th=throwable(text);
+  const joinable=rc.length===2&&JOIN.has(rc[0].c+rc[1].c);
+  const one=rc.length===1?rc[0].c:null,me=G.me,live=!G.over;
+  const cds=[["反転","invert"],["巡り","cycle"],["同音","homophone"]].map(([n,k])=>cdText(G.cpu,k)&&`${n} ${cdText(G.cpu,k)}`).filter(Boolean);
+  $("cpuCds").textContent=cds.length?"待ち："+cds.join("・"):"";
+  $("bThrow").disabled=!(live&&th.ok);
+  $("bSplit").disabled=!(live&&one&&D.parts.parts[one]);
+  $("bJoin").disabled=!(live&&joinable);
+  $("bInvert").disabled=!(live&&one&&INV.has(one)&&ready(me,"invert"));
+  $("bCycle").disabled=!(live&&one&&NEXT.has(one)&&ready(me,"cycle"));
+  $("bHomo").disabled=!(live&&one&&HOMO.has(one)&&ready(me,"homophone"));
+  $("bBack").disabled=!rc.length;
+  $("cdInvert").textContent=cdText(me,"invert");
+  $("cdCycle").textContent=cdText(me,"cycle");
+  $("cdHomo").textContent=cdText(me,"homophone");
+}
+function addLog(p,text,w,pieces){
+  const li=document.createElement("li");li.className=p===G.me?"me":"";
+  li.innerHTML=`<span class="who">${p.name}</span>：<span class="w">${text}</span> ${w?w.kana:""} → ${pieces.join(" ")}`;
+  $("log").prepend(li);
+}
+function showFx(p,text){
+  const fx=$("fx"),box=$("fxChars");box.innerHTML="";$("fxWho").textContent=p.name;
+  fx.classList.add("on");
+  [...text].forEach((c,i)=>{const s=document.createElement("div");s.className="c";s.textContent=c;box.appendChild(s);
+    setTimeout(()=>s.classList.add("in"),180+i*380)});
+  clearTimeout(showFx.t);showFx.t=setTimeout(()=>fx.classList.remove("on"),400+text.length*380+900);
+}
+setInterval(()=>{if(G&&!G.over)renderOps()},250);
+
+Promise.all(FILES.map(f=>fetch(`data/${f}.json`).then(r=>r.json()).then(j=>D[f]=j)))
+  .then(()=>{index();$("msg").textContent=`字 ${N5.size}・語 ${WORDS.size}`})
+  .catch(e=>{$("msg").textContent="データを読めませんでした（file:// では開けません。Pages かローカルのサーバーで開いてください）"});
+</script>
+</body>
+</html>
