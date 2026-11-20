@@ -1,6 +1,6 @@
 {
- "version": "2026-11-20.1",
- "note": "数値は仮置き（D-010・D-013・D-014・R-番号）",
+ "version": "2026-11-20.2",
+ "note": "数値は仮置き（D-010・D-013・D-014・R-番号）。drop_every_sec と cpu.pace は KJ-002 の試し用の切り替えで使う",
  "basket_size": 20,
  "start_hand": 6,
  "same_char_max_in_start": 2,
@@ -10,9 +10,12 @@
   "homophone": 20
  },
  "refill_when_empty": 6,
+ "drop_every_sec": 8,
  "cpu": {
-  "think_min_sec": 2.0,
-  "think_max_sec": 4.0,
+  "pace": {
+   "normal": [2.0, 4.0],
+   "slow": [8.0, 12.0]
+  },
   "throw_chance": 0.5
  }
 }

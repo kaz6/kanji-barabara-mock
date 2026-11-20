@@ -1,143 +1,84 @@
-// 操作の計算：割る・くっつける・反転・巡り・同音・届き方・投げられるか・待ち時間
-"use strict";
+// 操作の計算（KJ-002b）：game.test.js に無い所を、表の全部の字で見る
+// 部品表の輪・割る⇔くっつけるの往復・反転の往復・巡りの一周・同音の行き先・部品だけは投げられない・待ち時間は操作ごとに別
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { KJ, D, T } = require("./helpers");
+const { K, D, T, newGame, setHand } = require("./helpers");
 
-test("割る：一段だけ（天 → 一 大。大 まではバラさない）", () => {
-  assert.deepEqual(KJ.splitOnce(T, "天"), ["一", "大"]);
-  assert.deepEqual(KJ.splitOnce(T, "大"), ["一", "人"]);
-  assert.deepEqual(KJ.splitOnce(T, "休"), ["人", "木"]);
-});
+const parts = D.parts.parts;
+const chars = (cards) => cards.map((x) => x.c).join("");
 
-test("割る：割れない札はそのまま（一・卜）", () => {
-  assert.deepEqual(KJ.splitOnce(T, "一"), ["一"]);
-  assert.equal(KJ.canSplit(T, "一"), false);
-  assert.deepEqual(KJ.splitOnce(T, "卜"), ["卜"]);
-});
-
-test("割る→くっつける：部品表のどの字も、割った2枚を左→右に並べると戻る（十口 を除く）", () => {
-  for (const [c, [a, b]] of Object.entries(D.parts.parts)) {
-    if (a + b === "十口") continue; // 古と田が同じ左右（data.test.js で見張っている）
-    assert.equal(KJ.joinOf(T, a, b), c, `${a}+${b}`);
+test("部品表に輪がない（A→B→A のように割り続けて戻らない）", () => {
+  const state = new Map(); // 1: 調べ中, 2: 済み
+  const loops = [];
+  function walk(c, trail) {
+    if (state.get(c) === 2) return;
+    if (state.get(c) === 1) { loops.push([...trail, c].join("→")); return; }
+    state.set(c, 1);
+    for (const x of parts[c] || []) walk(x, [...trail, c]);
+    state.set(c, 2);
   }
+  for (const c of Object.keys(parts)) walk(c, []);
+  assert.deepEqual(loops, []);
 });
 
-test("くっつける：順番つき（人+木=休、木+人 はくっつかない）", () => {
-  assert.equal(KJ.joinOf(T, "人", "木"), "休");
-  assert.equal(KJ.joinOf(T, "木", "人"), undefined);
-  assert.equal(KJ.joinOf(T, "卜", "一"), "上");
-  assert.equal(KJ.joinOf(T, "一", "卜"), "下");
+test("割る⇔くっつける：どの字も、割った2枚を左→右に並べると戻る（一段だけ割れる）", () => {
+  for (const [c, [a, b]] of Object.entries(parts)) {
+    assert.deepEqual(K.splitOnce(T, c), [a, b], `${c} を割る`);
+    assert.ok(K.joinResults(T, a, b).includes(c), `${a}+${b}→${c}`);
+  }
+  assert.deepEqual(K.splitOnce(T, "天"), ["一", "大"], "大 まではバラさない");
 });
 
 test("くっつける：中継ぎを経て二回（二+小=示、示+土=社）", () => {
-  assert.equal(KJ.joinOf(T, "二", "小"), "示");
-  assert.equal(KJ.isN5(T, "示"), false);
-  assert.equal(KJ.joinOf(T, "示", "土"), "社");
+  assert.deepEqual(K.joinResults(T, "二", "小"), ["示"]);
+  assert.equal(K.isN5(T, "示"), false);
+  assert.deepEqual(K.joinResults(T, "示", "土"), ["社"]);
 });
 
-test("くっつける：十+口 は 古 か 田（今は表の後に書いた方）", () => {
-  assert.ok(["古", "田"].includes(KJ.joinOf(T, "十", "口")));
-});
-
-test("反転：対義の相手になり、もう一度反転すると戻る", () => {
-  assert.equal(KJ.invertOf(T, "上"), "下");
-  assert.equal(KJ.invertOf(T, "下"), "上");
+test("反転：どの対義も、相手になり、もう一度反転すると戻る", () => {
   for (const [a, b] of D.antonyms.pairs) {
-    assert.equal(KJ.invertOf(T, a), b);
-    assert.equal(KJ.invertOf(T, KJ.invertOf(T, a)), a);
+    assert.equal(T.INV.get(a), b);
+    assert.equal(T.INV.get(T.INV.get(a)), a);
   }
-  assert.equal(KJ.invertOf(T, "木"), undefined);
+  assert.equal(T.INV.get("木"), undefined);
 });
 
-test("巡り：1つ先へ。最後から最初へ戻る", () => {
-  assert.equal(KJ.cycleOf(T, "月"), "火");
-  assert.equal(KJ.cycleOf(T, "日"), "月");
-  assert.equal(KJ.cycleOf(T, "北"), "東");
-  assert.equal(KJ.cycleOf(T, "十"), "一");
+test("巡り：どの巡りも1つ先へ進み、一周すると最初に戻る（最後から最初へ）", () => {
   for (const cy of D.cycles.cycles) {
-    let c = cy.chars[0];
-    for (let i = 0; i < cy.chars.length; i++) c = KJ.cycleOf(T, c);
-    assert.equal(c, cy.chars[0], `${cy.name} を一周すると戻る`);
+    const cs = cy.chars;
+    cs.forEach((c, i) => assert.equal(T.NEXT.get(c), cs[(i + 1) % cs.length], `${cy.name}：${c}`));
+    let c = cs[0];
+    for (let i = 0; i < cs.length; i++) c = T.NEXT.get(c);
+    assert.equal(c, cs[0], `${cy.name} を一周`);
   }
-  assert.equal(KJ.cycleOf(T, "人"), undefined);
+  assert.equal(T.NEXT.get("北"), "東");
+  assert.equal(T.NEXT.get("人"), undefined);
 });
 
-test("同音：同じ読みの字に変えられる。自分は入らない", () => {
-  const to = KJ.homoChars(T, "言");
-  assert.ok(to.includes("出"), "言→出（訓 い）");
-  assert.ok(!to.includes("言"));
-  const g = KJ.homoGroups(T, "言").find(x => x.reading === "い");
-  assert.ok(g && g.type === "kun" && g.chars.includes("出"));
-});
-
-test("同音：変えられる先は、どれも同じ組の読みを持つ", () => {
+test("同音：変えられる先は、どれも同じ読みの組にあり、自分は入らない", () => {
   for (const c of T.N5) {
-    const groups = KJ.homoGroups(T, c);
-    for (const x of KJ.homoChars(T, c)) {
-      assert.ok(groups.some(g => g.chars.includes(x)), `${c}→${x}`);
+    const groups = T.HOMO.get(c) || [];
+    for (const x of K.homoChars(T, c)) {
+      assert.notEqual(x, c);
+      assert.ok(groups.some((g) => g.chars.includes(x)), `${c}→${x}`);
     }
   }
-  assert.deepEqual(KJ.homoChars(T, "卜"), []);
+  assert.deepEqual(K.homoChars(T, "卜"), []);
 });
 
-test("届き方：1〜2字はそのまま、3字は一段、4字は二段", () => {
-  assert.deepEqual(KJ.delivered(T, "休"), ["休"]);
-  assert.deepEqual(KJ.delivered(T, "休日"), ["休", "日"]);
-  assert.deepEqual(KJ.delivered(T, "一日中"), ["一", "日", "口", "｜"]);
-  assert.deepEqual(KJ.delivered(T, "天上天下").join(""), "一一人卜一一一人一卜");
-});
-
-test("言葉の判定：words.json の語・N5 の1字は投げられる", () => {
+test("言葉の判定：N5 の字は全部1字で投げられ、部品だけの字はどれも投げられない", () => {
   const used = new Set();
-  assert.deepEqual(KJ.throwable(T, used, "休日"), { ok: true });
-  assert.deepEqual(KJ.throwable(T, used, "天上天下"), { ok: true });
-  assert.deepEqual(KJ.throwable(T, used, "休"), { ok: true });
-  for (const c of T.N5) assert.ok(KJ.throwable(T, used, c).ok, c);
+  for (const c of T.N5) assert.ok(K.throwable(T, used, c).ok, c);
+  const only = [...new Set(Object.values(parts).flat())].filter((c) => !T.N5.has(c));
+  assert.ok(only.length > 0);
+  for (const c of only) assert.deepEqual(K.throwable(T, used, c), { ok: false, why: "部品は投げられない" }, c);
+  assert.deepEqual(K.throwable(T, used, "天上天下"), { ok: true });
 });
 
-test("言葉の判定：部品だけ・辞書にない並び・空は投げられない", () => {
-  const used = new Set();
-  assert.deepEqual(KJ.throwable(T, used, "卜"), { ok: false, why: "部品は投げられない" });
-  assert.deepEqual(KJ.throwable(T, used, "田"), { ok: false, why: "部品は投げられない" });
-  assert.deepEqual(KJ.throwable(T, used, "日休"), { ok: false, why: "辞書にない" });
-  assert.equal(KJ.throwable(T, used, "").ok, false);
-  const partsOnly = Object.values(D.parts.parts).flat().filter(c => !T.N5.has(c));
-  for (const c of partsOnly) assert.equal(KJ.throwable(T, used, c).ok, false, c);
-});
-
-test("言葉の判定：投げ済みの語・字は投げられない（語ごと。休 を投げても 休日 は投げられる）", () => {
-  const used = new Set(["休"]);
-  assert.deepEqual(KJ.throwable(T, used, "休"), { ok: false, why: "投げ済み" });
-  assert.deepEqual(KJ.throwable(T, used, "休日"), { ok: true });
-});
-
-test("待ち時間：反転・巡り・同音は rules.json の秒数だけ待つ", () => {
-  const sec = D.rules.cooldown_sec;
-  for (const k of KJ.COOLDOWN_KINDS) {
-    const cd = KJ.newCooldowns();
-    assert.ok(KJ.ready(cd, k, 100));
-    KJ.useCooldown(cd, k, sec, 100);
-    assert.equal(KJ.ready(cd, k, 100), false, `${k} 直後`);
-    assert.equal(KJ.ready(cd, k, 100 + sec[k] - 0.01), false, `${k} 解ける直前`);
-    assert.equal(KJ.ready(cd, k, 100 + sec[k]), true, `${k} 解けた`);
-    assert.equal(KJ.cooldownLeft(cd, k, 100 + 1), sec[k] - 1);
-  }
-});
-
-test("待ち時間：操作ごとに別（反転を使っても巡り・同音は待たない）", () => {
-  const sec = D.rules.cooldown_sec;
-  const cd = KJ.newCooldowns();
-  KJ.useCooldown(cd, "invert", sec, 0);
-  assert.equal(KJ.ready(cd, "invert", 1), false);
-  assert.equal(KJ.ready(cd, "cycle", 1), true);
-  assert.equal(KJ.ready(cd, "homophone", 1), true);
-});
-
-test("待ち時間：人ごとに別（あなたが同音を使っても CPU は待たない）", () => {
-  const sec = D.rules.cooldown_sec;
-  const me = KJ.newCooldowns(), cpu = KJ.newCooldowns();
-  KJ.useCooldown(me, "homophone", sec, 0);
-  assert.equal(KJ.ready(me, "homophone", 1), false);
-  assert.equal(KJ.ready(cpu, "homophone", 1), true);
+test("待ち時間：操作ごとに別（反転を使っても、巡り・同音はすぐ使える）", () => {
+  const g = newGame();
+  assert.ok(g.invert(g.me, setHand(g, g.me, "上")).ok);
+  assert.equal(g.invert(g.me, setHand(g, g.me, "上")).why, "待ち時間");
+  assert.equal(chars(g.cycle(g.me, setHand(g, g.me, "月")).cards), "火");
+  assert.ok(g.homophone(g.me, setHand(g, g.me, "言"), "出").ok);
 });

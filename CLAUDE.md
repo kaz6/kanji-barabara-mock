@@ -10,10 +10,10 @@
 
 ## 中身の分け方
 
-- `js/core.js`：操作の計算だけ（表引き・割る・くっつける・反転・巡り・同音・届き方・投げられるか・待ち時間）。DOM に触らない。ブラウザでは `window.KJ`、Node では `require`
-- `index.html`：画面・札の状態・CPU。計算は core.js を呼ぶ（R-025）
-- `data/`：表。数値（カゴ・待ち時間・CPU）は `data/rules.json` だけ。表を変えたら `version` を上げる
-- `tests/`：テスト（下）
+- `js/core.js`：遊びの決まり（表引き・割る・くっつける・投げる・待ち時間・切り替え・CPU・ログ）。DOM に触らない。ブラウザでは `window.KJ`、Node では `require`
+- `index.html`：画面だけ。決まりは core.js を呼ぶ
+- `data/rules.json`：数値（カゴ・待ち時間・CPU・落ちてくる間隔）。数値を変えるときはここだけ。変えたら `version` を上げる
+- `tests/`：テスト
 - `tools/build_data.py`：辞書から作る3ファイル（kanji・words・readings）を作り直す
 
 ## テストの回し方
@@ -22,12 +22,14 @@
 npm test
 ```
 
-- 中身は `node --test "tests/*.test.js"`。Node 22 以上。入れるものはない
-- かかる時間：1回 0.3 秒ほど（2026-11-20、コンテナで 30 件）
-- `tests/data.test.js`：データの整合（部品表に輪がない・割れる字と中継ぎ・同じ左右から2字できるのは 十口 だけ・対義・巡り・偏の字・同じ読み・語・特別な語）
-- `tests/ops.test.js`：割る（一段）・くっつける（順番つき・中継ぎ）・反転・巡り（最後から最初へ）・同音・届き方・言葉の判定・待ち時間（操作ごと・人ごと）
-- 画面・CPU・札の状態はテストしていない（KJ-003 で作り直すため。R-025）。画面を変えたら Playwright かブラウザで手で確かめ、PR に書く
-- PR を出すと GitHub Actions（.github/workflows/test.yml）が同じ `npm test` を回す
+- 中身は `node --test "tests/*.test.js" "tests/*.test.mjs"`（Node 22 以上）
+- `tests/data.test.js`：データの整合（部品表・対義・巡り・偏の形・同じ読み・語・特別な語・決まり）
+- `tests/game.test.js`：割る・くっつける・届き方・投げ済み・待ち時間・あふれ・切り替え・CPU・ログ。時計と乱数は差し替えている（`tests/helpers.js`）
+- `tests/ops.test.js`：表の全部の字で見る操作（部品表に輪がない・割る⇔くっつけるの往復・反転の往復・巡りの一周・同音の行き先・部品だけは投げられない・待ち時間は操作ごとに別）
+- `tests/browser.test.mjs`：画面（台に札を置いてもカゴが動かない・並べる順が逆・設定・ログをコピー）。Playwright の Chromium がないと skip になる。skip は「通った」ではない
+- かかる時間：1回 2 秒ほど（画面のテストこみ。画面なしなら 0.3 秒ほど。2026-11-20、コンテナで 50 件）
+- PR を出すと GitHub Actions（.github/workflows/test.yml）が同じ `npm test` を回す。Actions では Playwright と Chromium を入れるので、画面のテストも skip にならない
+- 変えたら必ず `npm test` を回し、件数と結果を PR に書く
 
 ## データを作り直す（tools/build_data.py）
 

@@ -7,9 +7,9 @@
 
 ## 中身
 
-- `index.html`：画面・札の状態・CPU（外のサーバーとは通信しない）
-- `js/core.js`：操作の計算（割る・くっつける・反転・巡り・同音・届き方・投げられるか・待ち時間）
-- `tests/`：テスト。`npm test`（Node 22 以上、入れるものはない）
+- `index.html`：画面（外のサーバーとは通信しない）
+- `js/core.js`：遊びの決まり（画面とテストの両方から使う）
+- `tests/`：テスト（`npm test`。回し方は [CLAUDE.md](CLAUDE.md)）
 - `data/`：表。どれも `version` を持つ
   - 辞書から生成：`kanji.json`・`words.json`・`readings.json`
   - 手作り：`parts.json`・`antonyms.json`・`cycles.json`・`radical_forms.json`・`special.json`・`rules.json`
