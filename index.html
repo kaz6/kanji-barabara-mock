@@ -138,6 +138,7 @@ details ul{padding-left:18px}
 </main>
 <div id="fx"><div class="who" id="fxWho"></div><div id="fxChars" style="display:flex;gap:2vw"></div></div>
 
+<script src="js/core.js"></script>
 <script>
 "use strict";
 const FILES=["kanji","words","readings","parts","antonyms","cycles","radical_forms","special","rules"];
@@ -149,33 +150,16 @@ const rnd=a=>a[Math.floor(Math.random()*a.length)];
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 
 // ---------- 表を引く ----------
-let N5,WORDS,JOIN,INV,NEXT,HOMO,SPECIAL,COMMON_WORDS;
+let T,N5,WORDS,JOIN,INV,NEXT,HOMO,SPECIAL,COMMON_WORDS; // 表と計算は js/core.js（R-025）
 function index(){
-  N5=new Set(D.kanji.kanji.map(k=>k.c));
-  WORDS=new Map(D.words.words.map(w=>[w.w,w]));
-  JOIN=new Map(Object.entries(D.parts.parts).map(([k,[a,b]])=>[a+b,k]));
-  INV=new Map(); for(const [a,b] of D.antonyms.pairs){INV.set(a,b);INV.set(b,a)}
-  NEXT=new Map(); for(const cy of D.cycles.cycles){const c=cy.chars;c.forEach((x,i)=>{if(!NEXT.has(x))NEXT.set(x,c[(i+1)%c.length])})}
-  HOMO=new Map(); for(const g of D.readings.same_reading_groups){for(const c of g.chars){if(!HOMO.has(c))HOMO.set(c,[]);HOMO.get(c).push(g)}}
-  SPECIAL=new Map(D.special.special.map(s=>[s.w,s]));
-  COMMON_WORDS=D.words.words.filter(w=>w.common&&w.w.length>=2);
+  T=KJ.buildTables(D);
+  ({N5,WORDS,JOIN,INV,NEXT,HOMO,SPECIAL,COMMON_WORDS}=T);
 }
-const splitOnce=c=>D.parts.parts[c]||[c];
-const isN5=c=>N5.has(c);
-function delivered(text){
-  const cs=[...text];
-  if(cs.length<=2) return cs;
-  const one=cs.flatMap(splitOnce);
-  return cs.length===3?one:one.flatMap(splitOnce);
-}
-function throwable(text){
-  if(!text) return {ok:false,why:""};
-  if(G.used.has(text)) return {ok:false,why:"投げ済み"};
-  if(WORDS.has(text)||(text.length===1&&isN5(text))) return {ok:true};
-  if(text.length===1) return {ok:false,why:"部品は投げられない"};
-  return {ok:false,why:"辞書にない"};
-}
-const homoChars=c=>[...new Set((HOMO.get(c)||[]).flatMap(g=>g.chars))].filter(x=>x!==c);
+const splitOnce=c=>KJ.splitOnce(T,c);
+const isN5=c=>KJ.isN5(T,c);
+const delivered=text=>KJ.delivered(T,text);
+const throwable=text=>KJ.throwable(T,G.used,text);
+const homoChars=c=>KJ.homoChars(T,c);
 
 // ---------- 状態 ----------
 let uid=0;
@@ -183,7 +167,7 @@ const card=(c,fresh)=>({id:++uid,c,t:now(),fresh:!!fresh});
 function makeBag(){return shuffle([...N5,...N5])} // 同じ字は2枚まで
 function player(name){
   const bag=makeBag();
-  return {name,bag,cards:bag.splice(0,D.rules.start_hand).map(c=>card(c)),cd:{invert:0,cycle:0,homophone:0},lastSpecial:null};
+  return {name,bag,cards:bag.splice(0,D.rules.start_hand).map(c=>card(c)),cd:KJ.newCooldowns(),lastSpecial:null};
 }
 function start(){
   G={me:player("あなた"),cpu:player("CPU"),row:[],used:new Set(),log:[],over:false};
@@ -193,8 +177,8 @@ function start(){
   scheduleCpu();
   render();
 }
-const ready=(p,k)=>now()>=p.cd[k];
-function useCd(p,k){p.cd[k]=now()+D.rules.cooldown_sec[k]}
+const ready=(p,k)=>KJ.ready(p.cd,k,now());
+function useCd(p,k){KJ.useCooldown(p.cd,k,D.rules.cooldown_sec,now())}
 function refill(p){
   if(p.cards.length===0){
     if(p.bag.length<D.rules.refill_when_empty) p.bag.push(...makeBag());
@@ -211,9 +195,9 @@ function replaceCards(p,ids,chars){ // ids の位置に chars を入れる（台
 
 // ---------- 操作（人と CPU で共通） ----------
 function doSplit(p,ids){const c=byId(p,ids[0]).c;return replaceCards(p,ids,splitOnce(c))}
-function doJoin(p,ids){const a=byId(p,ids[0]).c,b=byId(p,ids[1]).c;return replaceCards(p,ids,[JOIN.get(a+b)])}
-function doInvert(p,ids){useCd(p,"invert");return replaceCards(p,ids,[INV.get(byId(p,ids[0]).c)])}
-function doCycle(p,ids){useCd(p,"cycle");return replaceCards(p,ids,[NEXT.get(byId(p,ids[0]).c)])}
+function doJoin(p,ids){const a=byId(p,ids[0]).c,b=byId(p,ids[1]).c;return replaceCards(p,ids,[KJ.joinOf(T,a,b)])}
+function doInvert(p,ids){useCd(p,"invert");return replaceCards(p,ids,[KJ.invertOf(T,byId(p,ids[0]).c)])}
+function doCycle(p,ids){useCd(p,"cycle");return replaceCards(p,ids,[KJ.cycleOf(T,byId(p,ids[0]).c)])}
 function doHomo(p,ids,to){useCd(p,"homophone");return replaceCards(p,ids,[to])}
 function doThrow(p,ids){
   const text=ids.map(i=>byId(p,i).c).join("");

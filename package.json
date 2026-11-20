@@ -1,0 +1,8 @@
+{
+  "name": "kanji-barabara-mock",
+  "private": true,
+  "description": "漢字版（仮）モック。依存パッケージなし。テストは Node の node:test で回す",
+  "scripts": {
+    "test": "node --test \"tests/*.test.js\""
+  }
+}
