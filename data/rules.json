@@ -1,9 +1,10 @@
 {
- "version": "2026-11-21.1",
- "note": "KJ-003「役づくりの競争」（D-017・D-018）の数値。どれも仮置き（R-025〜）。数値を変えるときはここだけ",
- "field_size": 6,
+ "version": "2026-11-21.2",
+ "note": "KJ-003「役づくりの競争」（D-017・D-018）の数値。どれも仮置き（R-025〜）。KJ-004 で 場3・手札の上限8・置き場4・相手の選び方を足した。数値を変えるときはここだけ",
+ "field_size": 3,
  "start_hand": 8,
- "hand_max": 12,
+ "hand_max": 8,
+ "split_extra": 4,
  "same_char_in_deck": 2,
  "cooldown_sec": {
   "invert": 10,
@@ -24,8 +25,10 @@
   "score": 50,
   "time_limit_sec": 300
  },
+ "opponent_default": "weak",
  "cpu": {
   "interval_sec": [8.0, 12.0],
+  "weak_interval_sec": [30.0, 45.0],
   "single_release_chance": 0.4
  }
 }

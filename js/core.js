@@ -8,6 +8,14 @@
 })(typeof self !== "undefined" ? self : this, function () {
   "use strict";
 
+  // 相手の選び方（KJ-004）。ひとりで＝CPU なし・場の取り合いなし・50点で終わらず5分で終わる
+  const OPPONENTS = [
+    { key: "solo", label: "ひとりで" },
+    { key: "weak", label: "とても弱い" },
+    { key: "normal", label: "いまの強さ" },
+  ];
+  const cpuInterval = (D, key) => (key === "weak" ? D.rules.cpu.weak_interval_sec : D.rules.cpu.interval_sec);
+
   const FILES = ["kanji", "words", "readings", "parts", "antonyms", "cycles", "radical_forms", "special", "rules"];
 
   // ---------- 表を引く ----------
@@ -81,16 +89,23 @@
     return m;
   }
   // ログの頭に書く仮置きの値
-  function rulesLabel(D) {
+  function opponentLabel(D, key) {
+    if (key === "solo") return "ひとりで（CPU なし。場の取り合いなし。50点では終わらず、5分たったら終わって点を出す。CPU の列は 0）";
+    const [a, b] = cpuInterval(D, key);
+    return key === "weak" ? `とても弱い（CPU は ${a}〜${b}秒に1回動く。動き方はいまの CPU のまま）` : `いまの強さ（CPU は ${a}〜${b}秒に1回動く）`;
+  }
+  function rulesLabel(D, key) {
     const R = D.rules, S = R.score;
+    key = key || R.opponent_default;
+    const [a, b] = cpuInterval(D, key);
     return [
-      `場=${R.field_size}枚 最初の手札=${R.start_hand}枚 手札の上限=${R.hand_max}枚 山=N5 の字を${R.same_char_in_deck}枚ずつ（尽きたら足す）`,
+      `場=${R.field_size}枚 最初の手札=${R.start_hand}枚 手札の上限=${R.hand_max}枚＋部品の置き場${R.split_extra}枚（置き場は割るときだけ増える。全部で${R.hand_max + R.split_extra}枚まで）山=N5 の字を${R.same_char_in_deck}枚ずつ（尽きたら足す）`,
       `点数 ${Object.entries(S.by_length).map(([n, p]) => `${n}字${p}`).join("・")} 四字熟語×${S.yoji_mult} 特別な語×${S.special_mult}`,
       `放ったら 放った字数×${R.take_per_char}枚を場から選んで取れる。放った言葉は消える（相手には届かない）`,
       `引き直し ${R.redraw.cost}点で手札を全部入れ替え（${R.start_hand}枚）。${R.redraw.cost}点ない人は${R.redraw.free_wait_sec}秒待って0点で`,
-      `勝ち 先に${R.win.score}点、または${R.win.time_limit_sec / 60}分で点の多い方（同点は引き分け）`,
+      `勝ち 先に${R.win.score}点、または${R.win.time_limit_sec / 60}分で点の多い方（同点は引き分け）。ひとりでは50点で終わらず${R.win.time_limit_sec / 60}分で終わる`,
       `待ち時間 反転=${R.cooldown_sec.invert}秒 巡り=${R.cooldown_sec.cycle}秒 同音=${R.cooldown_sec.homophone}秒（その人の操作ごと）`,
-      `CPU ${R.cpu.interval_sec[0]}〜${R.cpu.interval_sec[1]}秒に1回動く`,
+      key === "solo" ? "CPU なし" : `CPU ${a}〜${b}秒に1回動く`,
     ];
   }
 
@@ -102,7 +117,9 @@
     const rand = env.rand || Math.random;
     const R = D.rules;
     let uid = 0;
-    const g = { D, T, log: [], events: [], used: new Set(), over: false, winner: null, startedAt: (env.date || (() => new Date()))() };
+    const opponent = OPPONENTS.some((o) => o.key === env.opponent) ? env.opponent : R.opponent_default;
+    const g = { D, T, opponent, solo: opponent === "solo", log: [], events: [], used: new Set(), over: false, winner: null,
+      startedAt: (env.date || (() => new Date()))() };
     const t0 = now();
     g.now = now;
     g.elapsed = () => now() - t0;
@@ -124,12 +141,19 @@
       }
       return out;
     }
-    function player(key, name) {
-      return { key, name, cards: draw(R.start_hand).map((c) => card(c)), cd: { invert: 0, cycle: 0, homophone: 0 },
+    function player(key, name, n) {
+      return { key, name, cards: draw(n).map((c) => card(c)), cd: { invert: 0, cycle: 0, homophone: 0 },
         score: 0, takes: 0, redrawAt: null, lastSpecial: null, stuck: false };
     }
-    g.me = player("me", "あなた");
-    g.cpu = player("cpu", "CPU");
+    g.me = player("me", "あなた", R.start_hand);
+    g.cpu = player("cpu", "CPU", g.solo ? 0 : R.start_hand); // ひとりで：CPU は出さない（山からも引かない）
+    const players = () => (g.solo ? [g.me] : [g.me, g.cpu]);
+    // 手札の枠と、割るときだけ増える部品の置き場（KJ-004）。札の tray が true なら置き場
+    const handCount = (p) => p.cards.filter((x) => !x.tray).length;
+    const trayCount = (p) => p.cards.filter((x) => x.tray).length;
+    const totalMax = R.hand_max + R.split_extra;
+    g.handCount = handCount;
+    g.trayCount = trayCount;
     g.field = draw(R.field_size).map((c) => card(c));
     g.opp = (p) => (p === g.me ? g.cpu : g.me);
     g.byId = (p, id) => p.cards.find((x) => x.id === id);
@@ -166,7 +190,7 @@
     g.movesInHand = (p) => {
       const cs = p.cards.map((x) => x.c);
       const out = [];
-      if (cs.some((c) => canSplit(T, c)) && cs.length < R.hand_max) out.push("割る");
+      if (cs.some((c) => canSplit(T, c)) && cs.length < totalMax) out.push("割る");
       if (p.cards.some((a) => p.cards.some((b) => a !== b && joinResults(T, a.c, b.c).length))) out.push("くっつける");
       for (const [name, k, ok] of [["反転", "invert", (c) => T.INV.has(c)], ["巡り", "cycle", (c) => T.NEXT.has(c)], ["同音", "homophone", (c) => T.HOMO.has(c)]]) {
         if (!cs.some(ok)) continue;
@@ -178,7 +202,7 @@
     };
     function checkStuck() {
       if (!g.me || !g.cpu || g.over) return;
-      for (const p of [g.me, g.cpu]) {
+      for (const p of players()) {
         const w = g.releasableInHand(p);
         if (!w && !p.stuck) {
           p.stuck = true;
@@ -204,6 +228,9 @@
       const pos = p.cards.findIndex((x) => x.id === ids[0]);
       p.cards = p.cards.filter((x) => !ids.includes(x.id));
       const nc = chars.map((c) => card(c));
+      // できた札は、手札に空きがあれば手札へ。なければ部品の置き場へ（R-032）
+      let room = R.hand_max - handCount(p);
+      for (const x of nc) { if (room > 0) room--; else x.tray = true; }
       p.cards.splice(Math.max(0, pos), 0, ...nc);
       return nc;
     }
@@ -215,7 +242,7 @@
       if (!live() || !cs || cs.length !== 1) return fail("1枚だけ");
       const c = cs[0].c;
       if (!canSplit(T, c)) return fail("割れない");
-      if (p.cards.length + 1 > R.hand_max) return fail("手札がいっぱい");
+      if (p.cards.length + 1 > totalMax) return fail("手札も置き場もいっぱい");
       const nc = replaceCards(p, ids, splitOnce(T, c));
       addLog(p.name, "割る", [c], nc.map((x) => x.c));
       return { ok: true, cards: nc };
@@ -286,14 +313,14 @@
     g.take = (p, fieldId) => {
       if (!live()) return fail("終わった");
       if (p.takes <= 0) return fail("取れる枚数がない");
-      if (p.cards.length >= R.hand_max) return fail("手札がいっぱい");
+      if (handCount(p) >= R.hand_max) return fail("手札がいっぱい");
       const i = g.field.findIndex((x) => x.id === fieldId);
       if (i < 0) return fail("場にない"); // 相手が先に取った
       const x = g.field[i];
       const [nc] = draw(1).map((c) => card(c, true));
       g.field[i] = nc;
       const got = card(x.c, true);
-      p.cards.push(got);
+      p.cards.push(got); // 手札の枠に入る（置き場は割るときだけ）
       p.takes -= 1;
       addLog(p.name, "取る", [x.c], [x.c], 0, `場に ${nc.c} が出た。残り${p.takes}枚取れる`);
       return { ok: true, card: got, c: x.c };
@@ -327,22 +354,26 @@
     function finish(winner, why) {
       g.over = true;
       g.winner = winner;
-      addLog("—", "終わり", [], [], 0, (winner ? `${winner.name}の勝ち` : "引き分け") + `（${why}）`);
-      g.events.push({ type: "over", winner });
+      addLog("—", "終わり", [], [], 0, g.solo ? `ひとりで ${g.me.score}点（${why}）` : (winner ? `${winner.name}の勝ち` : "引き分け") + `（${why}）`);
+      g.events.push({ type: "over", winner, solo: g.solo });
     }
     function checkOver() {
       if (g.over) return;
       const hit = [g.me, g.cpu].filter((p) => p.score >= R.win.score);
+      if (g.solo) return; // ひとりでは50点で終わらない
       if (hit.length) finish(hit[0], `先に${R.win.score}点`);
     }
     // 画面が定期的に呼ぶ：0点の引き直しの待ちと、時間切れ
     g.tick = () => {
       if (!live()) return false;
       let changed = false;
-      for (const p of [g.me, g.cpu]) {
+      for (const p of players()) {
         if (p.redrawAt !== null && now() >= p.redrawAt) { doRedraw(p, 0, `${R.redraw.free_wait_sec}秒待った（0点）`); changed = true; }
       }
-      if (now() >= g.endsAt) {
+      if (now() >= g.endsAt && g.solo) {
+        finish(null, `${R.win.time_limit_sec / 60}分`);
+        changed = true;
+      } else if (now() >= g.endsAt) {
         const a = g.me.score, b = g.cpu.score;
         finish(a === b ? null : a > b ? g.me : g.cpu, `${R.win.time_limit_sec / 60}分 ${a}対${b}`);
         changed = true;
@@ -351,7 +382,7 @@
     };
 
     // ---------- CPU（1段階。8〜12秒に1回。速さで強くしない） ----------
-    g.cpuDelay = () => { const [a, b] = R.cpu.interval_sec; return a + rand() * (b - a); };
+    g.cpuDelay = () => { const [a, b] = cpuInterval(D, g.opponent); return a + rand() * (b - a); };
     const pick = (a) => a[Math.floor(rand() * a.length)];
     function pickIds(p, text) {
       const pool = p.cards.slice(), ids = [];
@@ -360,7 +391,7 @@
     }
     // 場の札で、手札と合わせて語になるものを先に取る。なければ無作為
     function cpuTakeAll(p) {
-      while (p.takes > 0 && p.cards.length < R.hand_max) {
+      while (p.takes > 0 && handCount(p) < R.hand_max) {
         const hand = p.cards.map((x) => x.c);
         const covers = (have, word) => {
           const left = have.slice();
@@ -372,9 +403,9 @@
       }
     }
     g.cpuTurn = () => {
-      if (!live()) return null;
+      if (!live() || g.solo) return null;
       const p = g.cpu;
-      if (p.takes > 0 && p.cards.length < R.hand_max) { cpuTakeAll(p); return { ok: true, op: "取る" }; }
+      if (p.takes > 0 && handCount(p) < R.hand_max) { cpuTakeAll(p); return { ok: true, op: "取る" }; }
       const ws = T.COMMON_WORDS.filter((w) => !g.used.has(w.w) && pickIds(p, w.w));
       if (ws.length) {
         const best = Math.max(...ws.map((w) => scoreOf(D, T, w.w).pts));
@@ -412,7 +443,8 @@
       const head = [
         "# 漢字版（仮）モック ログ（KJ-003 役づくりの競争）",
         `# はじめた時刻 ${ds}（端末の時計）`,
-        ...rulesLabel(D).map((x) => "# 仮置き " + x),
+        `# 相手 ${opponentLabel(D, g.opponent)}`,
+        ...rulesLabel(D, g.opponent).map((x) => "# 仮置き " + x),
         "# 手 はじめ・割る・くっつける・反転・巡り・同音・放つ・取る・引き直し・ためした（並べたのに放てず・くっつけられずにやめた並び）・動けない（放てる言葉が手札に無くなった。使った札＝その時の手札）・動ける・終わり",
         "# 点＝その手で増えた点（引き直しで払った点はマイナス）",
         "# データ " + FILES.map((f) => `${f}=${D[f].version}`).join(" "),
@@ -426,7 +458,7 @@
   }
 
   return {
-    FILES, makeTables, isN5, isChar, splitOnce, canSplit, delivered, joinResults, joinReversed,
-    releasable, scoreOf, homoChars, marks, rulesLabel, createGame,
+    FILES, OPPONENTS, makeTables, isN5, isChar, splitOnce, canSplit, delivered, joinResults, joinReversed,
+    releasable, scoreOf, homoChars, marks, rulesLabel, opponentLabel, createGame,
   };
 });

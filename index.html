@@ -22,7 +22,12 @@ h1{font-size:17px;margin:0 0 2px;font-weight:700}
 .score{font-variant-numeric:tabular-nums;font-size:15px;font-weight:700}
 .takes{font-size:13px;color:var(--accent);font-weight:700}
 .cds{margin-left:auto;font-size:12px;color:var(--sub);font-variant-numeric:tabular-nums}
-.hand{display:grid;grid-template-columns:repeat(12,1fr);gap:4px}
+.hand{display:grid;grid-template-columns:repeat(8,1fr);gap:4px}
+.trayhead{font-size:12px;color:var(--sub);margin:8px 0 3px}
+.tray .slot{background:transparent;outline:1px dashed var(--line);outline-offset:-1px}
+.tray .tile{border-style:dashed}
+.opp{display:inline-flex;gap:10px;align-items:center;font-size:14px;flex-wrap:wrap}
+.opp label{cursor:pointer;white-space:nowrap}
 .slot{aspect-ratio:1;background:var(--slot);border-radius:4px}
 .slot.held{background:transparent;outline:1px dashed var(--dim);outline-offset:-1px;cursor:pointer}
 .tile{aspect-ratio:1;position:relative;background:var(--tile);border:1px solid var(--line);border-radius:4px;
@@ -37,15 +42,15 @@ h1{font-size:17px;margin:0 0 2px;font-weight:700}
 .cpu .tile{font-size:clamp(14px,3.4vw,22px);cursor:default}
 .cpu .tile:hover{border-color:var(--line)}
 .cpu .tile .mk{display:none}
-/* 場（6枚。取ったところは同じ位置に山から出る） */
-.field{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;max-width:420px}
+/* 場（3枚。取ったところは同じ位置に山から出る） */
+.field{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-width:240px}
 .field .tile{cursor:default}
 .field.can .tile{cursor:pointer;border-color:var(--accent)}
 .field:not(.can) .tile:hover{border-color:var(--line)}
 @media (max-width:540px){
-  .me .hand{grid-template-columns:repeat(6,1fr);gap:5px}
+  .me .hand{grid-template-columns:repeat(4,1fr);gap:5px}
   .me .tile{font-size:30px}
-  .cpu .hand{grid-template-columns:repeat(12,1fr)}
+  .cpu .hand{grid-template-columns:repeat(8,1fr)}
   .tile .mk{font-size:11px}
 }
 /* 台（高さを固定する） */
@@ -105,6 +110,7 @@ details ul{padding-left:18px}
   <p class="lead">手札を組み替えて言葉を作り、放つと点が入る。放った字数だけ場から字を取れる。先に 50 点か、5 分で点の多い方が勝ち。</p>
 
   <div class="bar">
+    <span class="opp" id="opp" role="radiogroup" aria-label="相手"><span>相手</span></span>
     <button class="op" id="start">はじめる</button>
     <button class="op" id="bLog">ログ</button>
     <button class="op" id="bCopyEnd" hidden>ログをコピー</button>
@@ -117,7 +123,7 @@ details ul{padding-left:18px}
     <div class="bar"><button class="op" id="bCopy">コピー</button><span class="note" id="copyMsg"></span></div>
   </section>
 
-  <section class="side cpu">
+  <section class="side cpu" id="cpuSide">
     <div class="side-head"><b>CPU</b><span class="score" id="cpuScore"></span><span class="count" id="cpuCount"></span><span class="cds" id="cpuCds"></span></div>
     <div class="hand" id="cpuHand"></div>
   </section>
@@ -146,6 +152,8 @@ details ul{padding-left:18px}
   <section class="side me">
     <div class="side-head"><b>あなた</b><span class="score" id="meScore"></span><span class="count" id="meCount"></span></div>
     <div class="hand" id="meHand"></div>
+    <div class="trayhead" id="trayHead"></div>
+    <div class="hand tray" id="meTray"></div>
   </section>
 
   <section class="side">
@@ -189,14 +197,23 @@ $("bCopy").onclick=copyLog;$("bCopyEnd").onclick=copyLog;
 
 // ---------- はじめる ----------
 let cpuTimer=null;
+function chosenOpponent(){const r=document.querySelector('#opp input:checked');return r?r.value:D.rules.opponent_default}
+function buildOpponentPicker(){
+  const box=$("opp");
+  for(const o of K.OPPONENTS){
+    const l=document.createElement("label");
+    l.innerHTML=`<input type="radio" name="opp" value="${o.key}"${o.key===D.rules.opponent_default?" checked":""}> ${o.label}`;
+    box.appendChild(l);
+  }
+}
 function start(){
   clearTimeout(cpuTimer);
-  G=K.createGame(D,T,{now:clock});
+  G=K.createGame(D,T,{now:clock,opponent:chosenOpponent()});
   row=[];lastTried="";
   $("msg").textContent="";$("msg").className="msg";
   $("bCopyEnd").hidden=true;
   hideChoices();
-  scheduleCpu();
+  if(!G.solo)scheduleCpu();
   render();
 }
 $("start").onclick=()=>{$("start").textContent="もう一度";start()};
@@ -205,12 +222,28 @@ function drain(){
   while(G.events.length){
     const e=G.events.shift();
     if(e.type==="fx")showFx(e.who,e.text);
-    if(e.type==="over")end(e.winner);
+    if(e.type==="over")end(e.winner,e.solo);
   }
 }
-function end(winner){
+// ひとりでの自己ベスト（その端末だけ。読めない・書けないときは出さない）
+const BEST_KEY="kj-solo-best";
+function soloBest(score){
+  let prev=null;
+  try{const v=localStorage.getItem(BEST_KEY);if(v!==null&&v!==""&&!isNaN(+v))prev=+v}catch(e){return null}
+  const best=prev===null||score>prev?score:prev;
+  try{localStorage.setItem(BEST_KEY,String(best))}catch(e){return null}
+  return {best,isNew:prev===null||score>prev};
+}
+function end(winner,solo){
   clearTimeout(cpuTimer);
   const m=$("msg"),sc=`${G.me.score} 対 ${G.cpu.score}`;
+  if(solo){
+    const b=soloBest(G.me.score);
+    m.textContent=`ひとりで ${G.me.score} 点`+(b?(b.isNew?`（自己ベスト更新）`:`（自己ベスト ${b.best} 点）`):"");
+    m.className="msg";
+    $("bCopyEnd").hidden=false;
+    return;
+  }
   if(winner===G.me){m.textContent=`勝ち（${sc}）`;m.className="msg win"}
   else if(winner===G.cpu){m.textContent=`負け（${sc}）`;m.className="msg lose"}
   else{m.textContent=`引き分け（${sc}）`;m.className="msg"}
@@ -280,33 +313,40 @@ function tileEl(x,{onClick,shown}={}){
   b.title=x.c;
   return b;
 }
-// 手札は上限の数だけマスを置く。台に出した札のマスは点線で残す（位置が動かない）
-function renderHand(el,p,interactive){
+// 手札は上限の数だけマスを置く。台に出した札のマスは点線で残す（位置が動かない）。
+// 部品の置き場（割るときだけ増える）は手札の下に別に見せる
+function renderHand(el,p,interactive,tray){
   el.innerHTML="";
   const inRow=interactive?new Set(row):new Set();
-  for(const x of p.cards){
+  const cards=p.cards.filter(x=>!!x.tray===!!tray);
+  for(const x of cards){
     if(inRow.has(x.id)){const s=document.createElement("div");s.className="slot held";s.title=x.c;s.onclick=()=>tapRow(x.id);el.appendChild(s);continue}
     el.appendChild(tileEl(x,interactive?{onClick:()=>tapHand(x.id)}:{}));
   }
-  for(let i=p.cards.length;i<D.rules.hand_max;i++){const s=document.createElement("div");s.className="slot";el.appendChild(s)}
+  const max=tray?D.rules.split_extra:D.rules.hand_max;
+  for(let i=cards.length;i<max;i++){const s=document.createElement("div");s.className="slot";el.appendChild(s)}
 }
 function renderField(){
-  const el=$("field"),can=!G.over&&G.me.takes>0&&G.me.cards.length<D.rules.hand_max;
+  const el=$("field"),can=!G.over&&G.me.takes>0&&G.handCount(G.me)<D.rules.hand_max;
   el.className="field"+(can?" can":"");el.innerHTML="";
+  el.style.gridTemplateColumns=`repeat(${D.rules.field_size},1fr)`;
   for(const x of G.field)el.appendChild(tileEl(x,{onClick:()=>tapField(x.id)}));
-  $("takes").textContent=G.me.takes>0?(G.me.cards.length<D.rules.hand_max?`あなたは ${G.me.takes} 枚取れる（タップ）`:`${G.me.takes} 枚取れる（手札がいっぱい）`):"";
+  $("takes").textContent=G.me.takes>0?(G.handCount(G.me)<D.rules.hand_max?`あなたは ${G.me.takes} 枚取れる（タップ）`:`${G.me.takes} 枚取れる（手札がいっぱい）`):"";
 }
 function cdText(p,k){const t=G.cdLeft(p,k);return t>0?Math.ceil(t)+"s":""}
 function render(){
   if(!G)return;
   row=row.filter(id=>G.byId(G.me,id));
-  renderHand($("cpuHand"),G.cpu,false);
-  renderHand($("meHand"),G.me,true);
+  $("cpuSide").hidden=G.solo;
+  renderHand($("cpuHand"),G.cpu,false,false);
+  renderHand($("meHand"),G.me,true,false);
+  renderHand($("meTray"),G.me,true,true);
   renderField();
   for(const [sc,ct,p] of [[$("meScore"),$("meCount"),G.me],[$("cpuScore"),$("cpuCount"),G.cpu]]){
     sc.textContent=`${p.score} 点`;
-    ct.textContent=`手札 ${p.cards.length} / ${D.rules.hand_max}`;
+    ct.textContent=`手札 ${G.handCount(p)} / ${D.rules.hand_max}`;
   }
+  $("trayHead").textContent=`部品の置き場（割ったあとの札。${G.trayCount(G.me)} / ${D.rules.split_extra}）`;
   // 台
   const rowEl=$("row");rowEl.innerHTML="";
   const s=rowState();
@@ -333,7 +373,7 @@ function renderOps(){
   if(G.cpu.redrawAt!==null)cds.push(`引き直し ${Math.ceil(G.redrawLeft(G.cpu))}s`);
   $("cpuCds").textContent=cds.length?"待ち："+cds.join("・"):"";
   $("bRelease").disabled=!(live&&s.rl.ok);
-  $("bSplit").disabled=!(live&&one&&K.canSplit(T,one)&&me.cards.length<D.rules.hand_max);
+  $("bSplit").disabled=!(live&&one&&K.canSplit(T,one)&&me.cards.length<D.rules.hand_max+D.rules.split_extra);
   $("bJoin").disabled=!(live&&s.joins.length);
   $("bInvert").disabled=!(live&&one&&T.INV.has(one)&&G.ready(me,"invert"));
   $("bCycle").disabled=!(live&&one&&T.NEXT.has(one)&&G.ready(me,"cycle"));
@@ -372,11 +412,13 @@ function buildHowto(){
     `手札の札をタップすると台に並ぶ（並べた順が左から）。台の札、または手札の点線のマスをタップすると手札に戻る。`,
     `<b>放つ</b>：台の札が辞書の語（1〜4字）か、N5 の字1字なら放てる。部品だけでは放てない。一度放った言葉は二人とも二度と使えない。放った札は消える（相手には届かない）。`,
     `<b>点数</b>：${Object.entries(S.by_length).map(([n,p])=>`${n}字 ${p}点`).join("・")}。四字熟語は ${S.yoji_mult} 倍、特別な語（天上天下）はさらに ${S.special_mult} 倍。`,
-    `<b>取る</b>：放ったら、放った字数と同じ枚数を<b>場</b>から選んで取れる（手札は ${R.hand_max} 枚まで）。取ったところには山から次の字が出る。相手も同じ場から取るので早い者勝ち。`,
+    `<b>取る</b>：放ったら、放った字数と同じ枚数を<b>場</b>から選んで取れる（手札は ${R.hand_max} 枚まで）。取ったところには山から次の字が出る。相手も同じ場から取るので早い者勝ち（ひとりでは取り合いなし）。`,
+    `<b>部品の置き場</b>：割ったあと手札に入りきらない札は、手札の下の置き場（${R.split_extra} 枠）に入る。手札と置き場を合わせて ${R.hand_max+R.split_extra} 枚まで割れる。置き場の札も台に並べて使える。手札に空きがあれば、くっつけてできた札は手札に入る。`,
+    `<b>相手</b>：はじめる前に選ぶ。ひとりで（CPU なし。50 点では終わらず、${R.win.time_limit_sec/60} 分たったら点を出す。この端末の自己ベストを覚える）／とても弱い（CPU は ${R.cpu.weak_interval_sec[0]}〜${R.cpu.weak_interval_sec[1]} 秒に1回）／いまの強さ（${R.cpu.interval_sec[0]}〜${R.cpu.interval_sec[1]} 秒に1回）。`,
     `<b>割る</b>：台の1枚を部品表で一段だけ割る。<b>くっつける</b>：台の2枚を、左→右の順でくっつける。逆に並べたときは「並べる順が逆」と出る。十・口 のように2通りの字になるときは選ぶ。`,
     `<b>反転</b>（印：反）対義の字に。${R.cooldown_sec.invert} 秒待ち。<b>巡り</b>（印：巡）曜日・方角・数を1つ先へ。${R.cooldown_sec.cycle} 秒待ち。<b>同音</b>（印：音）同じ読みの字から選ぶ。${R.cooldown_sec.homophone} 秒待ち。待ち時間は操作ごとで、二人は別々。`,
     `<b>引き直し</b>：${R.redraw.cost} 点払って手札を全部入れ替える（${R.start_hand} 枚）。${R.redraw.cost} 点ないときは ${R.redraw.free_wait_sec} 秒待てば 0 点で入れ替わる（待つあいだも動ける）。`,
-    `<b>勝ち</b>：先に ${R.win.score} 点。または ${R.win.time_limit_sec/60} 分たって点の多い方。CPU は ${R.cpu.interval_sec[0]}〜${R.cpu.interval_sec[1]} 秒に1回動く。`,
+    `<b>勝ち</b>：先に ${R.win.score} 点。または ${R.win.time_limit_sec/60} 分たって点の多い方。CPU の速さは相手の選び方で変わる。`,
     `人・食・言・示 を左に置いてくっつけられるときは、亻・飠・訁・礻 の形で見せる（札はもとの字のまま）。色の薄い札は部品（字ではない）。`,
     `<b>ログ</b>：一手ごとの記録。上の「ログ」で見てコピーできる。終わったら「ログをコピー」が出る。`,
   ].map(x=>`<li>${x}</li>`).join("");
@@ -386,7 +428,7 @@ setInterval(()=>{if(!G||G.over)return;if(G.tick())afterChange();else renderOps()
 window.__KJ={get game(){return G},get row(){return row},get tables(){return T},data:D,render}; // ブラウザのテスト用
 
 Promise.all(K.FILES.map(f=>fetch(`data/${f}.json`).then(r=>r.json()).then(j=>D[f]=j)))
-  .then(()=>{T=K.makeTables(D);buildHowto();$("msg").textContent=`字 ${T.N5.size}・語 ${T.WORDS.size}`})
+  .then(()=>{T=K.makeTables(D);buildOpponentPicker();buildHowto();$("msg").textContent=`字 ${T.N5.size}・語 ${T.WORDS.size}`})
   .catch(e=>{$("msg").textContent="データを読めませんでした（file:// では開けません。Pages かローカルのサーバーで開いてください）"});
 </script>
 </body>

@@ -103,6 +103,12 @@ test("決まり：数値がそろっている（KJ-003 の仮置き）", () => {
   assert.deepEqual([r.win.score, r.win.time_limit_sec], [50, 300]);
   const [a, b] = r.cpu.interval_sec;
   assert.deepEqual([a, b], [8, 12]);
+  // KJ-004：場3・手札の上限8・部品の置き場4（全部で12マス）・とても弱い CPU は30〜45秒
+  assert.deepEqual([r.field_size, r.hand_max, r.split_extra], [3, 8, 4]);
+  assert.equal(r.start_hand, 8, "最初の手札は8のまま");
+  assert.deepEqual(r.cpu.weak_interval_sec, [30, 45]);
+  assert.ok(["solo", "weak", "normal"].includes(r.opponent_default));
+  assert.equal(r.opponent_default, "weak");
 });
 
 test("字として見せる（jouyou）：N5 の外で、部品表に出てくる字。玉 を含む", () => {
