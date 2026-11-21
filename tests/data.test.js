@@ -141,17 +141,39 @@ test("同じ読みの組：字はデータにあり、2字以上。レベルで�
   }
 });
 
-test("語：1〜4字で、字は全部データにあり、lv は使う字のいちばん高いレベル。表記は重ならない", () => {
+test("語：1〜4字。2字以上は字がすべて手に持てる字で、lv はそれが手に持てるいちばん低いレベル。1字はレベルの字。表記は重ならない（KJ-011）", () => {
   const seen = new Set();
   for (const w of D.words.words) {
     const cs = [...w.w];
     assert.ok(cs.length >= 1 && cs.length <= 4, w.w);
-    for (const c of cs) assert.ok(ALL.has(c), `${w.w} の ${c}`);
-    assert.equal(w.lv, cs.some((c) => LV[c] === "N4") ? "N4" : "N5", w.w);
+    if (cs.length === 1) {
+      assert.ok(ALL.has(w.w), w.w);
+      assert.equal(w.lv, LV[w.w], w.w);
+    } else {
+      assert.ok(cs.every((c) => TT.N4.HOLD.has(c)), `${w.w} に手に持てない字`);
+      assert.equal(w.lv, cs.every((c) => TT.N5.HOLD.has(c)) ? "N5" : "N4", w.w);
+    }
     assert.ok(!seen.has(w.w), w.w);
     seen.add(w.w);
   }
-  for (const w of TT.N5.WORDS.values()) for (const c of w.w) assert.ok(N5.has(c), w.w);
+  for (const lv of ["N5", "N4"]) {
+    for (const w of TT[lv].WORDS.values()) for (const c of w.w) assert.ok(TT[lv].HOLD.has(c), `${lv} の ${w.w} の ${c}`);
+  }
+});
+
+test("手に持てる字（KJ-011）：レベルの字＋割る・くっつけるで出る「字」。部品の色のものは入らない。N5 ⊂ N4。数は words.json と同じ", () => {
+  for (const lv of ["N5", "N4"]) {
+    const L = TT[lv];
+    for (const c of L.CHARS) assert.ok(L.HOLD.has(c), c);
+    for (const c of L.HOLD) assert.ok(K.isChar(L, c), `${lv} の ${c} は部品の見た目`);
+    for (const [k, v] of Object.entries(L.parts)) for (const c of [k, ...v]) if (K.isChar(L, c)) assert.ok(L.HOLD.has(c), `${lv} の ${c}`);
+    assert.equal(L.HOLD.size, D.words.stats.hold_by_level[lv], lv);
+  }
+  for (const c of TT.N5.HOLD) assert.ok(TT.N4.HOLD.has(c), c);
+  for (const lv of ["N5", "N4"]) {
+    assert.ok(TT[lv].HOLD.has("交") && !TT[lv].CHARS.has("交"), `${lv}：交 は中継ぎで手に持てるが山の字ではない`);
+    assert.ok(!TT[lv].HOLD.has("亠") && !TT[lv].HOLD.has("ナ"), `${lv}：部品は手に持てる字に入らない`);
+  }
 });
 
 test("特別な語：words.json にあり、つながる相手も words.json にある", () => {

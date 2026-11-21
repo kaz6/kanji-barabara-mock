@@ -167,9 +167,9 @@ test("点数：2字3・3字6・4字12、四字熟語は倍、特別な語はさ�
   assert.equal(K.scoreOf(D, T, "日").pts, 0);
   assert.equal(K.scoreOf(D, T, "休日").pts, 3);
   assert.equal(K.scoreOf(D, T, "一日中").pts, 6);
-  const yoji = D.words.words.find((w) => w.yoji && !T.SPECIAL.has(w.w));
+  const yoji = [...T.WORDS.values()].find((w) => w.yoji && !T.SPECIAL.has(w.w));
   assert.equal(K.scoreOf(D, T, yoji.w).pts, 24, yoji.w);
-  const four = D.words.words.find((w) => [...w.w].length === 4 && !w.yoji);
+  const four = [...T.WORDS.values()].find((w) => [...w.w].length === 4 && !w.yoji);
   if (four) assert.equal(K.scoreOf(D, T, four.w).pts, 12, four.w);
   assert.equal(K.scoreOf(D, T, "天上天下").pts, 48, "四字熟語×2・特別な語×2");
   assert.match(K.scoreOf(D, T, "天上天下").how, /四字熟語×2・特別な語×2/);
@@ -667,4 +667,37 @@ test("レベル N4：N4 の語を放てる（強弱）。N5 では辞書にな�
   const g5 = newGame(1, "solo", "N5");
   const ids5 = setHand(g5, g5.me, "強弱");
   assert.equal(g5.release(g5.me, ids5).why, "辞書にない");
+});
+
+// ---------- KJ-011：放てる言葉はレベルで縛らない（D-029） ----------
+for (const lv of ["N5", "N4"]) {
+  test(`放つ（${lv}）：国交 は放てる（交 は 友→又・ナ…の先の中継ぎ。山の字ではない）`, () => {
+    const g = newGame(1, "solo", lv);
+    assert.ok(!g.T.CHARS.has("交"));
+    const r = g.release(g.me, setHand(g, g.me, "国交"));
+    assert.ok(r.ok, r.why);
+  });
+}
+
+test("放つ：手に持てない字の入った語は通らない（N5 の 国際・N4 の字を使う 強弱）", () => {
+  const g = newGame(1, "solo", "N5");
+  assert.ok(!g.T.HOLD.has("際"));
+  assert.equal(g.release(g.me, setHand(g, g.me, "国際")).why, "辞書にない");
+  assert.equal(g.release(g.me, setHand(g, g.me, "強弱")).why, "辞書にない");
+});
+
+test("山：レベルの外の字（手に持てる字でも）と部品は山にも場にも出ない。引き直しで手札に 交・亠 があっても山に戻らない", () => {
+  for (const lv of ["N5", "N4"]) {
+    for (const seed of [1, 2, 3]) {
+      const g = newGame(seed, "solo", lv);
+      const T = g.T;
+      for (const c of g.deck) assert.ok(T.CHARS.has(c), `${lv} 山に ${c}`);
+      for (const f of g.field) assert.ok(T.CHARS.has(f.c), `${lv} 場に ${f.c}`);
+      for (const x of g.me.cards) assert.ok(T.CHARS.has(x.c), `${lv} 手札に ${x.c}`);
+      setHand(g, g.me, "交亠国");
+      g.me.score = 10;
+      assert.ok(g.redraw(g.me).ok);
+      for (const c of g.deck) assert.ok(T.CHARS.has(c), `${lv} 引き直しのあと山に ${c}`);
+    }
+  }
 });
