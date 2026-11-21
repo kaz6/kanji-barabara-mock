@@ -135,7 +135,7 @@
     key = key || R.opponent_default;
     const [a, b] = cpuInterval(D, key);
     return [
-      `場=${R.field_size}枚 最初の手札=${R.start_hand}枚 手札の上限=${R.hand_max}枚＋部品の置き場${R.split_extra}枚（置き場は割るときだけ増える。全部で${R.hand_max + R.split_extra}枚まで）山=${level} の字を${R.same_char_in_deck}枚ずつ（尽きたら足す）`,
+      `場=${R.field_size}枚 最初の手札=${R.start_hand}枚 手札の上限=${R.hand_max}枚＋ストック${R.split_extra}枚（全部で${R.hand_max + R.split_extra}マス。場から取るのは手札の${R.hand_max}枚まで。割る・くっつけるでできた札は、字も部品も、手札が埋まっていればストックへ。手札とストックの間は自分で動かせる）山=${level} の字を${R.same_char_in_deck}枚ずつ（尽きたら足す）`,
       `点数 ${Object.entries(S.by_length).map(([n, p]) => `${n}字${p}`).join("・")} 四字熟語×${S.yoji_mult} 特別な語×${S.special_mult}（1字は放てない）`,
       `放ったら 放った字数×${R.take_per_char}枚を場から選んで取れる。放った言葉は消える（相手には届かない）`,
       `引き直し ${R.redraw.cost}点で手札を全部入れ替え（${R.start_hand}枚）。${R.redraw.cost}点ない人は${R.redraw.free_wait_sec}秒待って0点で`,
@@ -185,7 +185,7 @@
     g.me = player("me", "あなた", R.start_hand);
     g.cpu = player("cpu", "CPU", g.solo ? 0 : R.start_hand); // ひとりで：CPU は出さない（山からも引かない）
     const players = () => (g.solo ? [g.me] : [g.me, g.cpu]);
-    // 手札の枠と、割るときだけ増える部品の置き場（KJ-004）。札の tray が true なら置き場
+    // 手札の枠（上の8マス）と、ストック（下の4マス。KJ-004 の部品の置き場を、作者 2026-11-21、KJ-006 のあとに字も部品も置ける場所に）。札の tray が true ならストック
     const handCount = (p) => p.cards.filter((x) => !x.tray).length;
     const trayCount = (p) => p.cards.filter((x) => x.tray).length;
     const totalMax = R.hand_max + R.split_extra;
@@ -199,7 +199,7 @@
     g.redrawLeft = (p) => (p.redrawAt === null ? 0 : Math.max(0, p.redrawAt - now()));
     const useCd = (p, k) => { p.cd[k] = now() + R.cooldown_sec[k]; };
 
-    const QUIET = new Set(["ためした", "終わり", "動けない", "動ける", "入れ替え", "並べ方"]);
+    const QUIET = new Set(["ためした", "終わり", "動けない", "動ける", "入れ替え", "移す", "並べ方"]);
     function addLog(who, op, from, to, pts, note) {
       g.log.push({ t: g.elapsed(), who, op, from: from || [], to: to || [], pts: pts || 0,
         meScore: g.me.score, cpuScore: g.cpu.score, me: g.me.cards.length, cpu: g.cpu.cards.length, note: note || "" });
@@ -265,7 +265,7 @@
       const pos = p.cards.findIndex((x) => x.id === ids[0]);
       p.cards = p.cards.filter((x) => !ids.includes(x.id));
       const nc = chars.map((c) => card(c));
-      // できた札は、手札に空きがあれば手札へ。なければ部品の置き場へ（R-032）
+      // できた札は、手札に空きがあれば手札へ。なければストックへ（R-032・R-042。字も部品も）
       let room = R.hand_max - handCount(p);
       for (const x of nc) { if (room > 0) room--; else x.tray = true; }
       p.cards.splice(Math.max(0, pos), 0, ...nc);
@@ -279,7 +279,7 @@
       if (!live() || !cs || cs.length !== 1) return fail("1枚だけ");
       const c = cs[0].c;
       if (!canSplit(T, c)) return fail("割れない");
-      if (p.cards.length + 1 > totalMax) return fail("手札も置き場もいっぱい");
+      if (p.cards.length + 1 > totalMax) return fail("手札もストックもいっぱい");
       const nc = replaceCards(p, ids, splitOnce(T, c));
       addLog(p.name, "割る", [c], nc.map((x) => x.c));
       return { ok: true, cards: nc };
@@ -357,7 +357,7 @@
       const [nc] = draw(1).map((c) => card(c, true));
       g.field[i] = nc;
       const got = card(x.c, true);
-      p.cards.push(got); // 手札の枠に入る（置き場は割るときだけ）
+      p.cards.push(got); // 手札の枠に入る（場から取るのは手札の枠だけ。ストックには入らない）
       p.takes -= 1;
       addLog(p.name, "取る", [x.c], [x.c], 0, `場に ${nc.c} が出た。残り${p.takes}枚取れる`);
       return { ok: true, card: got, c: x.c };
@@ -393,15 +393,29 @@
       addLog("あなた", "並べ方", [], [], 0, `${layoutLabel(key)}に切り替え`);
       return { ok: true };
     };
-    // 手札の中で2枚の位置を入れ替える（手札どうし・置き場どうし）。持っている札も数も変わらない
+    // 2枚の位置を入れ替える。手札とストックの間でもよい（入れ替えた札はそれぞれ相手の段へ）。持っている札も数も変わらない
     g.swap = (p, idA, idB) => {
       if (!live()) return fail("終わった");
       const a = g.byId(p, idA), b = g.byId(p, idB);
       if (!a || !b || a === b) return fail("札がない");
-      if (!!a.tray !== !!b.tray) return fail("手札と置き場の間は入れ替えない");
       const i = p.cards.indexOf(a), j = p.cards.indexOf(b);
+      const ta = !!a.tray, tb = !!b.tray;
       p.cards[i] = b; p.cards[j] = a;
-      addLog(p.name, "入れ替え", [a.c, b.c], [b.c, a.c]);
+      if (ta !== tb) { if (tb) a.tray = true; else delete a.tray; if (ta) b.tray = true; else delete b.tray; }
+      addLog(p.name, "入れ替え", [a.c, b.c], [b.c, a.c], 0, ta !== tb ? "手札とストックの間" : "");
+      return { ok: true };
+    };
+    // 1枚を手札⇄ストックの空いたマスへ移す（toTray が true ならストックへ）
+    g.move = (p, id, toTray) => {
+      if (!live()) return fail("終わった");
+      const a = g.byId(p, id);
+      if (!a) return fail("札がない");
+      if (!!a.tray === !!toTray) return fail("同じ段");
+      if (toTray ? trayCount(p) >= R.split_extra : handCount(p) >= R.hand_max) return fail(toTray ? "ストックがいっぱい" : "手札がいっぱい");
+      p.cards = p.cards.filter((x) => x !== a);
+      if (toTray) a.tray = true; else delete a.tray;
+      p.cards.push(a);
+      addLog(p.name, "移す", [a.c], [a.c], 0, toTray ? "手札→ストック" : "ストック→手札");
       return { ok: true };
     };
     g.tried = (p, chars, why) => { if (live()) addLog(p.name, "ためした", chars, [], 0, why); };
@@ -496,7 +510,7 @@
         `# 相手 ${opponentLabel(D, g.opponent)}`,
         `# 並べ方 ${layoutLabel(g.startLayout)}（はじめたとき。途中で切り替えると「並べ方」の行が残る）`,
         ...rulesLabel(D, g.opponent, g.level).map((x) => "# 仮置き " + x),
-        "# 手 はじめ・割る・くっつける・反転・巡り・同音・放つ・取る・引き直し・入れ替え（手札の中で札の位置を替えた）・並べ方（切り替えた）・ためした（並べたのに放てず・くっつけられずにやめた並び）・動けない（放てる言葉が手札に無くなった。使った札＝その時の手札）・動ける・終わり",
+        "# 手 はじめ・割る・くっつける・反転・巡り・同音・放つ・取る・引き直し・入れ替え（札の位置を替えた。手札とストックの間も）・移す（手札⇄ストックの空いたマスへ）・並べ方（切り替えた）・ためした（並べたのに放てず・くっつけられずにやめた並び）・動けない（放てる言葉が手札に無くなった。使った札＝その時の手札）・動ける・終わり",
         "# 点＝その手で増えた点（引き直しで払った点はマイナス）",
         "# データ " + FILES.map((f) => `${f}=${D[f].version}`).join(" "),
         `# 字 ${T.CHARS.size}・語 ${T.WORDS.size}（巡り ${T.CYCLES.map((c) => c.name).join("・")}）`,
