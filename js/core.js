@@ -67,12 +67,13 @@
   const joinResults = (T, a, b) => T.JOIN.get(a + b) || [];
   // 逆に並べればくっつく（順番の決まりは変えない。表示だけ）
   const joinReversed = (T, a, b) => joinResults(T, a, b).length === 0 && joinResults(T, b, a).length > 0;
-  // 放てるか：words.json の語（1〜4字）か、N5 の1字。一度放った言葉は二人とも使えない（D-005）
+  // 放てるか：words.json の2〜4字の語。1字は放てない（KJ-008。くっつけて作った字でも例外なし）。一度放った言葉は二人とも使えない（D-005）
+  const SINGLE_WHY = "1字では放てない（2字以上の言葉）";
   function releasable(T, used, text) {
     if (!text) return { ok: false, why: "" };
+    if ([...text].length === 1) return { ok: false, why: SINGLE_WHY };
     if (used.has(text)) return { ok: false, why: "放った言葉" };
-    if (T.WORDS.has(text) || ([...text].length === 1 && isN5(T, text))) return { ok: true };
-    if ([...text].length === 1) return { ok: false, why: "部品は放てない" };
+    if (T.WORDS.has(text)) return { ok: true };
     return { ok: false, why: "辞書にない" };
   }
   // 役の点数（R-026）。1字1・2字3・3字6・4字12、四字熟語の印つきは倍、特別な語はさらに倍
@@ -106,7 +107,7 @@
     const [a, b] = cpuInterval(D, key);
     return [
       `場=${R.field_size}枚 最初の手札=${R.start_hand}枚 手札の上限=${R.hand_max}枚＋部品の置き場${R.split_extra}枚（置き場は割るときだけ増える。全部で${R.hand_max + R.split_extra}枚まで）山=N5 の字を${R.same_char_in_deck}枚ずつ（尽きたら足す）`,
-      `点数 ${Object.entries(S.by_length).map(([n, p]) => `${n}字${p}`).join("・")} 四字熟語×${S.yoji_mult} 特別な語×${S.special_mult}`,
+      `点数 ${Object.entries(S.by_length).map(([n, p]) => `${n}字${p}`).join("・")} 四字熟語×${S.yoji_mult} 特別な語×${S.special_mult}（1字は放てない）`,
       `放ったら 放った字数×${R.take_per_char}枚を場から選んで取れる。放った言葉は消える（相手には届かない）`,
       `引き直し ${R.redraw.cost}点で手札を全部入れ替え（${R.start_hand}枚）。${R.redraw.cost}点ない人は${R.redraw.free_wait_sec}秒待って0点で`,
       `勝ち 先に${R.win.score}点、または${R.win.time_limit_sec / 60}分で点の多い方（同点は引き分け）。ひとりでは50点で終わらず${R.win.time_limit_sec / 60}分で終わる`,
@@ -178,14 +179,13 @@
     g.addLog = addLog;
 
     // ---------- 動けない（R-023 を KJ-003 に合わせた） ----------
-    // 手札をそのまま並べて放てる言葉（N5 の1字か辞書の語、放っていないもの）が1つも無い状態
+    // 手札をそのまま並べて放てる言葉（辞書の2字以上の語、放っていないもの）が1つも無い状態（KJ-008：1字は数えない）
     g.releasableInHand = (p) => {
       const cs = p.cards.map((x) => x.c);
       const have = {};
       for (const c of cs) have[c] = (have[c] || 0) + 1;
-      for (const c of Object.keys(have)) if (isN5(T, c) && !g.used.has(c)) return c;
       for (const w of T.WORDS.values()) {
-        if (g.used.has(w.w)) continue;
+        if ([...w.w].length < 2 || g.used.has(w.w)) continue;
         const need = {};
         let ok = true;
         for (const c of w.w) { need[c] = (need[c] || 0) + 1; if (!have[c] || need[c] > have[c]) { ok = false; break; } }
@@ -446,18 +446,12 @@
       }
       const good = joins.filter((j) => isN5(T, j[2]));
       if (good.length) { const j = pick(good); return g.join(p, [j[0].id, j[1].id], j[2]); }
-      const singles = p.cards.filter((x) => isN5(T, x.c) && !g.used.has(x.c));
-      if (singles.length && rand() < R.cpu.single_release_chance) {
-        const r = g.release(p, [pick(singles).id]);
-        if (r.ok) cpuTakeAll(p);
-        return r;
-      }
       if (joins.length) { const j = pick(joins); return g.join(p, [j[0].id, j[1].id], j[2]); }
       const cyc = p.cards.filter((x) => T.NEXT.has(x.c));
       if (cyc.length && g.ready(p, "cycle") && rand() < 0.5) return g.cycle(p, [pick(cyc).id]);
       const inv = p.cards.filter((x) => T.INV.has(x.c));
       if (inv.length && g.ready(p, "invert") && rand() < 0.3) return g.invert(p, [pick(inv).id]);
-      if (!singles.length && !ws.length && p.redrawAt === null) return g.redraw(p); // 放てる言葉がない
+      if (!g.releasableInHand(p) && p.redrawAt === null) return g.redraw(p); // 放てる言葉（2字以上）がない＝動けない
       return null;
     };
 
@@ -467,7 +461,7 @@
       const d = g.startedAt;
       const ds = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
       const head = [
-        "# 漢字版（仮）モック ログ（KJ-003 役づくりの競争）",
+        "# 漢字版（仮）モック ログ（KJ-003 役づくりの競争・KJ-008 1字は放てない）",
         `# はじめた時刻 ${ds}（端末の時計）`,
         `# 相手 ${opponentLabel(D, g.opponent)}`,
         `# 並べ方 ${layoutLabel(g.startLayout)}（はじめたとき。途中で切り替えると「並べ方」の行が残る）`,
