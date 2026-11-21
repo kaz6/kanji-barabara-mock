@@ -305,3 +305,77 @@ test("cutSpec：左右＝縦の点線、上下＝横の点線、その他＝角�
   assert.equal(K.cutSpec(T, "日"), null);
   assert.ok(Math.abs(K.cutSpec(T, "休").at - 0.3) < 1e-9, "休 は左の 亻 が細いので左から約 0.3");
 });
+
+// ---- KJ-027：札の字がスマホで出る（字体の同梱）----
+const fsx = require("fs");
+const pathx = require("path");
+const GL = JSON.parse(fsx.readFileSync(pathx.join(__dirname, "..", "data", "glyphs.json"), "utf8"));
+const fontBuf = fsx.readFileSync(pathx.join(__dirname, "..", GL.font));
+// otf の cmap（format 12）から、入っている字のコードを読む
+function fontCodes(b) {
+  const n = b.readUInt16BE(4);
+  let off = 0;
+  for (let i = 0; i < n; i++) if (b.toString("latin1", 12 + i * 16, 16 + i * 16) === "cmap") off = b.readUInt32BE(20 + i * 16);
+  const out = new Set();
+  const cn = b.readUInt16BE(off + 2);
+  for (let i = 0; i < cn; i++) {
+    const so = off + b.readUInt32BE(off + 4 + i * 8 + 4);
+    if (b.readUInt16BE(so) !== 12) continue;
+    const g = b.readUInt32BE(so + 12);
+    for (let j = 0; j < g; j++) {
+      const s = b.readUInt32BE(so + 16 + j * 12), e = b.readUInt32BE(so + 20 + j * 12);
+      for (let c = s; c <= e; c++) out.add(c);
+    }
+  }
+  return out;
+}
+// 札に出る字ぜんぶ（字・割る前の字・部品・巡り・偏の形）
+function allCardChars() {
+  const s = new Set(D.kanji.kanji.map((k) => k.c));
+  for (const [k, v] of Object.entries(D.parts.parts)) { s.add(k); for (const x of v) s.add(x); }
+  for (const c of D.cycles.cycles) for (const x of c.chars) s.add(x);
+  for (const [k, v] of Object.entries(D.radical_forms.left)) { s.add(k); s.add(v); }
+  return s;
+}
+
+test("字体：札に出る字がぜんぶ glyphs.json の一覧にあり、同梱の字はすべてフォントに入っている", () => {
+  const all = new Set([...GL.all]);
+  for (const c of allCardChars()) assert.ok(all.has(c), `${c}（U+${c.codePointAt(0).toString(16)}）が glyphs.json にない。python3 tools/build_glyphs.py を回す`);
+  const codes = fontCodes(fontBuf);
+  for (const c of GL.embed) assert.ok(codes.has(c.codePointAt(0)), `${c} がフォントに入っていない`);
+  assert.equal(codes.size, GL.embed.length, "フォントに余計な字がない");
+  assert.equal(GL.device_count + GL.embed.length, all.size);
+});
+
+test("字体：同梱しない字は JIS X 0208（端末の標準字体にある）の字だけ。同梱の字は JIS X 0208 の外", () => {
+  // WHATWG の shift_jis（JIS X 0208 を含む）で1字に戻る字を「端末にある」とみなす。同梱の字は1字に戻らない（または別の字になる）
+  const dec = new TextDecoder("shift_jis");
+  const enc = new Map();
+  for (let hi = 0x81; hi <= 0x9f; hi++) for (let lo = 0x40; lo <= 0xfc; lo++) { const s = dec.decode(Uint8Array.of(hi, lo)); if ([...s].length === 1 && s !== "�") enc.set(s, 1); }
+  for (let hi = 0xe0; hi <= 0xea; hi++) for (let lo = 0x40; lo <= 0xfc; lo++) { const s = dec.decode(Uint8Array.of(hi, lo)); if ([...s].length === 1 && s !== "�") enc.set(s, 1); }
+  const embed = new Set(GL.embed);
+  for (const c of GL.all) {
+    if (embed.has(c)) assert.ok(!enc.has(c), `${c} は JIS の中なので同梱しなくてよい`);
+    else assert.ok(enc.has(c), `${c} は JIS X 0208 の外なのに同梱していない`);
+  }
+});
+
+test("字体：作者が化けると見つけた 後 の右（𢀖）と 験 の右が直っている（KJ-027）", () => {
+  const emb = new Set(GL.embed);
+  assert.ok(emb.has("𢀖"), "𢀖 は同梱（幺 と 夂 を重ねて作る）");
+  assert.deepEqual(D.parts.parts["後"], ["彳", "𢀖"]);
+  assert.deepEqual(D.parts.parts["験"], ["馬", "僉"], "験 は 馬＋僉（日本の字体にある僉）");
+  assert.ok(!GL.all.includes("佥"), "日本の字体に無い 佥 は使わない");
+  assert.ok(!emb.has("僉"), "僉 は端末の字体にある");
+  for (const lv of ["N5", "N4"]) {
+    assert.deepEqual(K.splitOnce(TT[lv], "験").length ? K.splitOnce(TT[lv], "験") : null, lv === "N4" ? ["馬", "僉"] : ["験"]);
+  }
+});
+
+test("字体：CSS の unicode-range が同梱の字と同じ", () => {
+  const css = fsx.readFileSync(pathx.join(__dirname, "..", "fonts", "kj-glyphs.css"), "utf8");
+  const m = css.match(/unicode-range:([^;}]+)/);
+  const got = m[1].split(",").map((x) => parseInt(x.trim().slice(2), 16)).sort((a, b) => a - b);
+  const want = [...GL.embed].map((c) => c.codePointAt(0)).sort((a, b) => a - b);
+  assert.deepEqual(got, want);
+});

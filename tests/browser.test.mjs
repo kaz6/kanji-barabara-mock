@@ -13,7 +13,7 @@ const require = createRequire(import.meta.url);
 let chromium = null;
 try { ({ chromium } = require("playwright")); } catch { /* 入っていない */ }
 
-const TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".json": "application/json; charset=utf-8" };
+const TYPES = { ".css": "text/css; charset=utf-8", ".otf": "font/otf", ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".json": "application/json; charset=utf-8" };
 function serve() {
   return new Promise((resolve) => {
     const srv = http.createServer((req, res) => {
@@ -677,6 +677,52 @@ test("画面", { skip }, async (t) => {
         return bad;
       });
       assert.deepEqual(hit, [], "点線が 反・巡・音 の印に重ならない");
+      assert.deepEqual(errors, []);
+      await ctx.close();
+    }
+  });
+
+  await t.test("点線は薄いグレー。端末に無い字（𢀖・⺍・电 など）は同梱の字体で出る（KJ-027）", async () => {
+    for (const vp of [{ width: 760, height: 1100 }, { width: 375, height: 700 }]) {
+      const { ctx, page, errors } = await open(browser, url, vp);
+      await page.evaluate(() => {
+        const G = __KJ.game;
+        G.me.cards = [..."後彳𢀖験馬僉学⺍"].map((c, i) => ({ id: 9100 + i, c, t: 0, fresh: false }));
+        G.me.cards.push(...[..."電电会𠆢"].map((c, i) => ({ id: 9200 + i, c, t: 0, fresh: false, tray: true })));
+        G.field = [..."国古山"].map((c, i) => ({ id: 9500 + i, c, t: 0, fresh: false }));
+        __KJ.render();
+      });
+      // 点線の色：茶色ではなく、赤青の差が小さい薄いグレー
+      const col = await page.evaluate(() => {
+        const out = {};
+        for (const sel of [".cutv", ".cuth"]) {
+          const e = document.querySelector("#meHand " + sel); if (!e) continue;
+          const cs = getComputedStyle(e); out[sel] = cs.borderLeftColor !== "rgba(0, 0, 0, 0)" && cs.borderLeftWidth !== "0px" ? cs.borderLeftColor : cs.borderTopColor;
+        }
+        out.x = getComputedStyle(document.querySelector("#field .cutx")).color;
+        return out;
+      });
+      for (const [k, v] of Object.entries(col)) {
+        const [r, g, b] = v.match(/\d+/g).map(Number);
+        assert.ok(Math.abs(r - b) <= 24 && Math.abs(r - g) <= 16, `${k} の色 ${v} はグレー`);
+        assert.ok(r >= 120 && r <= 200, `${k} の色 ${v} は字が読める薄さ`);
+      }
+      // 同梱の字体が読み込まれ、𢀖・⺍・电・𠆢 が描ける（空白ではない）
+      const r = await page.evaluate(async () => {
+        await document.fonts.load('32px "KJ Glyphs"', "𢀖");
+        const face = [...document.fonts].find((f) => f.family.replace(/"/g, "") === "KJ Glyphs");
+        const ink = (ch) => {
+          const cv = document.createElement("canvas"); cv.width = cv.height = 64;
+          const g = cv.getContext("2d"); g.font = '48px "KJ Glyphs"'; g.fillStyle = "#000"; g.textBaseline = "top"; g.fillText(ch, 4, 4);
+          let n = 0; const d = g.getImageData(0, 0, 64, 64).data; for (let i = 3; i < d.length; i += 4) if (d[i] > 128) n++;
+          return n;
+        };
+        return { status: face && face.status, ink: Object.fromEntries([..."𢀖⺍电𠆢𠂉产"].map((c) => [c, ink(c)])) };
+      });
+      assert.equal(r.status, "loaded", "KJ Glyphs が読み込まれる");
+      for (const [c, n] of Object.entries(r.ink)) assert.ok(n > 40, `${c} が描ける（${n}）`);
+      // 札の字は文字のまま（選んでコピーできる）。後 の右側 𢀖・験 の右側 僉 が札になっている
+      for (const c of [..."𢀖僉⺍"]) assert.equal(await page.locator("#meHand .tile", { hasText: c }).count(), 1, `${c} の札`);
       assert.deepEqual(errors, []);
       await ctx.close();
     }
