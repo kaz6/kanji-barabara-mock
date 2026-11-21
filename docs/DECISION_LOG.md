@@ -435,3 +435,14 @@ R-025〜R-027 はカードに書いてあった仮置き、R-028〜R-031 は係�
 - コード：`js/core.js` に `playLogRow`・`logSendAllowed`・`playLogResult`（DOM に触らない）。`index.html` に `sendLog`（fetch・端末への保存）
 - 変えていないもの：遊びの決まり・数値（rules.json は触っていない）・画面の文言
 - 却下した案：「作者に送ります」の表示（作者の言葉のとおり出さない）
+
+### R-052 テストが通った係の PR を GitHub Actions が自動でマージする（KJ-028。作者 2026-11-22 06:10。D-043）
+
+- 作者の言葉：「すすめる。よろ」
+- きっかけ：相談チャットと係の「マージ」が auto mode の判定で拒まれた（00:24〜00:55）。下書きを外すのは通った。マージは AI ではなく、作者が入れた GitHub の仕組みにやらせる
+- 決めたこと：`.github/workflows/automerge.yml`。動くのは test が終わったとき（workflow_run）・30分ごと（schedule。下書きを外したあとでテストが先に終わっていた PR も拾う）・手で（workflow_dispatch）。マージする PR は、open・下書きでない・base が main・head が同じリポジトリの `kj-` で始まるブランチ・その head の最新コミットで test が success・mergeable のすべてを満たすもの。merge（マージコミット）で、GITHUB_TOKEN。permissions は contents: write・pull-requests: write だけ。条件に合わない PR には何もしない。マージしたら「自動マージした」と1行コメント
+- 作者がやること：Settings → Actions → General → Workflow permissions を「Read and write permissions」にする（06:32 済み）。この PR（automerge 自身）は作者が手でマージする
+- 係の仮決め：test の成功は `test.yml` の run を head_sha で引いて見る。mergeable が null のときは3秒おきに最大5回取り直す。取り直す間に head が進んだら見送る。マージ時に sha を渡す（その head でなければ拒まれる）
+- 変えていないもの：test のワークフローの中身・遊びの決まり・数値
+- 却下した案：なし
+
