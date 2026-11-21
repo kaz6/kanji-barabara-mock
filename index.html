@@ -262,9 +262,11 @@ function start(){
   $("msg").textContent="";$("msg").className="msg";
   $("bCopyEnd").hidden=true;
   hideChoices();
-  if(!G.solo)scheduleCpu();
+  if(G.picking){$("msg").textContent=PICK_MSG;$("msg").className="msg"} // はじめの1枚を選ぶまで時間は止まり、CPU も動かない
+  else if(!G.solo)scheduleCpu();
   render();
 }
+const PICK_MSG="最初の1枚を場から選ぶ（時間は止まっています）";
 $("start").onclick=()=>{$("start").textContent="もう一度";start()};
 function scheduleCpu(){cpuTimer=setTimeout(()=>{if(!G||G.over)return;G.cpuTurn();afterChange();if(!G.over)scheduleCpu()},G.cpuDelay()*1000)}
 function drain(){
@@ -320,7 +322,7 @@ function noteTried(){
 }
 let dragEnded=false; // 引きずって離したあとに出るタップを無視する
 function tapHand(id){
-  if(G.over||dragEnded)return;
+  if(G.over||G.picking||dragEnded)return;
   if(row.includes(id)){tapRow(id);return} // 手札で選ぶ：もう一度タップで外れる
   row.push(id);lastTried="";hideChoices();render();
 }
@@ -328,7 +330,7 @@ function tapHand(id){
 function attachDrag(b,id){
   b.dataset.id=id;
   b.addEventListener("pointerdown",e=>{
-    if(!G||G.over||(e.pointerType==="mouse"&&e.button!==0))return;
+    if(!G||G.over||G.picking||(e.pointerType==="mouse"&&e.button!==0))return;
     const sx=e.clientX,sy=e.clientY;let moved=false,over=null;
     const rows=[$("meHand"),$("meTray")];
     const under=(ev)=>{const t=document.elementFromPoint(ev.clientX,ev.clientY);const el=t&&t.closest("[data-id],.slot.free");return el&&el!==b&&rows.includes(el.parentNode)&&(el.dataset.id||el.parentNode!==b.parentNode)?el:null};
@@ -349,7 +351,16 @@ function attachDrag(b,id){
   });
 }
 function tapRow(id){if(G.over)return;noteTried();row=row.filter(x=>x!==id);hideChoices();afterChange()}
-function tapField(id){if(!G||G.over)return;const r=G.take(G.me,id);if(!r.ok){$("msg").textContent=r.why;$("msg").className="msg"}afterChange()}
+function tapField(id){
+  if(!G||G.over)return;
+  if(G.picking){ // はじめの1枚：選んだら時間が動き出す。CPU は人のあとに1枚取る
+    const r=G.pickFirst(id);
+    $("msg").textContent=r.ok?"":r.why;$("msg").className="msg";
+    if(r.ok&&!G.solo)scheduleCpu();
+    afterChange();return;
+  }
+  const r=G.take(G.me,id);if(!r.ok){$("msg").textContent=r.why;$("msg").className="msg"}afterChange()
+}
 function afterOp(res){if(res&&res.ok){row=res.cards?res.cards.map(x=>x.id):[];lastTried=""}hideChoices();afterChange()}
 const isSingleTry=s=>s.rc.length===1&&!s.rl.ok&&[...s.text].length===1; // 1字は押せるが、はじかれる（KJ-008）
 $("bRelease").onclick=()=>{
@@ -417,16 +428,17 @@ function renderHand(el,p,interactive,tray){
   for(let i=cards.length;i<max;i++){const s=document.createElement("div");s.className="slot"+(interactive?" free":"");el.appendChild(s)}
 }
 function renderField(){
-  const el=$("field"),can=!G.over&&G.me.takes>0&&G.handCount(G.me)<D.rules.hand_max;
+  const el=$("field"),can=!G.over&&(G.picking||G.me.takes>0)&&G.handCount(G.me)<D.rules.hand_max;
   el.className="field"+(can?" can":"");el.innerHTML="";
   el.style.gridTemplateColumns=`repeat(${D.rules.field_size},1fr)`;
   for(const x of G.field)el.appendChild(tileEl(x,{onClick:()=>tapField(x.id)}));
-  $("takes").textContent=G.me.takes>0?(G.handCount(G.me)<D.rules.hand_max?`あなたは ${G.me.takes} 枚取れる（タップ）`:`${G.me.takes} 枚取れる（手札がいっぱい）`):"";
+  $("takes").textContent=G.picking?"最初の1枚をタップして取る（試合で1回、はじめだけ）":G.me.takes>0?(G.handCount(G.me)<D.rules.hand_max?`あなたは ${G.me.takes} 枚取れる（タップ）`:`${G.me.takes} 枚取れる（手札がいっぱい）`):"";
 }
 function cdText(p,k){const t=G.cdLeft(p,k);return t>0?Math.ceil(t)+"s":""}
 function render(){
   if(!G)return;
   row=row.filter(id=>G.byId(G.me,id));
+  G.setTable(layout==="table"?row:[]); // 台の札は一時置き場：上・下の枚数に数えない
   $("cpuSide").hidden=G.solo;
   renderHand($("cpuHand"),G.cpu,false,false);
   renderHand($("meHand"),G.me,true,false);
@@ -459,16 +471,17 @@ function render(){
   renderOps();
 }
 function renderOps(){
-  const s=rowState(),one=s.rc.length===1?s.rc[0].c:null,me=G.me,live=!G.over;
+  const s=rowState(),one=s.rc.length===1?s.rc[0].c:null,me=G.me,live=!G.over&&!G.picking;
+  const fit1=G.fits(me,row,1);
   const cds=[["反転","invert"],["巡り","cycle"],["同音","homophone"]].map(([n,k])=>cdText(G.cpu,k)&&`${n} ${cdText(G.cpu,k)}`).filter(Boolean);
   if(G.cpu.redrawAt!==null)cds.push(`引き直し ${Math.ceil(G.redrawLeft(G.cpu))}s`);
   $("cpuCds").textContent=cds.length?"待ち："+cds.join("・"):"";
   $("bRelease").disabled=!(live&&(s.rl.ok||isSingleTry(s)));
-  $("bSplit").disabled=!(live&&one&&K.canSplit(T,one)&&me.cards.length<D.rules.hand_max+D.rules.split_extra);
-  $("bJoin").disabled=!(live&&s.joins.length);
-  $("bInvert").disabled=!(live&&one&&T.INV.has(one)&&G.ready(me,"invert"));
-  $("bCycle").disabled=!(live&&one&&T.NEXT.has(one)&&G.ready(me,"cycle"));
-  $("bHomo").disabled=!(live&&one&&T.HOMO.has(one)&&G.ready(me,"homophone"));
+  $("bSplit").disabled=!(live&&one&&K.canSplit(T,one)&&G.fits(me,row,2));
+  $("bJoin").disabled=!(live&&s.joins.length&&fit1);
+  $("bInvert").disabled=!(live&&one&&T.INV.has(one)&&G.ready(me,"invert")&&fit1);
+  $("bCycle").disabled=!(live&&one&&T.NEXT.has(one)&&G.ready(me,"cycle")&&fit1);
+  $("bHomo").disabled=!(live&&one&&T.HOMO.has(one)&&G.ready(me,"homophone")&&fit1);
   $("bBack").disabled=!s.rc.length;
   $("bRedraw").disabled=!(live&&me.redrawAt===null);
   $("cdInvert").textContent=cdText(me,"invert");
@@ -506,7 +519,9 @@ function buildHowto(){
     `<b>放つ</b>：台の札が辞書の語（2〜4字）なら放てる。<b>1字では放てない</b>（くっつけて作った字でも同じ）。一度放った言葉は二人とも二度と使えない。放った札は消える（相手には届かない）。`,
     `<b>点数</b>：${Object.entries(S.by_length).map(([n,p])=>`${n}字 ${p}点`).join("・")}。四字熟語は ${S.yoji_mult} 倍、特別な語（天上天下）はさらに ${S.special_mult} 倍。`,
     `<b>取る</b>：放ったら、放った字数と同じ枚数を<b>場</b>から選んで取れる（手札は ${R.hand_max} 枚まで）。取ったところには山から次の字が出る。相手も同じ場から取るので早い者勝ち（ひとりでは取り合いなし）。`,
-    `<b>ストック</b>：手札（${R.hand_max} マス）の下の ${R.split_extra} マス。字も部品も置ける。割る・くっつけるでできた札は、手札に空きがなければストックに入る（全部で ${R.hand_max+R.split_extra} 枚まで）。場から取るのは手札の ${R.hand_max} マスまで。ストックの札も台に並べて使える。はじめの手札は ${R.start_hand} 枚。`,
+    `<b>ストック</b>：手札（${R.hand_max} マス）の下の ${R.split_extra} マス。字も部品も置ける。割る・くっつけるでできた札は、手札に空きがなければストックに入る（全部で ${R.hand_max+R.split_extra} 枚まで）。場から取るのは手札の ${R.hand_max} マスまで。ストックの札も台に並べて使える。`,
+    `<b>はじまり</b>：はじめの手札は ${R.start_hand} 枚。そのあと<b>場から1枚だけ選んで取れる</b>（試合で1回、はじめだけ。選ぶまで時間は止まっている。相手も人のあとに1枚取る）。ストックには、使いやすい部品が ${R.start_stock_parts} 枚、最初から入っている。`,
+    `<b>台</b>（台に並べるとき）は一時置き場：台に置いた札は、手札・ストックの枚数に数えない（台に動かすと空きができる）。`,
     `<b>レベル</b>：はじめる前に選ぶ（N5／N4。N4 は N5＋N4 の字）。山に入る字・語・割り方・対義・巡り・同音がレベルで変わる。いまは ${K.levelLabel(T.level)}（字 ${T.CHARS.size}・語 ${T.WORDS.size}）。`,
     `<b>相手</b>：はじめる前に選ぶ。ひとりで（CPU なし。50 点では終わらず、${R.win.time_limit_sec/60} 分たったら点を出す。この端末の自己ベストを覚える）／とても弱い（CPU は ${R.cpu.weak_interval_sec[0]}〜${R.cpu.weak_interval_sec[1]} 秒に1回）／いまの強さ（${R.cpu.interval_sec[0]}〜${R.cpu.interval_sec[1]} 秒に1回）。`,
     `<b>割る</b>：台の1枚を部品表で一段だけ割る。<b>くっつける</b>：台の2枚を、左→右の順でくっつける。逆に並べたときは「並べる順が逆」と出る。十・口 のように2通りの字になるときは選ぶ。`,
