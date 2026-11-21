@@ -42,12 +42,13 @@ jobs:
 
               // 条件3：その head の最新のコミットで test が success
               const runs = await github.rest.actions.listWorkflowRuns({
-                owner, repo, workflow_id: 'test.yml',
+                owner, repo, workflow_id: 'test.yml', event: 'pull_request',
                 head_sha: item.head.sha, per_page: 20,
               });
-              const ok = runs.data.workflow_runs.some(
-                (r) => r.status === 'completed' && r.conclusion === 'success'
-              );
+              // いちばん新しい run が完了していて success のときだけ通す
+              const latest = runs.data.workflow_runs
+                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
+              const ok = !!latest && latest.status === 'completed' && latest.conclusion === 'success';
               if (!ok) { core.info(`#${item.number}: test が success ではない。何もしない`); continue; }
 
               // 条件4：mergeable（null は計算中なので少し待って取り直す）
