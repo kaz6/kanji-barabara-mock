@@ -100,6 +100,19 @@
     return cs.length === 3 ? one : one.flatMap((c) => splitOnce(T, c));
   }
   const joinResults = (T, a, b) => T.JOIN.get(a + b) || [];
+  // 最初にストックへ入れる「使いやすい部品」の候補（KJ-013）：部品表で「くっつけてできる字」の数が多い、字として見せない部品（山に無い札）の上位 top 個
+  function stockCandidates(T, top) {
+    const dest = new Map();
+    for (const [key, res] of T.JOIN) {
+      for (const c of [...key]) {
+        if (isChar(T, c)) continue;
+        if (!dest.has(c)) dest.set(c, new Set());
+        for (const r of res) dest.get(c).add(r);
+      }
+    }
+    return [...dest].map(([c, set]) => ({ c, n: set.size }))
+      .sort((a, b) => b.n - a.n || a.c.codePointAt(0) - b.c.codePointAt(0)).slice(0, top);
+  }
   // 逆に並べればくっつく（順番の決まりは変えない。表示だけ）
   const joinReversed = (T, a, b) => joinResults(T, a, b).length === 0 && joinResults(T, b, a).length > 0;
   // 放てるか：words.json の2〜4字の語。1字は放てない（KJ-008。くっつけて作った字でも例外なし）。一度放った言葉は二人とも使えない（D-005）
@@ -142,8 +155,10 @@
     key = key || R.opponent_default;
     const [a, b] = cpuInterval(D, key);
     return [
-      `場=${R.field_size}枚 最初の手札=${R.start_hand}枚 手札の上限=${R.hand_max}枚＋部品の置き場${R.split_extra}枚（置き場は割るときだけ増える。全部で${R.hand_max + R.split_extra}枚まで）山=${level} の字を${R.same_char_in_deck}枚ずつ（尽きたら足す）`,
+      `場=${R.field_size}枚 最初の手札=${R.start_hand}枚 手札の上限=${R.hand_max}枚＋ストック${R.split_extra}枚（全部で${R.hand_max + R.split_extra}マス。場から取るのは手札の${R.hand_max}枚まで。割る・くっつけるでできた札は、字も部品も、手札が埋まっていればストックへ。手札とストックの間は自分で動かせる）山=${level} の字を${R.same_char_in_deck}枚ずつ（尽きたら足す）`,
       `点数 ${Object.entries(S.by_length).map(([n, p]) => `${n}字${p}`).join("・")} 四字熟語×${S.yoji_mult} 特別な語×${S.special_mult}（1字は放てない）`,
+      `はじまり：最初の手札${R.start_hand}枚のあと、場から1枚だけ選んで取る（試合で1回。選ぶまで時間は止まる。CPU は人のあとに1枚取る。ひとりでは人だけ）。ストックに使いやすい部品を${R.start_stock_parts}枚入れて始める（部品表で行き先が多い字でない部品の上位${R.start_stock_top}個から無作為）`,
+      `台（机）に置いた札は一時置き場。上の段・下の段の枚数に数えない（段の空きで見る 取る・割る・くっつけるは台を除いた枚数）`,
       `放ったら 放った字数×${R.take_per_char}枚を場から選んで取れる。放った言葉は消える（相手には届かない）`,
       `引き直し ${R.redraw.cost}点で手札を全部入れ替え（${R.start_hand}枚）。${R.redraw.cost}点ない人は${R.redraw.free_wait_sec}秒待って0点で`,
       `勝ち 先に${R.win.score}点、または${R.win.time_limit_sec / 60}分で点の多い方（同点は引き分け）。ひとりでは50点で終わらず${R.win.time_limit_sec / 60}分で終わる`,
@@ -164,11 +179,13 @@
     const g = { D, T, level: T.level, opponent, solo: opponent === "solo", log: [], events: [], used: new Set(), over: false, winner: null,
       startedAt: (env.date || (() => new Date()))() };
     g.layout = LAYOUTS.some((l) => l.key === env.layout) ? env.layout : (R.layout_default || "hand");
-    const t0 = now();
+    let t0 = now();
     g.now = now;
-    g.elapsed = () => now() - t0;
+    // はじめの1枚（KJ-013）：選ぶまで時間は止まっている。選んだ時に時計が動き出す
+    g.picking = env.firstPick === false ? false : (R.first_pick || 0) > 0;
+    g.elapsed = () => (g.picking ? 0 : now() - t0);
     g.endsAt = t0 + R.win.time_limit_sec;
-    g.timeLeft = () => Math.max(0, g.endsAt - now());
+    g.timeLeft = () => (g.picking ? R.win.time_limit_sec : Math.max(0, g.endsAt - now()));
 
     const card = (c, fresh) => ({ id: ++uid, c, t: now(), fresh: !!fresh });
     function shuffle(a) {
@@ -192,13 +209,31 @@
     g.me = player("me", "あなた", R.start_hand);
     g.cpu = player("cpu", "CPU", g.solo ? 0 : R.start_hand); // ひとりで：CPU は出さない（山からも引かない）
     const players = () => (g.solo ? [g.me] : [g.me, g.cpu]);
-    // 手札の枠と、割るときだけ増える部品の置き場（KJ-004）。札の tray が true なら置き場
-    const handCount = (p) => p.cards.filter((x) => !x.tray).length;
-    const trayCount = (p) => p.cards.filter((x) => x.tray).length;
+    // 手札の枠（上の8マス）と、ストック（下の4マス。KJ-004 の部品の置き場を、作者 2026-11-21、KJ-006 のあとに字も部品も置ける場所に）。札の tray が true ならストック
+    // 台（机）に置いた札は一時置き場：上の段・下の段の枚数に数えない（作者 2026-11-21 追記 P-012・D-030）。画面が g.setTable で台の札を知らせる
+    g.table = new Set();
+    g.setTable = (ids) => { g.table = new Set(ids); };
+    const onTable = (x) => g.table.has(x.id);
+    const handCount = (p) => p.cards.filter((x) => !x.tray && !onTable(x)).length;
+    const trayCount = (p) => p.cards.filter((x) => x.tray && !onTable(x)).length;
+    const counted = (p) => handCount(p) + trayCount(p);
     const totalMax = R.hand_max + R.split_extra;
+    // 札 srcs を n 枚に替えたあと、段（台を除く）に収まるか
+    const fits = (p, srcs, n) => counted(p) - srcs.filter((x) => !onTable(x)).length + n <= totalMax;
     g.handCount = handCount;
     g.trayCount = trayCount;
+    g.fits = (p, ids, n) => fits(p, ids.map((id) => g.byId(p, id)).filter(Boolean), n); // 札 ids を n 枚に替えられる空きがあるか（台を除く）
     g.field = draw(R.field_size).map((c) => card(c));
+    // 下のストックに、使いやすい部品を1枚入れて始める（KJ-013。部品表で行き先が多い部品の上位から無作為に1枚）
+    g.stockCandidates = stockCandidates(T, R.start_stock_top || 5);
+    if (env.startStock !== false && (R.start_stock_parts || 0) > 0 && g.stockCandidates.length) {
+      for (const p of players()) {
+        for (let i = 0; i < R.start_stock_parts; i++) {
+          const c = g.stockCandidates[Math.floor(rand() * g.stockCandidates.length)].c;
+          const x = card(c); x.tray = true; p.cards.push(x);
+        }
+      }
+    }
     g.opp = (p) => (p === g.me ? g.cpu : g.me);
     g.byId = (p, id) => p.cards.find((x) => x.id === id);
     g.ready = (p, k) => now() >= p.cd[k];
@@ -206,7 +241,7 @@
     g.redrawLeft = (p) => (p.redrawAt === null ? 0 : Math.max(0, p.redrawAt - now()));
     const useCd = (p, k) => { p.cd[k] = now() + R.cooldown_sec[k]; };
 
-    const QUIET = new Set(["ためした", "終わり", "動けない", "動ける", "入れ替え", "並べ方"]);
+    const QUIET = new Set(["はじまり", "ためした", "終わり", "動けない", "動ける", "入れ替え", "移す", "並べ方"]);
     function addLog(who, op, from, to, pts, note) {
       g.log.push({ t: g.elapsed(), who, op, from: from || [], to: to || [], pts: pts || 0,
         meScore: g.me.score, cpuScore: g.cpu.score, me: g.me.cards.length, cpu: g.cpu.cards.length, note: note || "" });
@@ -233,7 +268,7 @@
     g.movesInHand = (p) => {
       const cs = p.cards.map((x) => x.c);
       const out = [];
-      if (cs.some((c) => canSplit(T, c)) && cs.length < totalMax) out.push("割る");
+      if (cs.some((c) => canSplit(T, c)) && counted(p) < totalMax) out.push("割る");
       if (p.cards.some((a) => p.cards.some((b) => a !== b && joinResults(T, a.c, b.c).length))) out.push("くっつける");
       for (const [name, k, ok] of [["反転", "invert", (c) => T.INV.has(c)], ["巡り", "cycle", (c) => T.NEXT.has(c)], ["同音", "homophone", (c) => T.HOMO.has(c)]]) {
         if (!cs.some(ok)) continue;
@@ -260,8 +295,10 @@
       }
     }
     g.startLayout = g.layout;
+    const hs = (p) => p.cards.filter((x) => !x.tray).map((x) => x.c).join("") + (trayCount(p) ? `（ストック ${p.cards.filter((x) => x.tray).map((x) => x.c).join("")}）` : "");
     addLog("—", "はじめ", [], [], 0,
-      `手札 ${g.me.cards.map((x) => x.c).join("")} / ${g.cpu.cards.map((x) => x.c).join("")}・場 ${g.field.map((x) => x.c).join("")}`);
+      `手札 ${hs(g.me)} / ${hs(g.cpu)}・場 ${g.field.map((x) => x.c).join("")}`
+      + (g.picking ? "・最初の1枚を場から選ぶまで時間は止まっている" : ""));
 
     function cardsOf(p, ids) {
       if (!Array.isArray(ids) || !ids.length || new Set(ids).size !== ids.length) return null;
@@ -272,43 +309,50 @@
       const pos = p.cards.findIndex((x) => x.id === ids[0]);
       p.cards = p.cards.filter((x) => !ids.includes(x.id));
       const nc = chars.map((c) => card(c));
-      // できた札は、手札に空きがあれば手札へ。なければ部品の置き場へ（R-032）
+      // できた札は、手札に空きがあれば手札へ。なければストックへ（R-032・R-042。字も部品も）
       let room = R.hand_max - handCount(p);
       for (const x of nc) { if (room > 0) room--; else x.tray = true; }
       p.cards.splice(Math.max(0, pos), 0, ...nc);
       return nc;
     }
     const fail = (why) => ({ ok: false, why });
-    const live = () => !g.over;
+    const PICK_WAIT = "最初の1枚を選ぶまで待つ";
+    const live = () => !g.over && !g.picking;
 
     g.split = (p, ids) => {
+      if (g.picking) return fail(PICK_WAIT);
       const cs = cardsOf(p, ids);
       if (!live() || !cs || cs.length !== 1) return fail("1枚だけ");
       const c = cs[0].c;
       if (!canSplit(T, c)) return fail("割れない");
-      if (p.cards.length + 1 > totalMax) return fail("手札も置き場もいっぱい");
-      const nc = replaceCards(p, ids, splitOnce(T, c));
+      const parts = splitOnce(T, c);
+      if (!fits(p, cs, parts.length)) return fail("手札もストックもいっぱい"); // 台の札は数えない
+      const nc = replaceCards(p, ids, parts);
       addLog(p.name, "割る", [c], nc.map((x) => x.c));
       return { ok: true, cards: nc };
     };
     g.join = (p, ids, choice) => {
+      if (g.picking) return fail(PICK_WAIT);
       const cs = cardsOf(p, ids);
       if (!live() || !cs || cs.length !== 2) return fail("2枚だけ");
       const rs = joinResults(T, cs[0].c, cs[1].c);
       if (!rs.length) return fail(joinReversed(T, cs[0].c, cs[1].c) ? "並べる順が逆" : "くっつかない");
       const to = choice === undefined ? rs[0] : choice;
       if (!rs.includes(to)) return fail("その字にはならない");
+      if (!fits(p, cs, 1)) return fail("手札もストックもいっぱい");
       const nc = replaceCards(p, ids, [to]);
       addLog(p.name, "くっつける", cs.map((x) => x.c), [to]);
       return { ok: true, cards: nc };
     };
     function oneStep(op, k, map) {
       return (p, ids) => {
+        if (g.picking) return fail(PICK_WAIT);
         const cs = cardsOf(p, ids);
         if (!live() || !cs || cs.length !== 1) return fail("1枚だけ");
         const c = cs[0].c;
         if (!map.has(c)) return fail("できない字");
         if (!g.ready(p, k)) return fail("待ち時間");
+        if (!fits(p, cs, 1)) return fail("手札もストックもいっぱい");
         useCd(p, k);
         const nc = replaceCards(p, ids, [map.get(c)]);
         addLog(p.name, op, [c], [nc[0].c]);
@@ -318,11 +362,13 @@
     g.invert = oneStep("反転", "invert", T.INV);
     g.cycle = oneStep("巡り", "cycle", T.NEXT);
     g.homophone = (p, ids, to) => {
+      if (g.picking) return fail(PICK_WAIT);
       const cs = cardsOf(p, ids);
       if (!live() || !cs || cs.length !== 1) return fail("1枚だけ");
       const c = cs[0].c;
       if (!homoChars(T, c).includes(to)) return fail("同じ読みではない");
       if (!g.ready(p, "homophone")) return fail("待ち時間");
+      if (!fits(p, cs, 1)) return fail("手札もストックもいっぱい");
       useCd(p, "homophone");
       const nc = replaceCards(p, ids, [to]);
       addLog(p.name, "同音", [c], [to]);
@@ -331,6 +377,7 @@
 
     // ---------- 放つ（D-017） ----------
     g.release = (p, ids) => {
+      if (g.picking) return fail(PICK_WAIT);
       const cs = cardsOf(p, ids);
       if (!live() || !cs) return fail("札がない");
       const text = cs.map((x) => x.c).join("");
@@ -354,20 +401,56 @@
     };
 
     // ---------- 取る：場の札を手札へ。空いたところは同じ位置に山から出す ----------
-    g.take = (p, fieldId) => {
-      if (!live()) return fail("終わった");
-      if (p.takes <= 0) return fail("取れる枚数がない");
-      if (handCount(p) >= R.hand_max) return fail("手札がいっぱい");
+    // 場の1枚を p の手札（上の段）へ。取ったところには山から次の字が出る
+    function fromField(p, fieldId) {
       const i = g.field.findIndex((x) => x.id === fieldId);
-      if (i < 0) return fail("場にない"); // 相手が先に取った
+      if (i < 0) return null; // 相手が先に取った
       const x = g.field[i];
       const [nc] = draw(1).map((c) => card(c, true));
       g.field[i] = nc;
       const got = card(x.c, true);
-      p.cards.push(got); // 手札の枠に入る（置き場は割るときだけ）
+      p.cards.push(got); // 手札の枠に入る（場から取るのは手札の枠だけ。ストックには入らない）
+      return { got, x, nc };
+    }
+    g.take = (p, fieldId) => {
+      if (!live()) return fail(g.picking ? PICK_WAIT : "終わった");
+      if (p.takes <= 0) return fail("取れる枚数がない");
+      if (handCount(p) >= R.hand_max) return fail("手札がいっぱい");
+      const r = fromField(p, fieldId);
+      if (!r) return fail("場にない");
       p.takes -= 1;
-      addLog(p.name, "取る", [x.c], [x.c], 0, `場に ${nc.c} が出た。残り${p.takes}枚取れる`);
-      return { ok: true, card: got, c: x.c };
+      addLog(p.name, "取る", [r.x.c], [r.x.c], 0, `場に ${r.nc.c} が出た。残り${p.takes}枚取れる`);
+      return { ok: true, card: r.got, c: r.x.c };
+    };
+    // 場の札で、手札と合わせて語になるものを先に取る。なければ無作為（CPU の取り方）
+    function cpuPickField(p) {
+      const hand = p.cards.map((x) => x.c);
+      const covers = (have, word) => {
+        const left = have.slice();
+        return [...word].every((ch) => { const i = left.indexOf(ch); if (i < 0) return false; left.splice(i, 1); return true; });
+      };
+      const useful = g.field.filter((f) => T.COMMON_WORDS.some((w) => !g.used.has(w.w) && w.w.includes(f.c) && covers([...hand, f.c], w.w)));
+      return pick(useful.length ? useful : g.field);
+    }
+    // はじめの1枚（KJ-013。作者「7枚＋山札から一枚引けるが正しいかも。これだけ特別」「引いてからスタート！」）：
+    // 最初の手札7枚のあと、場から1枚だけ選んで取る（試合で1回、はじめだけ）。選ぶまで時間は止まっている。CPU は人のあとに1枚取る（場は入れ替わっているので同じ札は取れない）
+    g.pickFirst = (fieldId) => {
+      if (g.over) return fail("終わった");
+      if (!g.picking) return fail("最初の1枚はもう選んだ");
+      if (handCount(g.me) >= R.hand_max) return fail("手札がいっぱい");
+      const r = fromField(g.me, fieldId);
+      if (!r) return fail("場にない");
+      addLog(g.me.name, "最初の1枚", [r.x.c], [r.x.c], 0, `場に ${r.nc.c} が出た`);
+      if (!g.solo && handCount(g.cpu) < R.hand_max) {
+        const f = cpuPickField(g.cpu);
+        const rc = fromField(g.cpu, f.id);
+        addLog(g.cpu.name, "最初の1枚", [rc.x.c], [rc.x.c], 0, `場に ${rc.nc.c} が出た`);
+      }
+      g.picking = false;
+      t0 = now();
+      g.endsAt = t0 + R.win.time_limit_sec;
+      addLog("—", "はじまり", [], [], 0, `手札 ${g.me.cards.map((x) => x.c).join("")}・時間が動き出した`);
+      return { ok: true, card: r.got, c: r.x.c };
     };
 
     // ---------- 引き直し（D-018） ----------
@@ -380,7 +463,7 @@
       addLog(p.name, "引き直し", old, p.cards.map((x) => x.c), pts, note);
     }
     g.redraw = (p) => {
-      if (!live()) return fail("終わった");
+      if (!live()) return fail(g.picking ? PICK_WAIT : "終わった");
       if (p.redrawAt !== null) return fail("待っている");
       if (p.score >= R.redraw.cost) {
         p.score -= R.redraw.cost;
@@ -400,15 +483,29 @@
       addLog("あなた", "並べ方", [], [], 0, `${layoutLabel(key)}に切り替え`);
       return { ok: true };
     };
-    // 手札の中で2枚の位置を入れ替える（手札どうし・置き場どうし）。持っている札も数も変わらない
+    // 2枚の位置を入れ替える。手札とストックの間でもよい（入れ替えた札はそれぞれ相手の段へ）。持っている札も数も変わらない
     g.swap = (p, idA, idB) => {
-      if (!live()) return fail("終わった");
+      if (!live()) return fail(g.picking ? PICK_WAIT : "終わった");
       const a = g.byId(p, idA), b = g.byId(p, idB);
       if (!a || !b || a === b) return fail("札がない");
-      if (!!a.tray !== !!b.tray) return fail("手札と置き場の間は入れ替えない");
       const i = p.cards.indexOf(a), j = p.cards.indexOf(b);
+      const ta = !!a.tray, tb = !!b.tray;
       p.cards[i] = b; p.cards[j] = a;
-      addLog(p.name, "入れ替え", [a.c, b.c], [b.c, a.c]);
+      if (ta !== tb) { if (tb) a.tray = true; else delete a.tray; if (ta) b.tray = true; else delete b.tray; }
+      addLog(p.name, "入れ替え", [a.c, b.c], [b.c, a.c], 0, ta !== tb ? "手札とストックの間" : "");
+      return { ok: true };
+    };
+    // 1枚を手札⇄ストックの空いたマスへ移す（toTray が true ならストックへ）
+    g.move = (p, id, toTray) => {
+      if (!live()) return fail(g.picking ? PICK_WAIT : "終わった");
+      const a = g.byId(p, id);
+      if (!a) return fail("札がない");
+      if (!!a.tray === !!toTray) return fail("同じ段");
+      if (toTray ? trayCount(p) >= R.split_extra : handCount(p) >= R.hand_max) return fail(toTray ? "ストックがいっぱい" : "手札がいっぱい");
+      p.cards = p.cards.filter((x) => x !== a);
+      if (toTray) a.tray = true; else delete a.tray;
+      p.cards.push(a);
+      addLog(p.name, "移す", [a.c], [a.c], 0, toTray ? "手札→ストック" : "ストック→手札");
       return { ok: true };
     };
     g.tried = (p, chars, why) => { if (live()) addLog(p.name, "ためした", chars, [], 0, why); };
@@ -451,17 +548,9 @@
       for (const ch of text) { const i = pool.findIndex((x) => x.c === ch); if (i < 0) return null; ids.push(pool[i].id); pool.splice(i, 1); }
       return ids;
     }
-    // 場の札で、手札と合わせて語になるものを先に取る。なければ無作為
     function cpuTakeAll(p) {
       while (p.takes > 0 && handCount(p) < R.hand_max) {
-        const hand = p.cards.map((x) => x.c);
-        const covers = (have, word) => {
-          const left = have.slice();
-          return [...word].every((ch) => { const i = left.indexOf(ch); if (i < 0) return false; left.splice(i, 1); return true; });
-        };
-        const useful = g.field.filter((f) => T.COMMON_WORDS.some((w) => !g.used.has(w.w) && w.w.includes(f.c) && covers([...hand, f.c], w.w)));
-        const f = pick(useful.length ? useful : g.field);
-        if (!g.take(p, f.id).ok) break;
+        if (!g.take(p, cpuPickField(p).id).ok) break;
       }
     }
     g.cpuTurn = () => {
@@ -503,7 +592,7 @@
         `# 相手 ${opponentLabel(D, g.opponent)}`,
         `# 並べ方 ${layoutLabel(g.startLayout)}（はじめたとき。途中で切り替えると「並べ方」の行が残る）`,
         ...rulesLabel(D, g.opponent, g.level).map((x) => "# 仮置き " + x),
-        "# 手 はじめ・割る・くっつける・反転・巡り・同音・放つ・取る・引き直し・入れ替え（手札の中で札の位置を替えた）・並べ方（切り替えた）・ためした（並べたのに放てず・くっつけられずにやめた並び）・動けない（放てる言葉が手札に無くなった。使った札＝その時の手札）・動ける・終わり",
+        "# 手 はじめ・割る・くっつける・反転・巡り・同音・放つ・取る・最初の1枚・はじまり・引き直し・入れ替え（札の位置を替えた。手札とストックの間も）・移す（手札⇄ストックの空いたマスへ）・並べ方（切り替えた）・ためした（並べたのに放てず・くっつけられずにやめた並び）・動けない（放てる言葉が手札に無くなった。使った札＝その時の手札）・動ける・終わり",
         "# 点＝その手で増えた点（引き直しで払った点はマイナス）",
         "# データ " + FILES.map((f) => `${f}=${D[f].version}`).join(" "),
         `# 字 ${T.CHARS.size}（手に持てる字 ${T.HOLD.size}）・語 ${T.WORDS.size}（巡り ${T.CYCLES.map((c) => c.name).join("・")}）`,
