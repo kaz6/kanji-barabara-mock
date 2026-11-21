@@ -54,10 +54,9 @@ h1{font-size:17px;margin:0 0 2px;font-weight:700}
 .field.can .tile{cursor:pointer;border-color:var(--accent)}
 .field:not(.can) .tile:hover{border-color:var(--line)}
 @media (max-width:540px){
-  .me .hand{grid-template-columns:repeat(4,1fr);gap:5px}
-  .me .tile{font-size:30px}
+  .me .tile{font-size:26px}
   .cpu .hand{grid-template-columns:repeat(8,1fr)}
-  .tile .mk{font-size:11px}
+  .tile .mk{font-size:10px}
 }
 /* 台（高さを固定する） */
 .stage{position:relative;background:#fff;border:1px solid var(--line);border-radius:6px;padding:12px;margin:14px 0}
@@ -117,6 +116,38 @@ details ul{padding-left:18px}
 #fx .c{font-family:var(--kanji);font-size:min(22vw,150px);line-height:1;opacity:0;transform:scale(1.6);transition:opacity .12s,transform .18s}
 #fx .c.in{opacity:1;transform:scale(1)}
 #fx .who{position:absolute;top:18%;font-size:14px;color:var(--sub)}
+/* ストックが空のときは低く薄く（札が入ったら手札と同じ形）。引きずっている間は、落とせるよう元の大きさにする（KJ-010） */
+.tray.empty .slot{aspect-ratio:auto;height:18px}
+body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
+/* 遊ぶ画面を375×700に収める（KJ-010）：札は小さく（40px以上）、場は1行、CPU の手札は伏せて枚数だけ、ボタンは2段 */
+@media (max-width:540px){
+  main{padding:8px 10px 32px}
+  body.playing h1,body.playing .lead{display:none}
+  .hand{gap:3px}
+  .side{margin:6px 0}
+  .side-head{height:20px;margin-bottom:3px}
+  .cpu #cpuHand{display:none}
+  .cds{font-size:11px;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .fieldside{display:flex;align-items:center;gap:8px;margin:6px 0}
+  .fieldside .side-head{margin:0;height:auto}
+  .field{max-width:144px;width:144px;flex:none;gap:4px}
+  .field .tile{font-size:24px}
+  .fieldside .takes{flex:1;font-size:12px;line-height:1.35;min-width:0}
+  .bar{gap:5px 6px;margin:4px 0}
+  .bar .opp{font-size:13px;gap:8px}
+  .bar .opp label{padding:2px 0}
+  .bar button.op{font-size:13px;padding:4px 9px;min-width:0}
+  #layNow{order:0}.clock{order:1;font-size:13px;margin-left:auto}.bar #again,.bar #bSetup,.bar #bLog,.bar #bCopyEnd{order:2}
+  .msgline{height:20px;font-size:13px}
+  .stage{padding:8px;margin:6px 0}
+  .row{height:52px;gap:4px}
+  .row .tile{width:46px;height:46px;font-size:30px}
+  .info{height:38px;margin:4px 0 6px;font-size:13px;line-height:19px}
+  .info .w{font-size:16px}
+  .ops{gap:5px}
+  button.op{font-size:13px;padding:6px 8px;min-width:0}
+  #bRedraw .cdv{width:4.6em}
+  .trayhead{margin:4px 0 2px;line-height:1.3}
 </style>
 </head>
 <body>
@@ -155,9 +186,10 @@ details ul{padding-left:18px}
     <div class="hand" id="cpuHand"></div>
   </section>
 
-  <section class="side">
-    <div class="side-head"><b>場</b><span class="takes" id="takes"></span></div>
+  <section class="side fieldside">
+    <div class="side-head"><b>場</b></div>
     <div class="field" id="field"></div>
+    <span class="takes" id="takes"></span>
   </section>
 
   <section class="stage">
@@ -176,7 +208,7 @@ details ul{padding-left:18px}
     <div class="choices" id="choices"></div>
   </section>
 
-  <section class="side me">
+  <section class="side me" id="meSide">
     <div class="side-head"><b>あなた</b><span class="score" id="meScore"></span><span class="count" id="meCount"></span></div>
     <div class="hand" id="meHand"></div>
     <div class="trayhead" id="trayHead"></div>
@@ -270,7 +302,7 @@ function setLayout(key){
 function tablesFor(lv){return TABLES[lv]||(TABLES[lv]=K.makeTables(D,lv))}
 function showCounts(){$("setupInfo").textContent=`字 ${T.CHARS.size}・語 ${T.WORDS.size}（レベル ${K.levelLabel(T.level)}）`}
 // 画面は2つ：はじめる前の画面と、遊ぶ画面。「もう一度」は同じ設定ですぐ始まる。「設定を変える」で前の画面へ戻る
-function showScreen(playing){$("setup").hidden=playing;$("game").hidden=!playing}
+function showScreen(playing){$("setup").hidden=playing;$("game").hidden=!playing;document.body.classList.toggle("playing",playing)}
 function start(){
   clearTimeout(cpuTimer);
   T=tablesFor(level);buildHowto();
@@ -354,15 +386,16 @@ function attachDrag(b,id){
     const rows=[$("meHand"),$("meTray")];
     const under=(ev)=>{const t=document.elementFromPoint(ev.clientX,ev.clientY);const el=t&&t.closest("[data-id],.slot.free");return el&&el!==b&&rows.includes(el.parentNode)&&(el.dataset.id||el.parentNode!==b.parentNode)?el:null};
     const move=ev=>{
-      if(!moved&&Math.hypot(ev.clientX-sx,ev.clientY-sy)>10){moved=true;b.classList.add("drag")}
+      if(!moved&&Math.hypot(ev.clientX-sx,ev.clientY-sy)>10){moved=true;b.classList.add("drag");document.body.classList.add("dragging")}
       if(!moved)return;
       const t=under(ev);if(over&&over!==t)over.classList.remove("over");over=t;if(t)t.classList.add("over");
     };
     const up=ev=>{
       document.removeEventListener("pointermove",move);document.removeEventListener("pointerup",up);document.removeEventListener("pointercancel",up);
-      if(!moved)return;
+      if(!moved){document.body.classList.remove("dragging");return}
       dragEnded=true;setTimeout(()=>{dragEnded=false},0);
-      const t=under(ev);
+      const t=under(ev); // 落とす先は、空のストックが広いまま（引きずり中の形）で決めてから、元へ戻す
+      document.body.classList.remove("dragging");
       b.classList.remove("drag");if(over)over.classList.remove("over");
       if(t&&ev.type==="pointerup"&&G&&!G.over){if(t.dataset.id)G.swap(G.me,id,+t.dataset.id);else G.move(G.me,id,t.parentNode===$("meTray"));afterChange()}
     };
@@ -443,6 +476,7 @@ function renderHand(el,p,interactive,tray){
     if(interactive)attachDrag(t,x.id);
     el.appendChild(t);
   }
+  if(tray)el.classList.toggle("empty",!cards.length);
   const max=tray?D.rules.split_extra:D.rules.hand_max;
   for(let i=cards.length;i<max;i++){const s=document.createElement("div");s.className="slot"+(interactive?" free":"");el.appendChild(s)}
 }

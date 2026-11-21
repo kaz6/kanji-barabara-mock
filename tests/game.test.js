@@ -120,9 +120,10 @@ test("取る：手札は8枚で止まる（置き場の札は数えない）", (
   assert.equal(g.me.takes, 2, "取れる枚数は残る");
 });
 
-test("割る：手札8＋置き場4の全部で12枚まで。12枚なら割れない（KJ-004）", () => {
+test("割る：手札8＋ストックの全部（rules.json の値。いまは8＋8＝16）まで。いっぱいなら割れない（KJ-004・KJ-010）", () => {
   const g = newGame();
-  assert.equal(D.rules.split_extra, 4);
+  const X = D.rules.split_extra, ALL = D.rules.hand_max + X;
+  assert.equal(X, 8, "ストックは8（KJ-010 追記）");
   setHand(g, g.me, "休" + "一".repeat(7)); // 手札8
   assert.equal(g.handCount(g.me), 8);
   let r = g.split(g.me, [g.me.cards[0].id]);
@@ -130,18 +131,18 @@ test("割る：手札8＋置き場4の全部で12枚まで。12枚なら割れ�
   assert.equal(g.handCount(g.me), 8, "割ったあとも手札は8まで");
   assert.equal(g.trayCount(g.me), 1, "あふれた1枚は置き場へ");
   assert.equal(g.me.cards.length, 9);
-  for (let i = 0; i < 3; i++) { // 置き場が4枚になるまで、手札の1枚を 休 にして割る
+  for (let i = 0; i < X - 1; i++) { // ストックがいっぱいになるまで、手札の1枚を 休 にして割る
     const hand = g.me.cards.find((x) => !x.tray && x.c === "一");
     hand.c = "休";
     assert.ok(g.split(g.me, [hand.id]).ok);
   }
-  assert.equal(g.me.cards.length, 12);
-  assert.equal(g.trayCount(g.me), 4);
+  assert.equal(g.me.cards.length, ALL);
+  assert.equal(g.trayCount(g.me), X);
   assert.equal(g.handCount(g.me), 8);
-  const spare = g.me.cards.find((x) => !x.tray && x.c === "一");
+  const spare = g.me.cards.find((x) => !x.tray && (x.c === "一" || x.c === "人")); // 手札の1枚を 休 にする
   spare.c = "休";
-  assert.equal(g.split(g.me, [spare.id]).why, "手札もストックもいっぱい", "12枚で割れない");
-  assert.equal(g.me.cards.length, 12);
+  assert.equal(g.split(g.me, [spare.id]).why, "手札もストックもいっぱい", "いっぱいで割れない");
+  assert.equal(g.me.cards.length, ALL);
 });
 
 test("置き場の札：割ってできた札は手札に空きがなければ置き場。くっつけてできた札は手札に空きがあれば手札へ（R-032）", () => {
@@ -464,7 +465,7 @@ test("ログ：書き出しの頭に仮置きの値を全部書く", () => {
   const g = newGame();
   const text = g.logText();
   const head = text.split("\n").filter((l) => l.startsWith("#")).join("\n");
-  assert.match(head, /場=3枚 最初の手札=7枚 手札の上限=8枚＋ストック4枚（全部で12マス。場から取るのは手札の8枚まで。割る・くっつけるでできた札は、字も部品も、手札が埋まっていればストックへ。手札とストックの間は自分で動かせる）/);
+  assert.match(head, /場=3枚 最初の手札=7枚 手札の上限=8枚＋ストック8枚（全部で16マス。場から取るのは手札の8枚まで。割る・くっつけるでできた札は、字も部品も、手札が埋まっていればストックへ。手札とストックの間は自分で動かせる）/);
   assert.match(head, /# 相手 いまの強さ（CPU は 8〜12秒に1回動く）/);
   assert.match(head, /点数 2字3・3字6・4字12 四字熟語×2 特別な語×2（1字は放てない）/);
   assert.match(head, /放った字数×1枚を場から選んで取れる/);
@@ -827,6 +828,7 @@ test("ストック：割る・くっつけるでできた札は、字も部品�
 test("移す：手札⇄ストックの空いたマスへ1枚ずつ動かせる。いっぱいなら動かせない。ログに残る", () => {
   const g = newGame(1);
   const ids = setHand(g, g.me, "山川一二三四五"); // 手札7
+  const X = D.rules.split_extra;
   assert.ok(g.move(g.me, ids[0], true).ok, "手札→ストック");
   assert.equal(g.trayCount(g.me), 1);
   assert.equal(g.handCount(g.me), 6);
@@ -834,8 +836,12 @@ test("移す：手札⇄ストックの空いたマスへ1枚ずつ動かせる�
   assert.equal(g.move(g.me, ids[0], true).why, "同じ段");
   assert.ok(g.move(g.me, ids[0], false).ok, "ストック→手札");
   assert.equal(g.trayCount(g.me), 0);
-  for (const id of ids.slice(0, 4)) assert.ok(g.move(g.me, id, true).ok);
-  assert.equal(g.move(g.me, ids[4], true).why, "ストックがいっぱい");
+  // ストックを rules.json の枚数までいっぱいにしてから、手札の1枚を移そうとするとはじかれる
+  const g1 = newGame(1);
+  const h1 = setHand(g1, g1.me, "山川一二三四五六");
+  for (let i = 0; i < X; i++) g1.me.cards.push({ id: 880000 + i, c: "七", t: 0, fresh: false, tray: true });
+  assert.equal(g1.trayCount(g1.me), X);
+  assert.equal(g1.move(g1.me, h1[0], true).why, "ストックがいっぱい");
   const full = newGame(1);
   const fids = setHand(full, full.me, "山川一二三四五六");
   full.me.cards.push({ id: 888001, c: "七", t: 0, fresh: false, tray: true });
@@ -967,27 +973,28 @@ test("台の札は一時置き場：上の段・下の段の枚数に数えな�
   assert.ok(g.take(g.me, g.field[0].id).ok, "台に動かせば空きができて取れる");
   assert.equal(g.handCount(g.me), 8);
   assert.equal(g.take(g.me, g.field[0].id).why, "手札がいっぱい");
-  // 割る：手札8＋ストック4（台を除く）が全部埋まっていると割れない。台の札を割る場合は2枚できる分の空きが要る
+  // 割る：手札8＋ストック（台を除く）が全部埋まっていると割れない。台の札を割る場合は2枚できる分の空きが要る
   const g2 = newGame(1);
   setHand(g2, g2.me, "休古日十口人木七");
-  for (const c of "山川一二") g2.me.cards.push({ id: 700000 + c.codePointAt(0), c, t: 0, fresh: false, tray: true });
-  assert.equal(g2.handCount(g2.me) + g2.trayCount(g2.me), 12);
+  const ALL = D.rules.hand_max + D.rules.split_extra;
+  for (let i = 0; i < D.rules.split_extra; i++) g2.me.cards.push({ id: 700000 + i, c: "山川一二三四五六七八"[i], t: 0, fresh: false, tray: true });
+  assert.equal(g2.handCount(g2.me) + g2.trayCount(g2.me), ALL);
   const kyu = g2.me.cards[0].id;
-  assert.equal(g2.split(g2.me, [kyu]).why, "手札もストックもいっぱい"); // 12マス埋まり：割ると 休→人木 で +1
+  assert.equal(g2.split(g2.me, [kyu]).why, "手札もストックもいっぱい"); // 全マス埋まり：割ると 休→人木 で +1
   g2.setTable([g2.me.cards[3].id]); // 十 を台に置いて1マス空ける
-  assert.equal(g2.handCount(g2.me) + g2.trayCount(g2.me), 11);
+  assert.equal(g2.handCount(g2.me) + g2.trayCount(g2.me), ALL - 1);
   assert.equal(g2.fits(g2.me, [kyu], 2), true);
   assert.ok(g2.split(g2.me, [kyu]).ok, "台に1枚置けば割れる");
   // 台の札どうしをくっつけて、台を除いた段が埋まっているなら、できた札の置き場がなく失敗する
   const g3 = newGame(1);
   const i3 = setHand(g3, g3.me, "十口日木人七大一");
-  for (const c of "山川二三") g3.me.cards.push({ id: 710000 + c.codePointAt(0), c, t: 0, fresh: false, tray: true });
+  for (let i = 0; i < D.rules.split_extra; i++) g3.me.cards.push({ id: 710000 + i, c: "山川二三四五六七"[i % 8], t: 0, fresh: false, tray: true });
   g3.setTable([i3[0], i3[1]]);
-  assert.equal(g3.handCount(g3.me) + g3.trayCount(g3.me), 10);
+  assert.equal(g3.handCount(g3.me) + g3.trayCount(g3.me), ALL - 2);
   assert.ok(g3.join(g3.me, [i3[0], i3[1]], "古").ok);
   g3.setTable([]);
   const j = g3.me.cards.filter((x) => !x.tray).length + g3.me.cards.filter((x) => x.tray).length;
-  assert.ok(j <= 12);
+  assert.ok(j <= ALL);
 });
 
 test("台の札は段に数えない：台が一時置き場として使えるか（場から取り続ける・戻す）。台を空にすると元の枚数で数える", () => {

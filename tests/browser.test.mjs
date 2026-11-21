@@ -106,7 +106,7 @@ test("画面", { skip }, async (t) => {
       await page.click("#bLog");
       const log = await page.inputValue("#logText");
       assert.match(log, /^# 漢字版（仮）モック ログ/);
-      assert.match(log, /# 仮置き 場=3枚 最初の手札=7枚 手札の上限=8枚＋ストック4枚/);
+      assert.match(log, /# 仮置き 場=3枚 最初の手札=7枚 手札の上限=8枚＋ストック8枚/);
       assert.match(log, /# 相手 とても弱い（CPU は 30〜45秒に1回動く/);
       assert.match(log, /\tためした\t口 十\t\t0\t.*\t並べる順が逆/);
       assert.match(log, /\tくっつける\t十 口\t古\t/);
@@ -352,7 +352,7 @@ test("画面", { skip }, async (t) => {
   });
 
   for (const vp of [{ width: 760, height: 1100, name: "広い画面" }, { width: 375, height: 900, name: "スマホ幅" }]) {
-    await t.test(`${vp.name}：手札8＋部品の置き場4。手札が8枚でも割れて、あふれた札は置き場に入る。位置は動かない`, async () => {
+    await t.test(`${vp.name}：手札8＋ストック（rules.json の枚数）。手札が8枚でも割れて、あふれた札は置き場に入る。位置は動かない`, async () => {
       const { ctx, page, errors } = await open(browser, url, vp);
       await page.evaluate(() => {
         const G = __KJ.game;
@@ -361,7 +361,7 @@ test("画面", { skip }, async (t) => {
       });
       const pos = (sel) => page.evaluate((s) => [...document.querySelectorAll(s)].map((e) => { const r = e.getBoundingClientRect(); return Math.round(r.left + scrollX) + "," + Math.round(r.top + scrollY); }).join(" "), sel);
       assert.equal(await page.locator("#meHand > *").count(), 8);
-      assert.equal(await page.locator("#meTray > *").count(), 4);
+      assert.equal(await page.locator("#meTray > *").count(), await page.evaluate(() => __KJ.data.rules.split_extra));
       assert.equal(await page.locator("#meTray .tile").count(), 0);
       assert.match(await page.textContent("#meCount"), /手札 8 \/ 8/);
       const hand0 = await pos("#meHand > *"), tray0 = await pos("#meTray > *"), field0 = await pos("#field > *");
@@ -580,6 +580,68 @@ test("画面", { skip }, async (t) => {
     if (process.env.KJ_SHOT) await page.screenshot({ path: process.env.KJ_SHOT, fullPage: true });
     assert.deepEqual(errors, []);
     await ctx.close();
+  });
+
+  // KJ-010：遊ぶ画面を 375×700 に収める。「台に並べる」「手札で選ぶ」の両方で、ストックが全部埋まった（札が一番多い）形で確かめる
+  for (const layout of ["table", "hand"]) {
+    await t.test(`375×700 に収まる（${layout === "table" ? "台に並べる" : "手札で選ぶ"}）：CPU の点と手札の枚数・場・台・ボタン・手札・ストック・残り時間がスクロールなしで見える`, async () => {
+      const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 }, "normal", layout);
+      await page.evaluate(() => {
+        const G = __KJ.game;
+        G.me.cards = [..."天上天下十口休日"].map((c, i) => ({ id: 9000 + i, c, t: 0, fresh: false }));
+        [..."山川二三四五六七"].forEach((c, i) => G.me.cards.push({ id: 9100 + i, c, t: 0, fresh: false, tray: true }));
+        G.me.takes = 2; // 「取れる」の文も出した形
+        __KJ.render();
+      });
+      assert.equal(await page.evaluate(() => __KJ.game.trayCount(__KJ.game.me)), await page.evaluate(() => __KJ.data.rules.split_extra), "ストックは全部埋まっている");
+      for (const ch of "天上天下") await page.locator("#meHand .tile", { hasText: ch }).first().click(); // 台（または選び）に4枚。言葉の説明が2行になる
+      const parts = await page.evaluate(() => {
+        const box = (sel) => [...document.querySelectorAll(sel)].map((e) => { const r = e.getBoundingClientRect(); return { sel, l: r.left, t: r.top, r: r.right, b: r.bottom, w: r.width, h: r.height, shown: r.width > 0 && r.height > 0 }; });
+        return [].concat(
+          box("#clock"), box("#cpuScore"), box("#cpuCount"), box("#field > *"), box("#takes"), box("#info"), box(".ops button"),
+          box("#meHand > *"), box("#meTray > *"), box("#meScore"), box("#meCount"), box("#msg").slice(0, 0));
+      });
+      const rows = layout === "table" ? await page.evaluate(() => { const r = document.getElementById("row").getBoundingClientRect(); return [{ sel: "#row", l: r.left, t: r.top, r: r.right, b: r.bottom, shown: r.height > 0 }]; }) : [];
+      for (const p of parts.concat(rows)) {
+        assert.ok(p.shown, `${p.sel} が見えている`);
+        assert.ok(p.t >= 0 && p.b <= 700, `${p.sel} が縦に画面内（上${Math.round(p.t)}〜下${Math.round(p.b)}）`);
+        assert.ok(p.l >= 0 && p.r <= 375, `${p.sel} が横に画面内（左${Math.round(p.l)}〜右${Math.round(p.r)}）`);
+      }
+      assert.equal(parts.filter((p) => p.sel === "#meHand > *").length, 8);
+      assert.equal(parts.filter((p) => p.sel === "#meTray > *").length, await page.evaluate(() => __KJ.data.rules.split_extra));
+      assert.equal(parts.filter((p) => p.sel === ".ops button").length, 8, "ボタンは8つ");
+      // 札は指で押せる大きさ（40px 以上）。ボタンは2段まで
+      for (const p of parts.filter((x) => x.sel === "#meHand > *" || x.sel === "#meTray > *")) assert.ok(p.w >= 40 && p.h >= 40, `手札・ストックの札が 40px 以上（${p.w}×${p.h}）`);
+      const tops = new Set(parts.filter((p) => p.sel === ".ops button").map((p) => Math.round(p.t)));
+      assert.ok(tops.size <= 2, `ボタンは2段まで（${tops.size}段）`);
+      // 横にあふれない
+      assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= 375), "横スクロールがない");
+      // 手札と場とストックの札の字が読める大きさ
+      const fs = await page.evaluate(() => ["#meHand .tile", "#meTray .tile", "#field .tile"].map((s) => parseFloat(getComputedStyle(document.querySelector(s)).fontSize)));
+      for (const f of fs) assert.ok(f >= 22, `字の大きさ ${f}px`);
+      if (process.env.KJ_SHOT) await page.screenshot({ path: process.env.KJ_SHOT.replace(/\.png$/, `-${layout}.png`) });
+      assert.deepEqual(errors, []);
+      await ctx.close();
+    });
+  }
+
+  await t.test("ストック：空のときは低く薄く、札が入ると手札と同じ形。16マス（手札8＋ストック8）。760px でも横にあふれない", async () => {
+    for (const vp of [{ width: 375, height: 700 }, { width: 760, height: 1100 }]) {
+      const { ctx, page, errors } = await open(browser, url, vp, "normal", "table");
+      await page.evaluate(() => { const G = __KJ.game; G.me.cards = [..."天上天下十口休日"].map((c, i) => ({ id: 9000 + i, c, t: 0, fresh: false })); __KJ.render(); });
+      const R = await page.evaluate(() => __KJ.data.rules);
+      assert.equal(await page.locator("#meHand > *").count() + await page.locator("#meTray > *").count(), R.hand_max + R.split_extra, "全部で16マス");
+      const h = (sel) => page.evaluate((s) => document.querySelector(s).getBoundingClientRect().height, sel);
+      assert.ok(await page.evaluate(() => document.getElementById("meTray").classList.contains("empty")));
+      const lowH = await h("#meTray > *"), handH = await h("#meHand > *");
+      assert.ok(lowH < handH, `空のストックは手札の札より低い（${lowH} < ${handH}）`);
+      await page.evaluate(() => { __KJ.game.me.cards.push({ id: 9100, c: "山", t: 0, fresh: false, tray: true }); __KJ.render(); });
+      assert.equal(await page.evaluate(() => document.getElementById("meTray").classList.contains("empty")), false);
+      assert.ok(Math.abs((await h("#meTray > *")) - handH) < 1, "札が入ったら手札と同じ形");
+      assert.ok(await page.evaluate((w) => document.documentElement.scrollWidth <= w, vp.width), `${vp.width}px で横にあふれない`);
+      assert.deepEqual(errors, []);
+      await ctx.close();
+    }
   });
 
   await t.test("終わると「ログをコピー」が出て、クリップボードに入る", async () => {
