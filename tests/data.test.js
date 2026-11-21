@@ -275,3 +275,32 @@ test("字として見せる（jouyou）：N5 の外で、部品表に出てく�
   assert.ok(K.isChar(T, "玉"));
   assert.ok(!K.isChar(T, "卜"), "卜 は部品の見た目のまま");
 });
+
+// 割れる札の点線（KJ-014）
+test("split_shapes：割り方（parts.json）の字すべてに形がある。割れない字には無い", () => {
+  const sh = D.split_shapes.shapes;
+  for (const k of Object.keys(parts)) assert.ok(sh[k], `${k} に形が無い`);
+  for (const k of Object.keys(sh)) assert.ok(parts[k], `${k} は割れない字なのに形がある`);
+  for (const [k, v] of Object.entries(sh)) {
+    assert.ok(["lr", "tb", "other"].includes(v.s), `${k} の形`);
+    if (v.s !== "other") assert.ok(v.at > 0 && v.at < 1, `${k} の線の位置`);
+    else assert.ok(v.kind === "囲み" || v.kind === "それ以外", `${k} の種類`);
+  }
+});
+
+test("cutSpec：左右＝縦の点線、上下＝横の点線、その他＝角に「割」。割れない字は null（N5・N4）", () => {
+  for (const lv of ["N5", "N4"]) {
+    const TL = TT[lv];
+    for (const c of new Set([...TL.CHARS, ...TL.JOUYOU, ...Object.values(TL.parts).flat()])) {
+      const sp = K.cutSpec(TL, c);
+      if (!TL.parts[c]) { assert.equal(sp, null, `${lv} ${c} は割れない`); continue; }
+      const s = D.split_shapes.shapes[c].s;
+      assert.equal(sp.kind, s === "lr" ? "v" : s === "tb" ? "h" : "x", `${lv} ${c}`);
+    }
+  }
+  assert.equal(K.cutSpec(T, "休").kind, "v");
+  assert.equal(K.cutSpec(T, "古").kind, "h");
+  assert.equal(K.cutSpec(T, "国").kind, "x");
+  assert.equal(K.cutSpec(T, "日"), null);
+  assert.ok(Math.abs(K.cutSpec(T, "休").at - 0.3) < 1e-9, "休 は左の 亻 が細いので左から約 0.3");
+});

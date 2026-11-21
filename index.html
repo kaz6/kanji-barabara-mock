@@ -6,7 +6,7 @@
 <title>漢字版（仮）モック</title>
 <style>
 :root{
-  --bg:#f6f4ef; --ink:#1d1b18; --sub:#6b665d; --line:#d9d4c9; --tile:#fffdf8;
+  --bg:#f6f4ef; --ink:#1d1b18; --sub:#6b665d; --line:#d9d4c9; --tile:#fffdf8; --cut:#8a6d3b;
   --slot:#ebe7de; --accent:#c8402a; --ok:#2f6b4f; --dim:#a9a397;
   --kanji:"Hiragino Mincho ProN","Yu Mincho","Noto Serif CJK JP","Noto Serif JP","Source Han Serif JP",serif;
 }
@@ -44,6 +44,16 @@ h1{font-size:17px;margin:0 0 2px;font-weight:700}
 .tile.new{border-color:var(--accent);border-width:2px}
 .tile .mk{position:absolute;top:1px;right:3px;font:10px/1.2 system-ui,sans-serif;color:var(--accent);letter-spacing:-1px}
 .tile .orig{position:absolute;bottom:1px;left:3px;font:10px/1 system-ui,sans-serif;color:var(--sub)}
+/* 割れる札の点線（KJ-014）：字に重ねる。角の印（反・巡・音＝右上、選んだ順＝左上、元の字＝左下）とぶつからないよう、その分だけ線を短くする */
+.tile .cut{position:absolute;pointer-events:none;z-index:1}
+.tile .cutv{left:calc(var(--at)*100%);top:7%;bottom:7%;border-left:1.5px dashed var(--cut)}
+.tile .cuth{top:calc(var(--at)*100%);left:7%;right:7%;border-top:1.5px dashed var(--cut)}
+.tile .cutx{right:2px;bottom:1px;font:bold 9px/1 system-ui,sans-serif;color:var(--cut);border:1px solid var(--cut);border-radius:2px;padding:0 1px}
+.tile.hasmk .cutv.r{top:36%}
+.tile.sel .cutv.l{top:36%}
+.tile.hasmk .cuth.t{right:56%}
+.tile.sel .cuth.t{left:34%}
+.tile.sel .cut{--cut:#fff}
 .cpu .hand{gap:3px}
 .cpu .tile{font-size:clamp(14px,3.4vw,22px);cursor:default}
 .cpu .tile:hover{border-color:var(--line)}
@@ -461,7 +471,18 @@ function tileEl(x,{onClick,shown,ord}={}){
   b.className="tile"+(K.isChar(T,x.c)?"":" part")+(x.fresh&&clock()-x.t<1.5?" new":"");
   b.textContent=shown||x.c;
   const m=K.marks(T,x.c);
-  if(m){const s=document.createElement("span");s.className="mk";s.textContent=m;b.appendChild(s)}
+  if(m){const s=document.createElement("span");s.className="mk";s.textContent=m;b.appendChild(s);b.classList.add("hasmk")}
+  // 割れる札の点線（KJ-014）。左右に割れる字は縦、上下は横、1本で表せない字は角に「割」
+  const cut=K.cutSpec(T,x.c);
+  if(cut){
+    const s=document.createElement("span");
+    if(cut.kind==="x"){s.className="cut cutx";s.textContent="割"}
+    else{
+      s.className="cut cut"+cut.kind;s.style.setProperty("--at",cut.at);
+      if(cut.kind==="v"){if(cut.at>0.55)s.classList.add("r");if(cut.at<0.35)s.classList.add("l")}else if(cut.at<0.32)s.classList.add("t");
+    }
+    s.dataset.cut=cut.kind;b.appendChild(s);
+  }
   if(shown&&shown!==x.c){const s=document.createElement("span");s.className="orig";s.textContent=x.c;b.appendChild(s)}
   if(ord){b.classList.add("sel");const s=document.createElement("span");s.className="ord";s.textContent=ord;b.appendChild(s)}
   if(onClick)b.onclick=onClick;

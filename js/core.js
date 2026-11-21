@@ -32,7 +32,7 @@
   const timeLabel = (sec) => `${sec / 60}分`;
   const cpuInterval = (D, key) => (key === "weak" ? D.rules.cpu.weak_interval_sec : D.rules.cpu.interval_sec);
 
-  const FILES = ["kanji", "words", "readings", "parts", "antonyms", "cycles", "radical_forms", "special", "rules"];
+  const FILES = ["kanji", "words", "readings", "parts", "antonyms", "cycles", "radical_forms", "special", "rules", "split_shapes"];
 
   // ---------- 表を引く ----------
   // level を省くと rules.json の level_default（なければ N4）
@@ -59,6 +59,7 @@
     T.parts = {};
     for (const k of Object.keys(all)) if (keep.has(k)) T.parts[k] = all[k]; // もとの並びのまま（十口 は 古 が先）
     T.RELAY = new Set([...relayAll].filter((r) => keep.has(r) && !T.CHARS.has(r)));
+    T.SHAPES = (D.split_shapes && D.split_shapes.shapes) || {};
     T.JOIN = new Map(); // "左右" → [できる字…]（十口 は 古・田 の2つ。R-016）
     for (const [k, [a, b]] of Object.entries(T.parts)) {
       const key = a + b;
@@ -144,6 +145,14 @@
     return { pts, how: parts.join("・") };
   }
   const homoChars = (T, c) => [...new Set((T.HOMO.get(c) || []).flatMap((g) => g.chars))].filter((x) => x !== c);
+  // 割れる札の点線（KJ-014）。割れない札は null。v＝縦の点線（左右に割れる）／h＝横の点線（上下）／x＝角に「割」（囲みなど、1本の線で表せない）
+  // at＝線の位置（0〜1。左右は左から、上下は上から）。形が付いていない割り方は x にする（データのテストで無いことを確かめる）
+  function cutSpec(T, c) {
+    if (!T.parts[c]) return null;
+    const sp = T.SHAPES && T.SHAPES[c];
+    if (!sp || (sp.s !== "lr" && sp.s !== "tb")) return { kind: "x", at: 0.5, enclose: !!(sp && sp.kind === "囲み") };
+    return { kind: sp.s === "lr" ? "v" : "h", at: sp.at };
+  }
   function marks(T, c) {
     let m = "";
     if (T.INV.has(c)) m += "反";
@@ -620,6 +629,6 @@
 
   return {
     FILES, OPPONENTS, LAYOUTS, LEVELS, timeChoices, normTime, timeLabel, layoutLabel, levelLabel, makeTables, isN5, isLevelChar, isChar, splitOnce, canSplit, delivered, joinResults, joinReversed,
-    releasable, scoreOf, homoChars, marks, rulesLabel, opponentLabel, createGame,
+    releasable, scoreOf, homoChars, marks, cutSpec, rulesLabel, opponentLabel, createGame,
   };
 });
