@@ -368,7 +368,12 @@ test("字体：作者が化けると見つけた 後 の右（𢀖）と 験 の
   assert.ok(!GL.all.includes("佥"), "日本の字体に無い 佥 は使わない");
   assert.ok(!emb.has("僉"), "僉 は端末の字体にある");
   for (const lv of ["N5", "N4"]) {
-    assert.deepEqual(K.splitOnce(TT[lv], "験").length ? K.splitOnce(TT[lv], "験") : null, lv === "N4" ? ["馬", "僉"] : ["験"]);
+    assert.deepEqual(K.splitOnce(TT[lv], "験"), lv === "N4" ? ["馬", "僉"] : ["験"]);
+  }
+  assert.deepEqual(K.joinResults(TT.N4, "馬", "僉"), ["験"], "N4：馬＋僉 でくっつく");
+  assert.deepEqual(K.joinResults(TT.N4, "僉", "馬"), [], "逆の順ではくっつかない");
+  assert.deepEqual(K.joinResults(TT.N5, "馬", "僉"), [], "N5 では 験 は割れない・くっつかない");
+  for (const lv of []) {
   }
 });
 
