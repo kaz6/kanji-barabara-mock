@@ -68,14 +68,17 @@
     T.INV = new Map();
     for (const [a, b] of D.antonyms.pairs) { if (T.CHARS.has(a) && T.CHARS.has(b)) { T.INV.set(a, b); T.INV.set(b, a); } }
     T.NEXT = new Map();
-    T.CYCLES = D.cycles.cycles.filter((cy) => cy.chars.every((c) => T.CHARS.has(c))); // 四季は N4 から
+    // 巡りの字がすべて「レベルの字か outside（レベルの外で、巡りでだけ手に入る字。十二支。KJ-009）」のものだけ使う。四季は N4 から
+    T.CYCLES = D.cycles.cycles.filter((cy) => cy.chars.every((c) => T.CHARS.has(c) || (cy.outside || []).includes(c)));
+    T.OUTSIDE = new Set(); // レベルの外の字（山には入らない。巡り・同音で手に入る。「字」として見せる）
+    for (const cy of T.CYCLES) for (const c of cy.outside || []) if (!T.CHARS.has(c)) T.OUTSIDE.add(c);
     for (const cy of T.CYCLES) {
       const c = cy.chars;
       c.forEach((x, i) => { if (!T.NEXT.has(x)) T.NEXT.set(x, c[(i + 1) % c.length]); });
     }
     T.HOMO = new Map();
     for (const g0 of D.readings.same_reading_groups) {
-      const g = { ...g0, chars: g0.chars.filter((c) => T.CHARS.has(c)) };
+      const g = { ...g0, chars: g0.chars.filter((c) => T.CHARS.has(c) || T.OUTSIDE.has(c)) };
       if (g.chars.length < 2) continue;
       for (const c of g.chars) { if (!T.HOMO.has(c)) T.HOMO.set(c, []); T.HOMO.get(c).push(g); }
     }
@@ -94,7 +97,7 @@
   const isLevelChar = (T, c) => T.CHARS.has(c);
   const isN5 = isLevelChar; // 古い名前（いまは「遊ぶレベルの字」）
   // 画面で「字」として見せるか（レベルの字か常用漢字）。部品の見た目にしない
-  const isChar = (T, c) => T.CHARS.has(c) || T.JOUYOU.has(c);
+  const isChar = (T, c) => T.CHARS.has(c) || T.JOUYOU.has(c) || T.OUTSIDE.has(c);
   const splitOnce = (T, c) => T.parts[c] || [c];
   const canSplit = (T, c) => !!T.parts[c];
   // 部品にバラして届く形（D-003・D-004）。KJ-003 の遊びでは使わない（消すかは作者が決める）

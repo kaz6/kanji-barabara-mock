@@ -2781,5 +2781,98 @@
     "China"
    ]
   }
+ ],
+ "outside_note": "レベルの外の字（KJ-009・D-027。十二支）。山には入れない。巡りでだけ手に入る。画面では「字」として見せる。data/cycles.json の outside から作る",
+ "outside": [
+  {
+   "c": "丑",
+   "strokes": 4,
+   "freq": 2305,
+   "en": [
+    "sign of the ox or cow",
+    "1-3AM"
+   ]
+  },
+  {
+   "c": "寅",
+   "strokes": 11,
+   "freq": 1975,
+   "en": [
+    "sign of the tiger",
+    "3-5AM"
+   ]
+  },
+  {
+   "c": "卯",
+   "strokes": 5,
+   "freq": 2400,
+   "en": [
+    "sign of the hare or rabbit",
+    "fourth sign of Chinese zodiac"
+   ]
+  },
+  {
+   "c": "辰",
+   "strokes": 7,
+   "freq": 1600,
+   "en": [
+    "sign of the dragon",
+    "7-9AM"
+   ]
+  },
+  {
+   "c": "巳",
+   "strokes": 3,
+   "freq": 2142,
+   "en": [
+    "sign of the snake or serpent",
+    "9-11AM"
+   ]
+  },
+  {
+   "c": "未",
+   "strokes": 5,
+   "freq": 650,
+   "en": [
+    "un-",
+    "not yet"
+   ]
+  },
+  {
+   "c": "申",
+   "strokes": 5,
+   "freq": 492,
+   "en": [
+    "have the honor to",
+    "sign of the monkey"
+   ]
+  },
+  {
+   "c": "酉",
+   "strokes": 7,
+   "freq": 2468,
+   "en": [
+    "west",
+    "bird"
+   ]
+  },
+  {
+   "c": "戌",
+   "strokes": 6,
+   "freq": null,
+   "en": [
+    "sign of the dog",
+    "7-9PM"
+   ]
+  },
+  {
+   "c": "亥",
+   "strokes": 6,
+   "freq": null,
+   "en": [
+    "sign of the hog",
+    "9-11PM"
+   ]
+  }
  ]
 }
