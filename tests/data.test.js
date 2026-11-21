@@ -100,7 +100,9 @@ test("決まり：数値がそろっている（KJ-003 の仮置き）", () => {
   assert.equal(r.score.yoji_mult, 2);
   assert.equal(r.score.special_mult, 2);
   assert.deepEqual([r.redraw.cost, r.redraw.free_wait_sec], [5, 30]);
-  assert.deepEqual([r.win.score, r.win.time_limit_sec], [50, 300]);
+  assert.equal(r.win.score, 50);
+  assert.equal(r.win.time_limit_sec, 600, "制限時間は10分（追記 P-005）");
+  assert.equal(r.layout_default, "hand", "並べ方の初期値は 手札で選ぶ（KJ-005）");
   const [a, b] = r.cpu.interval_sec;
   assert.deepEqual([a, b], [8, 12]);
   // KJ-004：場3・手札の上限8・部品の置き場4（全部で12マス）・とても弱い CPU は30〜45秒

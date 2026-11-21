@@ -29,7 +29,7 @@ function serve() {
 
 const skip = chromium ? false : "Playwright が入っていない";
 
-async function open(browser, url, vp, opponent) {
+async function open(browser, url, vp, opponent, layout = "table") {
   const ctx = await browser.newContext({ viewport: vp });
   await ctx.grantPermissions(["clipboard-read", "clipboard-write"]).catch(() => {});
   const page = await ctx.newPage();
@@ -39,6 +39,7 @@ async function open(browser, url, vp, opponent) {
   await page.goto(url);
   await page.waitForFunction(() => document.getElementById("msg").textContent.startsWith("字 "));
   if (opponent) await page.check(`#opp input[value="${opponent}"]`);
+  await page.check(`#lay input[value="${layout}"]`); // 既存の画面テストは「台に並べる」で見る。手札で選ぶは KJ-005 の下のテスト
   await page.click("#start");
   // CPU を止め、手を決める
   await page.evaluate(() => {
@@ -207,6 +208,147 @@ test("画面", { skip }, async (t) => {
       await ctx.close();
     });
   }
+
+
+  // ---------- KJ-005：手札で選ぶ・入れ替え・切り替え ----------
+  for (const vp of [{ width: 760, height: 1100, name: "広い画面" }, { width: 375, height: 900, name: "スマホ幅" }]) {
+    await t.test(`${vp.name}：手札で選ぶ。色が変わり選んだ順の数字が出る。台は出ない。放つ・割る・くっつけるが台と同じ結果。外せる`, async () => {
+      const { ctx, page, errors } = await open(browser, url, vp, null, "hand");
+      const pos = (sel) => page.evaluate((s) => [...document.querySelectorAll(s)].map((e) => { const r = e.getBoundingClientRect(); return Math.round(r.left + scrollX) + "," + Math.round(r.top + scrollY); }).join(" "), sel);
+      const hand0 = await pos("#meHand > *");
+      const tile = (ch) => page.locator("#meHand .tile", { hasText: ch }).first();
+      assert.equal(await page.isVisible("#row"), false, "台は出さない");
+      // 休 → 日 の順に選ぶ：色が変わり 1・2
+      await tile("休").click(); await tile("日").click();
+      assert.equal(await tile("休").evaluate((e) => e.classList.contains("sel")), true);
+      assert.equal(await tile("休").locator(".ord").textContent(), "1");
+      assert.equal(await tile("日").locator(".ord").textContent(), "2");
+      assert.equal(await pos("#meHand > *"), hand0, "選んでも手札は動かない");
+      assert.match(await page.textContent("#info"), /休日.*3点/);
+      // もう一度タップで外れる。外した札の数字は消え、残りは詰める
+      await tile("休").click();
+      assert.equal(await tile("休").evaluate((e) => e.classList.contains("sel")), false);
+      assert.equal(await tile("日").locator(".ord").textContent(), "1");
+      // 選んだ順が効く：日 → 休 は放てない（休日 とは別）
+      await tile("休").click();
+      assert.equal(await tile("日").locator(".ord").textContent(), "1");
+      assert.equal(await tile("休").locator(".ord").textContent(), "2");
+      assert.equal(await page.isDisabled("#bRelease"), true, "日休 は放てない");
+      await page.click("#bBack");
+      assert.equal(await page.locator("#meHand .tile.sel").count(), 0);
+      // 口 → 十 は くっつけない（並べる順が逆）。十 → 口 は 古 か 田
+      await tile("口").click(); await tile("十").click();
+      assert.match(await page.textContent("#info"), /並べる順が逆/);
+      assert.equal(await page.isDisabled("#bJoin"), true);
+      await page.click("#bBack");
+      await tile("十").click(); await tile("口").click();
+      await page.click("#bJoin");
+      await page.locator("#choices button", { hasText: "古" }).click();
+      assert.equal(await page.locator("#meHand .tile", { hasText: "古" }).count(), 1, "古 が手札にできた");
+      assert.equal(await page.locator("#meHand .tile.sel").count(), 1, "できた札は選んだまま");
+      await page.click("#bBack");
+      // 割る：休 → 人木
+      await tile("休").click();
+      await page.click("#bSplit");
+      assert.equal(await page.locator("#meHand .tile, #meTray .tile", { hasText: "木" }).count(), 1);
+      // 放つ → 場から取る（割ってできた札は選んだままなので、戻してから選ぶ）
+      await page.click("#bBack");
+      await tile("日").click();
+      await page.click("#bRelease");
+      assert.match(await page.textContent("#meScore"), /^1 点/);
+      assert.equal(await page.locator("#meHand .tile.sel").count(), 0);
+      // 放つ・割る・くっつけるがログに残る。頭に並べ方
+      await page.click("#bLog");
+      const log = await page.inputValue("#logText");
+      assert.match(log, /# 並べ方 手札で選ぶ（はじめたとき/);
+      assert.match(log, /\tくっつける\t十 口\t古\t/);
+      assert.match(log, /\t割る\t休\t人 木\t/);
+      assert.match(log, /\t放つ\t日\t\t1\t/);
+      assert.match(log, /\tためした\t口 十\t\t0\t.*並べる順が逆/);
+      assert.deepEqual(errors, []);
+      await ctx.close();
+    });
+
+    await t.test(`${vp.name}：切り替え。いつでも戻せる。選んだ札は引き継ぐ。端末に覚える。ログに残る`, async () => {
+      const { ctx, page, errors } = await open(browser, url, vp, null, "hand");
+      const tile = (ch) => page.locator("#meHand .tile", { hasText: ch }).first();
+      await tile("休").click(); await tile("日").click();
+      // 台に並べるへ：選んだ札が台に並ぶ
+      await page.check('#lay input[value="table"]');
+      assert.equal(await page.isVisible("#row"), true);
+      assert.match(await page.textContent("#row"), /^休.*日/);
+      assert.equal(await page.locator("#meHand .slot.held").count(), 2);
+      // 手札で選ぶへ戻す
+      await page.check('#lay input[value="hand"]');
+      assert.equal(await page.isVisible("#row"), false);
+      assert.equal(await page.locator("#meHand .tile.sel").count(), 2);
+      assert.equal(await page.evaluate(() => localStorage.getItem("kj-layout")), "hand");
+      await page.check('#lay input[value="table"]');
+      assert.equal(await page.evaluate(() => localStorage.getItem("kj-layout")), "table");
+      // 再読み込みしても覚えている
+      await page.reload();
+      await page.waitForFunction(() => document.getElementById("msg").textContent.startsWith("字 "));
+      assert.equal(await page.locator("#lay input:checked").getAttribute("value"), "table");
+      // 消して読み込み直すと初期値（手札で選ぶ）
+      await page.evaluate(() => localStorage.clear());
+      await page.reload();
+      await page.waitForFunction(() => document.getElementById("msg").textContent.startsWith("字 "));
+      assert.equal(await page.locator("#lay input:checked").getAttribute("value"), "hand");
+      // 遊んでいる最中の切り替えがログに出る
+      await page.click("#start");
+      await page.check('#lay input[value="table"]');
+      await page.click("#bLog");
+      assert.match(await page.inputValue("#logText"), /\t並べ方\t\t\t0\t.*台に並べるに切り替え/);
+      assert.deepEqual(errors, []);
+      await ctx.close();
+    });
+
+    await t.test(`${vp.name}：入れ替え。札を引きずって別の札の上で離すと位置が替わる（どちらの並べ方でも。指一本）。ただのタップは選ぶだけ`, async () => {
+      for (const layout of ["hand", "table"]) {
+        const { ctx, page, errors } = await open(browser, url, vp, null, layout);
+        const order = () => page.locator("#meHand > *").evaluateAll((els) => els.map((e) => e.classList.contains("tile") ? e.title : "_").join(""));
+        assert.equal(await order(), "天上天下十口休日");
+        const center = async (loc) => { const b = await loc.boundingBox(); return [b.x + b.width / 2, b.y + b.height / 2]; };
+        const drag = async (from, to) => {
+          await page.locator("#meHand .tile", { hasText: to }).first().scrollIntoViewIfNeeded();
+          await page.locator("#meHand .tile", { hasText: from }).first().scrollIntoViewIfNeeded();
+          const [x1, y1] = await center(page.locator("#meHand .tile", { hasText: from }).first());
+          const [x2, y2] = await center(page.locator("#meHand .tile", { hasText: to }).first());
+          await page.mouse.move(x1, y1); await page.mouse.down();
+          await page.mouse.move((x1 + x2) / 2, (y1 + y2) / 2, { steps: 4 });
+          await page.mouse.move(x2, y2, { steps: 4 });
+          await page.mouse.up();
+        };
+        await drag("休", "天");
+        assert.equal(await order(), "休上天下十口天日", `${layout}：休と最初の天が入れ替わる`);
+        assert.equal(await page.locator("#row .tile").count(), 0, "引きずっても台には置かれない");
+        assert.equal(await page.locator("#meHand .tile.sel").count(), 0, "引きずっても選ばれない");
+        // ただのタップは今までどおり
+        await page.locator("#meHand .tile", { hasText: "口" }).click();
+        if (layout === "hand") assert.equal(await page.locator("#meHand .tile.sel").count(), 1);
+        else assert.equal(await page.locator("#row .tile").count(), 1);
+        // 入れ替えは選んだ順に響かない（選んだ札の id の順のまま）
+        await drag("日", "上");
+        assert.equal(await order(), layout === "hand" ? "休日天下十口天上" : "休日天下十_天上");
+        await page.click("#bLog");
+        const log = await page.inputValue("#logText");
+        assert.match(log, /\t入れ替え\t休 天\t天 休\t/);
+        assert.match(log, /\t入れ替え\t日 上\t上 日\t/);
+        assert.match(log, /\tはじめ\t/);
+        assert.deepEqual(errors, []);
+        await ctx.close();
+      }
+    });
+  }
+
+  await t.test("手札で選ぶ：スマホ幅の画像（選んだ札が目立つ）", async () => {
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 }, null, "hand");
+    await page.locator("#meHand .tile", { hasText: "休" }).first().click();
+    await page.locator("#meHand .tile", { hasText: "日" }).first().click();
+    if (process.env.KJ_SHOT) await page.screenshot({ path: process.env.KJ_SHOT, fullPage: true });
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
 
   await t.test("終わると「ログをコピー」が出て、クリップボードに入る", async () => {
     const { ctx, page } = await open(browser, url, { width: 760, height: 1100 });

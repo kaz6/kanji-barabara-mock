@@ -8,12 +8,18 @@
 })(typeof self !== "undefined" ? self : this, function () {
   "use strict";
 
-  // 相手の選び方（KJ-004）。ひとりで＝CPU なし・場の取り合いなし・50点で終わらず5分で終わる
+  // 相手の選び方（KJ-004）。ひとりで＝CPU なし・場の取り合いなし・50点で終わらず制限時間で終わる
   const OPPONENTS = [
     { key: "solo", label: "ひとりで" },
     { key: "weak", label: "とても弱い" },
     { key: "normal", label: "いまの強さ" },
   ];
+  // 並べ方（KJ-005）。手札で選ぶ＝手札の上で選んだ順にそのまま操作する／台に並べる＝台に並べてから操作する
+  const LAYOUTS = [
+    { key: "hand", label: "手札で選ぶ" },
+    { key: "table", label: "台に並べる" },
+  ];
+  const layoutLabel = (key) => (LAYOUTS.find((l) => l.key === key) || LAYOUTS[0]).label;
   const cpuInterval = (D, key) => (key === "weak" ? D.rules.cpu.weak_interval_sec : D.rules.cpu.interval_sec);
 
   const FILES = ["kanji", "words", "readings", "parts", "antonyms", "cycles", "radical_forms", "special", "rules"];
@@ -90,7 +96,7 @@
   }
   // ログの頭に書く仮置きの値
   function opponentLabel(D, key) {
-    if (key === "solo") return "ひとりで（CPU なし。場の取り合いなし。50点では終わらず、5分たったら終わって点を出す。CPU の列は 0）";
+    if (key === "solo") return `ひとりで（CPU なし。場の取り合いなし。50点では終わらず、${D.rules.win.time_limit_sec / 60}分たったら終わって点を出す。CPU の列は 0）`;
     const [a, b] = cpuInterval(D, key);
     return key === "weak" ? `とても弱い（CPU は ${a}〜${b}秒に1回動く。動き方はいまの CPU のまま）` : `いまの強さ（CPU は ${a}〜${b}秒に1回動く）`;
   }
@@ -120,6 +126,7 @@
     const opponent = OPPONENTS.some((o) => o.key === env.opponent) ? env.opponent : R.opponent_default;
     const g = { D, T, opponent, solo: opponent === "solo", log: [], events: [], used: new Set(), over: false, winner: null,
       startedAt: (env.date || (() => new Date()))() };
+    g.layout = LAYOUTS.some((l) => l.key === env.layout) ? env.layout : (R.layout_default || "hand");
     const t0 = now();
     g.now = now;
     g.elapsed = () => now() - t0;
@@ -162,7 +169,7 @@
     g.redrawLeft = (p) => (p.redrawAt === null ? 0 : Math.max(0, p.redrawAt - now()));
     const useCd = (p, k) => { p.cd[k] = now() + R.cooldown_sec[k]; };
 
-    const QUIET = new Set(["ためした", "終わり", "動けない", "動ける"]);
+    const QUIET = new Set(["ためした", "終わり", "動けない", "動ける", "入れ替え", "並べ方"]);
     function addLog(who, op, from, to, pts, note) {
       g.log.push({ t: g.elapsed(), who, op, from: from || [], to: to || [], pts: pts || 0,
         meScore: g.me.score, cpuScore: g.cpu.score, me: g.me.cards.length, cpu: g.cpu.cards.length, note: note || "" });
@@ -216,6 +223,7 @@
         }
       }
     }
+    g.startLayout = g.layout;
     addLog("—", "はじめ", [], [], 0,
       `手札 ${g.me.cards.map((x) => x.c).join("")} / ${g.cpu.cards.map((x) => x.c).join("")}・場 ${g.field.map((x) => x.c).join("")}`);
 
@@ -349,6 +357,24 @@
     };
 
     // はじかれた並び。画面側が「並べたのにやめた」ときに呼ぶ
+    // 並べ方の切り替え（途中でもできる）。ログに残す
+    g.setLayout = (key) => {
+      if (!LAYOUTS.some((l) => l.key === key) || key === g.layout) return fail("同じ");
+      g.layout = key;
+      addLog("あなた", "並べ方", [], [], 0, `${layoutLabel(key)}に切り替え`);
+      return { ok: true };
+    };
+    // 手札の中で2枚の位置を入れ替える（手札どうし・置き場どうし）。持っている札も数も変わらない
+    g.swap = (p, idA, idB) => {
+      if (!live()) return fail("終わった");
+      const a = g.byId(p, idA), b = g.byId(p, idB);
+      if (!a || !b || a === b) return fail("札がない");
+      if (!!a.tray !== !!b.tray) return fail("手札と置き場の間は入れ替えない");
+      const i = p.cards.indexOf(a), j = p.cards.indexOf(b);
+      p.cards[i] = b; p.cards[j] = a;
+      addLog(p.name, "入れ替え", [a.c, b.c], [b.c, a.c]);
+      return { ok: true };
+    };
     g.tried = (p, chars, why) => { if (live()) addLog(p.name, "ためした", chars, [], 0, why); };
 
     function finish(winner, why) {
@@ -444,8 +470,9 @@
         "# 漢字版（仮）モック ログ（KJ-003 役づくりの競争）",
         `# はじめた時刻 ${ds}（端末の時計）`,
         `# 相手 ${opponentLabel(D, g.opponent)}`,
+        `# 並べ方 ${layoutLabel(g.startLayout)}（はじめたとき。途中で切り替えると「並べ方」の行が残る）`,
         ...rulesLabel(D, g.opponent).map((x) => "# 仮置き " + x),
-        "# 手 はじめ・割る・くっつける・反転・巡り・同音・放つ・取る・引き直し・ためした（並べたのに放てず・くっつけられずにやめた並び）・動けない（放てる言葉が手札に無くなった。使った札＝その時の手札）・動ける・終わり",
+        "# 手 はじめ・割る・くっつける・反転・巡り・同音・放つ・取る・引き直し・入れ替え（手札の中で札の位置を替えた）・並べ方（切り替えた）・ためした（並べたのに放てず・くっつけられずにやめた並び）・動けない（放てる言葉が手札に無くなった。使った札＝その時の手札）・動ける・終わり",
         "# 点＝その手で増えた点（引き直しで払った点はマイナス）",
         "# データ " + FILES.map((f) => `${f}=${D[f].version}`).join(" "),
         `# 字 ${T.N5.size}・語 ${T.WORDS.size}`,
@@ -458,7 +485,7 @@
   }
 
   return {
-    FILES, OPPONENTS, makeTables, isN5, isChar, splitOnce, canSplit, delivered, joinResults, joinReversed,
+    FILES, OPPONENTS, LAYOUTS, layoutLabel, makeTables, isN5, isChar, splitOnce, canSplit, delivered, joinResults, joinReversed,
     releasable, scoreOf, homoChars, marks, rulesLabel, opponentLabel, createGame,
   };
 });
