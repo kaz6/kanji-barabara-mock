@@ -29,10 +29,11 @@ function serve() {
 
 const skip = chromium ? false : "Playwright が入っていない";
 
-async function open(browser, url, vp, opponent, layout = "table") {
+async function open(browser, url, vp, opponent, layout = "table", pre = null) {
   const ctx = await browser.newContext({ viewport: vp });
   await ctx.grantPermissions(["clipboard-read", "clipboard-write"]).catch(() => {});
   const page = await ctx.newPage();
+  if (pre) await pre(page);
   const errors = [];
   page.on("pageerror", (e) => errors.push(String(e)));
   page.on("console", (m) => { if (m.type() === "error") errors.push(m.text()); });
@@ -704,6 +705,140 @@ test("画面", { skip }, async (t) => {
     const clip = await page.evaluate(() => navigator.clipboard.readText());
     assert.match(clip, /# 仮置き 勝ち 先に50点/);
     assert.match(clip, /\t終わり\t.*あなたの勝ち（先に50点）/);
+    await ctx.close();
+  });
+
+  // ---------- KJ-020 ログの自動送信（本物の送り先には送らない。通信は page.route で受ける） ----------
+  const LOG_ROUTE = "**/rest/v1/play_logs";
+  // force：手元・テストでは送らない決まりを、送る処理を確かめるときだけ外す。status：受け側の返事（201＝入った／500＝失敗）
+  const forced = (posts, status = () => 201) => async (page) => {
+    await page.addInitScript(() => { window.__KJ_LOG_FORCE = true; });
+    await page.route(LOG_ROUTE, async (route) => {
+      posts.push({ headers: route.request().headers(), body: JSON.parse(route.request().postData()) });
+      await route.fulfill({ status: status(posts.length), body: "" });
+    });
+  };
+  const until = async (fn, ms = 3000) => { const t0 = Date.now(); while (!fn() && Date.now() - t0 < ms) await new Promise((r) => setTimeout(r, 25)); };
+  const winNow = async (page) => {
+    await page.evaluate(() => { __KJ.game.me.score = 48; });
+    await page.locator("#meHand .tile", { hasText: "休" }).click();
+    await page.locator("#meHand .tile", { hasText: "日" }).click();
+    await page.click("#bRelease");
+  };
+
+  await t.test("ログの送信（KJ-020）：終わったら1行送る。中身の形・同じ端末は同じ device_id・何も表示しない", async () => {
+    const posts = [];
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 }, null, "table", forced(posts));
+    const before = await page.evaluate(() => document.body.innerText);
+    await winNow(page);
+    await until(() => posts.length >= 1);
+    await page.waitForTimeout(200);
+    assert.equal(posts.length, 1, "終わりで1回だけ送る");
+    const { headers, body } = posts[0];
+    assert.match(headers.apikey, /^sb_publishable_/);
+    assert.equal(headers.authorization, undefined, "秘密の鍵は使わない");
+    assert.deepEqual(Object.keys(body).sort(), ["app_version", "device_id", "level", "log", "opponent", "result"]);
+    assert.match(body.result, /^あなたの勝ち（10分 51対\d+）$/);
+    assert.equal(body.level, "N4");
+    assert.equal(body.opponent, "weak");
+    assert.match(body.log, /^# 漢字版（仮）モック ログ/);
+    assert.match(body.log, /\t終わり\t/);
+    assert.match(body.device_id, /^[0-9a-f]{24}$/);
+    assert.equal(await page.evaluate(() => localStorage.getItem("kj-device")), body.device_id);
+    assert.equal(await page.evaluate(() => localStorage.getItem("kj-unsent-log")), null, "入ったので残さない");
+    assert.doesNotMatch(await page.evaluate(() => document.body.innerText), /送り|送信|送っ/, "画面に送ったことを出さない");
+    assert.doesNotMatch(before, /送り|送信|送っ/);
+    // 2試合目も同じ device_id
+    await page.click("#again");
+    await page.locator("#field .tile").first().click();
+    await page.evaluate(() => { const G = __KJ.game; G.cpuTurn = () => null; G.me.cards = [..."休日"].map((c, i) => ({ id: 9100 + i, c, t: 0, fresh: false })); });
+    await page.evaluate(() => __KJ.render());
+    await winNow(page);
+    await until(() => posts.length >= 2);
+    assert.equal(posts.length, 2);
+    assert.equal(posts[1].body.device_id, body.device_id);
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+
+  await t.test("ログの送信（KJ-020）：途中で捨てても、1手以上動いていれば送る。1手も動いていなければ送らない", async () => {
+    const posts = [];
+    const { ctx, page } = await open(browser, url, { width: 375, height: 900 }, null, "table", forced(posts));
+    await page.click("#bSetup"); // 1手も動かず捨てる
+    await page.waitForTimeout(300);
+    assert.equal(posts.length, 0, "1手も動いていない");
+    await page.click("#start");
+    await page.locator("#field .tile").first().click();
+    await page.evaluate(() => { const G = __KJ.game; G.cpuTurn = () => null; G.me.cards = [..."口十"].map((c, i) => ({ id: 9200 + i, c, t: 0, fresh: false })); });
+    await page.evaluate(() => __KJ.render());
+    await page.locator("#meHand .tile", { hasText: "口" }).click();
+    await page.locator("#meHand .tile", { hasText: "十" }).click();
+    await page.click("#bBack"); // 並べ方が逆のまま戻す＝「ためした」が残る＝動いた
+    await page.click("#again");
+    await until(() => posts.length >= 1);
+    assert.equal(posts.length, 1, "もう一度で捨てた試合を送る");
+    assert.match(posts[0].body.result, /^途中でやめた（/);
+    await page.locator("#field .tile").first().click();
+    await page.evaluate(() => { __KJ.game.cpuTurn = () => null; __KJ.game.tried(__KJ.game.me, ["天"], "辞書にない"); });
+    await page.click("#bSetup");
+    await until(() => posts.length >= 2);
+    assert.equal(posts.length, 2, "設定を変えるで捨てた試合も送る");
+    await ctx.close();
+  });
+
+  await t.test("ログの送信（KJ-020）：失敗しても遊びは止まらない。1件だけ残し、次の試合の終わりに送り直す", async () => {
+    const posts = [];
+    const { ctx, page } = await open(browser, url, { width: 375, height: 900 }, null, "table", forced(posts, (n) => (n === 1 ? 500 : 201)));
+    await winNow(page);
+    await until(() => posts.length >= 1);
+    await page.waitForTimeout(200);
+    assert.match(await page.textContent("#msg"), /勝ち/, "失敗しても終わりの画面は出る");
+    assert.equal(await page.isVisible("#again"), true);
+    const kept = JSON.parse(await page.evaluate(() => localStorage.getItem("kj-unsent-log")));
+    assert.equal(kept.device_id, posts[0].body.device_id, "失敗した1件が残る");
+    await page.click("#again");
+    await page.locator("#field .tile").first().click();
+    await page.evaluate(() => { const G = __KJ.game; G.cpuTurn = () => null; G.me.cards = [..."休日"].map((c, i) => ({ id: 9300 + i, c, t: 0, fresh: false })); });
+    await page.evaluate(() => __KJ.render());
+    await winNow(page);
+    await until(() => posts.length >= 3);
+    assert.equal(posts.length, 3, "残していた1件＋今回の1件を送る");
+    assert.deepEqual(posts[1].body, posts[0].body, "残していたものがそのまま送り直される");
+    assert.equal(await page.evaluate(() => localStorage.getItem("kj-unsent-log")), null);
+    await ctx.close();
+  });
+
+  await t.test("ログの送信（KJ-020）：通信が落ちていても遊びは止まらない／localStorage が読めなくても送れる", async () => {
+    const posts = [];
+    const { ctx, page } = await open(browser, url, { width: 375, height: 900 }, null, "table", async (p) => {
+      await forced(posts)(p);
+      await p.addInitScript(() => { Object.defineProperty(window, "localStorage", { get() { throw new Error("blocked"); } }); });
+    });
+    await winNow(page);
+    await until(() => posts.length >= 1);
+    assert.equal(posts.length, 1);
+    assert.ok(posts[0].body.device_id.length >= 8, "読めないときは試合ごとの無作為");
+    await ctx.close();
+    const { ctx: c2, page: p2 } = await open(browser, url, { width: 375, height: 900 }, null, "table", async (p) => {
+      await p.addInitScript(() => { window.__KJ_LOG_FORCE = true; });
+      await p.route(LOG_ROUTE, (route) => route.abort());
+    });
+    await winNow(p2);
+    await p2.waitForTimeout(300);
+    assert.match(await p2.textContent("#msg"), /勝ち/, "通信が切れていても終われる");
+    await c2.close();
+  });
+
+  await t.test("ログの送信（KJ-020）：手元（127.0.0.1）とテスト（webdriver）では、force が無ければ送らない", async () => {
+    const posts = [];
+    const { ctx, page } = await open(browser, url, { width: 375, height: 900 }, null, "table", async (p) => {
+      await p.route(LOG_ROUTE, async (route) => { posts.push(1); await route.fulfill({ status: 201, body: "" }); });
+    });
+    await winNow(page);
+    await page.waitForTimeout(500);
+    assert.match(await page.textContent("#msg"), /勝ち/);
+    assert.equal(posts.length, 0, "送っていない");
+    assert.equal(await page.evaluate(() => localStorage.getItem("kj-device")), null, "端末の印も作らない");
     await ctx.close();
   });
 });

@@ -28,6 +28,11 @@ npm test
 - `tests/browser.test.mjs`：画面（台に札を置いても手札と場が動かない・並べる順が逆・放つ→取る・引き直し・ログをコピー・手札で選ぶ・並べ方の切り替え・入れ替え）。Playwright の Chromium がないと skip になる。skip は「通った」ではない
 - 変えたら必ず `npm test` を回し、件数と結果を PR に書く
 
+## ログの自動送信（KJ-020）
+
+- 試合の終わり・途中で捨てたときに、ログを Supabase の `play_logs` に1行送る（`index.html` の `sendLog`、中身は `js/core.js` の `playLogRow`）。手元（localhost）とテスト（webdriver）では送らない。テストで送る処理を見るときだけ `window.__KJ_LOG_FORCE` を立て、通信は `page.route` で受ける（本物の送り先に出さない）
+- 鍵は publishable（`sb_publishable_…`。公開してよい）だけ。secret・service_role は書かない
+
 ## ローカルで開く
 
 ```bash

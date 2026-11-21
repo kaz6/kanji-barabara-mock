@@ -1078,3 +1078,49 @@ test("十二支：外の字を含む語が放てる（未来・丑年）。N5 �
     assert.ok(r.ok && r.pts === 3, `${lv}：丑年`);
   }
 });
+
+// ---------- KJ-020 ログの自動送信：送る中身の形と、送ってよい場所 ----------
+test("ログの送信（KJ-020）：1手も動いていなければ送らない。動いたら決まった形の1行", () => {
+  const g = newGame(1, "normal");
+  assert.equal(K.playLogRow(g, "dev-1"), null, "はじめただけでは送らない");
+  g.setLayout("hand"); // 並べ方の切り替えは手に数えない
+  assert.equal(K.playLogRow(g, "dev-1"), null);
+  g.tried(g.me, ["天", "口"], "辞書にない");
+  const row = K.playLogRow(g, "dev-1");
+  assert.deepEqual(Object.keys(row).sort(), ["app_version", "device_id", "level", "log", "opponent", "result"]);
+  assert.equal(row.device_id, "dev-1");
+  assert.equal(row.app_version, D.rules.version);
+  assert.equal(row.level, "N5");
+  assert.equal(row.opponent, "normal");
+  assert.match(row.result, /^途中でやめた（/);
+  assert.equal(row.log, g.logText());
+  assert.ok(row.result.length <= K.PLAY_LOG_LIMITS.result && row.device_id.length <= K.PLAY_LOG_LIMITS.device_id);
+});
+
+test("ログの送信（KJ-020）：終わったときの result（勝ち・ひとりで）と、長すぎる値は切る", () => {
+  const g = newGame(1, "normal");
+  setHand(g, g.me, "休日");
+  g.me.score = 48;
+  assert.ok(g.release(g.me, g.me.cards.map((x) => x.id)).ok);
+  assert.ok(g.over);
+  const row = K.playLogRow(g, "x".repeat(100));
+  assert.match(row.result, /^あなたの勝ち（10分 51対\d+）$/);
+  assert.equal(row.device_id.length, 64);
+  const s = newGame(1, "solo");
+  setHand(s, s.me, "休日");
+  assert.ok(s.release(s.me, s.me.cards.map((x) => x.id)).ok);
+  s.clock.t += 700;
+  s.tick();
+  assert.ok(s.over);
+  assert.equal(K.playLogRow(s, "d").result, "ひとりで 3点（10分）");
+  const big = newGame(1);
+  big.tried(big.me, ["天"], "x".repeat(300000));
+  assert.equal(K.playLogRow(big, "d").log.length, K.PLAY_LOG_LIMITS.log);
+});
+
+test("ログの送信（KJ-020）：手元（localhost・127.0.0.1・file）とテストでは送らない。公開ページでは送る", () => {
+  assert.equal(K.logSendAllowed({ hostname: "kaz6.github.io", webdriver: false }), true);
+  for (const h of ["localhost", "127.0.0.1", "", "[::1]", "foo.localhost"]) assert.equal(K.logSendAllowed({ hostname: h, webdriver: false }), false, h);
+  assert.equal(K.logSendAllowed({ hostname: "kaz6.github.io", webdriver: true }), false, "テスト（webdriver）では送らない");
+  assert.equal(K.logSendAllowed({ hostname: "127.0.0.1", webdriver: true, force: true }), true, "force は送る処理を確かめるときだけ");
+});
