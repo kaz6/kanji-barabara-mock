@@ -650,6 +650,47 @@ test("画面", { skip }, async (t) => {
     }
   });
 
+  await t.test("割れる札に点線（左右＝縦・上下＝横・囲み＝「割」）。割れない札には出ない。手札・ストック・場・台", async () => {
+    for (const vp of [{ width: 760, height: 1100 }, { width: 375, height: 700 }]) {
+      const { ctx, page, errors } = await open(browser, url, vp);
+      await page.evaluate(() => {
+        const G = __KJ.game;
+        G.field = [..."山国古"].map((c, i) => ({ id: 9500 + i, c, t: 0, fresh: false }));
+        G.me.cards.push({ id: 9101, c: "親", t: 0, fresh: false, tray: true });
+        __KJ.render();
+      });
+      const cut = (sel, ch) => page.evaluate(([s, c]) => { const e = [...document.querySelectorAll(s)].find((x) => x.title === c); const k = e && e.querySelector(".cut"); return k ? k.dataset.cut + ":" + k.textContent : null; }, [sel, ch]);
+      assert.equal(await cut("#meHand .tile", "天"), "h:", "天（上下）は横の点線");
+      assert.equal(await cut("#meHand .tile", "休"), "v:", "手札の 休（左右）は縦の点線");
+      assert.equal(await cut("#meTray .tile", "親"), "v:", "ストックの 親（左右）は縦の点線");
+      assert.equal(await cut("#meHand .tile", "十"), null, "割れない 十");
+      assert.equal(await cut("#meHand .tile", "口"), null, "割れない 口");
+      assert.equal(await cut("#field .tile", "山"), null, "割れない 山");
+      assert.equal(await cut("#field .tile", "国"), "x:割", "囲みの 国 は角に「割」");
+      assert.equal(await cut("#field .tile", "古"), "h:", "場の 古（上下）");
+      // 台に並べても点線は出る
+      await page.locator("#meHand .tile", { hasText: "天" }).first().click();
+      assert.equal(await cut("#row .tile", "天"), "h:", "台の札にも点線");
+      // 点線の位置（休 は左から約 0.3）。親 はストックの札
+      const at = await page.evaluate(() => { const k = [...document.querySelectorAll("#meHand .tile")].find((x) => x.title === "休").querySelector(".cut"); return k.style.getPropertyValue("--at"); });
+      assert.equal(Number(at), 0.3);
+      // 点線が角の印とぶつからない（引 は左右で線の位置が右寄り。右上の印は 反… の字が無いので 巡・音 の付く字で確かめる）
+      const hit = await page.evaluate(() => {
+        const bad = [];
+        for (const t of document.querySelectorAll(".tile")) {
+          const k = t.querySelector(".cut:not(.cutx)"), m = t.querySelector(".mk");
+          if (!k || !m) continue;
+          const a = k.getBoundingClientRect(), b = m.getBoundingClientRect();
+          if (a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top) bad.push(t.title);
+        }
+        return bad;
+      });
+      assert.deepEqual(hit, [], "点線が 反・巡・音 の印に重ならない");
+      assert.deepEqual(errors, []);
+      await ctx.close();
+    }
+  });
+
   await t.test("終わると「ログをコピー」が出て、クリップボードに入る", async () => {
     const { ctx, page } = await open(browser, url, { width: 760, height: 1100 });
     await page.evaluate(() => { __KJ.game.me.score = 48; });
