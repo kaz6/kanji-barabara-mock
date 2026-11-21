@@ -15,6 +15,8 @@ test("どのファイルにも version がある", () => {
 const ALL = new Set(D.kanji.kanji.map((k) => k.c)); // データにある字（N5＋N4）
 const LV = Object.fromEntries(D.kanji.kanji.map((k) => [k.c, k.lv]));
 const TT = { N5: K.makeTables(D, "N5"), N4: K.makeTables(D, "N4") };
+const OUT = new Set((D.kanji.outside || []).map((k) => k.c)); // レベルの外の字（十二支。KJ-009）。山には入らない
+const ZODIAC = [..."子丑寅卯辰巳午未申酉戌亥"];
 
 test("kanji.json：数と字がそろっている。どの字にもレベル（N5／N4）がある", () => {
   assert.equal(D.kanji.count, D.kanji.kanji.length);
@@ -104,7 +106,7 @@ test("巡り：どの字もデータにあり、同じ巡りの中で重なら�
   const seen = new Set();
   for (const cy of D.cycles.cycles) {
     for (const c of cy.chars) {
-      assert.ok(ALL.has(c), `巡り（${cy.name}）の ${c} がデータにない`);
+      assert.ok(ALL.has(c) || OUT.has(c), `巡り（${cy.name}）の ${c} がデータにない`);
       assert.ok(!seen.has(c), `${c} が2つの巡りにある`);
       seen.add(c);
     }
@@ -113,12 +115,65 @@ test("巡り：どの字もデータにあり、同じ巡りの中で重なら�
 });
 
 test("巡り：四季は N4 のときだけ。春→夏→秋→冬→春", () => {
-  assert.deepEqual(TT.N5.CYCLES.map((c) => c.name), ["曜日", "方角", "数"]);
-  assert.deepEqual(TT.N4.CYCLES.map((c) => c.name), ["曜日", "方角", "数", "四季"]);
+  assert.deepEqual(TT.N5.CYCLES.map((c) => c.name), ["曜日", "方角", "数", "十二支"]);
+  assert.deepEqual(TT.N4.CYCLES.map((c) => c.name), ["曜日", "方角", "数", "四季", "十二支"]);
   const seq = ["春"];
   for (let i = 0; i < 4; i++) seq.push(TT.N4.NEXT.get(seq[seq.length - 1]));
   assert.deepEqual(seq, ["春", "夏", "秋", "冬", "春"]);
   assert.ok(!TT.N5.NEXT.has("春"));
+});
+
+test("十二支（KJ-009）：子→丑→…→亥→子と一周する。N5・N4 どちらでも出る。ひとつの字は1つの巡りだけ", () => {
+  for (const lv of ["N5", "N4"]) {
+    const L = TT[lv];
+    assert.ok(L.CYCLES.some((c) => c.name === "十二支"), lv);
+    const seq = ["子"];
+    for (let i = 0; i < 12; i++) seq.push(L.NEXT.get(seq[seq.length - 1]));
+    assert.deepEqual(seq, [...ZODIAC, "子"], `${lv}：亥から子へ戻る`);
+  }
+  const owners = new Map();
+  for (const cy of D.cycles.cycles) for (const c of cy.chars) owners.set(c, [...(owners.get(c) || []), cy.name]);
+  for (const c of ZODIAC) assert.deepEqual(owners.get(c), ["十二支"], `${c} が別の巡りにも乗っている`);
+});
+
+test("レベルの外の字（十二支）：データにあり、読みがある。山の字ではないが、字として見せ、手に持てる。部品表の行き先には出ない", () => {
+  assert.deepEqual([...OUT].sort(), [..."丑寅卯辰巳未申酉戌亥"].sort());
+  const cy = D.cycles.cycles.find((c) => c.name === "十二支");
+  assert.deepEqual([...cy.outside].sort(), [...OUT].sort());
+  for (const c of ZODIAC) if (!OUT.has(c)) assert.ok(TT.N5.CHARS.has(c), `${c} は N5 の字（山に入る）`);
+  for (const c of OUT) {
+    assert.ok(!ALL.has(c), `${c} は山の字（kanji）に入れない`);
+    const r = D.readings.readings[c];
+    assert.ok(r && (r.on.length || r.kun.length), `${c} の読みがない`);
+    for (const lv of ["N5", "N4"]) {
+      const L = TT[lv];
+      assert.ok(!L.CHARS.has(c), `${lv}：${c} は山に入らない`);
+      assert.ok(L.OUTSIDE.has(c) && L.HOLD.has(c) && K.isChar(L, c), `${lv}：${c} は手に持てる「字」`);
+      assert.ok(L.NEXT.has(c), `${lv}：${c} は巡りで行ける`);
+      assert.ok(!(c in L.parts), `${lv}：${c} は割れない`);
+    }
+  }
+  assert.equal(D.kanji.count, D.kanji.kanji.length, "kanji の数は山の字だけ");
+});
+
+test("レベルの外の字（十二支）：同じ読みの字に変えられる（戌 は N5 だけ、同じ読みの N5 の字がない）", () => {
+  for (const lv of ["N5", "N4"]) {
+    const L = TT[lv];
+    for (const c of OUT) {
+      const to = K.homoChars(L, c);
+      if (c === "戌" && lv === "N5") assert.equal(to.length, 0, "戌（ジュツ・いぬ）の同じ読みの N5 の字はない");
+      else assert.ok(to.length > 0, `${lv}：${c} の同音先がない`);
+      for (const x of to) assert.ok(L.CHARS.has(x) || L.OUTSIDE.has(x), `${lv}：${c}→${x}`);
+    }
+  }
+  assert.ok(K.homoChars(TT.N4, "戌").includes("犬"), "N4 では 戌→犬");
+});
+
+test("十二支の字を含む語：words.json にあり、字がすべて手に持てる。未来 は N5 から", () => {
+  for (const w of ["未来", "申立", "辰年", "丑年", "上申書"]) assert.ok(D.words.words.some((x) => x.w === w), w);
+  assert.equal(D.words.words.find((x) => x.w === "未来").lv, "N5");
+  assert.ok(TT.N5.WORDS.has("未来") && TT.N5.WORDS.has("丑年"));
+  assert.ok(!TT.N5.WORDS.has("丁丑") && TT.N4.WORDS.has("丁丑"), "丁 は N4 の字なので N4 から");
 });
 
 test("偏の形：もとの字はデータの字か中継ぎか常用漢字で、どれかの字の左に来る", () => {
@@ -131,12 +186,13 @@ test("偏の形：もとの字はデータの字か中継ぎか常用漢字で�
 test("同じ読みの組：字はデータにあり、2字以上。レベルで絞っても2字以上", () => {
   for (const g of D.readings.same_reading_groups) {
     assert.ok(g.chars.length >= 2, g.reading);
-    for (const c of g.chars) assert.ok(ALL.has(c), `${g.reading} の ${c}`);
+    for (const c of g.chars) assert.ok(ALL.has(c) || OUT.has(c), `${g.reading} の ${c}`);
     assert.ok(g.type === "on" || g.type === "kun");
   }
   for (const L of Object.values(TT)) {
     for (const [c, gs] of L.HOMO) for (const g of gs) {
-      assert.ok(L.CHARS.has(c) && g.chars.length >= 2 && g.chars.every((x) => L.CHARS.has(x)), c);
+      const ok = (x) => L.CHARS.has(x) || L.OUTSIDE.has(x); // レベルの字か、巡りで手に入るレベルの外の字（十二支）
+      assert.ok(ok(c) && g.chars.length >= 2 && g.chars.every(ok), c);
     }
   }
 });

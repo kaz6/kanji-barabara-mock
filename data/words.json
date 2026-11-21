@@ -11,41 +11,41 @@
  },
  "stats": {
   "hold_by_level": {
-   "N5": 128,
-   "N4": 344
+   "N5": 138,
+   "N4": 353
   },
   "by_level": {
    "N5": {
-    "total": 2384,
+    "total": 2420,
     "by_length": {
      "1": 97,
-     "2": 1685,
-     "3": 453,
+     "2": 1716,
+     "3": 458,
      "4": 149
     },
-    "common": 718,
+    "common": 720,
     "yoji": 43
    },
    "N4": {
-    "total": 10390,
+    "total": 10438,
     "by_length": {
      "1": 253,
-     "2": 6482,
-     "3": 2557,
-     "4": 1098
+     "2": 6525,
+     "3": 2561,
+     "4": 1099
     },
-    "common": 2417,
+    "common": 2419,
     "yoji": 202
    }
   },
-  "total": 10390,
+  "total": 10438,
   "by_length": {
    "1": 253,
-   "2": 6482,
-   "3": 2557,
-   "4": 1098
+   "2": 6525,
+   "3": 2561,
+   "4": 1099
   },
-  "common": 2417,
+  "common": 2419,
   "yoji": 202
  },
  "words": [
@@ -3475,6 +3475,15 @@
    "kana": "じょうでん",
    "en": [
     "high rice field; very fertile rice field"
+   ],
+   "common": true
+  },
+  {
+   "w": "上申",
+   "lv": "N5",
+   "kana": "じょうしん",
+   "en": [
+    "report to a superior"
    ],
    "common": true
   },
@@ -13313,7 +13322,7 @@
   },
   {
    "w": "未来",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "みらい",
    "en": [
     "the future (usually distant)",
@@ -16810,6 +16819,15 @@
    "kana": "ちくりん",
    "en": [
     "bamboo thicket; bamboo grove"
+   ],
+   "common": true
+  },
+  {
+   "w": "答申",
+   "lv": "N4",
+   "kana": "とうしん",
+   "en": [
+    "report; reply"
    ],
    "common": true
   },
@@ -20596,12 +20614,36 @@
    ]
   },
   {
+   "w": "丁丑",
+   "lv": "N4",
+   "kana": "ひのとのうし",
+   "en": [
+    "Fire Ox (14th year of the sexagenary cycle, e.g. 1937, 1997, 2057)"
+   ]
+  },
+  {
+   "w": "丁亥",
+   "lv": "N4",
+   "kana": "ていがい",
+   "en": [
+    "Fire Boar (24th year of the sexagenary cycle, e.g. 1947, 2007, 2067)"
+   ]
+  },
+  {
    "w": "丁半",
    "lv": "N4",
    "kana": "ちょうはん",
    "en": [
     "even and odd numbers (on dice)",
     "chō-han; gambling game in which two dice are thrown and players bet on whether the total is odd or even"
+   ]
+  },
+  {
+   "w": "丁卯",
+   "lv": "N4",
+   "kana": "ひのとう",
+   "en": [
+    "Fire Rabbit (4th year of the sexagenary cycle, e.g. 1927, 1987, 2047)"
    ]
   },
   {
@@ -20637,6 +20679,14 @@
    ]
   },
   {
+   "w": "丁巳",
+   "lv": "N4",
+   "kana": "ひのとみ",
+   "en": [
+    "Fire Snake (54th year of the sexagenary cycle, e.g. 1917, 1977, 2037)"
+   ]
+  },
+  {
    "w": "丁年",
    "lv": "N4",
    "kana": "ていねん",
@@ -20658,6 +20708,14 @@
    "kana": "ちょういし",
    "en": [
     "roadside stone distance indicators placed at intervals of one chō (approx. 109 meters)"
+   ]
+  },
+  {
+   "w": "丁酉",
+   "lv": "N4",
+   "kana": "ひのととり",
+   "en": [
+    "Fire Rooster (34th year of the sexagenary cycle, e.g. 1957, 2017, 2077)"
    ]
   },
   {
@@ -21651,6 +21709,14 @@
    ]
   },
   {
+   "w": "上巳",
+   "lv": "N5",
+   "kana": "じょうし",
+   "en": [
+    "Doll's Festival (March 3); Girls' Festival"
+   ]
+  },
+  {
    "w": "上市",
    "lv": "N4",
    "kana": "じょうし",
@@ -22546,6 +22612,22 @@
    ]
   },
   {
+   "w": "丑寅",
+   "lv": "N5",
+   "kana": "うしとら",
+   "en": [
+    "northeast"
+   ]
+  },
+  {
+   "w": "丑年",
+   "lv": "N5",
+   "kana": "うしどし",
+   "en": [
+    "year of the Ox"
+   ]
+  },
+  {
    "w": "世上",
    "lv": "N4",
    "kana": "せじょう",
@@ -22624,6 +22706,38 @@
    "kana": "ひのえね",
    "en": [
     "Fire Rat (13th year of the sexagenary cycle, e.g. 1936, 1996, 2056)"
+   ]
+  },
+  {
+   "w": "丙寅",
+   "lv": "N4",
+   "kana": "ひのえとら",
+   "en": [
+    "Fire Tiger (3rd year of the sexagenary cycle, e.g. 1926, 1986, 2046)"
+   ]
+  },
+  {
+   "w": "丙戌",
+   "lv": "N4",
+   "kana": "ひのえいぬ",
+   "en": [
+    "Fire Dog (23rd year of the sexagenary cycle, e.g. 1946, 2006, 2066)"
+   ]
+  },
+  {
+   "w": "丙申",
+   "lv": "N4",
+   "kana": "ひのえさる",
+   "en": [
+    "Fire Monkey (33rd year of the sexagenary cycle, e.g. 1956, 2016, 2076)"
+   ]
+  },
+  {
+   "w": "丙辰",
+   "lv": "N4",
+   "kana": "ひのえたつ",
+   "en": [
+    "Fire Dragon (53rd year of the sexagenary cycle, e.g. 1916, 1976, 2036)"
    ]
   },
   {
@@ -23774,6 +23888,14 @@
    ]
   },
   {
+   "w": "二酉",
+   "lv": "N5",
+   "kana": "にゆう",
+   "en": [
+    "large collection of books; place where many books are stored"
+   ]
+  },
+  {
    "w": "二間",
    "lv": "N5",
    "kana": "ふたま",
@@ -24087,6 +24209,22 @@
    "kana": "こうどく",
    "en": [
     "reading responsively"
+   ]
+  },
+  {
+   "w": "亥年",
+   "lv": "N5",
+   "kana": "いどし",
+   "en": [
+    "year of the Boar (e.g. 2007, 2019, 2031); year of the Pig"
+   ]
+  },
+  {
+   "w": "亥月",
+   "lv": "N5",
+   "kana": "がいげつ",
+   "en": [
+    "tenth month of the lunar calendar"
    ]
   },
   {
@@ -28355,6 +28493,14 @@
    ]
   },
   {
+   "w": "北辰",
+   "lv": "N5",
+   "kana": "ほくしん",
+   "en": [
+    "North-Star"
+   ]
+  },
+  {
    "w": "北送",
    "lv": "N4",
    "kana": "ほくそう",
@@ -29269,6 +29415,38 @@
    "kana": "うらないしゃ",
    "en": [
     "diviner; fortuneteller"
+   ]
+  },
+  {
+   "w": "卯年",
+   "lv": "N5",
+   "kana": "うさぎどし",
+   "en": [
+    "year of the Hare; year of the Rabbit"
+   ]
+  },
+  {
+   "w": "卯建",
+   "lv": "N4",
+   "kana": "うだつ",
+   "en": [
+    "short pillar set on a beam to support a ridgepole"
+   ]
+  },
+  {
+   "w": "卯月",
+   "lv": "N5",
+   "kana": "うづき",
+   "en": [
+    "fourth month of the lunar calendar"
+   ]
+  },
+  {
+   "w": "卯木",
+   "lv": "N5",
+   "kana": "うつぎ",
+   "en": [
+    "deutzia; Deutzia crenata"
    ]
   },
   {
@@ -35265,6 +35443,14 @@
    ]
   },
   {
+   "w": "寅年",
+   "lv": "N5",
+   "kana": "とらどし",
+   "en": [
+    "year of the Tiger"
+   ]
+  },
+  {
    "w": "寒九",
    "lv": "N4",
    "kana": "かんく",
@@ -36701,11 +36887,59 @@
    ]
   },
   {
+   "w": "己丑",
+   "lv": "N4",
+   "kana": "つちのとうし",
+   "en": [
+    "Earth Ox (26th year of the sexagenary cycle, e.g. 1949, 2009, 2069)"
+   ]
+  },
+  {
+   "w": "己亥",
+   "lv": "N4",
+   "kana": "つちのとい",
+   "en": [
+    "Earth Boar (36th year of the sexagenary cycle, e.g. 1959, 2019, 2079)"
+   ]
+  },
+  {
+   "w": "己卯",
+   "lv": "N4",
+   "kana": "つちのとう",
+   "en": [
+    "Earth Rabbit (16th year of the sexagenary cycle, e.g. 1939, 1999, 2059)"
+   ]
+  },
+  {
+   "w": "己巳",
+   "lv": "N4",
+   "kana": "つちのとみ",
+   "en": [
+    "Earth Snake (6th year of the sexagenary cycle, e.g. 1929, 1989, 2049)"
+   ]
+  },
+  {
    "w": "己未",
    "lv": "N4",
    "kana": "つちのとひつじ",
    "en": [
     "Earth Sheep (56th year of the sexagenary cycle, e.g. 1919, 1979, 2039)"
+   ]
+  },
+  {
+   "w": "己酉",
+   "lv": "N4",
+   "kana": "つちのととり",
+   "en": [
+    "Earth Rooster (46th year of the sexagenary cycle, e.g. 1909, 1969, 2029)"
+   ]
+  },
+  {
+   "w": "巳年",
+   "lv": "N5",
+   "kana": "みどし",
+   "en": [
+    "year of the Snake"
    ]
   },
   {
@@ -38501,6 +38735,22 @@
    "kana": "いば",
    "en": [
     "uncontrolled"
+   ]
+  },
+  {
+   "w": "戌亥",
+   "lv": "N5",
+   "kana": "いぬい",
+   "en": [
+    "northwest"
+   ]
+  },
+  {
+   "w": "戌年",
+   "lv": "N5",
+   "kana": "いぬどし",
+   "en": [
+    "year of the Dog"
    ]
   },
   {
@@ -40698,6 +40948,14 @@
    ]
   },
   {
+   "w": "時辰",
+   "lv": "N5",
+   "kana": "じしん",
+   "en": [
+    "time; hour"
+   ]
+  },
+  {
    "w": "時運",
    "lv": "N4",
    "kana": "じうん",
@@ -41563,7 +41821,7 @@
   },
   {
    "w": "未年",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "ひつじどし",
    "en": [
     "year of the Sheep"
@@ -41571,10 +41829,18 @@
   },
   {
    "w": "未生",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "みしょう",
    "en": [
     "unborn"
+   ]
+  },
+  {
+   "w": "未申",
+   "lv": "N5",
+   "kana": "ひつじさる",
+   "en": [
+    "southwest"
    ]
   },
   {
@@ -41604,7 +41870,7 @@
   },
   {
    "w": "未聞",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "みもん",
    "en": [
     "unheard"
@@ -41612,7 +41878,7 @@
   },
   {
    "w": "未見",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "みけん",
    "en": [
     "not yet seen; unseen"
@@ -41620,7 +41886,7 @@
   },
   {
    "w": "未読",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "みどく",
    "en": [
     "unread"
@@ -45145,6 +45411,14 @@
    ]
   },
   {
+   "w": "物申",
+   "lv": "N4",
+   "kana": "ものもう",
+   "en": [
+    "hallo!; excuse me!"
+   ]
+  },
+  {
    "w": "物色",
    "lv": "N4",
    "kana": "ぶっしょく",
@@ -46183,6 +46457,55 @@
    "en": [
     "master of the rice field; chief farmer",
     "lesser cuckoo (Cuculus poliocephalus)"
+   ]
+  },
+  {
+   "w": "申入",
+   "lv": "N5",
+   "kana": "もうしいれ",
+   "en": [
+    "proposal; offer"
+   ]
+  },
+  {
+   "w": "申出",
+   "lv": "N5",
+   "kana": "もうしで",
+   "en": [
+    "proposal; request"
+   ]
+  },
+  {
+   "w": "申分",
+   "lv": "N5",
+   "kana": "もうしわけ",
+   "en": [
+    "apology; excuse"
+   ]
+  },
+  {
+   "w": "申年",
+   "lv": "N5",
+   "kana": "さるどし",
+   "en": [
+    "year of the Monkey"
+   ]
+  },
+  {
+   "w": "申楽",
+   "lv": "N4",
+   "kana": "さるがく",
+   "en": [
+    "sarugaku (form of theatre popular in Japan during the 11th to 14th centuries)",
+    "noh"
+   ]
+  },
+  {
+   "w": "申立",
+   "lv": "N5",
+   "kana": "もうしたて",
+   "en": [
+    "statement; account (of something)"
    ]
   },
   {
@@ -53237,6 +53560,22 @@
    ]
   },
   {
+   "w": "辰巳",
+   "lv": "N5",
+   "kana": "たつみ",
+   "en": [
+    "southeast"
+   ]
+  },
+  {
+   "w": "辰年",
+   "lv": "N5",
+   "kana": "たつどし",
+   "en": [
+    "year of the Dragon"
+   ]
+  },
+  {
    "w": "近事",
    "lv": "N4",
    "kana": "きんじ",
@@ -54119,6 +54458,14 @@
    "en": [
     "Eurasian oystercatcher (Haematopus ostralegus)",
     "black-headed gull (Larus ridibundus)"
+   ]
+  },
+  {
+   "w": "酉年",
+   "lv": "N5",
+   "kana": "とりどし",
+   "en": [
+    "year of the Rooster; year of the Cock"
    ]
   },
   {
@@ -61023,6 +61370,14 @@
    ]
   },
   {
+   "w": "上申書",
+   "lv": "N5",
+   "kana": "じょうしんしょ",
+   "en": [
+    "written report"
+   ]
+  },
+  {
    "w": "上質紙",
    "lv": "N4",
    "kana": "じょうしつし",
@@ -65414,6 +65769,14 @@
    "kana": "せんゆうしゃ",
    "en": [
     "occupant; possessor"
+   ]
+  },
+  {
+   "w": "卯月鳥",
+   "lv": "N4",
+   "kana": "うづきどり",
+   "en": [
+    "lesser cuckoo (Cuculus poliocephalus)"
    ]
   },
   {
@@ -71419,7 +71782,7 @@
   },
   {
    "w": "未分化",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "みぶんか",
    "en": [
     "undifferentiated; unspecialized"
@@ -71435,7 +71798,7 @@
   },
   {
    "w": "未来人",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "みらいじん",
    "en": [
     "man of the future; Homo futurus"
@@ -71443,7 +71806,7 @@
   },
   {
    "w": "未来学",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "みらいがく",
    "en": [
     "futurology"
@@ -73200,6 +73563,14 @@
    ]
   },
   {
+   "w": "申立人",
+   "lv": "N5",
+   "kana": "もうしたてにん",
+   "en": [
+    "petitioner; complainant"
+   ]
+  },
+  {
    "w": "男体化",
    "lv": "N4",
    "kana": "なんたいか",
@@ -74685,6 +75056,14 @@
    "kana": "たけやらい",
    "en": [
     "bamboo enclosure"
+   ]
+  },
+  {
+   "w": "答申書",
+   "lv": "N4",
+   "kana": "とうしんしょ",
+   "en": [
+    "a report (of one's findings)"
    ]
   },
   {
@@ -79801,6 +80180,14 @@
    "kana": "ふいしけん",
    "en": [
     "surprise examination"
+   ]
+  },
+  {
+   "w": "不服申立",
+   "lv": "N4",
+   "kana": "ふふくもうしたて",
+   "en": [
+    "petitioning (an administration) for redress; suing civilly to seek redress (for a court's action)"
    ]
   },
   {

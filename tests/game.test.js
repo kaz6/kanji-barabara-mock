@@ -1002,3 +1002,72 @@ test("台の札は段に数えない：台が一時置き場として使える�
   g.setTable([]);
   assert.equal(g.handCount(g.me), 11, "台を空にすると手札が上限を超えて見える（台を使うと札が増える所）");
 });
+
+// ---------- 十二支（KJ-009・D-027） ----------
+test("十二支：巡りで子から一周して亥から子へ戻る。N5・N4 どちらでも。レベルの外の字が手札に来る", () => {
+  const order = [..."子丑寅卯辰巳午未申酉戌亥"];
+  for (const lv of ["N5", "N4"]) {
+    const g = newGame(1, "solo", lv);
+    let [id] = setHand(g, g.me, "子");
+    const seen = ["子"];
+    for (let i = 0; i < 12; i++) {
+      g.clock.t += D.rules.cooldown_sec.cycle;
+      const r = g.cycle(g.me, [id]);
+      assert.ok(r.ok, `${lv}：${seen[seen.length - 1]} から巡れない`);
+      seen.push(r.cards[0].c);
+      id = r.cards[0].id;
+    }
+    assert.deepEqual(seen, [...order, "子"], `${lv}：一周して子に戻る`);
+    assert.ok(!g.T.CHARS.has("丑") && K.isChar(g.T, "丑"), `${lv}：丑 は山の字ではないが「字」として見せる`);
+  }
+});
+
+test("十二支：レベルの外の字（丑など）は山にも場にも出ない。引き直し・取るで補充されても出ない", () => {
+  const out = [..."丑寅卯辰巳未申酉戌亥"];
+  for (const lv of ["N5", "N4"]) {
+    for (const seed of [1, 2, 3]) {
+      const g = newGame(seed, "solo", lv);
+      for (const c of out) {
+        assert.ok(!g.deck.includes(c), `${lv} 山に ${c}`);
+        assert.ok(!g.field.some((f) => f.c === c), `${lv} 場に ${c}`);
+        assert.ok(!g.me.cards.some((x) => x.c === c), `${lv} 手札に ${c}`);
+      }
+      setHand(g, g.me, "丑辰未");
+      g.me.score = 10;
+      assert.ok(g.redraw(g.me).ok);
+      for (const c of out) {
+        assert.ok(!g.deck.includes(c), `${lv} 引き直しのあと山に ${c}`);
+        assert.ok(!g.me.cards.some((x) => x.c === c), `${lv} 引き直しで手札に ${c}`);
+      }
+    }
+  }
+});
+
+test("十二支：レベルの外の字も同じ読みの字に変えられる。変えた先から外の字にも変えられる", () => {
+  const g = newGame(1, "solo", "N5");
+  let [id] = setHand(g, g.me, "丑");
+  assert.ok(K.homoChars(g.T, "丑").includes("中"));
+  let r = g.homophone(g.me, [id], "中");
+  assert.ok(r.ok, "丑→中（チュウ）");
+  assert.equal(chars(g.me.cards), "中");
+  g.clock.t += D.rules.cooldown_sec.homophone;
+  [id] = setHand(g, g.me, "新");
+  r = g.homophone(g.me, [id], "辰");
+  assert.ok(r.ok, "新→辰（シン）。レベルの字から外の字へ");
+  assert.equal(chars(g.me.cards), "辰");
+  g.clock.t += D.rules.cooldown_sec.homophone;
+  [id] = setHand(g, g.me, "辰");
+  assert.ok(g.homophone(g.me, [id], "申").ok, "辰→申（シン）。外の字どうし");
+});
+
+test("十二支：外の字を含む語が放てる（未来・丑年）。N5 でも N4 でも", () => {
+  for (const lv of ["N5", "N4"]) {
+    const g = newGame(1, "solo", lv);
+    let r = g.release(g.me, setHand(g, g.me, "未来山"));
+    assert.equal(r.ok, false, "未来山 は語にない");
+    r = g.release(g.me, setHand(g, g.me, "未来").slice(0, 2));
+    assert.ok(r.ok && r.pts === 3, `${lv}：未来`);
+    r = g.release(g.me, setHand(g, g.me, "丑年").slice(0, 2));
+    assert.ok(r.ok && r.pts === 3, `${lv}：丑年`);
+  }
+});

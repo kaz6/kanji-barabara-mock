@@ -22,6 +22,9 @@
 1字の語はこれまでどおりレベルの字だけ（1字は放てないので、台の読み・意味のためだけに残す）。
 手に持てる字の決め方は js/core.js の makeTables（T.HOLD）と同じにしてある。片方を変えたらもう片方も変える。
 
+レベルの外の字（KJ-009・D-027。十二支の 丑寅卯辰巳未申酉戌亥）は data/cycles.json の outside に手で書く。このスクリプトが kanji.json の outside と
+readings.json に読みを足す（山には入れない。巡りでだけ手に入り、同音で別の字に変えられる。手に持てる字に入るので、その字を含む語も words に入る）。
+
 手作りの表（parts / antonyms / cycles / radical_forms / special）はこのスクリプトでは作らない。
 """
 import argparse
@@ -104,9 +107,11 @@ def holdable(level_chars, parts_json, cycles_json, antonyms_json):
         for c in [k, *allp[k]]:
             if c in CH or c in jouyou:
                 hold.add(c)
-    # 巡り・対義は、字がすべてレベルの字のものだけ使う（makeTables と同じ）。同音もレベルの字だけ
+    # 巡りは、字がすべて「レベルの字か outside（レベルの外で巡りでだけ手に入る字。十二支。KJ-009）」のものだけ使う（makeTables と同じ）。
+    # 対義はレベルの字だけ。同音は、レベルの字と、使う巡りの outside の字
     for cy in cycles_json["cycles"]:
-        if all(c in CH for c in cy["chars"]):
+        out = set(cy.get("outside", []))
+        if all(c in CH or c in out for c in cy["chars"]):
             hold |= set(cy["chars"])
     for a, b in antonyms_json["pairs"]:
         if a in CH and b in CH:
@@ -142,14 +147,24 @@ def main():
                 chars.append(c)
     list_source = "・".join(sources)
     charset = set(chars)
+    # レベルの外の字（KJ-009）：data/cycles.json の outside。山には入れない。巡りでだけ手に入り、同音で別の字に変えられる
+    cycles_in = load_json("cycles.json")
+    outside = []
+    for cy in cycles_in["cycles"]:
+        for c in cy.get("outside", []):
+            if c not in outside and c not in charset:
+                outside.append(c)
 
     kanji = []
+    outside_rows = []
     readings = {}
-    for ch in chars:
+    for ch in chars + outside:
+        is_out = ch in outside
         row = db.execute("select ID, stroke_count, freq from character where literal = ?", (ch,)).fetchone()
         if not row:
             print(f"警告: KANJIDIC2 に {ch} がありません", file=sys.stderr)
-            kanji.append({"c": ch, "lv": lv_of[ch]})
+            if not is_out:
+                kanji.append({"c": ch, "lv": lv_of[ch]})
             continue
         cid, strokes, freq = row
         on, kun = [], []
@@ -160,8 +175,11 @@ def main():
         meanings = [m for (m,) in db.execute(
             "select m.value from meaning m join rm_group g on m.gid = g.ID "
             "where g.cid = ? and (m.m_lang = '' or m.m_lang = 'en')", (cid,))]
-        kanji.append({"c": ch, "lv": lv_of[ch], "strokes": strokes, "freq": int(freq) if freq else None,
-                      "en": meanings[:2]})
+        if is_out:
+            outside_rows.append({"c": ch, "strokes": strokes, "freq": int(freq) if freq else None, "en": meanings[:2]})
+        else:
+            kanji.append({"c": ch, "lv": lv_of[ch], "strokes": strokes, "freq": int(freq) if freq else None,
+                          "en": meanings[:2]})
         readings[ch] = {"on": on, "kun": kun}
 
     write("kanji.json", {
@@ -173,6 +191,8 @@ def main():
         "count": len(kanji),
         "count_by_level": {lv: sum(1 for k in kanji if k["lv"] == lv) for lv in levels},
         "kanji": kanji,
+        "outside_note": "レベルの外の字（KJ-009・D-027。十二支）。山には入れない。巡りでだけ手に入る。画面では「字」として見せる。data/cycles.json の outside から作る",
+        "outside": outside_rows,
     })
 
     # ---- 同じ読みの組 ----
@@ -181,7 +201,7 @@ def main():
         return v.split(".", 1)[0]
 
     groups = defaultdict(list)
-    for ch in chars:
+    for ch in chars + outside:
         r = readings.get(ch)
         if not r:
             continue
@@ -193,7 +213,7 @@ def main():
             for k, v in sorted(groups.items()) if len(v) >= 2]
     write("readings.json", {
         "version": VERSION,
-        "source": "KANJIDIC2（ja_on / ja_kun）。訓読みは送りがな（. の後）を落として比べる。組は全レベルの字で作り、遊ぶときにレベルの字だけに絞る（2字未満の組は使わない）",
+        "source": "KANJIDIC2（ja_on / ja_kun）。訓読みは送りがな（. の後）を落として比べる。組は全レベルの字とレベルの外の字（十二支。KJ-009）で作り、遊ぶときにレベルの字と使う巡りの外の字だけに絞る（2字未満の組は使わない）",
         "readings": readings,
         "same_reading_groups": same,
     })
