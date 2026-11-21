@@ -319,6 +319,7 @@ function showCounts(){$("setupInfo").textContent=`字 ${T.CHARS.size}・語 ${T.
 function showScreen(playing){$("setup").hidden=playing;$("game").hidden=!playing;document.body.classList.toggle("playing",playing)}
 function start(){
   clearTimeout(cpuTimer);
+  sendAbandoned();
   T=tablesFor(level);buildHowto();
   G=K.createGame(D,T,{now:clock,opponent,layout,timeLimit});
   row=[];lastTried="";
@@ -330,7 +331,7 @@ function start(){
   render();
 }
 $("start").onclick=start;$("again").onclick=start;
-$("bSetup").onclick=()=>{clearTimeout(cpuTimer);G=null;row=[];hideChoices();$("logPanel").classList.remove("on");showScreen(false);T=tablesFor(level);showCounts();buildHowto()};
+$("bSetup").onclick=()=>{clearTimeout(cpuTimer);sendAbandoned();G=null;row=[];hideChoices();$("logPanel").classList.remove("on");showScreen(false);T=tablesFor(level);showCounts();buildHowto()};
 function scheduleCpu(){cpuTimer=setTimeout(()=>{if(!G||G.over)return;G.cpuTurn();afterChange();if(!G.over)scheduleCpu()},G.cpuDelay()*1000)}
 function drain(){
   while(G.events.length){
@@ -348,8 +349,44 @@ function soloBest(score){
   try{localStorage.setItem(BEST_KEY,String(best))}catch(e){return null}
   return {best,isNew:prev===null||score>prev};
 }
+// ---------- ログの自動送信（KJ-020）----------
+// 試合が終わったとき（途中で捨てたときも、1手以上動いていれば）、ログ全文を作者の表（play_logs）に1行送る。画面には何も出さない。
+// 送る先は書き込みだけの公開鍵（publishable）。手元（localhost）とテスト（webdriver）では送らない
+const LOG_URL="https://ysxrdhzybzvucxwdqchw.supabase.co/rest/v1/play_logs";
+const LOG_KEY="sb_publishable_YSX3OMEXFAdtx8xTwvtcDw_ErF7tfQ7";
+const DEVICE_KEY="kj-device",UNSENT_KEY="kj-unsent-log";
+const randId=()=>{try{const a=new Uint8Array(12);crypto.getRandomValues(a);return Array.from(a,x=>x.toString(16).padStart(2,"0")).join("")}catch(e){return String(Date.now())+Math.random().toString(16).slice(2)}};
+let gameDevice=null; // localStorage が読めないときは、試合ごとの無作為
+function deviceId(){
+  const v=lsGet(DEVICE_KEY);if(v&&v.length>=8)return v;
+  const id=randId();lsSet(DEVICE_KEY,id);
+  return lsGet(DEVICE_KEY)===id?id:(gameDevice||(gameDevice=randId()));
+}
+async function postLog(row){
+  try{
+    const r=await fetch(LOG_URL,{method:"POST",headers:{"content-type":"application/json",apikey:LOG_KEY,Prefer:"return=minimal"},body:JSON.stringify(row)});
+    return r.ok;
+  }catch(e){return false}
+}
+async function sendLog(g){
+  try{
+    if(!K.logSendAllowed({hostname:location.hostname,webdriver:navigator.webdriver,force:window.__KJ_LOG_FORCE}))return;
+    const row=K.playLogRow(g,deviceId());if(!row)return;
+    const list=[];
+    const old=lsGet(UNSENT_KEY);
+    if(old){try{list.push(JSON.parse(old))}catch(e){}}
+    list.push(row);
+    try{localStorage.removeItem(UNSENT_KEY)}catch(e){}
+    let failed=null;
+    for(const x of list){if(!(await postLog(x)))failed=x}
+    if(failed)lsSet(UNSENT_KEY,JSON.stringify(failed)); // 失敗は1件だけ残し、次の試合の終わりにもう一度送る
+  }catch(e){}
+}
+// 終わらないまま捨てる（もう一度・設定を変える）ときも送る
+function sendAbandoned(){if(G&&!G.over)sendLog(G)}
 function end(winner,solo){
   clearTimeout(cpuTimer);
+  sendLog(G);
   const m=$("msg"),sc=`${G.me.score} 対 ${G.cpu.score}`;
   if(solo){
     const b=soloBest(G.me.score);

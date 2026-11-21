@@ -595,8 +595,45 @@
     return g;
   }
 
+
+  // ---------- ログの自動送信（KJ-020。D-038）----------
+  // 送る中身の形と、送ってよい場所の判定。送る処理そのもの（fetch・端末への保存）は index.html
+  const PLAY_LOG_LIMITS = { device_id: 64, result: 200, log: 200000 };
+  // 自分（人）が1手でも動いたか（はじめ・終わり・動けない・並べ方の切り替え・最初の1枚は数えない）
+  function playedAny(g) {
+    return g.log.some((e) => e.who === g.me.name && e.op !== "並べ方" && e.op !== "最初の1枚");
+  }
+  // 終わりの1行（例：あなたの勝ち（10分 27対6））。終わっていなければ「途中でやめた」
+  function playLogResult(g) {
+    const sc = g.solo ? "" : ` ${g.me.score}対${g.cpu.score}`;
+    const body = `${timeLabel(g.timeLimit)}${sc}`;
+    if (!g.over) return `途中でやめた（${body}・${g.me.score}点）`.slice(0, PLAY_LOG_LIMITS.result);
+    if (g.solo) return `ひとりで ${g.me.score}点（${timeLabel(g.timeLimit)}）`;
+    return `${g.winner ? g.winner.name + "の勝ち" : "引き分け"}（${body.trim()}）`.slice(0, PLAY_LOG_LIMITS.result);
+  }
+  // play_logs に1行送る中身。1手も動いていなければ null（送らない）
+  function playLogRow(g, deviceId) {
+    if (!g || !playedAny(g)) return null;
+    return {
+      device_id: String(deviceId || "").slice(0, PLAY_LOG_LIMITS.device_id) || "unknown",
+      app_version: String(g.D.rules.version || ""),
+      level: g.level,
+      opponent: g.opponent,
+      result: playLogResult(g),
+      log: g.logText().slice(0, PLAY_LOG_LIMITS.log),
+    };
+  }
+  // 送ってよい場所か：手元（localhost・127.0.0.1・file）とテスト（navigator.webdriver）では送らない。force はテストが送る処理を確かめるときだけ
+  function logSendAllowed(env) {
+    if (env && env.force) return true;
+    if (!env || env.webdriver) return false;
+    const h = String(env.hostname || "").toLowerCase();
+    if (!h || h === "localhost" || h === "127.0.0.1" || h === "[::1]" || h === "::1" || h.endsWith(".localhost")) return false;
+    return true;
+  }
+
   return {
     FILES, OPPONENTS, LAYOUTS, LEVELS, timeChoices, normTime, timeLabel, layoutLabel, levelLabel, makeTables, isN5, isLevelChar, isChar, splitOnce, canSplit, delivered, joinResults, joinReversed,
-    releasable, scoreOf, homoChars, marks, cutSpec, rulesLabel, opponentLabel, createGame,
+    releasable, scoreOf, homoChars, marks, cutSpec, rulesLabel, opponentLabel, createGame, playLogRow, logSendAllowed, playLogResult, PLAY_LOG_LIMITS,
   };
 });
