@@ -41,7 +41,6 @@ async function open(browser, url, vp, opponent, layout = "table") {
   if (opponent) await page.check(`#opp input[value="${opponent}"]`);
   await page.check(`#lay input[value="${layout}"]`); // 既存の画面テストは「台に並べる」で見る。手札で選ぶは KJ-005 の下のテスト
   await page.click("#start");
-  await page.locator("#field .tile").first().click(); // はじめの1枚（KJ-013。下の専用テストで詳しく見る）。選ぶと時間が動き出す
   // CPU を止め、手を決める
   await page.evaluate(() => {
     const G = __KJ.game; G.cpuTurn = () => null;
@@ -106,7 +105,7 @@ test("画面", { skip }, async (t) => {
       await page.click("#bLog");
       const log = await page.inputValue("#logText");
       assert.match(log, /^# 漢字版（仮）モック ログ/);
-      assert.match(log, /# 仮置き 場=3枚 最初の手札=7枚 手札の上限=8枚＋ストック8枚/);
+      assert.match(log, /# 仮置き 場=3枚 最初の手札=8枚 手札の上限=8枚＋ストック8枚/);
       assert.match(log, /# 相手 とても弱い（CPU は 30〜45秒に1回動く/);
       assert.match(log, /\tためした\t口 十\t\t0\t.*\t並べる順が逆/);
       assert.match(log, /\tくっつける\t十 口\t古\t/);
@@ -161,8 +160,7 @@ test("画面", { skip }, async (t) => {
       await page.check(`#tim input[value="${sec}"]`);
       await page.click("#start");
       assert.equal(await page.evaluate(() => __KJ.game.timeLimit), sec);
-      assert.equal(await page.evaluate(() => __KJ.game.picking), true);
-      await page.locator("#field .tile").first().click();
+      assert.equal(await page.evaluate(() => __KJ.game.picking), undefined, "はじめの1枚はない（KJ-016）");
       const left = await page.evaluate(() => __KJ.game.timeLeft());
       assert.ok(left > sec - 3 && left <= sec, `残り ${left} 秒（${sec} 秒で始まる）`);
       assert.match(await page.textContent("#clock"), new RegExp(`^残り ${Math.floor(sec / 60)}:`));
@@ -224,15 +222,14 @@ test("画面", { skip }, async (t) => {
     for (const id of ["opp", "lvl", "tim"]) assert.equal(await page.isVisible("#" + id), false, `${id} は遊んでいる途中では変えられない`);
     assert.equal(await page.isVisible("#layNow"), true, "並べ方の切り替えは残る");
     await page.check('#layNow input[value="table"]');
-    await page.locator("#field .tile").first().click(); // はじめの1枚
     // 終わらせて もう一度
     await page.evaluate(() => { __KJ.game.endsAt = __KJ.game.now() - 1; });
     await page.waitForFunction(() => document.getElementById("msg").textContent.startsWith("ひとりで "));
     await page.click("#again");
     const g = await page.evaluate(() => ({ lv: __KJ.game.level, t: __KJ.game.timeLimit, o: __KJ.game.opponent, l: __KJ.game.layout, over: __KJ.game.over, picking: __KJ.game.picking }));
-    assert.deepEqual(g, { lv: "N5", t: 300, o: "solo", l: "table", over: false, picking: true }, "同じ設定（並べ方は途中で変えた値）で新しく始まる");
+    assert.deepEqual(g, { lv: "N5", t: 300, o: "solo", l: "table", over: false, picking: undefined }, "同じ設定（並べ方は途中で変えた値）で新しく始まる");
     assert.equal(await page.isVisible("#setup"), false);
-    assert.equal(await page.textContent("#msg"), "最初の1枚を場から選ぶ（時間は止まっています）");
+    assert.equal(await page.textContent("#msg"), "", "はじめの1枚はない。始めてすぐ遊べる");
     assert.deepEqual(errors, []);
     await ctx.close();
   });
@@ -271,7 +268,7 @@ test("画面", { skip }, async (t) => {
     await ctx.close();
   });
 
-  await t.test("はじめの1枚：選ぶまで時間は止まり操作できない。選ぶと8枚になり時間が動き出す。ストックに部品が1枚入っている。ログに「最初の1枚」", async () => {
+  await t.test("はじまり（KJ-016）：8枚で始まり、すぐ時間が動いて操作できる。ストックに部品が1枚。「最初の1枚を選ぶ」は出ない", async () => {
     const ctx = await browser.newContext({ viewport: { width: 375, height: 900 } });
     const page = await ctx.newPage();
     const errors = [];
@@ -281,32 +278,24 @@ test("画面", { skip }, async (t) => {
     await page.check('#opp input[value="normal"]');
     await page.check('#lay input[value="table"]');
     await page.click("#start");
-    assert.equal(await page.evaluate(() => __KJ.game.picking), true);
-    assert.match(await page.textContent("#msg"), /最初の1枚を場から選ぶ/);
-    assert.equal(await page.locator("#meHand .tile").count(), 7, "最初の手札は7枚");
+    assert.equal(await page.evaluate(() => __KJ.game.picking), undefined);
+    assert.doesNotMatch(await page.textContent("#msg"), /最初の1枚/);
+    assert.doesNotMatch(await page.textContent("body"), /最初の1枚を/);
+    assert.equal(await page.locator("#meHand .tile").count(), 8, "最初の手札は8枚");
     assert.equal(await page.locator("#meTray .tile").count(), 1, "ストックに部品が1枚");
     assert.ok(await page.evaluate(() => __KJ.game.me.cards.find((x) => x.tray) && !__KJ.tables.CHARS.has(__KJ.game.me.cards.find((x) => x.tray).c)), "山に無い部品");
-    assert.equal(await page.evaluate(() => document.getElementById("field").classList.contains("can")), true);
-    for (const id of ["bRelease", "bSplit", "bJoin", "bRedraw"]) assert.equal(await page.locator("#" + id).isDisabled(), true, id);
-    // 手札をタップしても台に並ばない
+    assert.equal(await page.evaluate(() => __KJ.game.cpu.cards.filter((x) => !x.tray).length), 8, "CPU も8枚");
+    // 始めてすぐ手札をタップして台に並べられる
     await page.locator("#meHand .tile").first().click();
-    assert.equal(await page.evaluate(() => __KJ.row.length), 0);
-    // 時間は止まっている
+    assert.equal(await page.evaluate(() => __KJ.row.length), 1, "すぐ操作できる");
+    // 時間は動いている
     const left0 = await page.evaluate(() => __KJ.game.timeLeft());
     await page.waitForTimeout(1200);
-    assert.equal(await page.evaluate(() => __KJ.game.timeLeft()), left0);
-    // ログは はじめ だけ（手札しだいで「動けない」の行が付くことはある）。手札のタップや時間では増えない
-    assert.deepEqual(await page.evaluate(() => __KJ.game.log.map((e) => e.op).filter((o) => o !== "はじめ" && o !== "動けない")), []);
-    // 場の1枚を選ぶ
-    await page.locator("#field .tile").first().click();
-    assert.equal(await page.evaluate(() => __KJ.game.picking), false);
-    assert.equal(await page.locator("#meHand .tile").count(), 8, "最初の1枚で8枚");
-    assert.equal(await page.evaluate(() => __KJ.game.cpu.cards.filter((x) => !x.tray).length), 8, "CPU も1枚取った");
-    assert.ok(await page.evaluate(() => __KJ.game.timeLeft()) < left0 + 0.01);
+    assert.ok(await page.evaluate(() => __KJ.game.timeLeft()) < left0, "時間が減る");
     await page.click("#bLog");
     const log = await page.inputValue("#logText");
-    assert.match(log, /最初の1枚/);
-    assert.match(log, /# 仮置き はじまり：最初の手札7枚のあと、場から1枚だけ選んで取る/);
+    assert.doesNotMatch(log, /最初の1枚/);
+    assert.match(log, /# 仮置き はじまり：最初の手札8枚で、すぐ時間が動く/);
     assert.deepEqual(errors, []);
     await ctx.close();
   });
@@ -331,7 +320,6 @@ test("画面", { skip }, async (t) => {
     assert.equal(await page.isVisible("#bCopyEnd"), true);
     // もう一度（同じ設定＝ひとりで）：低い点なら 自己ベスト 51 点 を出す
     await page.click("#again");
-    await page.locator("#field .tile").first().click(); // はじめの1枚
     await page.evaluate(() => { const G = __KJ.game; G.me.score = 3; G.endsAt = G.now() - 1; });
     await page.waitForFunction(() => document.getElementById("msg").textContent.startsWith("ひとりで 3 点"));
     assert.match(await page.textContent("#msg"), /（自己ベスト 51 点）/);
@@ -386,14 +374,16 @@ test("画面", { skip }, async (t) => {
       await page.locator("#meTray .tile").click();
       assert.equal(await page.locator("#row .tile").count(), 2);
       assert.equal(await pos("#meTray > *"), tray0, "置いても置き場は動かない");
-      // 手札が8枚のときは場から取れない。台に置いた札は手札に数えない（台は一時置き場。KJ-013）ので、台に置くと取れる
+      // 手札が8枚のときは場から取れない。台に置いた札も手札に数える（台は並べて見る場所。KJ-016）ので、台に置いても取れない
       await page.click("#bBack");
       await page.evaluate(() => { __KJ.game.me.takes = 2; __KJ.render(); });
       assert.equal(await page.evaluate(() => __KJ.game.handCount(__KJ.game.me)), 8);
       assert.match(await page.textContent("#takes"), /手札がいっぱい/);
       await page.locator("#meHand .tile").first().click();
-      assert.equal(await page.evaluate(() => __KJ.game.handCount(__KJ.game.me)), 7, "台の札は数えない");
-      assert.match(await page.textContent("#takes"), /取れる（タップ）/);
+      assert.equal(await page.evaluate(() => __KJ.game.handCount(__KJ.game.me)), 8, "台の札も数える");
+      assert.match(await page.textContent("#takes"), /手札がいっぱい/, "台に置いても取れない");
+      await page.click("#bBack");
+      assert.equal(await page.evaluate(() => __KJ.game.handCount(__KJ.game.me)), 8, "台から戻しても8");
       assert.deepEqual(errors, []);
       await ctx.close();
     });
