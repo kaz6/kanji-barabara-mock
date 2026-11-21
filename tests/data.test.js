@@ -196,7 +196,9 @@ test("決まり：数値がそろっている（KJ-003 の仮置き）", () => {
   assert.deepEqual([r.redraw.cost, r.redraw.free_wait_sec], [5, 30]);
   assert.equal(r.win.score, 50);
   assert.equal(r.win.time_limit_sec, 600, "制限時間は10分（追記 P-005）");
-  assert.equal(r.layout_default, "hand", "並べ方の初期値は 手札で選ぶ（KJ-005）");
+  assert.equal(r.layout_default, "table", "並べ方の初期値は 台に並べる（追記 P-007。KJ-005 の手札で選ぶから戻した。仮）");
+  assert.deepEqual(r.win.time_choices_sec, [300, 600, 900], "制限時間は 5・10・15分から選ぶ（KJ-007）");
+  assert.ok(r.win.time_choices_sec.includes(r.win.time_limit_sec), "既定（10分）は選べる値の中にある");
   const [a, b] = r.cpu.interval_sec;
   assert.deepEqual([a, b], [8, 12]);
   // KJ-004：場3・手札の上限8・ストック4（全部で12マス。もとは部品の置き場）・とても弱い CPU は30〜45秒

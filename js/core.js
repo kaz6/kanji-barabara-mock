@@ -26,6 +26,10 @@
   ];
   const levelLabel = (key) => (LEVELS.find((l) => l.key === key) || LEVELS[0]).label;
   const layoutLabel = (key) => (LAYOUTS.find((l) => l.key === key) || LAYOUTS[0]).label;
+  // 制限時間（KJ-007）。選べる値は rules.win.time_choices_sec、既定は win.time_limit_sec（D-024）。知らない値は既定
+  const timeChoices = (D) => (D.rules.win.time_choices_sec && D.rules.win.time_choices_sec.length ? D.rules.win.time_choices_sec : [D.rules.win.time_limit_sec]);
+  const normTime = (D, v) => (timeChoices(D).includes(Number(v)) && v !== null && v !== "" ? Number(v) : D.rules.win.time_limit_sec);
+  const timeLabel = (sec) => `${sec / 60}分`;
   const cpuInterval = (D, key) => (key === "weak" ? D.rules.cpu.weak_interval_sec : D.rules.cpu.interval_sec);
 
   const FILES = ["kanji", "words", "readings", "parts", "antonyms", "cycles", "radical_forms", "special", "rules"];
@@ -144,13 +148,15 @@
     return m;
   }
   // ログの頭に書く仮置きの値
-  function opponentLabel(D, key) {
-    if (key === "solo") return `ひとりで（CPU なし。場の取り合いなし。50点では終わらず、${D.rules.win.time_limit_sec / 60}分たったら終わって点を出す。CPU の列は 0）`;
+  function opponentLabel(D, key, limit) {
+    limit = normTime(D, limit);
+    if (key === "solo") return `ひとりで（CPU なし。場の取り合いなし。50点では終わらず、${limit / 60}分たったら終わって点を出す。CPU の列は 0）`;
     const [a, b] = cpuInterval(D, key);
     return key === "weak" ? `とても弱い（CPU は ${a}〜${b}秒に1回動く。動き方はいまの CPU のまま）` : `いまの強さ（CPU は ${a}〜${b}秒に1回動く）`;
   }
-  function rulesLabel(D, key, level) {
+  function rulesLabel(D, key, level, limit) {
     const R = D.rules, S = R.score;
+    limit = normTime(D, limit);
     level = level || R.level_default || "N4";
     key = key || R.opponent_default;
     const [a, b] = cpuInterval(D, key);
@@ -161,7 +167,7 @@
       `台（机）に置いた札は一時置き場。上の段・下の段の枚数に数えない（段の空きで見る 取る・割る・くっつけるは台を除いた枚数）`,
       `放ったら 放った字数×${R.take_per_char}枚を場から選んで取れる。放った言葉は消える（相手には届かない）`,
       `引き直し ${R.redraw.cost}点で手札を全部入れ替え（${R.start_hand}枚）。${R.redraw.cost}点ない人は${R.redraw.free_wait_sec}秒待って0点で`,
-      `勝ち 先に${R.win.score}点、または${R.win.time_limit_sec / 60}分で点の多い方（同点は引き分け）。ひとりでは50点で終わらず${R.win.time_limit_sec / 60}分で終わる`,
+      `勝ち 先に${R.win.score}点、または${limit / 60}分で点の多い方（同点は引き分け）。ひとりでは50点で終わらず${limit / 60}分で終わる`,
       `待ち時間 反転=${R.cooldown_sec.invert}秒 巡り=${R.cooldown_sec.cycle}秒 同音=${R.cooldown_sec.homophone}秒（その人の操作ごと）`,
       key === "solo" ? "CPU なし" : `CPU ${a}〜${b}秒に1回動く`,
     ];
@@ -178,14 +184,15 @@
     const opponent = OPPONENTS.some((o) => o.key === env.opponent) ? env.opponent : R.opponent_default;
     const g = { D, T, level: T.level, opponent, solo: opponent === "solo", log: [], events: [], used: new Set(), over: false, winner: null,
       startedAt: (env.date || (() => new Date()))() };
+    g.timeLimit = normTime(D, env.timeLimit); // 制限時間（秒。KJ-007）
     g.layout = LAYOUTS.some((l) => l.key === env.layout) ? env.layout : (R.layout_default || "hand");
     let t0 = now();
     g.now = now;
     // はじめの1枚（KJ-013）：選ぶまで時間は止まっている。選んだ時に時計が動き出す
     g.picking = env.firstPick === false ? false : (R.first_pick || 0) > 0;
     g.elapsed = () => (g.picking ? 0 : now() - t0);
-    g.endsAt = t0 + R.win.time_limit_sec;
-    g.timeLeft = () => (g.picking ? R.win.time_limit_sec : Math.max(0, g.endsAt - now()));
+    g.endsAt = t0 + g.timeLimit;
+    g.timeLeft = () => (g.picking ? g.timeLimit : Math.max(0, g.endsAt - now()));
 
     const card = (c, fresh) => ({ id: ++uid, c, t: now(), fresh: !!fresh });
     function shuffle(a) {
@@ -448,7 +455,7 @@
       }
       g.picking = false;
       t0 = now();
-      g.endsAt = t0 + R.win.time_limit_sec;
+      g.endsAt = t0 + g.timeLimit;
       addLog("—", "はじまり", [], [], 0, `手札 ${g.me.cards.map((x) => x.c).join("")}・時間が動き出した`);
       return { ok: true, card: r.got, c: r.x.c };
     };
@@ -530,11 +537,11 @@
         if (p.redrawAt !== null && now() >= p.redrawAt) { doRedraw(p, 0, `${R.redraw.free_wait_sec}秒待った（0点）`); changed = true; }
       }
       if (now() >= g.endsAt && g.solo) {
-        finish(null, `${R.win.time_limit_sec / 60}分`);
+        finish(null, `${g.timeLimit / 60}分`);
         changed = true;
       } else if (now() >= g.endsAt) {
         const a = g.me.score, b = g.cpu.score;
-        finish(a === b ? null : a > b ? g.me : g.cpu, `${R.win.time_limit_sec / 60}分 ${a}対${b}`);
+        finish(a === b ? null : a > b ? g.me : g.cpu, `${g.timeLimit / 60}分 ${a}対${b}`);
         changed = true;
       }
       return changed;
@@ -589,9 +596,10 @@
         "# 漢字版（仮）モック ログ（KJ-003 役づくりの競争・KJ-008 1字は放てない・KJ-006 レベル）",
         `# はじめた時刻 ${ds}（端末の時計）`,
         `# レベル ${levelLabel(g.level)}`,
-        `# 相手 ${opponentLabel(D, g.opponent)}`,
+        `# 相手 ${opponentLabel(D, g.opponent, g.timeLimit)}`,
+        `# 時間 ${timeLabel(g.timeLimit)}`,
         `# 並べ方 ${layoutLabel(g.startLayout)}（はじめたとき。途中で切り替えると「並べ方」の行が残る）`,
-        ...rulesLabel(D, g.opponent, g.level).map((x) => "# 仮置き " + x),
+        ...rulesLabel(D, g.opponent, g.level, g.timeLimit).map((x) => "# 仮置き " + x),
         "# 手 はじめ・割る・くっつける・反転・巡り・同音・放つ・取る・最初の1枚・はじまり・引き直し・入れ替え（札の位置を替えた。手札とストックの間も）・移す（手札⇄ストックの空いたマスへ）・並べ方（切り替えた）・ためした（並べたのに放てず・くっつけられずにやめた並び）・動けない（放てる言葉が手札に無くなった。使った札＝その時の手札）・動ける・終わり",
         "# 点＝その手で増えた点（引き直しで払った点はマイナス）",
         "# データ " + FILES.map((f) => `${f}=${D[f].version}`).join(" "),
@@ -605,7 +613,7 @@
   }
 
   return {
-    FILES, OPPONENTS, LAYOUTS, LEVELS, layoutLabel, levelLabel, makeTables, isN5, isLevelChar, isChar, splitOnce, canSplit, delivered, joinResults, joinReversed,
+    FILES, OPPONENTS, LAYOUTS, LEVELS, timeChoices, normTime, timeLabel, layoutLabel, levelLabel, makeTables, isN5, isLevelChar, isChar, splitOnce, canSplit, delivered, joinResults, joinReversed,
     releasable, scoreOf, homoChars, marks, rulesLabel, opponentLabel, createGame,
   };
 });
