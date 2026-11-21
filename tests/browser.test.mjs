@@ -185,7 +185,8 @@ test("画面", { skip }, async (t) => {
     const left0 = await page.evaluate(() => __KJ.game.timeLeft());
     await page.waitForTimeout(1200);
     assert.equal(await page.evaluate(() => __KJ.game.timeLeft()), left0);
-    assert.equal(await page.evaluate(() => __KJ.game.log.length), 1, "はじめの1行だけ");
+    // ログは はじめ だけ（手札しだいで「動けない」の行が付くことはある）。手札のタップや時間では増えない
+    assert.deepEqual(await page.evaluate(() => __KJ.game.log.map((e) => e.op).filter((o) => o !== "はじめ" && o !== "動けない")), []);
     // 場の1枚を選ぶ
     await page.locator("#field .tile").first().click();
     assert.equal(await page.evaluate(() => __KJ.game.picking), false);
