@@ -1,0 +1,80 @@
+name: automerge
+
+# テストが通った係の PR（kj- で始まるブランチ）を自動でマージする（R-052）。
+# マージは AI ではなく、この仕組みがする。
+
+on:
+  workflow_run:
+    workflows: [test]
+    types: [completed]
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: automerge
+  cancel-in-progress: false
+
+jobs:
+  automerge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const prs = await github.paginate(github.rest.pulls.list, {
+              owner, repo, state: 'open', base: 'main', per_page: 100,
+            });
+            const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+            for (const item of prs) {
+              // 条件1：下書きでない
+              if (item.draft) continue;
+              // 条件2：head が同じリポジトリの kj- で始まるブランチ
+              if (!item.head.repo || item.head.repo.full_name !== `${owner}/${repo}`) continue;
+              if (!item.head.ref.startsWith('kj-')) continue;
+
+              // 条件3：その head の最新のコミットで test が success
+              const runs = await github.rest.actions.listWorkflowRuns({
+                owner, repo, workflow_id: 'test.yml', event: 'pull_request',
+                head_sha: item.head.sha, per_page: 20,
+              });
+              // いちばん新しい run が完了していて success のときだけ通す
+              const latest = runs.data.workflow_runs
+                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
+              const ok = !!latest && latest.status === 'completed' && latest.conclusion === 'success';
+              if (!ok) { core.info(`#${item.number}: test が success ではない。何もしない`); continue; }
+
+              // 条件4：mergeable（null は計算中なので少し待って取り直す）
+              let pr = (await github.rest.pulls.get({ owner, repo, pull_number: item.number })).data;
+              for (let i = 0; i < 5 && pr.mergeable === null; i++) {
+                await sleep(3000);
+                pr = (await github.rest.pulls.get({ owner, repo, pull_number: item.number })).data;
+              }
+              if (pr.state !== 'open' || pr.draft || pr.mergeable !== true) {
+                core.info(`#${item.number}: mergeable ではない（${pr.mergeable}）。何もしない`);
+                continue;
+              }
+              // 取り直したあいだに head が進んでいたら見送る（次の回で見る）
+              if (pr.head.sha !== item.head.sha) continue;
+
+              try {
+                await github.rest.pulls.merge({
+                  owner, repo, pull_number: pr.number,
+                  merge_method: 'merge', sha: pr.head.sha,
+                });
+              } catch (e) {
+                core.warning(`#${pr.number}: マージできなかった：${e.message}`);
+                continue;
+              }
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: pr.number, body: '自動マージした',
+              });
+              core.info(`#${pr.number}: 自動マージした`);
+            }
