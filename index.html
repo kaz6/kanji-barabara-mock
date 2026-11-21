@@ -34,6 +34,12 @@ h1{font-size:17px;margin:0 0 2px;font-weight:700}
   display:flex;align-items:center;justify-content:center;font-family:var(--kanji);font-size:clamp(20px,4.6vw,30px);
   cursor:pointer;user-select:none;padding:0;color:var(--ink);width:100%}
 .tile:hover{border-color:var(--ink)}
+/* 手札で選ぶ（KJ-005）：選んだ札は色が変わり、角に選んだ順の数字。指一本で札を引きずって入れ替える */
+.me .tile{touch-action:none}
+.tile.sel{background:var(--accent);border-color:var(--accent);color:#fff}
+.tile .ord{position:absolute;top:1px;left:3px;font:bold 12px/1.2 system-ui,sans-serif;color:#fff}
+.tile.drag{opacity:.55;border-style:dashed}
+.tile.over{border-color:var(--accent);border-width:2px}
 .tile.part{background:#f1ede4;color:#4a463f}
 .tile.new{border-color:var(--accent);border-width:2px}
 .tile .mk{position:absolute;top:1px;right:3px;font:10px/1.2 system-ui,sans-serif;color:var(--accent);letter-spacing:-1px}
@@ -107,10 +113,11 @@ details ul{padding-left:18px}
 <body>
 <main>
   <h1>漢字版（仮）モック</h1>
-  <p class="lead">手札を組み替えて言葉を作り、放つと点が入る。放った字数だけ場から字を取れる。先に 50 点か、5 分で点の多い方が勝ち。</p>
+  <p class="lead" id="lead"></p>
 
   <div class="bar">
     <span class="opp" id="opp" role="radiogroup" aria-label="相手"><span>相手</span></span>
+    <span class="opp" id="lay" role="radiogroup" aria-label="並べ方"><span>並べ方</span></span>
     <button class="op" id="start">はじめる</button>
     <button class="op" id="bLog">ログ</button>
     <button class="op" id="bCopyEnd" hidden>ログをコピー</button>
@@ -177,6 +184,8 @@ const D={};
 let T=null, G=null; // 表・ゲームの状態
 let row=[];         // 台に並べた札の id（左から）
 let lastTried="";
+const LAY_KEY="kj-layout";
+let layout=null;    // 並べ方（"hand"＝手札で選ぶ／"table"＝台に並べる）。端末に覚える
 const $=id=>document.getElementById(id);
 const clock=()=>performance.now()/1000;
 
@@ -198,6 +207,25 @@ $("bCopy").onclick=copyLog;$("bCopyEnd").onclick=copyLog;
 // ---------- はじめる ----------
 let cpuTimer=null;
 function chosenOpponent(){const r=document.querySelector('#opp input:checked');return r?r.value:D.rules.opponent_default}
+function loadLayout(){
+  let v=null;try{v=localStorage.getItem(LAY_KEY)}catch(e){}
+  layout=K.LAYOUTS.some(l=>l.key===v)?v:D.rules.layout_default;
+}
+function buildLayoutPicker(){
+  const box=$("lay");
+  for(const o of K.LAYOUTS){
+    const l=document.createElement("label");
+    l.innerHTML=`<input type="radio" name="lay" value="${o.key}"${o.key===layout?" checked":""}> ${o.label}`;
+    l.querySelector("input").onchange=()=>setLayout(o.key);
+    box.appendChild(l);
+  }
+}
+function setLayout(key){
+  layout=key;
+  try{localStorage.setItem(LAY_KEY,key)}catch(e){}
+  if(!G){return}
+  G.setLayout(key);hideChoices();afterChange();
+}
 function buildOpponentPicker(){
   const box=$("opp");
   for(const o of K.OPPONENTS){
@@ -208,7 +236,7 @@ function buildOpponentPicker(){
 }
 function start(){
   clearTimeout(cpuTimer);
-  G=K.createGame(D,T,{now:clock,opponent:chosenOpponent()});
+  G=K.createGame(D,T,{now:clock,opponent:chosenOpponent(),layout});
   row=[];lastTried="";
   $("msg").textContent="";$("msg").className="msg";
   $("bCopyEnd").hidden=true;
@@ -269,7 +297,35 @@ function noteTried(){
   const key=s.text+"|"+why;if(key===lastTried)return;lastTried=key;
   G.tried(G.me,s.rc.map(x=>x.c),why);
 }
-function tapHand(id){if(G.over)return;row.push(id);lastTried="";hideChoices();render()}
+let dragEnded=false; // 引きずって離したあとに出るタップを無視する
+function tapHand(id){
+  if(G.over||dragEnded)return;
+  if(row.includes(id)){tapRow(id);return} // 手札で選ぶ：もう一度タップで外れる
+  row.push(id);lastTried="";hideChoices();render();
+}
+// 手札の中の入れ替え：札を引きずって、同じ並び（手札どうし・置き場どうし）の札の上で離す。指一本でできる
+function attachDrag(b,id){
+  b.dataset.id=id;
+  b.addEventListener("pointerdown",e=>{
+    if(!G||G.over||(e.pointerType==="mouse"&&e.button!==0))return;
+    const sx=e.clientX,sy=e.clientY;let moved=false,over=null;
+    const under=(ev)=>{const t=document.elementFromPoint(ev.clientX,ev.clientY);const el=t&&t.closest("[data-id]");return el&&el!==b&&el.parentNode===b.parentNode?el:null};
+    const move=ev=>{
+      if(!moved&&Math.hypot(ev.clientX-sx,ev.clientY-sy)>10){moved=true;b.classList.add("drag")}
+      if(!moved)return;
+      const t=under(ev);if(over&&over!==t)over.classList.remove("over");over=t;if(t)t.classList.add("over");
+    };
+    const up=ev=>{
+      document.removeEventListener("pointermove",move);document.removeEventListener("pointerup",up);document.removeEventListener("pointercancel",up);
+      if(!moved)return;
+      dragEnded=true;setTimeout(()=>{dragEnded=false},0);
+      const t=under(ev);
+      b.classList.remove("drag");if(over)over.classList.remove("over");
+      if(t&&ev.type==="pointerup"&&G&&!G.over){G.swap(G.me,id,+t.dataset.id);afterChange()}
+    };
+    document.addEventListener("pointermove",move);document.addEventListener("pointerup",up);document.addEventListener("pointercancel",up);
+  });
+}
 function tapRow(id){if(G.over)return;noteTried();row=row.filter(x=>x!==id);hideChoices();afterChange()}
 function tapField(id){if(!G||G.over)return;const r=G.take(G.me,id);if(!r.ok){$("msg").textContent=r.why;$("msg").className="msg"}afterChange()}
 function afterOp(res){if(res&&res.ok){row=res.cards?res.cards.map(x=>x.id):[];lastTried=""}hideChoices();afterChange()}
@@ -302,13 +358,14 @@ function showChoices(groups){
 function hideChoices(){$("choices").classList.remove("on")}
 
 // ---------- 描画 ----------
-function tileEl(x,{onClick,shown}={}){
+function tileEl(x,{onClick,shown,ord}={}){
   const b=document.createElement(onClick?"button":"div");
   b.className="tile"+(K.isChar(T,x.c)?"":" part")+(x.fresh&&clock()-x.t<1.5?" new":"");
   b.textContent=shown||x.c;
   const m=K.marks(T,x.c);
   if(m){const s=document.createElement("span");s.className="mk";s.textContent=m;b.appendChild(s)}
   if(shown&&shown!==x.c){const s=document.createElement("span");s.className="orig";s.textContent=x.c;b.appendChild(s)}
+  if(ord){b.classList.add("sel");const s=document.createElement("span");s.className="ord";s.textContent=ord;b.appendChild(s)}
   if(onClick)b.onclick=onClick;
   b.title=x.c;
   return b;
@@ -320,8 +377,10 @@ function renderHand(el,p,interactive,tray){
   const inRow=interactive?new Set(row):new Set();
   const cards=p.cards.filter(x=>!!x.tray===!!tray);
   for(const x of cards){
-    if(inRow.has(x.id)){const s=document.createElement("div");s.className="slot held";s.title=x.c;s.onclick=()=>tapRow(x.id);el.appendChild(s);continue}
-    el.appendChild(tileEl(x,interactive?{onClick:()=>tapHand(x.id)}:{}));
+    if(inRow.has(x.id)&&layout==="table"){const s=document.createElement("div");s.className="slot held";s.title=x.c;s.onclick=()=>tapRow(x.id);el.appendChild(s);continue}
+    const t=tileEl(x,interactive?{onClick:()=>tapHand(x.id),ord:inRow.has(x.id)?row.indexOf(x.id)+1:0}:{});
+    if(interactive)attachDrag(t,x.id);
+    el.appendChild(t);
   }
   const max=tray?D.rules.split_extra:D.rules.hand_max;
   for(let i=cards.length;i<max;i++){const s=document.createElement("div");s.className="slot";el.appendChild(s)}
@@ -347,11 +406,12 @@ function render(){
     ct.textContent=`手札 ${G.handCount(p)} / ${D.rules.hand_max}`;
   }
   $("trayHead").textContent=`部品の置き場（割ったあとの札。${G.trayCount(G.me)} / ${D.rules.split_extra}）`;
-  // 台
-  const rowEl=$("row");rowEl.innerHTML="";
+  // 台（手札で選ぶときは使わない。選んだ札は手札の上で色が変わる）
+  const rowEl=$("row");rowEl.innerHTML="";rowEl.style.display=layout==="hand"?"none":"";
   const s=rowState();
-  if(!s.rc.length)rowEl.innerHTML='<span class="empty">手札をタップして台に並べる</span>';
-  s.rc.forEach((x,i)=>{
+  if(layout==="hand"){/* 台は出さない */}
+  else if(!s.rc.length)rowEl.innerHTML='<span class="empty">手札をタップして台に並べる</span>';
+  if(layout==="table")s.rc.forEach((x,i)=>{
     const shown=(i===0&&s.joins.length&&D.radical_forms.left[x.c])||null;
     rowEl.appendChild(tileEl({...x,fresh:false},{onClick:()=>tapRow(x.id),shown}));
   });
@@ -408,8 +468,10 @@ function showFx(who,text){
 }
 function buildHowto(){
   const R=D.rules,S=R.score;
+  $("lead").textContent=`手札を組み替えて言葉を作り、放つと点が入る。放った字数だけ場から字を取れる。先に ${R.win.score} 点か、${R.win.time_limit_sec/60} 分で点の多い方が勝ち。`;
   $("howto").innerHTML=[
-    `手札の札をタップすると台に並ぶ（並べた順が左から）。台の札、または手札の点線のマスをタップすると手札に戻る。`,
+    `<b>並べ方</b>（上で切り替え。いつでも戻せる）：<b>手札で選ぶ</b>は、手札の札をタップすると色が変わって選ばれ、角に選んだ順の数字（1・2・3…）が出る。もう一度タップで外れる。ボタンは選んだ札に、選んだ順で働く。<b>台に並べる</b>は、手札の札をタップすると台に並ぶ（並べた順が左から）。台の札、または手札の点線のマスをタップすると手札に戻る。`,
+    `<b>入れ替え</b>：手札（または置き場）の札を指で引きずって、同じ並びの別の札の上で離すと、位置が入れ替わる（どちらの並べ方でも使える）。`,
     `<b>放つ</b>：台の札が辞書の語（1〜4字）か、N5 の字1字なら放てる。部品だけでは放てない。一度放った言葉は二人とも二度と使えない。放った札は消える（相手には届かない）。`,
     `<b>点数</b>：${Object.entries(S.by_length).map(([n,p])=>`${n}字 ${p}点`).join("・")}。四字熟語は ${S.yoji_mult} 倍、特別な語（天上天下）はさらに ${S.special_mult} 倍。`,
     `<b>取る</b>：放ったら、放った字数と同じ枚数を<b>場</b>から選んで取れる（手札は ${R.hand_max} 枚まで）。取ったところには山から次の字が出る。相手も同じ場から取るので早い者勝ち（ひとりでは取り合いなし）。`,
@@ -428,7 +490,7 @@ setInterval(()=>{if(!G||G.over)return;if(G.tick())afterChange();else renderOps()
 window.__KJ={get game(){return G},get row(){return row},get tables(){return T},data:D,render}; // ブラウザのテスト用
 
 Promise.all(K.FILES.map(f=>fetch(`data/${f}.json`).then(r=>r.json()).then(j=>D[f]=j)))
-  .then(()=>{T=K.makeTables(D);buildOpponentPicker();buildHowto();$("msg").textContent=`字 ${T.N5.size}・語 ${T.WORDS.size}`})
+  .then(()=>{T=K.makeTables(D);loadLayout();buildOpponentPicker();buildLayoutPicker();buildHowto();$("msg").textContent=`字 ${T.N5.size}・語 ${T.WORDS.size}`})
   .catch(e=>{$("msg").textContent="データを読めませんでした（file:// では開けません。Pages かローカルのサーバーで開いてください）"});
 </script>
 </body>

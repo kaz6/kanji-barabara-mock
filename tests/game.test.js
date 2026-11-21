@@ -276,17 +276,17 @@ test("勝ち：先に50点。終わったら動かせない", () => {
   assert.match(g.log[g.log.length - 1].note, /あなたの勝ち（先に50点）/);
 });
 
-test("勝ち：5分たったら点の多い方。同点は引き分け", () => {
+test("勝ち：制限時間（rules.json）がたったら点の多い方。同点は引き分け", () => {
   let g = newGame();
   g.cpu.score = 3;
-  g.clock.t += 299.9;
+  g.clock.t += D.rules.win.time_limit_sec - 0.1;
   g.tick();
   assert.equal(g.over, false);
   g.clock.t += 0.2;
   g.tick();
   assert.equal(g.winner, g.cpu);
   g = newGame();
-  g.clock.t += 300;
+  g.clock.t += D.rules.win.time_limit_sec;
   g.tick();
   assert.equal(g.over, true);
   assert.equal(g.winner, null);
@@ -363,10 +363,10 @@ test("ログ：書き出しの頭に仮置きの値を全部書く", () => {
   assert.match(head, /点数 1字1・2字3・3字6・4字12 四字熟語×2 特別な語×2/);
   assert.match(head, /放った字数×1枚を場から選んで取れる/);
   assert.match(head, /引き直し 5点で手札を全部入れ替え（8枚）。5点ない人は30秒待って0点で/);
-  assert.match(head, /勝ち 先に50点、または5分で点の多い方/);
+  assert.match(head, /勝ち 先に50点、または10分で点の多い方/);
   assert.match(head, /反転=10秒 巡り=3秒 同音=20秒/);
   assert.match(head, /CPU 8〜12秒に1回動く/);
-  assert.match(head, /rules=2026-11-21\.2/);
+  assert.match(head, /rules=2026-11-21\.3/);
   assert.match(head, /はじめた時刻 2026-11-20 18:00:00/);
   assert.match(text, /秒\tどちら\t手\t使った札\tできた札\t点\tあなたの点\tCPUの点\tあなたの手札\tCPUの手札\tメモ/);
 });
@@ -436,13 +436,13 @@ test("ひとりで：CPU は出ない。山から CPU の分は引かない。�
   assert.equal(g.log.some((e) => e.who === "CPU"), false, "CPU の行がない（動けない も出ない）");
 });
 
-test("ひとりで：50点になっても終わらない。5分たったら終わり、点を出す", () => {
+test("ひとりで：50点になっても終わらない。制限時間（10分）がたったら終わり、点を出す", () => {
   const g = newGame(1, "solo");
   g.me.score = 48;
   assert.ok(g.release(g.me, setHand(g, g.me, "休日")).ok);
   assert.equal(g.me.score, 51);
   assert.equal(g.over, false, "50点を超えても続く");
-  g.clock.t += 299.9;
+  g.clock.t += D.rules.win.time_limit_sec - 0.1;
   g.tick();
   assert.equal(g.over, false);
   g.clock.t += 0.2;
@@ -451,7 +451,7 @@ test("ひとりで：50点になっても終わらない。5分たったら終�
   assert.equal(g.winner, null);
   const ev = g.events.find((e) => e.type === "over");
   assert.deepEqual([ev.solo, ev.winner], [true, null]);
-  assert.match(g.log[g.log.length - 1].note, /ひとりで 51点（5分）/);
+  assert.match(g.log[g.log.length - 1].note, /ひとりで 51点（10分）/);
   assert.equal(g.release(g.me, setHand(g, g.me, "山")).ok, false, "終わったら動かせない");
 });
 
@@ -466,9 +466,85 @@ test("ひとりで：引き直しの待ちも動く。CPU の待ちは見ない"
 
 test("ログ：頭に選んだ相手を書く（ひとりで／とても弱い／いまの強さ）", () => {
   const head = (opp) => newGame(1, opp).logText().split("\n").filter((l) => l.startsWith("# 相手")).join("");
-  assert.match(head("solo"), /# 相手 ひとりで（CPU なし。場の取り合いなし。50点では終わらず、5分たったら終わって点を出す/);
+  assert.match(head("solo"), /# 相手 ひとりで（CPU なし。場の取り合いなし。50点では終わらず、10分たったら終わって点を出す/);
   assert.match(head("weak"), /# 相手 とても弱い（CPU は 30〜45秒に1回動く。動き方はいまの CPU のまま）/);
   assert.match(head("normal"), /# 相手 いまの強さ（CPU は 8〜12秒に1回動く）/);
   assert.match(newGame(1, "weak").logText(), /# 仮置き CPU 30〜45秒に1回動く/);
   assert.match(newGame(1, "solo").logText(), /# 仮置き CPU なし/);
+});
+
+// ---------- KJ-005：並べ方・入れ替え ----------
+test("並べ方：初期値は 手札で選ぶ。選べる・ログの頭に書く・途中で切り替えるとログに残る", () => {
+  const g = newGame(1);
+  assert.equal(g.layout, "hand");
+  assert.match(g.logText(), /# 並べ方 手札で選ぶ（はじめたとき/);
+  assert.equal(K.createGame(D, T, { now: () => 0, layout: "table" }).layout, "table");
+  assert.equal(K.createGame(D, T, { now: () => 0, layout: "でたらめ" }).layout, "hand", "知らない値は初期値");
+  assert.deepEqual(K.LAYOUTS.map((l) => l.label), ["手札で選ぶ", "台に並べる"]);
+  assert.equal(g.setLayout("hand").ok, false, "同じ並べ方への切り替えは何もしない");
+  assert.equal(g.setLayout("table").ok, true);
+  assert.equal(g.layout, "table");
+  const e = g.log[g.log.length - 1];
+  assert.deepEqual([e.op, e.note], ["並べ方", "台に並べるに切り替え"]);
+  assert.match(g.logText(), /# 並べ方 手札で選ぶ（はじめたとき[^\n]*\n/, "頭は はじめたときの並べ方のまま");
+  assert.match(g.logText(), /\t並べ方\t\t\t0\t.*台に並べるに切り替え/);
+  assert.equal(g.me.stuck, false, "並べ方の切り替えで 動けない を出さない");
+});
+
+test("手札で選ぶ：選んだ順がそのまま効く。放つ・くっつける・割る は台に並べた時と同じ結果", () => {
+  // 画面は「選んだ札の id の並び」を台の並びと同じ形で core に渡す。順番ちがいで結果が変わることを確かめる
+  for (const layout of ["hand", "table"]) {
+    const run = (chars, op) => {
+      const g = K.createGame(D, T, { now: () => 1000, rand: () => 0.5, layout, date: () => new Date(2026, 10, 21) });
+      const ids = setHand(g, g.me, "休日十口人木");
+      const pick = (s) => [...s].map((c) => g.me.cards.find((x) => x.c === c).id);
+      return { g, ids, r: op(g, pick(chars)) };
+    };
+    const a = run("休日", (g, ids) => g.release(g.me, ids));
+    assert.deepEqual([a.r.ok, a.r.text, a.r.pts], [true, "休日", 3], layout);
+    const b = run("日休", (g, ids) => g.release(g.me, ids));
+    assert.equal(b.r.ok, false, layout + "：日休 は放てない（選んだ順）");
+    const c = run("十口", (g, ids) => g.join(g.me, ids));
+    assert.equal(c.r.ok, true, layout);
+    assert.ok(["古", "田"].includes(c.r.cards[0].c));
+    const d = run("口十", (g, ids) => g.join(g.me, ids));
+    assert.deepEqual([d.r.ok, d.r.why], [false, "並べる順が逆"], layout);
+    const e = run("休", (g, ids) => g.split(g.me, ids));
+    assert.deepEqual([e.r.ok, e.r.cards.map((x) => x.c).join("")], [true, "人木"], layout);
+  }
+});
+
+test("入れ替え：手札の中で2枚の位置が替わる。札の数・中身は変わらず、ログに残る", () => {
+  const g = newGame(1);
+  const ids = setHand(g, g.me, "天上天下十口休日");
+  const before = g.me.cards.map((x) => x.c).join("");
+  assert.equal(g.swap(g.me, ids[0], ids[7]).ok, true);
+  assert.equal(g.me.cards.map((x) => x.c).join(""), "日上天下十口休天");
+  assert.equal(g.me.cards.length, 8);
+  assert.deepEqual([...g.me.cards.map((x) => x.c)].sort(), [...before].sort());
+  const e = g.log[g.log.length - 1];
+  assert.deepEqual([e.op, e.from.join(""), e.to.join("")], ["入れ替え", "天日", "日天"]);
+  assert.equal(g.me.stuck, false);
+  assert.equal(g.swap(g.me, ids[0], ids[0]).ok, false, "同じ札どうしは何もしない");
+  assert.equal(g.swap(g.me, ids[0], 999999).ok, false, "手札にない札");
+  assert.equal(g.swap(g.cpu, ids[0], ids[1]).ok, false, "相手の札は替えられない");
+  g.over = true;
+  assert.equal(g.swap(g.me, ids[1], ids[2]).ok, false, "終わったら替えられない");
+});
+
+test("入れ替え：手札どうし・置き場どうしだけ。手札と置き場の間は替えない。入れ替えのあとも割る・放つが同じに働く", () => {
+  const g = newGame(1);
+  setHand(g, g.me, "休一二三四五六七");
+  const hand = g.me.cards.map((x) => x.id);
+  const r = g.split(g.me, [hand[0]]); // 亻木 のうち手札に入りきらない分が置き場へ
+  assert.ok(r.ok);
+  const tray = g.me.cards.filter((x) => x.tray), inHand = g.me.cards.filter((x) => !x.tray);
+  assert.ok(tray.length >= 1);
+  assert.equal(g.swap(g.me, tray[0].id, inHand[0].id).ok, false, "置き場と手札は替えない");
+  assert.equal(g.swap(g.me, inHand[0].id, inHand[1].id).ok, true);
+  assert.equal(g.me.cards.filter((x) => x.tray).length, tray.length, "置き場の枚数は同じ");
+  assert.equal(g.me.cards.length, 9);
+  const log0 = g.log.length;
+  assert.ok(g.release(g.me, [g.me.cards.find((x) => x.c === "一").id]).ok, "入れ替えのあとも放てる");
+  assert.ok(g.log.length > log0);
 });
