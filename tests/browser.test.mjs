@@ -37,7 +37,7 @@ async function open(browser, url, vp, opponent, layout = "table") {
   page.on("pageerror", (e) => errors.push(String(e)));
   page.on("console", (m) => { if (m.type() === "error") errors.push(m.text()); });
   await page.goto(url);
-  await page.waitForFunction(() => document.getElementById("msg").textContent.startsWith("字 "));
+  await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
   if (opponent) await page.check(`#opp input[value="${opponent}"]`);
   await page.check(`#lay input[value="${layout}"]`); // 既存の画面テストは「台に並べる」で見る。手札で選ぶは KJ-005 の下のテスト
   await page.click("#start");
@@ -92,8 +92,9 @@ test("画面", { skip }, async (t) => {
       assert.match(await page.textContent("#meScore"), /^3 点/);
       assert.match(await page.textContent("#takes"), /2 枚取れる/);
       assert.equal(await pos("#field > *"), field0);
-      await page.locator("#field .tile", { hasText: "山" }).click();
-      await page.locator("#field .tile", { hasText: "川" }).click();
+      // 取ったあとのマスには山から無作為に字が出る（同じ字が出ることもある）ので、字ではなくマスの位置（山=1番目・川=2番目）で押す
+      await page.locator("#field .tile").nth(0).click();
+      await page.locator("#field .tile").nth(1).click();
       assert.equal(await page.textContent("#takes"), "");
       assert.equal(await page.locator("#meHand .tile", { hasText: "山" }).count(), 1, "山 が手札に来た");
       assert.equal(await pos("#field > *"), field0, "取ったあとも場の位置は同じ");
@@ -128,6 +129,114 @@ test("画面", { skip }, async (t) => {
     await ctx.close();
   });
 
+  await t.test("はじめる前の画面（KJ-007）：4つが上から並び、初期値は 相手=とても弱い・レベル=N4・時間=10分・並べ方=台に並べる。下に「はじめる」", async () => {
+    const ctx = await browser.newContext({ viewport: { width: 375, height: 800 } });
+    const page = await ctx.newPage();
+    const errors = [];
+    page.on("pageerror", (e) => errors.push(String(e)));
+    await page.goto(url);
+    await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
+    assert.equal(await page.isVisible("#setup"), true);
+    assert.equal(await page.isVisible("#game"), false, "遊ぶ画面はまだ出ない");
+    const ys = await page.evaluate(() => ["opp", "lvl", "tim", "lay", "start"].map((id) => document.getElementById(id).getBoundingClientRect().top));
+    assert.deepEqual([...ys].sort((a, b) => a - b), ys, "相手・レベル・時間・並べ方・はじめる の順に上から並ぶ");
+    const labels = (id) => page.locator(`#${id} label`).allTextContents().then((a) => a.map((x) => x.trim()));
+    assert.deepEqual(await labels("opp"), ["ひとりで", "とても弱い", "いまの強さ"]);
+    assert.deepEqual(await labels("lvl"), ["N5", "N4"]);
+    assert.deepEqual(await labels("tim"), ["5分", "10分", "15分"]);
+    assert.deepEqual(await labels("lay"), ["手札で選ぶ", "台に並べる"]);
+    for (const [id, v] of [["opp", "weak"], ["lvl", "N4"], ["tim", "600"], ["lay", "table"]]) assert.equal(await page.locator(`#${id} input:checked`).getAttribute("value"), v, id);
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, "横にはみ出さない");
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+
+  await t.test("はじめる前の画面（KJ-007）：時間の3択で終わる時刻が変わる。4つが端末に残り、ログの頭に出る", async () => {
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 });
+    await page.click("#bSetup");
+    assert.equal(await page.isVisible("#setup"), true, "設定を変えるで はじめる前の画面へ戻る");
+    assert.equal(await page.isVisible("#game"), false);
+    assert.equal(await page.evaluate(() => __KJ.game), null, "遊びは捨てる");
+    for (const sec of [300, 600, 900]) {
+      await page.check(`#tim input[value="${sec}"]`);
+      await page.click("#start");
+      assert.equal(await page.evaluate(() => __KJ.game.timeLimit), sec);
+      assert.equal(await page.evaluate(() => __KJ.game.picking), true);
+      await page.locator("#field .tile").first().click();
+      const left = await page.evaluate(() => __KJ.game.timeLeft());
+      assert.ok(left > sec - 3 && left <= sec, `残り ${left} 秒（${sec} 秒で始まる）`);
+      assert.match(await page.textContent("#clock"), new RegExp(`^残り ${Math.floor(sec / 60)}:`));
+      await page.click("#bLog");
+      assert.match(await page.inputValue("#logText"), new RegExp(`# 時間 ${sec / 60}分\n`));
+      await page.click("#bLog");
+      await page.click("#bSetup");
+    }
+    // 4つ選んで、ログの頭に4つとも出る
+    await page.check('#opp input[value="solo"]');
+    await page.check('#lvl input[value="N5"]');
+    await page.check('#tim input[value="300"]');
+    await page.check('#lay input[value="hand"]');
+    await page.click("#start");
+    await page.click("#bLog");
+    const log = await page.inputValue("#logText");
+    assert.match(log, /# レベル N5\n# 相手 ひとりで（CPU なし。場の取り合いなし。50点では終わらず、5分たったら/);
+    assert.match(log, /# 時間 5分\n# 並べ方 手札で選ぶ（はじめたとき/);
+    // 4つが端末に残る
+    assert.deepEqual(await page.evaluate(() => ["kj-opponent", "kj-level", "kj-time", "kj-layout"].map((k) => localStorage.getItem(k))), ["solo", "N5", "300", "hand"]);
+    await page.reload();
+    await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
+    for (const [id, v] of [["opp", "solo"], ["lvl", "N5"], ["tim", "300"], ["lay", "hand"]]) assert.equal(await page.locator(`#${id} input:checked`).getAttribute("value"), v, `${id} を覚えている`);
+    // 知らない値が残っていても初期値で動く
+    await page.evaluate(() => { localStorage.setItem("kj-time", "7"); localStorage.setItem("kj-opponent", "ばか"); });
+    await page.reload();
+    await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
+    assert.equal(await page.locator("#tim input:checked").getAttribute("value"), "600");
+    assert.equal(await page.locator("#opp input:checked").getAttribute("value"), "weak");
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+
+  await t.test("はじめる前の画面（KJ-007）：localStorage が使えなくても始められる（初期値で動く）", async () => {
+    const ctx = await browser.newContext({ viewport: { width: 375, height: 900 } });
+    const page = await ctx.newPage();
+    const errors = [];
+    page.on("pageerror", (e) => errors.push(String(e)));
+    await page.addInitScript(() => { Object.defineProperty(window, "localStorage", { get() { throw new Error("blocked"); } }); });
+    await page.goto(url);
+    await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
+    for (const [id, v] of [["opp", "weak"], ["lvl", "N4"], ["tim", "600"], ["lay", "table"]]) assert.equal(await page.locator(`#${id} input:checked`).getAttribute("value"), v, id);
+    await page.check('#tim input[value="900"]'); // 選んでも壊れない（覚えないだけ）
+    await page.click("#start");
+    assert.equal(await page.evaluate(() => __KJ.game.timeLimit), 900);
+    assert.equal(await page.evaluate(() => __KJ.game.opponent), "weak");
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+
+  await t.test("はじめる前の画面（KJ-007）：「もう一度」は同じ設定ですぐ始まる。遊ぶ画面では並べ方だけ変えられる", async () => {
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 }, "normal", "hand");
+    await page.click("#bSetup");
+    await page.check('#lvl input[value="N5"]');
+    await page.check('#tim input[value="300"]');
+    await page.check('#opp input[value="solo"]');
+    await page.click("#start");
+    assert.equal(await page.isVisible("#setup"), false);
+    for (const id of ["opp", "lvl", "tim"]) assert.equal(await page.isVisible("#" + id), false, `${id} は遊んでいる途中では変えられない`);
+    assert.equal(await page.isVisible("#layNow"), true, "並べ方の切り替えは残る");
+    await page.check('#layNow input[value="table"]');
+    await page.locator("#field .tile").first().click(); // はじめの1枚
+    // 終わらせて もう一度
+    await page.evaluate(() => { __KJ.game.endsAt = __KJ.game.now() - 1; });
+    await page.waitForFunction(() => document.getElementById("msg").textContent.startsWith("ひとりで "));
+    await page.click("#again");
+    const g = await page.evaluate(() => ({ lv: __KJ.game.level, t: __KJ.game.timeLimit, o: __KJ.game.opponent, l: __KJ.game.layout, over: __KJ.game.over, picking: __KJ.game.picking }));
+    assert.deepEqual(g, { lv: "N5", t: 300, o: "solo", l: "table", over: false, picking: true }, "同じ設定（並べ方は途中で変えた値）で新しく始まる");
+    assert.equal(await page.isVisible("#setup"), false);
+    assert.equal(await page.textContent("#msg"), "最初の1枚を場から選ぶ（時間は止まっています）");
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+
   await t.test("レベル（KJ-006）：初期値は N4。N5 を選ぶと字と語が減り、ログの頭に出る。端末に覚える", async () => {
     const { ctx, page, errors } = await open(browser, url, { width: 760, height: 1100 });
     const labels = await page.locator("#lvl label").allTextContents();
@@ -137,8 +246,9 @@ test("画面", { skip }, async (t) => {
     const n4 = await page.evaluate(() => [__KJ.tables.CHARS.size, __KJ.tables.WORDS.size]);
     await page.click("#bLog");
     assert.match(await page.inputValue("#logText"), /# レベル N4（N5＋N4 の字）/);
+    assert.equal(await page.isVisible("#lvl"), false, "遊んでいる途中では変えられない");
+    await page.click("#bSetup");
     await page.check('#lvl input[value="N5"]');
-    assert.equal(await page.evaluate(() => __KJ.game.level), "N4", "遊んでいる途中では変わらない（次にはじめるときに効く）");
     await page.click("#start");
     assert.equal(await page.evaluate(() => __KJ.game.level), "N5");
     const n5 = await page.evaluate(() => [__KJ.tables.CHARS.size, __KJ.tables.WORDS.size]);
@@ -147,13 +257,13 @@ test("画面", { skip }, async (t) => {
     assert.match(await page.inputValue("#logText"), /# レベル N5\n/);
     assert.equal(await page.evaluate(() => localStorage.getItem("kj-level")), "N5");
     await page.reload();
-    await page.waitForFunction(() => document.getElementById("msg").textContent.startsWith("字 "));
+    await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
     assert.equal(await page.locator("#lvl input:checked").getAttribute("value"), "N5");
-    assert.match(await page.textContent("#msg"), /レベル N5/);
+    assert.match(await page.textContent("#setupInfo"), /レベル N5/);
     // localStorage が読めなくても初期値で始められる
     await page.addInitScript(() => { Object.defineProperty(window, "localStorage", { get() { throw new Error("blocked"); } }); });
     await page.reload();
-    await page.waitForFunction(() => document.getElementById("msg").textContent.startsWith("字 "));
+    await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
     assert.equal(await page.locator("#lvl input:checked").getAttribute("value"), "N4");
     await page.click("#start");
     assert.equal(await page.evaluate(() => __KJ.game.level), "N4");
@@ -167,7 +277,7 @@ test("画面", { skip }, async (t) => {
     const errors = [];
     page.on("pageerror", (e) => errors.push(String(e)));
     await page.goto(url);
-    await page.waitForFunction(() => document.getElementById("msg").textContent.startsWith("字 "));
+    await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
     await page.check('#opp input[value="normal"]');
     await page.check('#lay input[value="table"]');
     await page.click("#start");
@@ -219,8 +329,8 @@ test("画面", { skip }, async (t) => {
     assert.match(await page.textContent("#msg"), /ひとりで 51 点（自己ベスト更新）/);
     assert.equal(await page.evaluate(() => localStorage.getItem("kj-solo-best")), "51");
     assert.equal(await page.isVisible("#bCopyEnd"), true);
-    // もう一度（ひとりで）：低い点なら 自己ベスト 51 点 を出す
-    await page.click("#start");
+    // もう一度（同じ設定＝ひとりで）：低い点なら 自己ベスト 51 点 を出す
+    await page.click("#again");
     await page.locator("#field .tile").first().click(); // はじめの1枚
     await page.evaluate(() => { const G = __KJ.game; G.me.score = 3; G.endsAt = G.now() - 1; });
     await page.waitForFunction(() => document.getElementById("msg").textContent.startsWith("ひとりで 3 点"));
@@ -359,29 +469,31 @@ test("画面", { skip }, async (t) => {
       const tile = (ch) => page.locator("#meHand .tile", { hasText: ch }).first();
       await tile("休").click(); await tile("日").click();
       // 台に並べるへ：選んだ札が台に並ぶ
-      await page.check('#lay input[value="table"]');
+      await page.check('#layNow input[value="table"]');
       assert.equal(await page.isVisible("#row"), true);
       assert.match(await page.textContent("#row"), /^休.*日/);
       assert.equal(await page.locator("#meHand .slot.held").count(), 2);
       // 手札で選ぶへ戻す
-      await page.check('#lay input[value="hand"]');
+      await page.check('#layNow input[value="hand"]');
       assert.equal(await page.isVisible("#row"), false);
       assert.equal(await page.locator("#meHand .tile.sel").count(), 2);
       assert.equal(await page.evaluate(() => localStorage.getItem("kj-layout")), "hand");
-      await page.check('#lay input[value="table"]');
+      await page.check('#layNow input[value="table"]');
       assert.equal(await page.evaluate(() => localStorage.getItem("kj-layout")), "table");
       // 再読み込みしても覚えている
       await page.reload();
-      await page.waitForFunction(() => document.getElementById("msg").textContent.startsWith("字 "));
+      await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
       assert.equal(await page.locator("#lay input:checked").getAttribute("value"), "table");
-      // 消して読み込み直すと初期値（手札で選ぶ）
+      // 消して読み込み直すと初期値（台に並べる。追記 P-007 で手札で選ぶから戻した）
       await page.evaluate(() => localStorage.clear());
       await page.reload();
-      await page.waitForFunction(() => document.getElementById("msg").textContent.startsWith("字 "));
-      assert.equal(await page.locator("#lay input:checked").getAttribute("value"), "hand");
+      await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
+      assert.equal(await page.locator("#lay input:checked").getAttribute("value"), "table");
       // 遊んでいる最中の切り替えがログに出る
+      await page.check('#lay input[value="hand"]');
       await page.click("#start");
-      await page.check('#lay input[value="table"]');
+      assert.equal(await page.locator("#layNow input:checked").getAttribute("value"), "hand", "遊ぶ画面の切り替えにも同じ値");
+      await page.check('#layNow input[value="table"]');
       await page.click("#bLog");
       assert.match(await page.inputValue("#logText"), /\t並べ方\t\t\t0\t.*台に並べるに切り替え/);
       assert.deepEqual(errors, []);

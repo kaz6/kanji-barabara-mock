@@ -82,6 +82,15 @@ button.op.main:disabled{background:#fff;border-color:var(--line);color:var(--dim
 .choices .g{margin:4px 0;display:flex;flex-wrap:wrap;align-items:center;gap:4px}
 .choices .g span{font-size:12px;color:var(--sub);min-width:64px}
 .choices button{font-family:var(--kanji);font-size:22px;width:44px;height:44px;border:1px solid var(--line);background:var(--tile);border-radius:4px;cursor:pointer}
+/* はじめる前の画面（KJ-007） */
+.setup{background:#fff;border:1px solid var(--line);border-radius:6px;padding:14px 14px 16px;margin:8px 0}
+.setup h2{font-size:15px;margin:0 0 10px}
+.setup .grp{margin:0 0 12px}
+.setup .gt{font-size:12px;color:var(--sub);margin:0 0 4px}
+.setup .opp{gap:14px}
+.setup .opp label{padding:4px 0}
+.setup button.op.main{width:100%;margin-top:6px;padding:12px}
+[hidden]{display:none!important}
 /* 上の帯・ログ */
 .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
 .clock{margin-left:auto;font-variant-numeric:tabular-nums;font-size:14px;color:var(--sub)}
@@ -115,11 +124,21 @@ details ul{padding-left:18px}
   <h1>漢字版（仮）モック</h1>
   <p class="lead" id="lead"></p>
 
+  <section class="setup" id="setup">
+    <h2>はじめる前に選ぶ</h2>
+    <div class="grp"><p class="gt">相手</p><span class="opp" id="opp" role="radiogroup" aria-label="相手"></span></div>
+    <div class="grp"><p class="gt">レベル</p><span class="opp" id="lvl" role="radiogroup" aria-label="レベル"></span></div>
+    <div class="grp"><p class="gt">時間</p><span class="opp" id="tim" role="radiogroup" aria-label="時間"></span></div>
+    <div class="grp"><p class="gt">並べ方（遊んでいる途中でも切り替えられる）</p><span class="opp" id="lay" role="radiogroup" aria-label="並べ方"></span></div>
+    <p class="note" id="setupInfo"></p>
+    <button class="op main" id="start">はじめる</button>
+  </section>
+
+  <div id="game" hidden>
   <div class="bar">
-    <span class="opp" id="opp" role="radiogroup" aria-label="相手"><span>相手</span></span>
-    <span class="opp" id="lvl" role="radiogroup" aria-label="レベル"><span>レベル</span></span>
-    <span class="opp" id="lay" role="radiogroup" aria-label="並べ方"><span>並べ方</span></span>
-    <button class="op" id="start">はじめる</button>
+    <span class="opp" id="layNow" role="radiogroup" aria-label="並べ方（いま）"><span>並べ方</span></span>
+    <button class="op" id="again">もう一度</button>
+    <button class="op" id="bSetup">設定を変える</button>
     <button class="op" id="bLog">ログ</button>
     <button class="op" id="bCopyEnd" hidden>ログをコピー</button>
     <span class="clock" id="clock"></span>
@@ -169,6 +188,8 @@ details ul{padding-left:18px}
     <ul class="log" id="released"></ul>
   </section>
 
+  </div>
+
   <details>
     <summary>しくみ</summary>
     <ul id="howto"></ul>
@@ -190,6 +211,9 @@ let row=[];         // 台に並べた札の id（左から）
 let lastTried="";
 const LAY_KEY="kj-layout";
 let layout=null;    // 並べ方（"hand"＝手札で選ぶ／"table"＝台に並べる）。端末に覚える
+const OPP_KEY="kj-opponent",TIME_KEY="kj-time";
+let opponent=null;  // 相手。端末に覚える（KJ-007）
+let timeLimit=null; // 制限時間（秒）。端末に覚える（KJ-007）
 const $=id=>document.getElementById(id);
 const clock=()=>performance.now()/1000;
 
@@ -210,64 +234,59 @@ $("bCopy").onclick=copyLog;$("bCopyEnd").onclick=copyLog;
 
 // ---------- はじめる ----------
 let cpuTimer=null;
-function chosenOpponent(){const r=document.querySelector('#opp input:checked');return r?r.value:D.rules.opponent_default}
-function loadLayout(){
-  let v=null;try{v=localStorage.getItem(LAY_KEY)}catch(e){}
-  layout=K.LAYOUTS.some(l=>l.key===v)?v:D.rules.layout_default;
+// 端末に覚える4つ（KJ-007）。読めない・書けないときは初期値で動く
+function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function lsSet(k,v){try{localStorage.setItem(k,String(v))}catch(e){}}
+function loadSettings(){
+  const o=lsGet(OPP_KEY);opponent=K.OPPONENTS.some(x=>x.key===o)?o:D.rules.opponent_default;
+  const l=lsGet(LVL_KEY);level=K.LEVELS.some(x=>x.key===l)?l:(D.rules.level_default||"N4");
+  timeLimit=K.normTime(D,lsGet(TIME_KEY));
+  const y=lsGet(LAY_KEY);layout=K.LAYOUTS.some(x=>x.key===y)?y:D.rules.layout_default;
 }
-function buildLayoutPicker(){
-  const box=$("lay");
-  for(const o of K.LAYOUTS){
+// 選ぶものを並べる：name のラジオ。onPick は選んだ値を受け取る
+function radios(box,name,items,cur,onPick){
+  for(const o of items){
     const l=document.createElement("label");
-    l.innerHTML=`<input type="radio" name="lay" value="${o.key}"${o.key===layout?" checked":""}> ${o.label}`;
-    l.querySelector("input").onchange=()=>setLayout(o.key);
+    l.innerHTML=`<input type="radio" name="${name}" value="${o.value}"${String(o.value)===String(cur)?" checked":""}> ${o.label}`;
+    if(o.title)l.title=o.title;
+    l.querySelector("input").onchange=()=>onPick(o.value);
     box.appendChild(l);
   }
 }
+function buildPickers(){
+  radios($("opp"),"opp",K.OPPONENTS.map(o=>({value:o.key,label:o.label})),opponent,v=>{opponent=v;lsSet(OPP_KEY,v)});
+  radios($("lvl"),"lvl",K.LEVELS.map(o=>({value:o.key,label:o.key,title:o.label})),level,v=>{level=v;lsSet(LVL_KEY,v);T=tablesFor(level);showCounts()});
+  radios($("tim"),"tim",K.timeChoices(D).map(sec=>({value:sec,label:K.timeLabel(sec)})),timeLimit,v=>{timeLimit=+v;lsSet(TIME_KEY,v);buildHowto()});
+  const lays=K.LAYOUTS.map(o=>({value:o.key,label:o.label}));
+  radios($("lay"),"lay",lays,layout,setLayout);
+  radios($("layNow"),"layNow",lays,layout,setLayout);
+}
 function setLayout(key){
-  layout=key;
-  try{localStorage.setItem(LAY_KEY,key)}catch(e){}
+  layout=key;lsSet(LAY_KEY,key);
+  for(const n of ["lay","layNow"]){const r=document.querySelector(`#${n} input[value="${key}"]`);if(r)r.checked=true}
   if(!G){return}
   G.setLayout(key);hideChoices();afterChange();
 }
 function tablesFor(lv){return TABLES[lv]||(TABLES[lv]=K.makeTables(D,lv))}
-function loadLevel(){
-  let v=null;try{v=localStorage.getItem(LVL_KEY)}catch(e){}
-  level=K.LEVELS.some(l=>l.key===v)?v:(D.rules.level_default||"N4");
-}
-function buildLevelPicker(){
-  const box=$("lvl");
-  for(const o of K.LEVELS){
-    const l=document.createElement("label");
-    l.innerHTML=`<input type="radio" name="lvl" value="${o.key}"${o.key===level?" checked":""}> ${o.key}`;
-    l.title=o.label;
-    l.querySelector("input").onchange=()=>{level=o.key;try{localStorage.setItem(LVL_KEY,o.key)}catch(e){}if(!G){T=tablesFor(level);showCounts()}};
-    box.appendChild(l);
-  }
-}
-function showCounts(){$("msg").textContent=`字 ${T.CHARS.size}・語 ${T.WORDS.size}（レベル ${K.levelLabel(T.level)}）`}
-function buildOpponentPicker(){
-  const box=$("opp");
-  for(const o of K.OPPONENTS){
-    const l=document.createElement("label");
-    l.innerHTML=`<input type="radio" name="opp" value="${o.key}"${o.key===D.rules.opponent_default?" checked":""}> ${o.label}`;
-    box.appendChild(l);
-  }
-}
+function showCounts(){$("setupInfo").textContent=`字 ${T.CHARS.size}・語 ${T.WORDS.size}（レベル ${K.levelLabel(T.level)}）`}
+// 画面は2つ：はじめる前の画面と、遊ぶ画面。「もう一度」は同じ設定ですぐ始まる。「設定を変える」で前の画面へ戻る
+function showScreen(playing){$("setup").hidden=playing;$("game").hidden=!playing}
 function start(){
   clearTimeout(cpuTimer);
   T=tablesFor(level);buildHowto();
-  G=K.createGame(D,T,{now:clock,opponent:chosenOpponent(),layout});
+  G=K.createGame(D,T,{now:clock,opponent,layout,timeLimit});
   row=[];lastTried="";
   $("msg").textContent="";$("msg").className="msg";
   $("bCopyEnd").hidden=true;
   hideChoices();
+  showScreen(true);
   if(G.picking){$("msg").textContent=PICK_MSG;$("msg").className="msg"} // はじめの1枚を選ぶまで時間は止まり、CPU も動かない
   else if(!G.solo)scheduleCpu();
   render();
 }
 const PICK_MSG="最初の1枚を場から選ぶ（時間は止まっています）";
-$("start").onclick=()=>{$("start").textContent="もう一度";start()};
+$("start").onclick=start;$("again").onclick=start;
+$("bSetup").onclick=()=>{clearTimeout(cpuTimer);G=null;row=[];hideChoices();$("logPanel").classList.remove("on");showScreen(false);T=tablesFor(level);showCounts();buildHowto()};
 function scheduleCpu(){cpuTimer=setTimeout(()=>{if(!G||G.over)return;G.cpuTurn();afterChange();if(!G.over)scheduleCpu()},G.cpuDelay()*1000)}
 function drain(){
   while(G.events.length){
@@ -512,7 +531,7 @@ function showFx(who,text){
 }
 function buildHowto(){
   const R=D.rules,S=R.score;
-  $("lead").textContent=`手札を組み替えて言葉を作り、放つと点が入る。放った字数だけ場から字を取れる。先に ${R.win.score} 点か、${R.win.time_limit_sec/60} 分で点の多い方が勝ち。`;
+  $("lead").textContent=`手札を組み替えて言葉を作り、放つと点が入る。放った字数だけ場から字を取れる。先に ${R.win.score} 点か、${(timeLimit||R.win.time_limit_sec)/60} 分で点の多い方が勝ち。`;
   $("howto").innerHTML=[
     `<b>並べ方</b>（上で切り替え。いつでも戻せる）：<b>手札で選ぶ</b>は、手札の札をタップすると色が変わって選ばれ、角に選んだ順の数字（1・2・3…）が出る。もう一度タップで外れる。ボタンは選んだ札に、選んだ順で働く。<b>台に並べる</b>は、手札の札をタップすると台に並ぶ（並べた順が左から）。台の札、または手札の点線のマスをタップすると手札に戻る。`,
     `<b>入れ替え・移す</b>：札を指で引きずって、別の札の上で離すと位置が入れ替わる（手札とストックの間でもよい）。空いたマスの上で離すと、そこへ移る（どちらの並べ方でも使える）。`,
@@ -523,11 +542,11 @@ function buildHowto(){
     `<b>はじまり</b>：はじめの手札は ${R.start_hand} 枚。そのあと<b>場から1枚だけ選んで取れる</b>（試合で1回、はじめだけ。選ぶまで時間は止まっている。相手も人のあとに1枚取る）。ストックには、使いやすい部品が ${R.start_stock_parts} 枚、最初から入っている。`,
     `<b>台</b>（台に並べるとき）は一時置き場：台に置いた札は、手札・ストックの枚数に数えない（台に動かすと空きができる）。`,
     `<b>レベル</b>：はじめる前に選ぶ（N5／N4。N4 は N5＋N4 の字）。山に入る字・語・割り方・対義・巡り・同音がレベルで変わる。いまは ${K.levelLabel(T.level)}（字 ${T.CHARS.size}・語 ${T.WORDS.size}）。`,
-    `<b>相手</b>：はじめる前に選ぶ。ひとりで（CPU なし。50 点では終わらず、${R.win.time_limit_sec/60} 分たったら点を出す。この端末の自己ベストを覚える）／とても弱い（CPU は ${R.cpu.weak_interval_sec[0]}〜${R.cpu.weak_interval_sec[1]} 秒に1回）／いまの強さ（${R.cpu.interval_sec[0]}〜${R.cpu.interval_sec[1]} 秒に1回）。`,
+    `<b>相手</b>：はじめる前に選ぶ。ひとりで（CPU なし。50 点では終わらず、${(timeLimit||R.win.time_limit_sec)/60} 分たったら点を出す。この端末の自己ベストを覚える）／とても弱い（CPU は ${R.cpu.weak_interval_sec[0]}〜${R.cpu.weak_interval_sec[1]} 秒に1回）／いまの強さ（${R.cpu.interval_sec[0]}〜${R.cpu.interval_sec[1]} 秒に1回）。`,
     `<b>割る</b>：台の1枚を部品表で一段だけ割る。<b>くっつける</b>：台の2枚を、左→右の順でくっつける。逆に並べたときは「並べる順が逆」と出る。十・口 のように2通りの字になるときは選ぶ。`,
     `<b>反転</b>（印：反）対義の字に。${R.cooldown_sec.invert} 秒待ち。<b>巡り</b>（印：巡）${T.CYCLES.map(c=>c.name).join("・")}を1つ先へ。${R.cooldown_sec.cycle} 秒待ち。<b>同音</b>（印：音）同じ読みの字から選ぶ。${R.cooldown_sec.homophone} 秒待ち。待ち時間は操作ごとで、二人は別々。`,
     `<b>引き直し</b>：${R.redraw.cost} 点払って手札を全部入れ替える（${R.start_hand} 枚）。${R.redraw.cost} 点ないときは ${R.redraw.free_wait_sec} 秒待てば 0 点で入れ替わる（待つあいだも動ける）。`,
-    `<b>勝ち</b>：先に ${R.win.score} 点。または ${R.win.time_limit_sec/60} 分たって点の多い方。CPU の速さは相手の選び方で変わる。`,
+    `<b>勝ち</b>：先に ${R.win.score} 点。または ${(timeLimit||R.win.time_limit_sec)/60} 分たって点の多い方。CPU の速さは相手の選び方で変わる。`,
     `${Object.keys(D.radical_forms.left).join("・")} を左に置いてくっつけられるときは、${Object.values(D.radical_forms.left).join("・")} の形で見せる（札はもとの字のまま）。色の薄い札は部品（字ではない）。`,
     `<b>ログ</b>：一手ごとの記録。上の「ログ」で見てコピーできる。終わったら「ログをコピー」が出る。`,
   ].map(x=>`<li>${x}</li>`).join("");
@@ -537,8 +556,8 @@ setInterval(()=>{if(!G||G.over)return;if(G.tick())afterChange();else renderOps()
 window.__KJ={get game(){return G},get row(){return row},get tables(){return T},data:D,render}; // ブラウザのテスト用
 
 Promise.all(K.FILES.map(f=>fetch(`data/${f}.json`).then(r=>r.json()).then(j=>D[f]=j)))
-  .then(()=>{loadLevel();T=tablesFor(level);loadLayout();buildOpponentPicker();buildLevelPicker();buildLayoutPicker();buildHowto();showCounts()})
-  .catch(e=>{$("msg").textContent="データを読めませんでした（file:// では開けません。Pages かローカルのサーバーで開いてください）"});
+  .then(()=>{loadSettings();T=tablesFor(level);buildPickers();buildHowto();showCounts()})
+  .catch(e=>{$("setupInfo").textContent="データを読めませんでした（file:// では開けません。Pages かローカルのサーバーで開いてください）"});
 </script>
 </body>
 </html>

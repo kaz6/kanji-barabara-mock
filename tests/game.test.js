@@ -547,21 +547,69 @@ test("ログ：頭に選んだ相手を書く（ひとりで／とても弱い�
 });
 
 // ---------- KJ-005：並べ方・入れ替え ----------
-test("並べ方：初期値は 手札で選ぶ。選べる・ログの頭に書く・途中で切り替えるとログに残る", () => {
+test("並べ方：初期値は 台に並べる（追記 P-007）。選べる・ログの頭に書く・途中で切り替えるとログに残る", () => {
   const g = newGame(1);
-  assert.equal(g.layout, "hand");
-  assert.match(g.logText(), /# 並べ方 手札で選ぶ（はじめたとき/);
-  assert.equal(K.createGame(D, T, { now: () => 0, layout: "table" }).layout, "table");
-  assert.equal(K.createGame(D, T, { now: () => 0, layout: "でたらめ" }).layout, "hand", "知らない値は初期値");
-  assert.deepEqual(K.LAYOUTS.map((l) => l.label), ["手札で選ぶ", "台に並べる"]);
-  assert.equal(g.setLayout("hand").ok, false, "同じ並べ方への切り替えは何もしない");
-  assert.equal(g.setLayout("table").ok, true);
   assert.equal(g.layout, "table");
+  assert.match(g.logText(), /# 並べ方 台に並べる（はじめたとき/);
+  assert.equal(K.createGame(D, T, { now: () => 0, layout: "hand" }).layout, "hand");
+  assert.equal(K.createGame(D, T, { now: () => 0, layout: "でたらめ" }).layout, D.rules.layout_default, "知らない値は初期値");
+  assert.deepEqual(K.LAYOUTS.map((l) => l.label), ["手札で選ぶ", "台に並べる"]);
+  assert.equal(g.setLayout("table").ok, false, "同じ並べ方への切り替えは何もしない");
+  assert.equal(g.setLayout("hand").ok, true);
+  assert.equal(g.layout, "hand");
   const e = g.log[g.log.length - 1];
-  assert.deepEqual([e.op, e.note], ["並べ方", "台に並べるに切り替え"]);
-  assert.match(g.logText(), /# 並べ方 手札で選ぶ（はじめたとき[^\n]*\n/, "頭は はじめたときの並べ方のまま");
-  assert.match(g.logText(), /\t並べ方\t\t\t0\t.*台に並べるに切り替え/);
+  assert.deepEqual([e.op, e.note], ["並べ方", "手札で選ぶに切り替え"]);
+  assert.match(g.logText(), /# 並べ方 台に並べる（はじめたとき[^\n]*\n/, "頭は はじめたときの並べ方のまま");
+  assert.match(g.logText(), /\t並べ方\t\t\t0\t.*手札で選ぶに切り替え/);
   assert.equal(g.me.stuck, false, "並べ方の切り替えで 動けない を出さない");
+});
+
+// ---------- KJ-007：制限時間を選ぶ ----------
+test("時間：選べるのは rules の 5・10・15分。知らない値は既定の10分。選んだ時間で終わる時刻が変わる", () => {
+  assert.deepEqual(K.timeChoices(D), [300, 600, 900]);
+  assert.equal(K.normTime(D, 900), 900);
+  assert.equal(K.normTime(D, "300"), 300, "端末に覚えた文字列も読める");
+  for (const bad of [7, 0, null, undefined, "", "でたらめ", 1200]) assert.equal(K.normTime(D, bad), D.rules.win.time_limit_sec, String(bad));
+  assert.equal(newGame(1).timeLimit, 600, "省くと既定");
+  for (const sec of K.timeChoices(D)) {
+    const clock = { t: 1000 };
+    const g = K.createGame(D, T, { now: () => clock.t, rand: () => 0.5, opponent: "solo", timeLimit: sec, firstPick: false, startStock: false });
+    assert.equal(g.timeLimit, sec);
+    assert.equal(g.timeLeft(), sec);
+    clock.t += sec - 0.1; g.tick();
+    assert.equal(g.over, false, `${sec}秒の手前では終わらない`);
+    clock.t += 0.2; g.tick();
+    assert.equal(g.over, true, `${sec}秒で終わる`);
+  }
+  // 対 CPU も選んだ時間で点の多い方が勝つ
+  const clock = { t: 1000 };
+  const g = K.createGame(D, T, { now: () => clock.t, rand: () => 0.5, opponent: "normal", timeLimit: 300, firstPick: false, startStock: false });
+  g.me.score = 7; clock.t += 301; g.tick();
+  assert.equal(g.over, true);
+  assert.equal(g.winner, g.me);
+});
+
+test("時間：はじめの1枚を選ぶまでは止まっていて、選んだ時から選んだ時間が数えられる", () => {
+  const g = newGame(1, "solo", "N5", { firstPick: true });
+  const g2 = K.createGame(D, T, { now: () => g.clock.t, rand: () => 0.5, opponent: "solo", timeLimit: 900 });
+  assert.equal(g2.picking, true);
+  g.clock.t += 400;
+  assert.equal(g2.timeLeft(), 900, "選ぶまで減らない");
+  g2.pickFirst(g2.field[0].id);
+  assert.equal(g2.timeLeft(), 900);
+  g.clock.t += 100;
+  assert.equal(g2.timeLeft(), 800);
+});
+
+test("ログの頭に 時間・相手・レベル・並べ方 の4つが出る（KJ-007）", () => {
+  const clock = { t: 1000 };
+  const g = K.createGame(D, T, { now: () => clock.t, rand: () => 0.5, opponent: "solo", timeLimit: 900, layout: "hand", date: () => new Date(2026, 10, 21, 9, 0, 0) });
+  const head = g.logText().split("\n").filter((l) => /^# (レベル|相手|時間|並べ方) /.test(l));
+  assert.equal(head.length, 4);
+  assert.deepEqual(head.map((l) => l.split(" ")[1]), ["レベル", "相手", "時間", "並べ方"]);
+  assert.match(g.logText(), /# 時間 15分\n/);
+  assert.match(g.logText(), /# 相手 ひとりで（CPU なし。場の取り合いなし。50点では終わらず、15分たったら終わって点を出す/);
+  assert.match(g.logText(), /# 仮置き 勝ち 先に50点、または15分で点の多い方（同点は引き分け）。ひとりでは50点で終わらず15分で終わる/);
 });
 
 test("手札で選ぶ：選んだ順がそのまま効く。放つ・くっつける・割る は台に並べた時と同じ結果", () => {
