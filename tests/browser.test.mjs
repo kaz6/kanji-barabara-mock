@@ -251,11 +251,15 @@ test("画面", { skip }, async (t) => {
       await tile("休").click();
       await page.click("#bSplit");
       assert.equal(await page.locator("#meHand .tile, #meTray .tile", { hasText: "木" }).count(), 1);
-      // 放つ → 場から取る（割ってできた札は選んだままなので、戻してから選ぶ）
+      // 1字では放てない（KJ-008）：割ってできた札は選んだままなので、戻してから選ぶ
       await page.click("#bBack");
       await tile("日").click();
-      await page.click("#bRelease");
-      assert.match(await page.textContent("#meScore"), /^1 点/);
+      assert.match(await page.textContent("#info"), /1字では放てない（2字以上の言葉）/);
+      await page.click("#bRelease"); // 押せるが、はじかれる
+      assert.match(await page.textContent("#msg"), /1字では放てない（2字以上の言葉）/);
+      assert.match(await page.textContent("#meScore"), /^0 点/);
+      assert.equal(await page.locator("#meHand .tile.sel").count(), 1, "札は選んだまま");
+      await page.click("#bBack");
       assert.equal(await page.locator("#meHand .tile.sel").count(), 0);
       // 放つ・割る・くっつけるがログに残る。頭に並べ方
       await page.click("#bLog");
@@ -263,7 +267,8 @@ test("画面", { skip }, async (t) => {
       assert.match(log, /# 並べ方 手札で選ぶ（はじめたとき/);
       assert.match(log, /\tくっつける\t十 口\t古\t/);
       assert.match(log, /\t割る\t休\t人 木\t/);
-      assert.match(log, /\t放つ\t日\t\t1\t/);
+      assert.doesNotMatch(log, /\t放つ\t日\t/, "1字は放てないので 放つ の行はない");
+      assert.match(log, /\tためした\t日\t\t0\t.*1字では放てない（2字以上の言葉）/);
       assert.match(log, /\tためした\t口 十\t\t0\t.*並べる順が逆/);
       assert.deepEqual(errors, []);
       await ctx.close();

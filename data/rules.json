@@ -1,6 +1,6 @@
 {
- "version": "2026-11-21.3",
- "note": "KJ-003「役づくりの競争」（D-017・D-018）の数値。どれも仮置き（R-025〜）。KJ-004 で 場3・手札の上限8・置き場4・相手の選び方を足した。KJ-005 で制限時間を10分に（追記 P-005）、並べ方の初期値を足した。数値を変えるときはここだけ",
+ "version": "2026-11-21.4",
+ "note": "KJ-003「役づくりの競争」（D-017・D-018）の数値。どれも仮置き（R-025〜）。KJ-004 で 場3・手札の上限8・置き場4・相手の選び方を足した。KJ-005 で制限時間を10分に（追記 P-005）、並べ方の初期値を足した。KJ-008 で1字を放てなくした（by_length から1を外し、single_release_chance を削除）。巡りの待ちを3秒→1秒（追記 P-008）。数値を変えるときはここだけ",
  "field_size": 3,
  "start_hand": 8,
  "hand_max": 8,
@@ -8,11 +8,11 @@
  "same_char_in_deck": 2,
  "cooldown_sec": {
   "invert": 10,
-  "cycle": 3,
+  "cycle": 1,
   "homophone": 20
  },
  "score": {
-  "by_length": { "1": 1, "2": 3, "3": 6, "4": 12 },
+  "by_length": { "2": 3, "3": 6, "4": 12 },
   "yoji_mult": 2,
   "special_mult": 2
  },
@@ -29,7 +29,6 @@
  "layout_default": "hand",
  "cpu": {
   "interval_sec": [8.0, 12.0],
-  "weak_interval_sec": [30.0, 45.0],
-  "single_release_chance": 0.4
+  "weak_interval_sec": [30.0, 45.0]
  }
 }
