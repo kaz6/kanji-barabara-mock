@@ -92,8 +92,9 @@ test("画面", { skip }, async (t) => {
       assert.match(await page.textContent("#meScore"), /^3 点/);
       assert.match(await page.textContent("#takes"), /2 枚取れる/);
       assert.equal(await pos("#field > *"), field0);
-      await page.locator("#field .tile", { hasText: "山" }).click();
-      await page.locator("#field .tile", { hasText: "川" }).click();
+      // 取ったあとのマスには山から無作為に字が出る（同じ字が出ることもある）ので、字ではなくマスの位置（山=1番目・川=2番目）で押す
+      await page.locator("#field .tile").nth(0).click();
+      await page.locator("#field .tile").nth(1).click();
       assert.equal(await page.textContent("#takes"), "");
       assert.equal(await page.locator("#meHand .tile", { hasText: "山" }).count(), 1, "山 が手札に来た");
       assert.equal(await pos("#field > *"), field0, "取ったあとも場の位置は同じ");
