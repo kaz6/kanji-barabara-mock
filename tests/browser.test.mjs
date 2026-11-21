@@ -614,6 +614,12 @@ test("画面", { skip }, async (t) => {
       for (const p of parts.filter((x) => x.sel === "#meHand > *" || x.sel === "#meTray > *")) assert.ok(p.w >= 40 && p.h >= 40, `手札・ストックの札が 40px 以上（${p.w}×${p.h}）`);
       const tops = new Set(parts.filter((p) => p.sel === ".ops button").map((p) => Math.round(p.t)));
       assert.ok(tops.size <= 2, `ボタンは2段まで（${tops.size}段）`);
+      // 字の幅が環境でちがっても、ボタンの中身が枠からはみ出さない（CI の Chromium で3段になった。KJ-010）
+      assert.deepEqual(await page.evaluate(() => [...document.querySelectorAll(".ops button")].filter((b) => b.scrollWidth > b.clientWidth + 1).map((b) => b.id)), [], "ボタンの中身が枠に収まる");
+      // 待ち時間の表示が入った形でも2段のまま
+      await page.evaluate(() => { for (const id of ["cdInvert", "cdCycle", "cdHomo"]) document.getElementById(id).textContent = "10s"; document.getElementById("cdRedraw").textContent = "待ち 30s"; });
+      assert.ok(new Set(await page.evaluate(() => [...document.querySelectorAll(".ops button")].map((b) => Math.round(b.getBoundingClientRect().top)))).size <= 2, "待ち時間が出ても2段");
+      assert.deepEqual(await page.evaluate(() => [...document.querySelectorAll(".ops button")].filter((b) => b.scrollWidth > b.clientWidth + 1).map((b) => b.id)), [], "待ち時間が出てもボタンの中身が枠に収まる");
       // 横にあふれない
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= 375), "横スクロールがない");
       // 手札と場とストックの札の字が読める大きさ

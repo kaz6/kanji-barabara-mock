@@ -144,9 +144,13 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
   .row .tile{width:46px;height:46px;font-size:30px}
   .info{height:38px;margin:4px 0 6px;font-size:13px;line-height:19px}
   .info .w{font-size:16px}
-  .ops{gap:5px}
-  button.op{font-size:13px;padding:6px 8px;min-width:0}
-  #bRedraw .cdv{width:4.6em}
+  /* ボタンは12列の2段に固定する（字の幅が環境でちがっても折り返さない） */
+  .ops{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:5px}
+  .ops button.op{font-size:13px;padding:6px 2px;min-width:0;white-space:nowrap;overflow:hidden;text-align:center}
+  #bRelease,#bSplit,#bBack{grid-column:span 2}
+  #bJoin,#bInvert,#bRedraw{grid-column:span 4}
+  #bCycle,#bHomo{grid-column:span 3}
+  #bRedraw .cdv{width:3.8em}
   .trayhead{margin:4px 0 2px;line-height:1.3}
 </style>
 </head>
