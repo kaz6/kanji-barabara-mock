@@ -26,11 +26,11 @@ function seeded(seed) {
 }
 // opponent は "solo"（ひとりで）／"weak"（とても弱い）／"normal"（いまの強さ。既存のテストの前提）
 // level は "N5"（既存のテストの前提）／"N4"（KJ-006）
-// opts.firstPick／opts.startStock を true にすると、はじめの1枚・ストックの部品つき（KJ-013。画面と同じはじまり。既存のテストは外した形が前提）
+// opts.startStock を true にすると、ストックに部品1枚つき（KJ-013。画面と同じはじまり。既存のテストは外した形が前提）。はじめの1枚は KJ-016 でやめた
 function newGame(seed = 1, opponent = "normal", level = "N5", opts = {}) {
   const clock = { t: 1000 };
   const g = K.createGame(D, level === "N4" ? T4 : T, { now: () => clock.t, rand: seeded(seed), date: () => new Date(2026, 10, 20, 18, 0, 0), opponent,
-    firstPick: !!opts.firstPick, startStock: !!opts.startStock });
+    startStock: !!opts.startStock });
   g.clock = clock;
   return g;
 }
