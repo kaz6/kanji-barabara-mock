@@ -104,7 +104,7 @@ test("画面", { skip }, async (t) => {
       await page.click("#bLog");
       const log = await page.inputValue("#logText");
       assert.match(log, /^# 漢字版（仮）モック ログ/);
-      assert.match(log, /# 仮置き 場=3枚 最初の手札=8枚 手札の上限=8枚＋部品の置き場4枚/);
+      assert.match(log, /# 仮置き 場=3枚 最初の手札=7枚 手札の上限=8枚＋ストック4枚/);
       assert.match(log, /# 相手 とても弱い（CPU は 30〜45秒に1回動く/);
       assert.match(log, /\tためした\t口 十\t\t0\t.*\t並べる順が逆/);
       assert.match(log, /\tくっつける\t十 口\t古\t/);
@@ -378,6 +378,41 @@ test("画面", { skip }, async (t) => {
       }
     });
   }
+
+  await t.test("ストック（R-042）：手札の札を引きずってストックの空いたマスへ移す。ストックの札と手札の札を入れ替える。ストックの見出し", async () => {
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 }, null, "hand");
+    assert.match(await page.textContent("#trayHead"), /^ストック（字も部品も置ける/);
+    const center = async (loc) => { const b = await loc.boundingBox(); return [b.x + b.width / 2, b.y + b.height / 2]; };
+    const dragTo = async (from, to) => {
+      await page.locator("#meTray").scrollIntoViewIfNeeded(); // 手札とストックが両方見える所で（先に動かしておかないと座標がずれる）
+      const [x1, y1] = await center(from); const [x2, y2] = await center(to);
+      await page.mouse.move(x1, y1); await page.mouse.down();
+      await page.mouse.move((x1 + x2) / 2, (y1 + y2) / 2, { steps: 4 });
+      await page.mouse.move(x2, y2, { steps: 4 });
+      await page.mouse.up();
+    };
+    // 休 をストックの空いたマスへ
+    await dragTo(page.locator("#meHand .tile", { hasText: "休" }).first(), page.locator("#meTray .slot").first());
+    assert.equal(await page.locator("#meTray .tile").count(), 1);
+    assert.equal(await page.locator("#meTray .tile").first().getAttribute("title"), "休");
+    assert.equal(await page.locator("#meHand .tile").count(), 7);
+    // ストックの 休 と手札の 日 を入れ替え
+    await dragTo(page.locator("#meTray .tile").first(), page.locator("#meHand .tile", { hasText: "日" }).first());
+    assert.equal(await page.locator("#meTray .tile").first().getAttribute("title"), "日");
+    assert.equal(await page.locator("#meHand .tile", { hasText: "休" }).count(), 1);
+    // 日 を手札の空いたマスへ戻す
+    await dragTo(page.locator("#meTray .tile").first(), page.locator("#meHand .slot").first());
+    assert.equal(await page.locator("#meTray .tile").count(), 0);
+    assert.equal(await page.locator("#meHand .tile").count(), 8);
+    assert.equal(await page.locator("#meHand .tile.sel").count(), 0, "引きずっても選ばれない");
+    await page.click("#bLog");
+    const log = await page.inputValue("#logText");
+    assert.match(log, /\t移す\t休\t休\t.*手札→ストック/);
+    assert.match(log, /\t入れ替え\t休 日\t日 休\t.*手札とストックの間/);
+    assert.match(log, /\t移す\t日\t日\t.*ストック→手札/);
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
 
   await t.test("手札で選ぶ：スマホ幅の画像（選んだ札が目立つ）", async () => {
     const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 }, null, "hand");
