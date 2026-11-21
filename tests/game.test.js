@@ -369,6 +369,54 @@ test("CPU：決まった乱数で 10分ぶん回しても1字を放たない（�
   }
 });
 
+// ---- KJ-015：N4 で CPU が止まる不具合 ----
+// 画面と同じはじまり（はじめの1枚・ストックの部品つき）で、人が最初の1枚を取ったあと、10分ぶん CPU だけを回す
+function runCpu10min(seed, opp, level) {
+  const g = newGame(seed, opp, level, { firstPick: true, startStock: true });
+  g.pickFirst(g.field[0].id);
+  while (!g.over) {
+    g.clock.t += g.cpuDelay();
+    g.tick();
+    if (g.over) break;
+    g.cpuTurn();
+  }
+  return g;
+}
+const cpuReleases = (g) => g.log.filter((e) => e.who === "CPU" && e.op === "放つ");
+
+test("CPU（KJ-015）：知っている語が無く、画面では「動ける」の語（よく使わない語）だけが手札にあるときも、引き直す（止まらない）", () => {
+  const g = newGame(1, "weak", "N4");
+  setHand(g, g.cpu, "図学"); // 図学 は N4 の語の表にある（よく使う語ではない）。割る・くっつける・巡り・反転の手もない手札
+  assert.equal(g.releasableInHand(g.cpu), "図学", "画面の「動けない」判定は 動ける");
+  const r = g.cpuTurn();
+  assert.equal(r.waiting, 30, "0点なので30秒待つ引き直し（前は null を返して何もしなかった）");
+});
+
+test("CPU（KJ-015）：CPU が知っている語は、どのレベルでもそのレベルの語の表にある", () => {
+  for (const [name, t] of [["N5", T], ["N4", T4]]) {
+    assert.ok(t.COMMON_WORDS.length > 0, name);
+    assert.deepEqual(t.COMMON_WORDS.filter((w) => !t.WORDS.has(w.w)).map((w) => w.w), [], `${name}: 表にない語を知っていると放てずに止まる`);
+  }
+});
+
+test("CPU（KJ-015）：N4 でも、決まった乱数（1・7・42）で 10分のうちに 2字以上の言葉を1回以上放つ（とても弱い・いまの強さ）", () => {
+  for (const opp of ["weak", "normal"]) {
+    for (const seed of [1, 7, 42]) {
+      const g = runCpu10min(seed, opp, "N4");
+      const rel = cpuReleases(g);
+      assert.ok(rel.length >= 1, `N4 ${opp} seed ${seed}: 放った回数 ${rel.length}`);
+      assert.ok(rel.every((e) => e.from.length >= 2), "2字以上");
+      assert.ok(g.log.some((e) => e.who === "CPU" && e.op === "引き直し"), `N4 ${opp} seed ${seed}: 放てないときは引き直している`);
+    }
+  }
+});
+
+test("CPU（KJ-015）：N5 の とても弱い CPU の点は、直す前（1・7・42 で 24・21・27、平均24）から大きく変わらない", () => {
+  const scores = [1, 7, 42].map((seed) => runCpu10min(seed, "weak", "N5").cpu.score);
+  const mean = scores.reduce((a, b) => a + b, 0) / scores.length;
+  assert.ok(mean >= 14 && mean <= 36, `平均 ${mean}（${scores}）`);
+});
+
 test("CPU：決まった乱数で 5分ぶん回しても壊れない（札の数が合う・使用済みを放たない・点は記録どおり）", () => {
   for (const seed of [1, 7, 42]) {
     const g = newGame(seed);

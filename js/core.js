@@ -87,7 +87,8 @@
     for (const c of T.INV.keys()) T.HOLD.add(c);
     for (const c of T.HOMO.keys()) T.HOLD.add(c);
     T.SPECIAL = new Map(D.special.special.map((s) => [s.w, s]));
-    T.COMMON_WORDS = D.words.words.filter((w) => w.common && w.w.length >= 2);
+    // CPU が知っている語＝よく使う語（このレベルの語の表にあるものだけ。KJ-015：表にない語を知っていると、放てずに止まる）
+    T.COMMON_WORDS = D.words.words.filter((w) => w.common && w.w.length >= 2 && T.WORDS.has(w.w));
     return T;
   }
   const isLevelChar = (T, c) => T.CHARS.has(c);
@@ -564,7 +565,7 @@
       if (!live() || g.solo) return null;
       const p = g.cpu;
       if (p.takes > 0 && handCount(p) < R.hand_max) { cpuTakeAll(p); return { ok: true, op: "取る" }; }
-      const ws = T.COMMON_WORDS.filter((w) => !g.used.has(w.w) && pickIds(p, w.w));
+      const ws = T.COMMON_WORDS.filter((w) => !g.used.has(w.w) && pickIds(p, w.w)); // CPU が知っていて、手札でいま放てる語
       if (ws.length) {
         const best = Math.max(...ws.map((w) => scoreOf(D, T, w.w).pts));
         const w = pick(ws.filter((x) => scoreOf(D, T, x.w).pts === best));
@@ -583,7 +584,9 @@
       if (cyc.length && g.ready(p, "cycle") && rand() < 0.5) return g.cycle(p, [pick(cyc).id]);
       const inv = p.cards.filter((x) => T.INV.has(x.c));
       if (inv.length && g.ready(p, "invert") && rand() < 0.3) return g.invert(p, [pick(inv).id]);
-      if (!g.releasableInHand(p) && p.redrawAt === null) return g.redraw(p); // 放てる言葉（2字以上）がない＝動けない
+      // CPU が知っている語で放てるものがない＝動けない（KJ-015）。画面の「動けない」（語の表の全部で見る）とは別。
+      // 知らない語が手札にあるだけで引き直さずに止まっていた（N4 で語の表が増えて目立った）
+      if (!ws.length && p.redrawAt === null) return g.redraw(p);
       return null;
     };
 
