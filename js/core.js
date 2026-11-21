@@ -19,42 +19,70 @@
     { key: "hand", label: "手札で選ぶ" },
     { key: "table", label: "台に並べる" },
   ];
+  // レベル（KJ-006）。N4＝N5＋N4 の字。レベルが変えるのは字・語・割り方・対義・巡り・同音の範囲だけ
+  const LEVELS = [
+    { key: "N5", label: "N5" },
+    { key: "N4", label: "N4（N5＋N4 の字）" },
+  ];
+  const levelLabel = (key) => (LEVELS.find((l) => l.key === key) || LEVELS[0]).label;
   const layoutLabel = (key) => (LAYOUTS.find((l) => l.key === key) || LAYOUTS[0]).label;
   const cpuInterval = (D, key) => (key === "weak" ? D.rules.cpu.weak_interval_sec : D.rules.cpu.interval_sec);
 
   const FILES = ["kanji", "words", "readings", "parts", "antonyms", "cycles", "radical_forms", "special", "rules"];
 
   // ---------- 表を引く ----------
-  function makeTables(D) {
+  // level を省くと rules.json の level_default（なければ N4）
+  function makeTables(D, level) {
     const T = {};
-    T.N5 = new Set(D.kanji.kanji.map((k) => k.c));
-    T.JOUYOU = new Set(D.parts.jouyou || []); // N5 の外でも「字」として見せる（KJ-003）
-    T.WORDS = new Map(D.words.words.map((w) => [w.w, w]));
+    const order = LEVELS.map((l) => l.key);
+    if (!order.includes(level)) level = order.includes(D.rules.level_default) ? D.rules.level_default : "N4";
+    const upto = order.indexOf(level);
+    const inLevel = (lv) => order.indexOf(lv || "N5") <= upto; // lv の無い古いデータは N5
+    T.level = level;
+    T.CHARS = new Set(D.kanji.kanji.filter((k) => inLevel(k.lv)).map((k) => k.c)); // 遊ぶレベルの字（山に入る字）
+    T.JOUYOU = new Set(D.parts.jouyou || []); // レベルの外でも「字」として見せる（KJ-003）
+    T.WORDS = new Map(D.words.words.filter((w) => inLevel(w.lv)).map((w) => [w.w, w]));
+    // 割り方：できる字がレベルの字の行と、そこへ届く中継ぎだけ（N5 では N4 の字の行を外す）
+    const all = D.parts.parts, relayAll = new Set(D.parts.relay || []);
+    const keep = new Set(Object.keys(all).filter((k) => T.CHARS.has(k)));
+    for (let grew = true; grew;) {
+      grew = false;
+      for (const r of relayAll) {
+        if (keep.has(r) || !all[r]) continue;
+        if ([...keep].some((k) => all[k].includes(r))) { keep.add(r); grew = true; }
+      }
+    }
+    T.parts = {};
+    for (const k of Object.keys(all)) if (keep.has(k)) T.parts[k] = all[k]; // もとの並びのまま（十口 は 古 が先）
+    T.RELAY = new Set([...relayAll].filter((r) => keep.has(r) && !T.CHARS.has(r)));
     T.JOIN = new Map(); // "左右" → [できる字…]（十口 は 古・田 の2つ。R-016）
-    for (const [k, [a, b]] of Object.entries(D.parts.parts)) {
+    for (const [k, [a, b]] of Object.entries(T.parts)) {
       const key = a + b;
       if (!T.JOIN.has(key)) T.JOIN.set(key, []);
       T.JOIN.get(key).push(k);
     }
     T.INV = new Map();
-    for (const [a, b] of D.antonyms.pairs) { T.INV.set(a, b); T.INV.set(b, a); }
+    for (const [a, b] of D.antonyms.pairs) { if (T.CHARS.has(a) && T.CHARS.has(b)) { T.INV.set(a, b); T.INV.set(b, a); } }
     T.NEXT = new Map();
-    for (const cy of D.cycles.cycles) {
+    T.CYCLES = D.cycles.cycles.filter((cy) => cy.chars.every((c) => T.CHARS.has(c))); // 四季は N4 から
+    for (const cy of T.CYCLES) {
       const c = cy.chars;
       c.forEach((x, i) => { if (!T.NEXT.has(x)) T.NEXT.set(x, c[(i + 1) % c.length]); });
     }
     T.HOMO = new Map();
-    for (const g of D.readings.same_reading_groups) {
+    for (const g0 of D.readings.same_reading_groups) {
+      const g = { ...g0, chars: g0.chars.filter((c) => T.CHARS.has(c)) };
+      if (g.chars.length < 2) continue;
       for (const c of g.chars) { if (!T.HOMO.has(c)) T.HOMO.set(c, []); T.HOMO.get(c).push(g); }
     }
     T.SPECIAL = new Map(D.special.special.map((s) => [s.w, s]));
     T.COMMON_WORDS = D.words.words.filter((w) => w.common && w.w.length >= 2);
-    T.parts = D.parts.parts;
     return T;
   }
-  const isN5 = (T, c) => T.N5.has(c);
-  // 画面で「字」として見せるか（N5 か常用漢字）。部品の見た目にしない
-  const isChar = (T, c) => T.N5.has(c) || T.JOUYOU.has(c);
+  const isLevelChar = (T, c) => T.CHARS.has(c);
+  const isN5 = isLevelChar; // 古い名前（いまは「遊ぶレベルの字」）
+  // 画面で「字」として見せるか（レベルの字か常用漢字）。部品の見た目にしない
+  const isChar = (T, c) => T.CHARS.has(c) || T.JOUYOU.has(c);
   const splitOnce = (T, c) => T.parts[c] || [c];
   const canSplit = (T, c) => !!T.parts[c];
   // 部品にバラして届く形（D-003・D-004）。KJ-003 の遊びでは使わない（消すかは作者が決める）
@@ -101,12 +129,13 @@
     const [a, b] = cpuInterval(D, key);
     return key === "weak" ? `とても弱い（CPU は ${a}〜${b}秒に1回動く。動き方はいまの CPU のまま）` : `いまの強さ（CPU は ${a}〜${b}秒に1回動く）`;
   }
-  function rulesLabel(D, key) {
+  function rulesLabel(D, key, level) {
     const R = D.rules, S = R.score;
+    level = level || R.level_default || "N4";
     key = key || R.opponent_default;
     const [a, b] = cpuInterval(D, key);
     return [
-      `場=${R.field_size}枚 最初の手札=${R.start_hand}枚 手札の上限=${R.hand_max}枚＋部品の置き場${R.split_extra}枚（置き場は割るときだけ増える。全部で${R.hand_max + R.split_extra}枚まで）山=N5 の字を${R.same_char_in_deck}枚ずつ（尽きたら足す）`,
+      `場=${R.field_size}枚 最初の手札=${R.start_hand}枚 手札の上限=${R.hand_max}枚＋部品の置き場${R.split_extra}枚（置き場は割るときだけ増える。全部で${R.hand_max + R.split_extra}枚まで）山=${level} の字を${R.same_char_in_deck}枚ずつ（尽きたら足す）`,
       `点数 ${Object.entries(S.by_length).map(([n, p]) => `${n}字${p}`).join("・")} 四字熟語×${S.yoji_mult} 特別な語×${S.special_mult}（1字は放てない）`,
       `放ったら 放った字数×${R.take_per_char}枚を場から選んで取れる。放った言葉は消える（相手には届かない）`,
       `引き直し ${R.redraw.cost}点で手札を全部入れ替え（${R.start_hand}枚）。${R.redraw.cost}点ない人は${R.redraw.free_wait_sec}秒待って0点で`,
@@ -125,7 +154,7 @@
     const R = D.rules;
     let uid = 0;
     const opponent = OPPONENTS.some((o) => o.key === env.opponent) ? env.opponent : R.opponent_default;
-    const g = { D, T, opponent, solo: opponent === "solo", log: [], events: [], used: new Set(), over: false, winner: null,
+    const g = { D, T, level: T.level, opponent, solo: opponent === "solo", log: [], events: [], used: new Set(), over: false, winner: null,
       startedAt: (env.date || (() => new Date()))() };
     g.layout = LAYOUTS.some((l) => l.key === env.layout) ? env.layout : (R.layout_default || "hand");
     const t0 = now();
@@ -139,7 +168,7 @@
       for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
       return a;
     }
-    const fullSet = () => { const out = []; for (let i = 0; i < R.same_char_in_deck; i++) out.push(...T.N5); return out; };
+    const fullSet = () => { const out = []; for (let i = 0; i < R.same_char_in_deck; i++) out.push(...T.CHARS); return out; };
     g.deck = shuffle(fullSet());
     function draw(n) {
       const out = [];
@@ -444,7 +473,7 @@
       for (const a of p.cards) for (const b of p.cards) {
         if (a !== b) for (const k of joinResults(T, a.c, b.c)) joins.push([a, b, k]);
       }
-      const good = joins.filter((j) => isN5(T, j[2]));
+      const good = joins.filter((j) => isLevelChar(T, j[2]));
       if (good.length) { const j = pick(good); return g.join(p, [j[0].id, j[1].id], j[2]); }
       if (joins.length) { const j = pick(joins); return g.join(p, [j[0].id, j[1].id], j[2]); }
       const cyc = p.cards.filter((x) => T.NEXT.has(x.c));
@@ -461,15 +490,16 @@
       const d = g.startedAt;
       const ds = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
       const head = [
-        "# 漢字版（仮）モック ログ（KJ-003 役づくりの競争・KJ-008 1字は放てない）",
+        "# 漢字版（仮）モック ログ（KJ-003 役づくりの競争・KJ-008 1字は放てない・KJ-006 レベル）",
         `# はじめた時刻 ${ds}（端末の時計）`,
+        `# レベル ${levelLabel(g.level)}`,
         `# 相手 ${opponentLabel(D, g.opponent)}`,
         `# 並べ方 ${layoutLabel(g.startLayout)}（はじめたとき。途中で切り替えると「並べ方」の行が残る）`,
-        ...rulesLabel(D, g.opponent).map((x) => "# 仮置き " + x),
+        ...rulesLabel(D, g.opponent, g.level).map((x) => "# 仮置き " + x),
         "# 手 はじめ・割る・くっつける・反転・巡り・同音・放つ・取る・引き直し・入れ替え（手札の中で札の位置を替えた）・並べ方（切り替えた）・ためした（並べたのに放てず・くっつけられずにやめた並び）・動けない（放てる言葉が手札に無くなった。使った札＝その時の手札）・動ける・終わり",
         "# 点＝その手で増えた点（引き直しで払った点はマイナス）",
         "# データ " + FILES.map((f) => `${f}=${D[f].version}`).join(" "),
-        `# 字 ${T.N5.size}・語 ${T.WORDS.size}`,
+        `# 字 ${T.CHARS.size}・語 ${T.WORDS.size}（巡り ${T.CYCLES.map((c) => c.name).join("・")}）`,
         "秒\tどちら\t手\t使った札\tできた札\t点\tあなたの点\tCPUの点\tあなたの手札\tCPUの手札\tメモ",
       ];
       const rows = g.log.map((e) => [e.t.toFixed(1), e.who, e.op, e.from.join(" "), e.to.join(" "), e.pts, e.meScore, e.cpuScore, e.me, e.cpu, e.note].join("\t"));
@@ -479,7 +509,7 @@
   }
 
   return {
-    FILES, OPPONENTS, LAYOUTS, layoutLabel, makeTables, isN5, isChar, splitOnce, canSplit, delivered, joinResults, joinReversed,
+    FILES, OPPONENTS, LAYOUTS, LEVELS, layoutLabel, levelLabel, makeTables, isN5, isLevelChar, isChar, splitOnce, canSplit, delivered, joinResults, joinReversed,
     releasable, scoreOf, homoChars, marks, rulesLabel, opponentLabel, createGame,
   };
 });

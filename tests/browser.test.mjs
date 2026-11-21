@@ -127,6 +127,39 @@ test("画面", { skip }, async (t) => {
     await ctx.close();
   });
 
+  await t.test("レベル（KJ-006）：初期値は N4。N5 を選ぶと字と語が減り、ログの頭に出る。端末に覚える", async () => {
+    const { ctx, page, errors } = await open(browser, url, { width: 760, height: 1100 });
+    const labels = await page.locator("#lvl label").allTextContents();
+    assert.deepEqual(labels.map((x) => x.trim()), ["N5", "N4"]);
+    assert.equal(await page.locator("#lvl input:checked").getAttribute("value"), "N4");
+    assert.equal(await page.evaluate(() => __KJ.game.level), "N4");
+    const n4 = await page.evaluate(() => [__KJ.tables.CHARS.size, __KJ.tables.WORDS.size]);
+    await page.click("#bLog");
+    assert.match(await page.inputValue("#logText"), /# レベル N4（N5＋N4 の字）/);
+    await page.check('#lvl input[value="N5"]');
+    assert.equal(await page.evaluate(() => __KJ.game.level), "N4", "遊んでいる途中では変わらない（次にはじめるときに効く）");
+    await page.click("#start");
+    assert.equal(await page.evaluate(() => __KJ.game.level), "N5");
+    const n5 = await page.evaluate(() => [__KJ.tables.CHARS.size, __KJ.tables.WORDS.size]);
+    assert.ok(n5[0] < n4[0] && n5[1] < n4[1], `${n5} < ${n4}`);
+    await page.click("#bLog"); await page.click("#bLog");
+    assert.match(await page.inputValue("#logText"), /# レベル N5\n/);
+    assert.equal(await page.evaluate(() => localStorage.getItem("kj-level")), "N5");
+    await page.reload();
+    await page.waitForFunction(() => document.getElementById("msg").textContent.startsWith("字 "));
+    assert.equal(await page.locator("#lvl input:checked").getAttribute("value"), "N5");
+    assert.match(await page.textContent("#msg"), /レベル N5/);
+    // localStorage が読めなくても初期値で始められる
+    await page.addInitScript(() => { Object.defineProperty(window, "localStorage", { get() { throw new Error("blocked"); } }); });
+    await page.reload();
+    await page.waitForFunction(() => document.getElementById("msg").textContent.startsWith("字 "));
+    assert.equal(await page.locator("#lvl input:checked").getAttribute("value"), "N4");
+    await page.click("#start");
+    assert.equal(await page.evaluate(() => __KJ.game.level), "N4");
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+
   await t.test("ひとりで：CPU が消える。50点でも終わらず、5分で終わって点と自己ベストを出す。ログの頭に相手", async () => {
     const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 }, "solo");
     assert.equal(await page.evaluate(() => __KJ.game.solo), true);
