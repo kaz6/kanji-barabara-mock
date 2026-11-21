@@ -10,7 +10,8 @@ function loadData() {
   return D;
 }
 const D = loadData();
-const T = K.makeTables(D);
+const T = K.makeTables(D, "N5"); // 既存のテストは N5（KJ-006 より前の前提）
+const T4 = K.makeTables(D, "N4");
 
 // 決まった乱数（mulberry32）
 function seeded(seed) {
@@ -24,9 +25,10 @@ function seeded(seed) {
   };
 }
 // opponent は "solo"（ひとりで）／"weak"（とても弱い）／"normal"（いまの強さ。既存のテストの前提）
-function newGame(seed = 1, opponent = "normal") {
+// level は "N5"（既存のテストの前提）／"N4"（KJ-006）
+function newGame(seed = 1, opponent = "normal", level = "N5") {
   const clock = { t: 1000 };
-  const g = K.createGame(D, T, { now: () => clock.t, rand: seeded(seed), date: () => new Date(2026, 10, 20, 18, 0, 0), opponent });
+  const g = K.createGame(D, level === "N4" ? T4 : T, { now: () => clock.t, rand: seeded(seed), date: () => new Date(2026, 10, 20, 18, 0, 0), opponent });
   g.clock = clock;
   return g;
 }
@@ -36,4 +38,4 @@ function setHand(g, p, chars) {
   p.cards = [...chars].map((c) => ({ id: ++id, c, t: g.now(), fresh: false }));
   return p.cards.map((x) => x.id);
 }
-module.exports = { K, D, T, newGame, setHand, ROOT };
+module.exports = { K, D, T, T4, newGame, setHand, ROOT };

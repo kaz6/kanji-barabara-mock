@@ -106,7 +106,7 @@ test("はじめ：手札は二人とも8枚、場は3枚、点は0。山は N5 �
   assert.equal(D.rules.field_size, 3);
   assert.equal(g.me.score + g.cpu.score, 0);
   const total = g.deck.length + g.field.length + g.me.cards.length + g.cpu.cards.length;
-  assert.equal(total, T.N5.size * D.rules.same_char_in_deck);
+  assert.equal(total, T.CHARS.size * D.rules.same_char_in_deck);
 });
 
 test("取る：手札は8枚で止まる（置き場の札は数えない）", () => {
@@ -424,7 +424,9 @@ test("ログ：書き出しの頭に仮置きの値を全部書く", () => {
   assert.match(head, /勝ち 先に50点、または10分で点の多い方/);
   assert.match(head, /反転=10秒 巡り=1秒 同音=20秒/);
   assert.match(head, /CPU 8〜12秒に1回動く/);
-  assert.match(head, /rules=2026-11-21\.4/);
+  assert.ok(head.includes(`rules=${D.rules.version}`), "rules.json の version");
+  assert.match(head, /# レベル N5\n/, "選んだレベル（このテストは N5 で作ったゲーム）");
+  assert.match(head, /山=N5 の字を2枚ずつ/);
   assert.match(head, /はじめた時刻 2026-11-20 18:00:00/);
   assert.match(text, /秒\tどちら\t手\t使った札\tできた札\t点\tあなたの点\tCPUの点\tあなたの手札\tCPUの手札\tメモ/);
 });
@@ -500,7 +502,7 @@ test("ひとりで：CPU は出ない。山から CPU の分は引かない。�
   assert.equal(g.cpu.cards.length, 0);
   assert.equal(g.cpuTurn(), null);
   const total = g.deck.length + g.field.length + g.me.cards.length;
-  assert.equal(total, T.N5.size * D.rules.same_char_in_deck, "札の数が合う");
+  assert.equal(total, T.CHARS.size * D.rules.same_char_in_deck, "札の数が合う");
   assert.equal(g.log.some((e) => e.who === "CPU"), false, "CPU の行がない（動けない も出ない）");
 });
 
@@ -615,4 +617,54 @@ test("入れ替え：手札どうし・置き場どうしだけ。手札と置�
   const log0 = g.log.length;
   assert.ok(g.release(g.me, ["山", "川"].map((c) => g.me.cards.find((x) => x.c === c).id)).ok, "入れ替えのあとも放てる（山川）");
   assert.ok(g.log.length > log0);
+});
+
+// ---------- KJ-006 レベル ----------
+test("レベル N4：山は N5＋N4 の字を2枚ずつ。ログの頭にレベルが出る", () => {
+  const g = newGame(3, "normal", "N4");
+  assert.equal(g.level, "N4");
+  const total = g.deck.length + g.me.cards.length + g.cpu.cards.length + g.field.length;
+  assert.equal(total, D.kanji.count * D.rules.same_char_in_deck);
+  const head = g.logText().split("\n").filter((l) => l.startsWith("#")).join("\n");
+  assert.match(head, /# レベル N4（N5＋N4 の字）/);
+  assert.match(head, /山=N4 の字を2枚ずつ/);
+  assert.match(head, /巡り 曜日・方角・数・四季/);
+  const h5 = newGame(3, "normal", "N5").logText();
+  assert.match(h5, /# レベル N5\n/);
+  assert.doesNotMatch(h5, /四季/);
+});
+
+test("レベル N4：四季が巡る（冬→春）。N5 では 春 は巡れない", () => {
+  const g = newGame(1, "solo", "N4");
+  const [id] = setHand(g, g.me, "冬");
+  const r = g.cycle(g.me, [id]);
+  assert.ok(r.ok);
+  assert.equal(r.cards[0].c, "春");
+  const g5 = newGame(1, "solo", "N5");
+  const [id5] = setHand(g5, g5.me, "春");
+  assert.equal(g5.cycle(g5.me, [id5]).ok, false);
+});
+
+test("レベル N4：N4 の字を割る・くっつける（海＝水＋毎、千＋里＝重）。N5 では N4 の字ができない", () => {
+  const g = newGame(1, "solo", "N4");
+  const [id] = setHand(g, g.me, "海");
+  const r = g.split(g.me, [id]);
+  assert.ok(r.ok);
+  assert.deepEqual(r.cards.map((x) => x.c), ["水", "毎"]);
+  const ids = setHand(g, g.me, "千里");
+  assert.equal(g.join(g.me, ids).cards[0].c, "重");
+  const g5 = newGame(1, "solo", "N5");
+  const ids5 = setHand(g5, g5.me, "木木");
+  assert.equal(g5.join(g5.me, ids5).ok, false, "林 は N4");
+  const [h] = setHand(g5, g5.me, "海");
+  assert.equal(g5.split(g5.me, [h]).ok, false);
+});
+
+test("レベル N4：N4 の語を放てる（強弱）。N5 では辞書にない", () => {
+  const g = newGame(1, "solo", "N4");
+  const ids = setHand(g, g.me, "強弱");
+  assert.ok(g.release(g.me, ids).ok);
+  const g5 = newGame(1, "solo", "N5");
+  const ids5 = setHand(g5, g5.me, "強弱");
+  assert.equal(g5.release(g5.me, ids5).why, "辞書にない");
 });

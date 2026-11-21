@@ -8,8 +8,13 @@
     # jamdict-data が入らない環境では、展開済みの jamdict.db を直接渡せる
     python3 tools/build_data.py --db /path/to/jamdict.db
 
+    # レベル（KJ-006）。N4＝N5＋N4 の字（初期値）／N5＝N5 の字だけ
+    python3 tools/build_data.py --level N5
+
     # N5 の字の表を差し替える（1行1字、または空白区切り。# 以降はコメント）
     python3 tools/build_data.py --kanji-list tools/n5_tanos.txt
+
+字・語には lv（その字・語が出てくるいちばん低いレベル）を付ける。画面はレベルで絞って使う（js/core.js の makeTables）。
 
 手作りの表（parts / antonyms / cycles / radical_forms / special）はこのスクリプトでは作らない。
 """
@@ -24,7 +29,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 DATA = os.path.join(ROOT, "data")
 
-VERSION = "2026-11-20.1"
+VERSION = "2026-11-21.1"
+# レベルと KANJIDIC2 の jlpt（旧級）の対応。tanos の表への差し替えはまだ（D-009）
+LEVELS = {"N5": "4", "N4": "3"}
+LEVEL_ORDER = ["N5", "N4"]
 COMMON_TAGS = {"news1", "ichi1", "spec1", "spec2", "gai1"}  # JMdict の「よく使う」の印
 SKIP_KANJI_INFO = {  # 書き方として外すもの
     "word containing out-dated kanji",
@@ -68,19 +76,31 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--db")
     ap.add_argument("--kanji-list", help="N5 の字の表（tanos などに差し替えるとき）")
+    ap.add_argument("--level", default="N4", choices=LEVEL_ORDER, help="どのレベルまで作るか（N4＝N5＋N4）")
     args = ap.parse_args()
     db = sqlite3.connect(find_db(args.db))
     meta = dict(db.execute("select key, value from meta"))
 
     # ---- 字 ----
-    if args.kanji_list:
-        chars = load_kanji_list(args.kanji_list)
-        list_source = os.path.basename(args.kanji_list)
-    else:
-        chars = [r[0] for r in db.execute(
-            "select literal from character where jlpt = 4 order by cast(freq as integer)")]
-        list_source = "KANJIDIC2 jlpt=4（旧4級。N5 の代用）"
+    levels = LEVEL_ORDER[:LEVEL_ORDER.index(args.level) + 1]
+    lv_of = {}
+    chars = []
+    sources = []
+    for lv in levels:
+        if lv == "N5" and args.kanji_list:
+            got = load_kanji_list(args.kanji_list)
+            sources.append(f"N5={os.path.basename(args.kanji_list)}")
+        else:
+            got = [r[0] for r in db.execute(
+                "select literal from character where jlpt = ? order by cast(freq as integer)", (LEVELS[lv],))]
+            sources.append(f"{lv}=KANJIDIC2 jlpt={LEVELS[lv]}（旧{LEVELS[lv]}級で代用）")
+        for c in got:
+            if c not in lv_of:
+                lv_of[c] = lv
+                chars.append(c)
+    list_source = "・".join(sources)
     charset = set(chars)
+    word_lv = lambda text: max((lv_of[c] for c in text), key=LEVEL_ORDER.index)
 
     kanji = []
     readings = {}
@@ -88,7 +108,7 @@ def main():
         row = db.execute("select ID, stroke_count, freq from character where literal = ?", (ch,)).fetchone()
         if not row:
             print(f"警告: KANJIDIC2 に {ch} がありません", file=sys.stderr)
-            kanji.append({"c": ch})
+            kanji.append({"c": ch, "lv": lv_of[ch]})
             continue
         cid, strokes, freq = row
         on, kun = [], []
@@ -99,16 +119,18 @@ def main():
         meanings = [m for (m,) in db.execute(
             "select m.value from meaning m join rm_group g on m.gid = g.ID "
             "where g.cid = ? and (m.m_lang = '' or m.m_lang = 'en')", (cid,))]
-        kanji.append({"c": ch, "strokes": strokes, "freq": int(freq) if freq else None,
+        kanji.append({"c": ch, "lv": lv_of[ch], "strokes": strokes, "freq": int(freq) if freq else None,
                       "en": meanings[:2]})
         readings[ch] = {"on": on, "kun": kun}
 
     write("kanji.json", {
         "version": VERSION,
-        "level": "N5",
+        "level": args.level,
+        "levels": levels,
         "source": list_source,
-        "note": "本来は tanos.co.uk の N5 表（D-009）。tools/build_data.py --kanji-list で差し替える",
+        "note": "lv＝その字のレベル。N4 で遊ぶときは N5＋N4 の字を使う。本来は tanos.co.uk の表（D-009）。tools/build_data.py --kanji-list で N5 を差し替える",
         "count": len(kanji),
+        "count_by_level": {lv: sum(1 for k in kanji if k["lv"] == lv) for lv in levels},
         "kanji": kanji,
     })
 
@@ -130,7 +152,7 @@ def main():
             for k, v in sorted(groups.items()) if len(v) >= 2]
     write("readings.json", {
         "version": VERSION,
-        "source": "KANJIDIC2（ja_on / ja_kun）。訓読みは送りがな（. の後）を落として比べる",
+        "source": "KANJIDIC2（ja_on / ja_kun）。訓読みは送りがな（. の後）を落として比べる。組は全レベルの字で作り、遊ぶときにレベルの字だけに絞る（2字未満の組は使わない）",
         "readings": readings,
         "same_reading_groups": same,
     })
@@ -190,7 +212,7 @@ def main():
         if not kana:
             continue
         misc = entry_misc(idseq)
-        w = {"w": text, "kana": kana, "en": glosses(idseq)}
+        w = {"w": text, "lv": word_lv(text), "kana": kana, "en": glosses(idseq)}
         if common:
             w["common"] = True
         if "yojijukugo" in misc or any("yojijukugo" in entry_misc(i) for _, i in kids):
@@ -198,7 +220,13 @@ def main():
         words.append(w)
     words.sort(key=lambda w: (len(w["w"]), not w.get("common", False), w["w"]))
 
+    def stat_of(ws):
+        return {"total": len(ws),
+                "by_length": {str(n): sum(1 for w in ws if len(w["w"]) == n) for n in range(1, 5)},
+                "common": sum(1 for w in ws if w.get("common")),
+                "yoji": sum(1 for w in ws if w.get("yoji"))}
     stats = {
+        "by_level": {lv: stat_of([w for w in words if LEVEL_ORDER.index(w["lv"]) <= LEVEL_ORDER.index(lv)]) for lv in levels},
         "total": len(words),
         "by_length": {str(n): sum(1 for w in words if len(w["w"]) == n) for n in range(1, 5)},
         "common": sum(1 for w in words if w.get("common")),
@@ -207,7 +235,7 @@ def main():
     write("words.json", {
         "version": VERSION,
         "source": f"JMdict（jamdict-data, jmdict {meta.get('jmdict.version')}）。字の範囲は kanji.json",
-        "fields": {"w": "語", "kana": "かな読み（最初の1つ）", "en": "英語の意味（最初の2つ）",
+        "fields": {"w": "語", "lv": "レベル（使う字のいちばん高いレベル）", "kana": "かな読み（最初の1つ）", "en": "英語の意味（最初の2つ）",
                    "common": "よく使う（news1/ichi1/spec1/spec2/gai1）", "yoji": "四字熟語"},
         "stats": stats,
         "words": words,

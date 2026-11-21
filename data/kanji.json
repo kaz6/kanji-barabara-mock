@@ -1,12 +1,21 @@
 {
- "version": "2026-11-20.1",
- "level": "N5",
- "source": "KANJIDIC2 jlpt=4（旧4級。N5 の代用）",
- "note": "本来は tanos.co.uk の N5 表（D-009）。tools/build_data.py --kanji-list で差し替える",
- "count": 103,
+ "version": "2026-11-21.1",
+ "level": "N4",
+ "levels": [
+  "N5",
+  "N4"
+ ],
+ "source": "N5=KANJIDIC2 jlpt=4（旧4級で代用）・N4=KANJIDIC2 jlpt=3（旧3級で代用）",
+ "note": "lv＝その字のレベル。N4 で遊ぶときは N5＋N4 の字を使う。本来は tanos.co.uk の表（D-009）。tools/build_data.py --kanji-list で N5 を差し替える",
+ "count": 284,
+ "count_by_level": {
+  "N5": 103,
+  "N4": 181
+ },
  "kanji": [
   {
    "c": "日",
+   "lv": "N5",
    "strokes": 4,
    "freq": 1,
    "en": [
@@ -16,6 +25,7 @@
   },
   {
    "c": "一",
+   "lv": "N5",
    "strokes": 1,
    "freq": 2,
    "en": [
@@ -25,6 +35,7 @@
   },
   {
    "c": "国",
+   "lv": "N5",
    "strokes": 8,
    "freq": 3,
    "en": [
@@ -33,6 +44,7 @@
   },
   {
    "c": "会",
+   "lv": "N5",
    "strokes": 6,
    "freq": 4,
    "en": [
@@ -42,6 +54,7 @@
   },
   {
    "c": "人",
+   "lv": "N5",
    "strokes": 2,
    "freq": 5,
    "en": [
@@ -50,6 +63,7 @@
   },
   {
    "c": "年",
+   "lv": "N5",
    "strokes": 6,
    "freq": 6,
    "en": [
@@ -59,6 +73,7 @@
   },
   {
    "c": "大",
+   "lv": "N5",
    "strokes": 3,
    "freq": 7,
    "en": [
@@ -68,6 +83,7 @@
   },
   {
    "c": "十",
+   "lv": "N5",
    "strokes": 2,
    "freq": 8,
    "en": [
@@ -76,6 +92,7 @@
   },
   {
    "c": "二",
+   "lv": "N5",
    "strokes": 2,
    "freq": 9,
    "en": [
@@ -85,6 +102,7 @@
   },
   {
    "c": "本",
+   "lv": "N5",
    "strokes": 5,
    "freq": 10,
    "en": [
@@ -94,6 +112,7 @@
   },
   {
    "c": "中",
+   "lv": "N5",
    "strokes": 4,
    "freq": 11,
    "en": [
@@ -103,6 +122,7 @@
   },
   {
    "c": "長",
+   "lv": "N5",
    "strokes": 8,
    "freq": 12,
    "en": [
@@ -112,6 +132,7 @@
   },
   {
    "c": "出",
+   "lv": "N5",
    "strokes": 5,
    "freq": 13,
    "en": [
@@ -121,6 +142,7 @@
   },
   {
    "c": "三",
+   "lv": "N5",
    "strokes": 3,
    "freq": 14,
    "en": [
@@ -129,6 +151,7 @@
   },
   {
    "c": "時",
+   "lv": "N5",
    "strokes": 10,
    "freq": 16,
    "en": [
@@ -138,6 +161,7 @@
   },
   {
    "c": "行",
+   "lv": "N5",
    "strokes": 6,
    "freq": 20,
    "en": [
@@ -147,6 +171,7 @@
   },
   {
    "c": "社",
+   "lv": "N5",
    "strokes": 7,
    "freq": 21,
    "en": [
@@ -156,6 +181,7 @@
   },
   {
    "c": "見",
+   "lv": "N5",
    "strokes": 7,
    "freq": 22,
    "en": [
@@ -165,6 +191,7 @@
   },
   {
    "c": "月",
+   "lv": "N5",
    "strokes": 4,
    "freq": 23,
    "en": [
@@ -174,6 +201,7 @@
   },
   {
    "c": "分",
+   "lv": "N5",
    "strokes": 4,
    "freq": 24,
    "en": [
@@ -183,6 +211,7 @@
   },
   {
    "c": "後",
+   "lv": "N5",
    "strokes": 9,
    "freq": 26,
    "en": [
@@ -192,6 +221,7 @@
   },
   {
    "c": "前",
+   "lv": "N5",
    "strokes": 9,
    "freq": 27,
    "en": [
@@ -201,6 +231,7 @@
   },
   {
    "c": "生",
+   "lv": "N5",
    "strokes": 5,
    "freq": 29,
    "en": [
@@ -210,6 +241,7 @@
   },
   {
    "c": "五",
+   "lv": "N5",
    "strokes": 4,
    "freq": 31,
    "en": [
@@ -218,6 +250,7 @@
   },
   {
    "c": "間",
+   "lv": "N5",
    "strokes": 12,
    "freq": 33,
    "en": [
@@ -227,6 +260,7 @@
   },
   {
    "c": "上",
+   "lv": "N5",
    "strokes": 3,
    "freq": 35,
    "en": [
@@ -236,6 +270,7 @@
   },
   {
    "c": "東",
+   "lv": "N5",
    "strokes": 8,
    "freq": 37,
    "en": [
@@ -244,6 +279,7 @@
   },
   {
    "c": "四",
+   "lv": "N5",
    "strokes": 5,
    "freq": 47,
    "en": [
@@ -252,6 +288,7 @@
   },
   {
    "c": "今",
+   "lv": "N5",
    "strokes": 4,
    "freq": 49,
    "en": [
@@ -260,6 +297,7 @@
   },
   {
    "c": "新",
+   "lv": "N5",
    "strokes": 13,
    "freq": 51,
    "en": [
@@ -268,6 +306,7 @@
   },
   {
    "c": "金",
+   "lv": "N5",
    "strokes": 8,
    "freq": 53,
    "en": [
@@ -276,6 +315,7 @@
   },
   {
    "c": "九",
+   "lv": "N5",
    "strokes": 2,
    "freq": 55,
    "en": [
@@ -284,6 +324,7 @@
   },
   {
    "c": "入",
+   "lv": "N5",
    "strokes": 2,
    "freq": 56,
    "en": [
@@ -293,6 +334,7 @@
   },
   {
    "c": "立",
+   "lv": "N5",
    "strokes": 5,
    "freq": 58,
    "en": [
@@ -302,6 +344,7 @@
   },
   {
    "c": "手",
+   "lv": "N5",
    "strokes": 4,
    "freq": 60,
    "en": [
@@ -310,6 +353,7 @@
   },
   {
    "c": "学",
+   "lv": "N5",
    "strokes": 8,
    "freq": 63,
    "en": [
@@ -319,6 +363,7 @@
   },
   {
    "c": "高",
+   "lv": "N5",
    "strokes": 10,
    "freq": 65,
    "en": [
@@ -328,6 +373,7 @@
   },
   {
    "c": "円",
+   "lv": "N5",
    "strokes": 4,
    "freq": 69,
    "en": [
@@ -337,6 +383,7 @@
   },
   {
    "c": "子",
+   "lv": "N5",
    "strokes": 3,
    "freq": 72,
    "en": [
@@ -346,6 +393,7 @@
   },
   {
    "c": "目",
+   "lv": "N5",
    "strokes": 5,
    "freq": 76,
    "en": [
@@ -355,6 +403,7 @@
   },
   {
    "c": "外",
+   "lv": "N5",
    "strokes": 5,
    "freq": 81,
    "en": [
@@ -363,6 +412,7 @@
   },
   {
    "c": "言",
+   "lv": "N5",
    "strokes": 7,
    "freq": 83,
    "en": [
@@ -372,6 +422,7 @@
   },
   {
    "c": "八",
+   "lv": "N5",
    "strokes": 2,
    "freq": 92,
    "en": [
@@ -381,6 +432,7 @@
   },
   {
    "c": "六",
+   "lv": "N5",
    "strokes": 4,
    "freq": 93,
    "en": [
@@ -389,6 +441,7 @@
   },
   {
    "c": "下",
+   "lv": "N5",
    "strokes": 3,
    "freq": 97,
    "en": [
@@ -398,6 +451,7 @@
   },
   {
    "c": "来",
+   "lv": "N5",
    "strokes": 7,
    "freq": 102,
    "en": [
@@ -407,6 +461,7 @@
   },
   {
    "c": "気",
+   "lv": "N5",
    "strokes": 6,
    "freq": 113,
    "en": [
@@ -416,6 +471,7 @@
   },
   {
    "c": "小",
+   "lv": "N5",
    "strokes": 3,
    "freq": 114,
    "en": [
@@ -425,6 +481,7 @@
   },
   {
    "c": "七",
+   "lv": "N5",
    "strokes": 2,
    "freq": 115,
    "en": [
@@ -433,6 +490,7 @@
   },
   {
    "c": "山",
+   "lv": "N5",
    "strokes": 3,
    "freq": 131,
    "en": [
@@ -441,6 +499,7 @@
   },
   {
    "c": "話",
+   "lv": "N5",
    "strokes": 13,
    "freq": 134,
    "en": [
@@ -450,6 +509,7 @@
   },
   {
    "c": "多",
+   "lv": "N5",
    "strokes": 6,
    "freq": 139,
    "en": [
@@ -459,6 +519,7 @@
   },
   {
    "c": "安",
+   "lv": "N5",
    "strokes": 6,
    "freq": 144,
    "en": [
@@ -468,6 +529,7 @@
   },
   {
    "c": "女",
+   "lv": "N5",
    "strokes": 3,
    "freq": 151,
    "en": [
@@ -477,6 +539,7 @@
   },
   {
    "c": "北",
+   "lv": "N5",
    "strokes": 5,
    "freq": 153,
    "en": [
@@ -485,6 +548,7 @@
   },
   {
    "c": "午",
+   "lv": "N5",
    "strokes": 4,
    "freq": 154,
    "en": [
@@ -494,6 +558,7 @@
   },
   {
    "c": "百",
+   "lv": "N5",
    "strokes": 6,
    "freq": 163,
    "en": [
@@ -502,6 +567,7 @@
   },
   {
    "c": "書",
+   "lv": "N5",
    "strokes": 10,
    "freq": 169,
    "en": [
@@ -510,6 +576,7 @@
   },
   {
    "c": "先",
+   "lv": "N5",
    "strokes": 6,
    "freq": 173,
    "en": [
@@ -519,6 +586,7 @@
   },
   {
    "c": "名",
+   "lv": "N5",
    "strokes": 6,
    "freq": 177,
    "en": [
@@ -528,6 +596,7 @@
   },
   {
    "c": "川",
+   "lv": "N5",
    "strokes": 3,
    "freq": 181,
    "en": [
@@ -537,6 +606,7 @@
   },
   {
    "c": "千",
+   "lv": "N5",
    "strokes": 3,
    "freq": 195,
    "en": [
@@ -545,6 +615,7 @@
   },
   {
    "c": "道",
+   "lv": "N5",
    "strokes": 12,
    "freq": 207,
    "en": [
@@ -554,6 +625,7 @@
   },
   {
    "c": "水",
+   "lv": "N5",
    "strokes": 4,
    "freq": 223,
    "en": [
@@ -562,6 +634,7 @@
   },
   {
    "c": "半",
+   "lv": "N5",
    "strokes": 5,
    "freq": 224,
    "en": [
@@ -571,6 +644,7 @@
   },
   {
    "c": "男",
+   "lv": "N5",
    "strokes": 7,
    "freq": 240,
    "en": [
@@ -579,6 +653,7 @@
   },
   {
    "c": "西",
+   "lv": "N5",
    "strokes": 6,
    "freq": 259,
    "en": [
@@ -588,6 +663,7 @@
   },
   {
    "c": "電",
+   "lv": "N5",
    "strokes": 13,
    "freq": 268,
    "en": [
@@ -596,6 +672,7 @@
   },
   {
    "c": "口",
+   "lv": "N5",
    "strokes": 3,
    "freq": 284,
    "en": [
@@ -604,6 +681,7 @@
   },
   {
    "c": "少",
+   "lv": "N5",
    "strokes": 4,
    "freq": 287,
    "en": [
@@ -613,6 +691,7 @@
   },
   {
    "c": "校",
+   "lv": "N5",
    "strokes": 10,
    "freq": 294,
    "en": [
@@ -622,6 +701,7 @@
   },
   {
    "c": "語",
+   "lv": "N5",
    "strokes": 14,
    "freq": 301,
    "en": [
@@ -631,6 +711,7 @@
   },
   {
    "c": "空",
+   "lv": "N5",
    "strokes": 8,
    "freq": 304,
    "en": [
@@ -640,6 +721,7 @@
   },
   {
    "c": "土",
+   "lv": "N5",
    "strokes": 3,
    "freq": 307,
    "en": [
@@ -649,6 +731,7 @@
   },
   {
    "c": "木",
+   "lv": "N5",
    "strokes": 4,
    "freq": 317,
    "en": [
@@ -658,6 +741,7 @@
   },
   {
    "c": "聞",
+   "lv": "N5",
    "strokes": 14,
    "freq": 319,
    "en": [
@@ -667,6 +751,7 @@
   },
   {
    "c": "食",
+   "lv": "N5",
    "strokes": 9,
    "freq": 328,
    "en": [
@@ -676,6 +761,7 @@
   },
   {
    "c": "車",
+   "lv": "N5",
    "strokes": 7,
    "freq": 333,
    "en": [
@@ -684,6 +770,7 @@
   },
   {
    "c": "何",
+   "lv": "N5",
    "strokes": 7,
    "freq": 340,
    "en": [
@@ -692,6 +779,7 @@
   },
   {
    "c": "南",
+   "lv": "N5",
    "strokes": 9,
    "freq": 341,
    "en": [
@@ -700,6 +788,7 @@
   },
   {
    "c": "足",
+   "lv": "N5",
    "strokes": 7,
    "freq": 343,
    "en": [
@@ -709,6 +798,7 @@
   },
   {
    "c": "万",
+   "lv": "N5",
    "strokes": 3,
    "freq": 375,
    "en": [
@@ -718,6 +808,7 @@
   },
   {
    "c": "店",
+   "lv": "N5",
    "strokes": 8,
    "freq": 378,
    "en": [
@@ -727,6 +818,7 @@
   },
   {
    "c": "毎",
+   "lv": "N5",
    "strokes": 6,
    "freq": 436,
    "en": [
@@ -735,6 +827,7 @@
   },
   {
    "c": "白",
+   "lv": "N5",
    "strokes": 5,
    "freq": 483,
    "en": [
@@ -743,6 +836,7 @@
   },
   {
    "c": "古",
+   "lv": "N5",
    "strokes": 5,
    "freq": 509,
    "en": [
@@ -751,6 +845,7 @@
   },
   {
    "c": "天",
+   "lv": "N5",
    "strokes": 4,
    "freq": 512,
    "en": [
@@ -760,6 +855,7 @@
   },
   {
    "c": "買",
+   "lv": "N5",
    "strokes": 12,
    "freq": 520,
    "en": [
@@ -768,6 +864,7 @@
   },
   {
    "c": "週",
+   "lv": "N5",
    "strokes": 11,
    "freq": 540,
    "en": [
@@ -776,6 +873,7 @@
   },
   {
    "c": "母",
+   "lv": "N5",
    "strokes": 5,
    "freq": 570,
    "en": [
@@ -784,6 +882,7 @@
   },
   {
    "c": "火",
+   "lv": "N5",
    "strokes": 4,
    "freq": 574,
    "en": [
@@ -792,6 +891,7 @@
   },
   {
    "c": "花",
+   "lv": "N5",
    "strokes": 7,
    "freq": 578,
    "en": [
@@ -800,6 +900,7 @@
   },
   {
    "c": "右",
+   "lv": "N5",
    "strokes": 5,
    "freq": 602,
    "en": [
@@ -808,6 +909,7 @@
   },
   {
    "c": "読",
+   "lv": "N5",
    "strokes": 14,
    "freq": 618,
    "en": [
@@ -816,6 +918,7 @@
   },
   {
    "c": "友",
+   "lv": "N5",
    "strokes": 4,
    "freq": 622,
    "en": [
@@ -824,6 +927,7 @@
   },
   {
    "c": "左",
+   "lv": "N5",
    "strokes": 5,
    "freq": 630,
    "en": [
@@ -832,6 +936,7 @@
   },
   {
    "c": "休",
+   "lv": "N5",
    "strokes": 6,
    "freq": 642,
    "en": [
@@ -841,6 +946,7 @@
   },
   {
    "c": "父",
+   "lv": "N5",
    "strokes": 4,
    "freq": 646,
    "en": [
@@ -849,6 +955,7 @@
   },
   {
    "c": "駅",
+   "lv": "N5",
    "strokes": 14,
    "freq": 724,
    "en": [
@@ -857,6 +964,7 @@
   },
   {
    "c": "雨",
+   "lv": "N5",
    "strokes": 8,
    "freq": 950,
    "en": [
@@ -865,6 +973,7 @@
   },
   {
    "c": "飲",
+   "lv": "N5",
    "strokes": 12,
    "freq": 969,
    "en": [
@@ -874,6 +983,7 @@
   },
   {
    "c": "魚",
+   "lv": "N5",
    "strokes": 11,
    "freq": 1208,
    "en": [
@@ -882,10 +992,1793 @@
   },
   {
    "c": "耳",
+   "lv": "N5",
    "strokes": 6,
    "freq": 1328,
    "en": [
     "ear"
+   ]
+  },
+  {
+   "c": "同",
+   "lv": "N4",
+   "strokes": 6,
+   "freq": 15,
+   "en": [
+    "same",
+    "agree"
+   ]
+  },
+  {
+   "c": "事",
+   "lv": "N4",
+   "strokes": 8,
+   "freq": 18,
+   "en": [
+    "matter",
+    "thing"
+   ]
+  },
+  {
+   "c": "自",
+   "lv": "N4",
+   "strokes": 6,
+   "freq": 19,
+   "en": [
+    "oneself"
+   ]
+  },
+  {
+   "c": "民",
+   "lv": "N4",
+   "strokes": 5,
+   "freq": 28,
+   "en": [
+    "people",
+    "nation"
+   ]
+  },
+  {
+   "c": "発",
+   "lv": "N4",
+   "strokes": 9,
+   "freq": 32,
+   "en": [
+    "departure",
+    "discharge"
+   ]
+  },
+  {
+   "c": "者",
+   "lv": "N4",
+   "strokes": 8,
+   "freq": 38,
+   "en": [
+    "someone",
+    "person"
+   ]
+  },
+  {
+   "c": "地",
+   "lv": "N4",
+   "strokes": 6,
+   "freq": 40,
+   "en": [
+    "ground",
+    "earth"
+   ]
+  },
+  {
+   "c": "合",
+   "lv": "N4",
+   "strokes": 6,
+   "freq": 41,
+   "en": [
+    "fit",
+    "suit"
+   ]
+  },
+  {
+   "c": "市",
+   "lv": "N4",
+   "strokes": 5,
+   "freq": 42,
+   "en": [
+    "market",
+    "city"
+   ]
+  },
+  {
+   "c": "業",
+   "lv": "N4",
+   "strokes": 13,
+   "freq": 43,
+   "en": [
+    "business",
+    "vocation"
+   ]
+  },
+  {
+   "c": "方",
+   "lv": "N4",
+   "strokes": 4,
+   "freq": 46,
+   "en": [
+    "direction",
+    "person"
+   ]
+  },
+  {
+   "c": "回",
+   "lv": "N4",
+   "strokes": 6,
+   "freq": 50,
+   "en": [
+    "-times",
+    "round"
+   ]
+  },
+  {
+   "c": "場",
+   "lv": "N4",
+   "strokes": 12,
+   "freq": 52,
+   "en": [
+    "location",
+    "place"
+   ]
+  },
+  {
+   "c": "員",
+   "lv": "N4",
+   "strokes": 10,
+   "freq": 54,
+   "en": [
+    "employee",
+    "member"
+   ]
+  },
+  {
+   "c": "開",
+   "lv": "N4",
+   "strokes": 12,
+   "freq": 59,
+   "en": [
+    "open",
+    "unfold"
+   ]
+  },
+  {
+   "c": "力",
+   "lv": "N4",
+   "strokes": 2,
+   "freq": 62,
+   "en": [
+    "power",
+    "strength"
+   ]
+  },
+  {
+   "c": "問",
+   "lv": "N4",
+   "strokes": 11,
+   "freq": 64,
+   "en": [
+    "question",
+    "ask"
+   ]
+  },
+  {
+   "c": "代",
+   "lv": "N4",
+   "strokes": 5,
+   "freq": 66,
+   "en": [
+    "substitute",
+    "change"
+   ]
+  },
+  {
+   "c": "明",
+   "lv": "N4",
+   "strokes": 8,
+   "freq": 67,
+   "en": [
+    "bright",
+    "light"
+   ]
+  },
+  {
+   "c": "動",
+   "lv": "N4",
+   "strokes": 11,
+   "freq": 73,
+   "en": [
+    "move",
+    "motion"
+   ]
+  },
+  {
+   "c": "京",
+   "lv": "N4",
+   "strokes": 8,
+   "freq": 74,
+   "en": [
+    "capital",
+    "10**16"
+   ]
+  },
+  {
+   "c": "通",
+   "lv": "N4",
+   "strokes": 10,
+   "freq": 80,
+   "en": [
+    "traffic",
+    "pass through"
+   ]
+  },
+  {
+   "c": "理",
+   "lv": "N4",
+   "strokes": 11,
+   "freq": 86,
+   "en": [
+    "logic",
+    "arrangement"
+   ]
+  },
+  {
+   "c": "体",
+   "lv": "N4",
+   "strokes": 7,
+   "freq": 88,
+   "en": [
+    "body",
+    "substance"
+   ]
+  },
+  {
+   "c": "田",
+   "lv": "N4",
+   "strokes": 5,
+   "freq": 90,
+   "en": [
+    "rice field",
+    "rice paddy"
+   ]
+  },
+  {
+   "c": "主",
+   "lv": "N4",
+   "strokes": 5,
+   "freq": 95,
+   "en": [
+    "lord",
+    "chief"
+   ]
+  },
+  {
+   "c": "題",
+   "lv": "N4",
+   "strokes": 18,
+   "freq": 96,
+   "en": [
+    "topic",
+    "subject"
+   ]
+  },
+  {
+   "c": "首",
+   "lv": "N4",
+   "strokes": 9,
+   "freq": 98,
+   "en": [
+    "neck",
+    "counter for songs and poems"
+   ]
+  },
+  {
+   "c": "意",
+   "lv": "N4",
+   "strokes": 13,
+   "freq": 99,
+   "en": [
+    "idea",
+    "mind"
+   ]
+  },
+  {
+   "c": "不",
+   "lv": "N4",
+   "strokes": 4,
+   "freq": 101,
+   "en": [
+    "negative",
+    "non-"
+   ]
+  },
+  {
+   "c": "作",
+   "lv": "N4",
+   "strokes": 7,
+   "freq": 103,
+   "en": [
+    "make",
+    "production"
+   ]
+  },
+  {
+   "c": "用",
+   "lv": "N4",
+   "strokes": 5,
+   "freq": 107,
+   "en": [
+    "utilize",
+    "business"
+   ]
+  },
+  {
+   "c": "度",
+   "lv": "N4",
+   "strokes": 9,
+   "freq": 110,
+   "en": [
+    "degrees",
+    "occurrence"
+   ]
+  },
+  {
+   "c": "強",
+   "lv": "N4",
+   "strokes": 11,
+   "freq": 112,
+   "en": [
+    "strong"
+   ]
+  },
+  {
+   "c": "持",
+   "lv": "N4",
+   "strokes": 9,
+   "freq": 119,
+   "en": [
+    "hold",
+    "have"
+   ]
+  },
+  {
+   "c": "野",
+   "lv": "N4",
+   "strokes": 11,
+   "freq": 120,
+   "en": [
+    "plains",
+    "field"
+   ]
+  },
+  {
+   "c": "都",
+   "lv": "N4",
+   "strokes": 11,
+   "freq": 123,
+   "en": [
+    "metropolis",
+    "capital"
+   ]
+  },
+  {
+   "c": "以",
+   "lv": "N4",
+   "strokes": 5,
+   "freq": 126,
+   "en": [
+    "by means of",
+    "because"
+   ]
+  },
+  {
+   "c": "思",
+   "lv": "N4",
+   "strokes": 9,
+   "freq": 132,
+   "en": [
+    "think"
+   ]
+  },
+  {
+   "c": "家",
+   "lv": "N4",
+   "strokes": 10,
+   "freq": 133,
+   "en": [
+    "house",
+    "home"
+   ]
+  },
+  {
+   "c": "世",
+   "lv": "N4",
+   "strokes": 5,
+   "freq": 135,
+   "en": [
+    "generation",
+    "world"
+   ]
+  },
+  {
+   "c": "区",
+   "lv": "N4",
+   "strokes": 4,
+   "freq": 137,
+   "en": [
+    "ward",
+    "district"
+   ]
+  },
+  {
+   "c": "県",
+   "lv": "N4",
+   "strokes": 9,
+   "freq": 140,
+   "en": [
+    "prefecture"
+   ]
+  },
+  {
+   "c": "進",
+   "lv": "N4",
+   "strokes": 11,
+   "freq": 142,
+   "en": [
+    "advance",
+    "proceed"
+   ]
+  },
+  {
+   "c": "正",
+   "lv": "N4",
+   "strokes": 5,
+   "freq": 143,
+   "en": [
+    "correct",
+    "justice"
+   ]
+  },
+  {
+   "c": "院",
+   "lv": "N4",
+   "strokes": 10,
+   "freq": 150,
+   "en": [
+    "Inst.",
+    "institution"
+   ]
+  },
+  {
+   "c": "心",
+   "lv": "N4",
+   "strokes": 4,
+   "freq": 157,
+   "en": [
+    "heart",
+    "mind"
+   ]
+  },
+  {
+   "c": "界",
+   "lv": "N4",
+   "strokes": 9,
+   "freq": 158,
+   "en": [
+    "world",
+    "boundary"
+   ]
+  },
+  {
+   "c": "産",
+   "lv": "N4",
+   "strokes": 11,
+   "freq": 161,
+   "en": [
+    "products",
+    "bear"
+   ]
+  },
+  {
+   "c": "教",
+   "lv": "N4",
+   "strokes": 11,
+   "freq": 166,
+   "en": [
+    "teach",
+    "faith"
+   ]
+  },
+  {
+   "c": "文",
+   "lv": "N4",
+   "strokes": 4,
+   "freq": 190,
+   "en": [
+    "sentence",
+    "literature"
+   ]
+  },
+  {
+   "c": "元",
+   "lv": "N4",
+   "strokes": 4,
+   "freq": 192,
+   "en": [
+    "beginning",
+    "former time"
+   ]
+  },
+  {
+   "c": "重",
+   "lv": "N4",
+   "strokes": 9,
+   "freq": 193,
+   "en": [
+    "heavy",
+    "important"
+   ]
+  },
+  {
+   "c": "近",
+   "lv": "N4",
+   "strokes": 7,
+   "freq": 194,
+   "en": [
+    "near",
+    "early"
+   ]
+  },
+  {
+   "c": "考",
+   "lv": "N4",
+   "strokes": 6,
+   "freq": 196,
+   "en": [
+    "consider",
+    "think over"
+   ]
+  },
+  {
+   "c": "画",
+   "lv": "N4",
+   "strokes": 8,
+   "freq": 199,
+   "en": [
+    "brush-stroke",
+    "picture"
+   ]
+  },
+  {
+   "c": "海",
+   "lv": "N4",
+   "strokes": 9,
+   "freq": 200,
+   "en": [
+    "sea",
+    "ocean"
+   ]
+  },
+  {
+   "c": "売",
+   "lv": "N4",
+   "strokes": 7,
+   "freq": 202,
+   "en": [
+    "sell"
+   ]
+  },
+  {
+   "c": "知",
+   "lv": "N4",
+   "strokes": 8,
+   "freq": 205,
+   "en": [
+    "know",
+    "wisdom"
+   ]
+  },
+  {
+   "c": "集",
+   "lv": "N4",
+   "strokes": 12,
+   "freq": 210,
+   "en": [
+    "gather",
+    "meet"
+   ]
+  },
+  {
+   "c": "別",
+   "lv": "N4",
+   "strokes": 7,
+   "freq": 214,
+   "en": [
+    "separate",
+    "branch off"
+   ]
+  },
+  {
+   "c": "物",
+   "lv": "N4",
+   "strokes": 8,
+   "freq": 215,
+   "en": [
+    "thing",
+    "object"
+   ]
+  },
+  {
+   "c": "引",
+   "lv": "N4",
+   "strokes": 4,
+   "freq": 218,
+   "en": [
+    "pull",
+    "tug"
+   ]
+  },
+  {
+   "c": "使",
+   "lv": "N4",
+   "strokes": 8,
+   "freq": 219,
+   "en": [
+    "use",
+    "send on a mission"
+   ]
+  },
+  {
+   "c": "所",
+   "lv": "N4",
+   "strokes": 8,
+   "freq": 221,
+   "en": [
+    "place",
+    "extent"
+   ]
+  },
+  {
+   "c": "品",
+   "lv": "N4",
+   "strokes": 9,
+   "freq": 225,
+   "en": [
+    "goods",
+    "refinement"
+   ]
+  },
+  {
+   "c": "計",
+   "lv": "N4",
+   "strokes": 9,
+   "freq": 228,
+   "en": [
+    "plot",
+    "plan"
+   ]
+  },
+  {
+   "c": "死",
+   "lv": "N4",
+   "strokes": 6,
+   "freq": 229,
+   "en": [
+    "death",
+    "die"
+   ]
+  },
+  {
+   "c": "特",
+   "lv": "N4",
+   "strokes": 10,
+   "freq": 234,
+   "en": [
+    "special"
+   ]
+  },
+  {
+   "c": "私",
+   "lv": "N4",
+   "strokes": 7,
+   "freq": 242,
+   "en": [
+    "private",
+    "I"
+   ]
+  },
+  {
+   "c": "始",
+   "lv": "N4",
+   "strokes": 8,
+   "freq": 244,
+   "en": [
+    "commence",
+    "begin"
+   ]
+  },
+  {
+   "c": "朝",
+   "lv": "N4",
+   "strokes": 12,
+   "freq": 248,
+   "en": [
+    "morning",
+    "dynasty"
+   ]
+  },
+  {
+   "c": "村",
+   "lv": "N4",
+   "strokes": 7,
+   "freq": 253,
+   "en": [
+    "village",
+    "town"
+   ]
+  },
+  {
+   "c": "運",
+   "lv": "N4",
+   "strokes": 12,
+   "freq": 255,
+   "en": [
+    "carry",
+    "luck"
+   ]
+  },
+  {
+   "c": "終",
+   "lv": "N4",
+   "strokes": 11,
+   "freq": 256,
+   "en": [
+    "end",
+    "finish"
+   ]
+  },
+  {
+   "c": "台",
+   "lv": "N4",
+   "strokes": 5,
+   "freq": 262,
+   "en": [
+    "pedestal",
+    "a stand"
+   ]
+  },
+  {
+   "c": "広",
+   "lv": "N4",
+   "strokes": 5,
+   "freq": 263,
+   "en": [
+    "wide",
+    "broad"
+   ]
+  },
+  {
+   "c": "住",
+   "lv": "N4",
+   "strokes": 7,
+   "freq": 270,
+   "en": [
+    "dwell",
+    "reside"
+   ]
+  },
+  {
+   "c": "真",
+   "lv": "N4",
+   "strokes": 10,
+   "freq": 279,
+   "en": [
+    "true",
+    "reality"
+   ]
+  },
+  {
+   "c": "有",
+   "lv": "N4",
+   "strokes": 6,
+   "freq": 282,
+   "en": [
+    "possess",
+    "have"
+   ]
+  },
+  {
+   "c": "町",
+   "lv": "N4",
+   "strokes": 7,
+   "freq": 292,
+   "en": [
+    "town",
+    "village"
+   ]
+  },
+  {
+   "c": "料",
+   "lv": "N4",
+   "strokes": 10,
+   "freq": 295,
+   "en": [
+    "fee",
+    "materials"
+   ]
+  },
+  {
+   "c": "工",
+   "lv": "N4",
+   "strokes": 3,
+   "freq": 299,
+   "en": [
+    "craft",
+    "construction"
+   ]
+  },
+  {
+   "c": "建",
+   "lv": "N4",
+   "strokes": 9,
+   "freq": 300,
+   "en": [
+    "build"
+   ]
+  },
+  {
+   "c": "急",
+   "lv": "N4",
+   "strokes": 9,
+   "freq": 309,
+   "en": [
+    "hurry",
+    "emergency"
+   ]
+  },
+  {
+   "c": "止",
+   "lv": "N4",
+   "strokes": 4,
+   "freq": 310,
+   "en": [
+    "stop",
+    "halt"
+   ]
+  },
+  {
+   "c": "送",
+   "lv": "N4",
+   "strokes": 9,
+   "freq": 311,
+   "en": [
+    "escort",
+    "send"
+   ]
+  },
+  {
+   "c": "切",
+   "lv": "N4",
+   "strokes": 4,
+   "freq": 324,
+   "en": [
+    "cut",
+    "cutoff"
+   ]
+  },
+  {
+   "c": "説",
+   "lv": "N4",
+   "strokes": 14,
+   "freq": 326,
+   "en": [
+    "opinion",
+    "theory"
+   ]
+  },
+  {
+   "c": "転",
+   "lv": "N4",
+   "strokes": 11,
+   "freq": 327,
+   "en": [
+    "revolve",
+    "turn around"
+   ]
+  },
+  {
+   "c": "研",
+   "lv": "N4",
+   "strokes": 9,
+   "freq": 336,
+   "en": [
+    "polish",
+    "study of"
+   ]
+  },
+  {
+   "c": "究",
+   "lv": "N4",
+   "strokes": 7,
+   "freq": 368,
+   "en": [
+    "research",
+    "study"
+   ]
+  },
+  {
+   "c": "楽",
+   "lv": "N4",
+   "strokes": 13,
+   "freq": 373,
+   "en": [
+    "music",
+    "comfort"
+   ]
+  },
+  {
+   "c": "起",
+   "lv": "N4",
+   "strokes": 10,
+   "freq": 374,
+   "en": [
+    "rouse",
+    "wake up"
+   ]
+  },
+  {
+   "c": "着",
+   "lv": "N4",
+   "strokes": 12,
+   "freq": 376,
+   "en": [
+    "don",
+    "arrive"
+   ]
+  },
+  {
+   "c": "乗",
+   "lv": "N4",
+   "strokes": 9,
+   "freq": 377,
+   "en": [
+    "ride",
+    "power"
+   ]
+  },
+  {
+   "c": "病",
+   "lv": "N4",
+   "strokes": 10,
+   "freq": 384,
+   "en": [
+    "ill",
+    "sick"
+   ]
+  },
+  {
+   "c": "声",
+   "lv": "N4",
+   "strokes": 7,
+   "freq": 388,
+   "en": [
+    "voice"
+   ]
+  },
+  {
+   "c": "質",
+   "lv": "N4",
+   "strokes": 15,
+   "freq": 389,
+   "en": [
+    "substance",
+    "quality"
+   ]
+  },
+  {
+   "c": "待",
+   "lv": "N4",
+   "strokes": 9,
+   "freq": 391,
+   "en": [
+    "wait",
+    "depend on"
+   ]
+  },
+  {
+   "c": "試",
+   "lv": "N4",
+   "strokes": 13,
+   "freq": 392,
+   "en": [
+    "test",
+    "try"
+   ]
+  },
+  {
+   "c": "族",
+   "lv": "N4",
+   "strokes": 11,
+   "freq": 393,
+   "en": [
+    "tribe",
+    "family"
+   ]
+  },
+  {
+   "c": "銀",
+   "lv": "N4",
+   "strokes": 14,
+   "freq": 395,
+   "en": [
+    "silver"
+   ]
+  },
+  {
+   "c": "早",
+   "lv": "N4",
+   "strokes": 6,
+   "freq": 402,
+   "en": [
+    "early",
+    "fast"
+   ]
+  },
+  {
+   "c": "映",
+   "lv": "N4",
+   "strokes": 9,
+   "freq": 404,
+   "en": [
+    "reflect",
+    "reflection"
+   ]
+  },
+  {
+   "c": "親",
+   "lv": "N4",
+   "strokes": 16,
+   "freq": 406,
+   "en": [
+    "parent",
+    "intimacy"
+   ]
+  },
+  {
+   "c": "験",
+   "lv": "N4",
+   "strokes": 18,
+   "freq": 410,
+   "en": [
+    "verification",
+    "effect"
+   ]
+  },
+  {
+   "c": "働",
+   "lv": "N4",
+   "strokes": 13,
+   "freq": 417,
+   "en": [
+    "work",
+    "(kokuji)"
+   ]
+  },
+  {
+   "c": "好",
+   "lv": "N4",
+   "strokes": 6,
+   "freq": 423,
+   "en": [
+    "fond",
+    "pleasing"
+   ]
+  },
+  {
+   "c": "英",
+   "lv": "N4",
+   "strokes": 8,
+   "freq": 430,
+   "en": [
+    "England",
+    "English"
+   ]
+  },
+  {
+   "c": "頭",
+   "lv": "N4",
+   "strokes": 16,
+   "freq": 433,
+   "en": [
+    "head",
+    "counter for large animals"
+   ]
+  },
+  {
+   "c": "低",
+   "lv": "N4",
+   "strokes": 7,
+   "freq": 435,
+   "en": [
+    "lower",
+    "short"
+   ]
+  },
+  {
+   "c": "医",
+   "lv": "N4",
+   "strokes": 7,
+   "freq": 437,
+   "en": [
+    "doctor",
+    "medicine"
+   ]
+  },
+  {
+   "c": "仕",
+   "lv": "N4",
+   "strokes": 5,
+   "freq": 439,
+   "en": [
+    "attend",
+    "doing"
+   ]
+  },
+  {
+   "c": "去",
+   "lv": "N4",
+   "strokes": 5,
+   "freq": 440,
+   "en": [
+    "gone",
+    "past"
+   ]
+  },
+  {
+   "c": "味",
+   "lv": "N4",
+   "strokes": 8,
+   "freq": 442,
+   "en": [
+    "flavor",
+    "taste"
+   ]
+  },
+  {
+   "c": "門",
+   "lv": "N4",
+   "strokes": 8,
+   "freq": 452,
+   "en": [
+    "gate",
+    "counter for cannons"
+   ]
+  },
+  {
+   "c": "写",
+   "lv": "N4",
+   "strokes": 5,
+   "freq": 453,
+   "en": [
+    "copy",
+    "be photographed"
+   ]
+  },
+  {
+   "c": "字",
+   "lv": "N4",
+   "strokes": 6,
+   "freq": 485,
+   "en": [
+    "character",
+    "letter"
+   ]
+  },
+  {
+   "c": "答",
+   "lv": "N4",
+   "strokes": 12,
+   "freq": 486,
+   "en": [
+    "solution",
+    "answer"
+   ]
+  },
+  {
+   "c": "夜",
+   "lv": "N4",
+   "strokes": 8,
+   "freq": 487,
+   "en": [
+    "night",
+    "evening"
+   ]
+  },
+  {
+   "c": "音",
+   "lv": "N4",
+   "strokes": 9,
+   "freq": 491,
+   "en": [
+    "sound",
+    "noise"
+   ]
+  },
+  {
+   "c": "注",
+   "lv": "N4",
+   "strokes": 8,
+   "freq": 497,
+   "en": [
+    "pour",
+    "irrigate"
+   ]
+  },
+  {
+   "c": "帰",
+   "lv": "N4",
+   "strokes": 10,
+   "freq": 504,
+   "en": [
+    "homecoming",
+    "arrive at"
+   ]
+  },
+  {
+   "c": "歌",
+   "lv": "N4",
+   "strokes": 14,
+   "freq": 519,
+   "en": [
+    "song",
+    "sing"
+   ]
+  },
+  {
+   "c": "光",
+   "lv": "N4",
+   "strokes": 6,
+   "freq": 527,
+   "en": [
+    "ray",
+    "light"
+   ]
+  },
+  {
+   "c": "悪",
+   "lv": "N4",
+   "strokes": 11,
+   "freq": 530,
+   "en": [
+    "bad",
+    "vice"
+   ]
+  },
+  {
+   "c": "図",
+   "lv": "N4",
+   "strokes": 7,
+   "freq": 539,
+   "en": [
+    "map",
+    "drawing"
+   ]
+  },
+  {
+   "c": "室",
+   "lv": "N4",
+   "strokes": 9,
+   "freq": 550,
+   "en": [
+    "room",
+    "apartment"
+   ]
+  },
+  {
+   "c": "太",
+   "lv": "N4",
+   "strokes": 4,
+   "freq": 552,
+   "en": [
+    "plump",
+    "thick"
+   ]
+  },
+  {
+   "c": "歩",
+   "lv": "N4",
+   "strokes": 8,
+   "freq": 554,
+   "en": [
+    "walk",
+    "counter for steps"
+   ]
+  },
+  {
+   "c": "風",
+   "lv": "N4",
+   "strokes": 9,
+   "freq": 558,
+   "en": [
+    "wind",
+    "air"
+   ]
+  },
+  {
+   "c": "紙",
+   "lv": "N4",
+   "strokes": 10,
+   "freq": 559,
+   "en": [
+    "paper"
+   ]
+  },
+  {
+   "c": "黒",
+   "lv": "N4",
+   "strokes": 11,
+   "freq": 573,
+   "en": [
+    "black"
+   ]
+  },
+  {
+   "c": "春",
+   "lv": "N4",
+   "strokes": 9,
+   "freq": 579,
+   "en": [
+    "springtime",
+    "spring (season)"
+   ]
+  },
+  {
+   "c": "赤",
+   "lv": "N4",
+   "strokes": 7,
+   "freq": 584,
+   "en": [
+    "red"
+   ]
+  },
+  {
+   "c": "青",
+   "lv": "N4",
+   "strokes": 8,
+   "freq": 589,
+   "en": [
+    "blue",
+    "green"
+   ]
+  },
+  {
+   "c": "森",
+   "lv": "N4",
+   "strokes": 12,
+   "freq": 609,
+   "en": [
+    "forest",
+    "woods"
+   ]
+  },
+  {
+   "c": "館",
+   "lv": "N4",
+   "strokes": 16,
+   "freq": 613,
+   "en": [
+    "building",
+    "mansion"
+   ]
+  },
+  {
+   "c": "屋",
+   "lv": "N4",
+   "strokes": 9,
+   "freq": 616,
+   "en": [
+    "roof",
+    "house"
+   ]
+  },
+  {
+   "c": "色",
+   "lv": "N4",
+   "strokes": 6,
+   "freq": 621,
+   "en": [
+    "color"
+   ]
+  },
+  {
+   "c": "走",
+   "lv": "N4",
+   "strokes": 7,
+   "freq": 626,
+   "en": [
+    "run"
+   ]
+  },
+  {
+   "c": "秋",
+   "lv": "N4",
+   "strokes": 9,
+   "freq": 635,
+   "en": [
+    "autumn"
+   ]
+  },
+  {
+   "c": "林",
+   "lv": "N4",
+   "strokes": 8,
+   "freq": 656,
+   "en": [
+    "grove",
+    "forest"
+   ]
+  },
+  {
+   "c": "夏",
+   "lv": "N4",
+   "strokes": 10,
+   "freq": 659,
+   "en": [
+    "summer"
+   ]
+  },
+  {
+   "c": "顔",
+   "lv": "N4",
+   "strokes": 18,
+   "freq": 676,
+   "en": [
+    "face",
+    "expression"
+   ]
+  },
+  {
+   "c": "短",
+   "lv": "N4",
+   "strokes": 12,
+   "freq": 689,
+   "en": [
+    "short",
+    "brevity"
+   ]
+  },
+  {
+   "c": "薬",
+   "lv": "N4",
+   "strokes": 16,
+   "freq": 702,
+   "en": [
+    "medicine",
+    "chemical"
+   ]
+  },
+  {
+   "c": "習",
+   "lv": "N4",
+   "strokes": 11,
+   "freq": 706,
+   "en": [
+    "learn"
+   ]
+  },
+  {
+   "c": "便",
+   "lv": "N4",
+   "strokes": 9,
+   "freq": 729,
+   "en": [
+    "convenience",
+    "facility"
+   ]
+  },
+  {
+   "c": "洋",
+   "lv": "N4",
+   "strokes": 9,
+   "freq": 763,
+   "en": [
+    "ocean",
+    "sea"
+   ]
+  },
+  {
+   "c": "旅",
+   "lv": "N4",
+   "strokes": 10,
+   "freq": 783,
+   "en": [
+    "trip",
+    "travel"
+   ]
+  },
+  {
+   "c": "軽",
+   "lv": "N4",
+   "strokes": 12,
+   "freq": 790,
+   "en": [
+    "lightly",
+    "trifling"
+   ]
+  },
+  {
+   "c": "池",
+   "lv": "N4",
+   "strokes": 6,
+   "freq": 827,
+   "en": [
+    "pond",
+    "cistern"
+   ]
+  },
+  {
+   "c": "服",
+   "lv": "N4",
+   "strokes": 8,
+   "freq": 873,
+   "en": [
+    "clothing",
+    "admit"
+   ]
+  },
+  {
+   "c": "遠",
+   "lv": "N4",
+   "strokes": 13,
+   "freq": 887,
+   "en": [
+    "distant",
+    "far"
+   ]
+  },
+  {
+   "c": "夕",
+   "lv": "N4",
+   "strokes": 3,
+   "freq": 924,
+   "en": [
+    "evening"
+   ]
+  },
+  {
+   "c": "借",
+   "lv": "N4",
+   "strokes": 10,
+   "freq": 932,
+   "en": [
+    "borrow",
+    "rent"
+   ]
+  },
+  {
+   "c": "曜",
+   "lv": "N4",
+   "strokes": 18,
+   "freq": 940,
+   "en": [
+    "weekday"
+   ]
+  },
+  {
+   "c": "弱",
+   "lv": "N4",
+   "strokes": 10,
+   "freq": 958,
+   "en": [
+    "weak",
+    "frail"
+   ]
+  },
+  {
+   "c": "肉",
+   "lv": "N4",
+   "strokes": 6,
+   "freq": 986,
+   "en": [
+    "meat"
+   ]
+  },
+  {
+   "c": "貸",
+   "lv": "N4",
+   "strokes": 12,
+   "freq": 995,
+   "en": [
+    "lend"
+   ]
+  },
+  {
+   "c": "堂",
+   "lv": "N4",
+   "strokes": 11,
+   "freq": 1010,
+   "en": [
+    "public chamber",
+    "hall"
+   ]
+  },
+  {
+   "c": "暗",
+   "lv": "N4",
+   "strokes": 13,
+   "freq": 1040,
+   "en": [
+    "darkness",
+    "disappear"
+   ]
+  },
+  {
+   "c": "鳥",
+   "lv": "N4",
+   "strokes": 11,
+   "freq": 1043,
+   "en": [
+    "bird",
+    "chicken"
+   ]
+  },
+  {
+   "c": "飯",
+   "lv": "N4",
+   "strokes": 12,
+   "freq": 1046,
+   "en": [
+    "meal",
+    "boiled rice"
+   ]
+  },
+  {
+   "c": "勉",
+   "lv": "N4",
+   "strokes": 10,
+   "freq": 1066,
+   "en": [
+    "exertion",
+    "endeavour"
+   ]
+  },
+  {
+   "c": "冬",
+   "lv": "N4",
+   "strokes": 5,
+   "freq": 1090,
+   "en": [
+    "winter"
+   ]
+  },
+  {
+   "c": "昼",
+   "lv": "N4",
+   "strokes": 9,
+   "freq": 1115,
+   "en": [
+    "daytime",
+    "noon"
+   ]
+  },
+  {
+   "c": "茶",
+   "lv": "N4",
+   "strokes": 9,
+   "freq": 1116,
+   "en": [
+    "tea"
+   ]
+  },
+  {
+   "c": "弟",
+   "lv": "N4",
+   "strokes": 7,
+   "freq": 1161,
+   "en": [
+    "younger brother",
+    "faithful service to elders"
+   ]
+  },
+  {
+   "c": "洗",
+   "lv": "N4",
+   "strokes": 9,
+   "freq": 1168,
+   "en": [
+    "wash",
+    "inquire into"
+   ]
+  },
+  {
+   "c": "牛",
+   "lv": "N4",
+   "strokes": 4,
+   "freq": 1202,
+   "en": [
+    "cow"
+   ]
+  },
+  {
+   "c": "兄",
+   "lv": "N4",
+   "strokes": 5,
+   "freq": 1219,
+   "en": [
+    "elder brother",
+    "big brother"
+   ]
+  },
+  {
+   "c": "犬",
+   "lv": "N4",
+   "strokes": 4,
+   "freq": 1326,
+   "en": [
+    "dog"
+   ]
+  },
+  {
+   "c": "菜",
+   "lv": "N4",
+   "strokes": 11,
+   "freq": 1327,
+   "en": [
+    "vegetable",
+    "side dish"
+   ]
+  },
+  {
+   "c": "暑",
+   "lv": "N4",
+   "strokes": 12,
+   "freq": 1442,
+   "en": [
+    "sultry",
+    "hot"
+   ]
+  },
+  {
+   "c": "妹",
+   "lv": "N4",
+   "strokes": 8,
+   "freq": 1446,
+   "en": [
+    "younger sister"
+   ]
+  },
+  {
+   "c": "寒",
+   "lv": "N4",
+   "strokes": 12,
+   "freq": 1456,
+   "en": [
+    "cold"
+   ]
+  },
+  {
+   "c": "姉",
+   "lv": "N4",
+   "strokes": 8,
+   "freq": 1473,
+   "en": [
+    "elder sister"
+   ]
+  },
+  {
+   "c": "漢",
+   "lv": "N4",
+   "strokes": 13,
+   "freq": 1487,
+   "en": [
+    "Sino-",
+    "China"
    ]
   }
  ]
