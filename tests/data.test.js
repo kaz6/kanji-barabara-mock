@@ -373,8 +373,6 @@ test("字体：作者が化けると見つけた 後 の右（𢀖）と 験 の
   assert.deepEqual(K.joinResults(TT.N4, "馬", "僉"), ["験"], "N4：馬＋僉 でくっつく");
   assert.deepEqual(K.joinResults(TT.N4, "僉", "馬"), [], "逆の順ではくっつかない");
   assert.deepEqual(K.joinResults(TT.N5, "馬", "僉"), [], "N5 では 験 は割れない・くっつかない");
-  for (const lv of []) {
-  }
 });
 
 test("字体：CSS の unicode-range が同梱の字と同じ", () => {
