@@ -75,6 +75,13 @@
       if (g.chars.length < 2) continue;
       for (const c of g.chars) { if (!T.HOMO.has(c)) T.HOMO.set(c, []); T.HOMO.get(c).push(g); }
     }
+    // 手に持てる字（KJ-011・D-029）：レベルの字＋割る・くっつけるで出る字（中継ぎ 交・里 など）＋巡り・対義・同音で行ける字のうち、
+    // 「字」として見せるもの。放てる言葉はこの字だけで書ける語（words.json はこれで作る。tools/build_data.py の holdable と同じ決め方）
+    T.HOLD = new Set(T.CHARS);
+    for (const [k, v] of Object.entries(T.parts)) for (const c of [k, ...v]) if (T.CHARS.has(c) || T.JOUYOU.has(c)) T.HOLD.add(c);
+    for (const c of T.NEXT.keys()) T.HOLD.add(c);
+    for (const c of T.INV.keys()) T.HOLD.add(c);
+    for (const c of T.HOMO.keys()) T.HOLD.add(c);
     T.SPECIAL = new Map(D.special.special.map((s) => [s.w, s]));
     T.COMMON_WORDS = D.words.words.filter((w) => w.common && w.w.length >= 2);
     return T;
@@ -366,7 +373,7 @@
     // ---------- 引き直し（D-018） ----------
     function doRedraw(p, pts, note) {
       const old = p.cards.map((x) => x.c);
-      g.deck.push(...old);
+      g.deck.push(...old.filter((c) => T.CHARS.has(c))); // 山に戻すのはレベルの字だけ（部品・中継ぎ・レベルの外の字は山に入れない。KJ-011）
       shuffle(g.deck);
       p.cards = draw(R.start_hand).map((c) => card(c, true));
       p.redrawAt = null;
@@ -499,7 +506,7 @@
         "# 手 はじめ・割る・くっつける・反転・巡り・同音・放つ・取る・引き直し・入れ替え（手札の中で札の位置を替えた）・並べ方（切り替えた）・ためした（並べたのに放てず・くっつけられずにやめた並び）・動けない（放てる言葉が手札に無くなった。使った札＝その時の手札）・動ける・終わり",
         "# 点＝その手で増えた点（引き直しで払った点はマイナス）",
         "# データ " + FILES.map((f) => `${f}=${D[f].version}`).join(" "),
-        `# 字 ${T.CHARS.size}・語 ${T.WORDS.size}（巡り ${T.CYCLES.map((c) => c.name).join("・")}）`,
+        `# 字 ${T.CHARS.size}（手に持てる字 ${T.HOLD.size}）・語 ${T.WORDS.size}（巡り ${T.CYCLES.map((c) => c.name).join("・")}）`,
         "秒\tどちら\t手\t使った札\tできた札\t点\tあなたの点\tCPUの点\tあなたの手札\tCPUの手札\tメモ",
       ];
       const rows = g.log.map((e) => [e.t.toFixed(1), e.who, e.op, e.from.join(" "), e.to.join(" "), e.pts, e.meScore, e.cpuScore, e.me, e.cpu, e.note].join("\t"));
