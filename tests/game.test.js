@@ -98,23 +98,69 @@ test("待ち時間：反転10秒・巡り3秒・同音20秒。二人は別々", 
 });
 
 
-test("はじめ：手札は二人とも8枚、場は6枚、点は0。山は N5 の字を2枚ずつ", () => {
+test("はじめ：手札は二人とも8枚、場は3枚、点は0。山は N5 の字を2枚ずつ（KJ-004 で場3）", () => {
   const g = newGame();
   assert.equal(g.me.cards.length, D.rules.start_hand);
   assert.equal(g.cpu.cards.length, D.rules.start_hand);
   assert.equal(g.field.length, D.rules.field_size);
+  assert.equal(D.rules.field_size, 3);
   assert.equal(g.me.score + g.cpu.score, 0);
   const total = g.deck.length + g.field.length + g.me.cards.length + g.cpu.cards.length;
   assert.equal(total, T.N5.size * D.rules.same_char_in_deck);
 });
 
-test("割る：手札が上限の12枚なら割れない", () => {
+test("取る：手札は8枚で止まる（置き場の札は数えない）", () => {
   const g = newGame();
-  const ids = setHand(g, g.me, "休" + "一".repeat(11));
-  assert.equal(g.split(g.me, [ids[0]]).why, "手札がいっぱい");
-  setHand(g, g.me, "休" + "一".repeat(10));
-  assert.ok(g.split(g.me, [g.me.cards[0].id]).ok, "11枚なら割れて12枚になる");
+  assert.equal(D.rules.hand_max, 8);
+  setHand(g, g.me, "山" + "一".repeat(6)); // 7枚
+  g.me.takes = 3;
+  assert.ok(g.take(g.me, g.field[0].id).ok, "7枚なら取れて8枚になる");
+  assert.equal(g.handCount(g.me), 8);
+  assert.equal(g.take(g.me, g.field[1].id).why, "手札がいっぱい");
+  assert.equal(g.me.takes, 2, "取れる枚数は残る");
+});
+
+test("割る：手札8＋置き場4の全部で12枚まで。12枚なら割れない（KJ-004）", () => {
+  const g = newGame();
+  assert.equal(D.rules.split_extra, 4);
+  setHand(g, g.me, "休" + "一".repeat(7)); // 手札8
+  assert.equal(g.handCount(g.me), 8);
+  let r = g.split(g.me, [g.me.cards[0].id]);
+  assert.ok(r.ok, "手札が8でも割れる");
+  assert.equal(g.handCount(g.me), 8, "割ったあとも手札は8まで");
+  assert.equal(g.trayCount(g.me), 1, "あふれた1枚は置き場へ");
+  assert.equal(g.me.cards.length, 9);
+  for (let i = 0; i < 3; i++) { // 置き場が4枚になるまで、手札の1枚を 休 にして割る
+    const hand = g.me.cards.find((x) => !x.tray && x.c === "一");
+    hand.c = "休";
+    assert.ok(g.split(g.me, [hand.id]).ok);
+  }
   assert.equal(g.me.cards.length, 12);
+  assert.equal(g.trayCount(g.me), 4);
+  assert.equal(g.handCount(g.me), 8);
+  const spare = g.me.cards.find((x) => !x.tray && x.c === "一");
+  spare.c = "休";
+  assert.equal(g.split(g.me, [spare.id]).why, "手札も置き場もいっぱい", "12枚で割れない");
+  assert.equal(g.me.cards.length, 12);
+});
+
+test("置き場の札：割ってできた札は手札に空きがなければ置き場。くっつけてできた札は手札に空きがあれば手札へ（R-032）", () => {
+  const g = newGame();
+  setHand(g, g.me, "休" + "一".repeat(7));
+  g.split(g.me, [g.me.cards[0].id]); // 人木。人は手札、木は置き場
+  const tray = g.me.cards.filter((x) => x.tray);
+  assert.deepEqual(tray.map((x) => x.c), ["木"]);
+  // 手札の1枚を放って空きを作り、置き場の 木 と手札の 人 をくっつける（人木=休）
+  const hand = g.me.cards.filter((x) => !x.tray);
+  assert.deepEqual(hand.slice(0, 1).map((x) => x.c), ["人"]);
+  const r = g.join(g.me, [hand[0].id, tray[0].id]);
+  assert.ok(r.ok);
+  assert.equal(chars(r.cards), "休");
+  assert.equal(r.cards[0].tray, undefined, "手札に空きがあるので手札側へ戻る");
+  assert.equal(g.trayCount(g.me), 0);
+  // 置き場の札も放てる・動けない判定に数える
+  g.me.cards.push({ id: 777777, c: "山", t: 0, fresh: false, tray: true });
+  assert.ok(g.release(g.me, [777777]).ok, "置き場の札も放てる");
 });
 
 test("点数：1字1・2字3・3字6・4字12、四字熟語は倍、特別な語はさらに倍", () => {
@@ -175,7 +221,7 @@ test("取る：場から手札へ。空いたところは同じ位置に山か�
   assert.equal(g.take(g.me, g.field[1].id).why, "取れる枚数がない");
 });
 
-test("取る：早い者勝ち。相手が先に取った札は取れない。手札が12枚なら取れない", () => {
+test("取る：早い者勝ち。相手が先に取った札は取れない。手札が8枚なら取れない", () => {
   const g = newGame();
   setHand(g, g.me, "山");
   setHand(g, g.cpu, "川");
@@ -184,7 +230,7 @@ test("取る：早い者勝ち。相手が先に取った札は取れない。�
   const id = g.field[0].id;
   assert.ok(g.take(g.cpu, id).ok);
   assert.equal(g.take(g.me, id).why, "場にない");
-  setHand(g, g.me, "一".repeat(12));
+  setHand(g, g.me, "一".repeat(8));
   assert.equal(g.take(g.me, g.field[1].id).why, "手札がいっぱい");
   assert.equal(g.me.takes, 1, "取れる枚数は残る");
 });
@@ -246,8 +292,8 @@ test("勝ち：5分たったら点の多い方。同点は引き分け", () => {
   assert.equal(g.winner, null);
 });
 
-test("CPU：8〜12秒に1回", () => {
-  const g = newGame();
+test("CPU（いまの強さ）：8〜12秒に1回", () => {
+  const g = newGame(1, "normal");
   for (let i = 0; i < 50; i++) { const d = g.cpuDelay(); assert.ok(d >= 8 && d <= 12, String(d)); }
 });
 
@@ -312,14 +358,15 @@ test("ログ：書き出しの頭に仮置きの値を全部書く", () => {
   const g = newGame();
   const text = g.logText();
   const head = text.split("\n").filter((l) => l.startsWith("#")).join("\n");
-  assert.match(head, /場=6枚 最初の手札=8枚 手札の上限=12枚/);
+  assert.match(head, /場=3枚 最初の手札=8枚 手札の上限=8枚＋部品の置き場4枚（置き場は割るときだけ増える。全部で12枚まで）/);
+  assert.match(head, /# 相手 いまの強さ（CPU は 8〜12秒に1回動く）/);
   assert.match(head, /点数 1字1・2字3・3字6・4字12 四字熟語×2 特別な語×2/);
   assert.match(head, /放った字数×1枚を場から選んで取れる/);
   assert.match(head, /引き直し 5点で手札を全部入れ替え（8枚）。5点ない人は30秒待って0点で/);
   assert.match(head, /勝ち 先に50点、または5分で点の多い方/);
   assert.match(head, /反転=10秒 巡り=3秒 同音=20秒/);
   assert.match(head, /CPU 8〜12秒に1回動く/);
-  assert.match(head, /rules=2026-11-21\.1/);
+  assert.match(head, /rules=2026-11-21\.2/);
   assert.match(head, /はじめた時刻 2026-11-20 18:00:00/);
   assert.match(text, /秒\tどちら\t手\t使った札\tできた札\t点\tあなたの点\tCPUの点\tあなたの手札\tCPUの手札\tメモ/);
 });
@@ -338,4 +385,90 @@ test("動けない：手札に放てる言葉が無くなったら残し、戻�
   assert.ok(g.invert(g.cpu, [g.cpu.cards[0].id]).ok);
   const back = g.log.find((x) => x.op === "動ける" && x.who === "CPU");
   assert.match(back.note, /放てる言葉：新/);
+});
+
+// ---------- KJ-004：相手の選び方 ----------
+test("相手：初期値は「とても弱い」。選べるのは ひとりで／とても弱い／いまの強さ", () => {
+  assert.equal(D.rules.opponent_default, "weak");
+  assert.deepEqual(K.OPPONENTS.map((o) => o.label), ["ひとりで", "とても弱い", "いまの強さ"]);
+  const g = K.createGame(D, T, { now: () => 0, rand: () => 0.5 });
+  assert.equal(g.opponent, "weak", "選ばなければ とても弱い");
+  assert.equal(K.createGame(D, T, { now: () => 0, rand: () => 0.5, opponent: "ばか" }).opponent, "weak");
+});
+
+test("とても弱い：30〜45秒に1回。動き方はいまの CPU と同じ", () => {
+  const g = newGame(1, "weak");
+  assert.deepEqual(D.rules.cpu.weak_interval_sec, [30, 45]);
+  for (let i = 0; i < 50; i++) { const d = g.cpuDelay(); assert.ok(d >= 30 && d <= 45, String(d)); }
+  setHand(g, g.cpu, "休日");
+  const r = g.cpuTurn();
+  assert.equal(r.text, "休日", "動きは同じ（放ったらすぐ場から取る）");
+  assert.equal(g.cpu.cards.length, 2);
+});
+
+test("とても弱い：決まった乱数で5分回すと、50点にならず、動く回数も少ない（3通り）", () => {
+  for (const seed of [1, 7, 42]) {
+    const run = (opp) => {
+      const g = newGame(seed, opp);
+      let moves = 0;
+      while (!g.over) {
+        g.clock.t += g.cpuDelay();
+        g.tick();
+        if (g.over) break;
+        if (g.cpuTurn()) moves++;
+      }
+      return { score: g.cpu.score, moves, winner: g.winner };
+    };
+    const weak = run("weak"), normal = run("normal");
+    assert.ok(weak.score < D.rules.win.score, `seed ${seed}: 弱い ${weak.score}点`);
+    assert.ok(weak.moves <= D.rules.win.time_limit_sec / 30, `seed ${seed}: 動いた回数 ${weak.moves}`);
+    assert.ok(weak.score < normal.score, `seed ${seed}: 弱い ${weak.score} < いまの ${normal.score}`);
+  }
+});
+
+test("ひとりで：CPU は出ない。山から CPU の分は引かない。場の取り合いはない", () => {
+  const g = newGame(1, "solo");
+  assert.equal(g.solo, true);
+  assert.equal(g.cpu.cards.length, 0);
+  assert.equal(g.cpuTurn(), null);
+  const total = g.deck.length + g.field.length + g.me.cards.length;
+  assert.equal(total, T.N5.size * D.rules.same_char_in_deck, "札の数が合う");
+  assert.equal(g.log.some((e) => e.who === "CPU"), false, "CPU の行がない（動けない も出ない）");
+});
+
+test("ひとりで：50点になっても終わらない。5分たったら終わり、点を出す", () => {
+  const g = newGame(1, "solo");
+  g.me.score = 48;
+  assert.ok(g.release(g.me, setHand(g, g.me, "休日")).ok);
+  assert.equal(g.me.score, 51);
+  assert.equal(g.over, false, "50点を超えても続く");
+  g.clock.t += 299.9;
+  g.tick();
+  assert.equal(g.over, false);
+  g.clock.t += 0.2;
+  assert.equal(g.tick(), true);
+  assert.equal(g.over, true);
+  assert.equal(g.winner, null);
+  const ev = g.events.find((e) => e.type === "over");
+  assert.deepEqual([ev.solo, ev.winner], [true, null]);
+  assert.match(g.log[g.log.length - 1].note, /ひとりで 51点（5分）/);
+  assert.equal(g.release(g.me, setHand(g, g.me, "山")).ok, false, "終わったら動かせない");
+});
+
+test("ひとりで：引き直しの待ちも動く。CPU の待ちは見ない", () => {
+  const g = newGame(1, "solo");
+  g.me.score = 0;
+  assert.equal(g.redraw(g.me).waiting, 30);
+  g.clock.t += 30;
+  assert.equal(g.tick(), true);
+  assert.equal(g.me.cards.length, D.rules.start_hand);
+});
+
+test("ログ：頭に選んだ相手を書く（ひとりで／とても弱い／いまの強さ）", () => {
+  const head = (opp) => newGame(1, opp).logText().split("\n").filter((l) => l.startsWith("# 相手")).join("");
+  assert.match(head("solo"), /# 相手 ひとりで（CPU なし。場の取り合いなし。50点では終わらず、5分たったら終わって点を出す/);
+  assert.match(head("weak"), /# 相手 とても弱い（CPU は 30〜45秒に1回動く。動き方はいまの CPU のまま）/);
+  assert.match(head("normal"), /# 相手 いまの強さ（CPU は 8〜12秒に1回動く）/);
+  assert.match(newGame(1, "weak").logText(), /# 仮置き CPU 30〜45秒に1回動く/);
+  assert.match(newGame(1, "solo").logText(), /# 仮置き CPU なし/);
 });

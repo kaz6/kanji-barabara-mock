@@ -23,9 +23,10 @@ function seeded(seed) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
-function newGame(seed = 1) {
+// opponent は "solo"（ひとりで）／"weak"（とても弱い）／"normal"（いまの強さ。既存のテストの前提）
+function newGame(seed = 1, opponent = "normal") {
   const clock = { t: 1000 };
-  const g = K.createGame(D, T, { now: () => clock.t, rand: seeded(seed), date: () => new Date(2026, 10, 20, 18, 0, 0) });
+  const g = K.createGame(D, T, { now: () => clock.t, rand: seeded(seed), date: () => new Date(2026, 10, 20, 18, 0, 0), opponent });
   g.clock = clock;
   return g;
 }
