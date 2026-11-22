@@ -446,3 +446,11 @@ R-025〜R-027 はカードに書いてあった仮置き、R-028〜R-031 は係�
 - 変えていないもの：test のワークフローの中身・遊びの決まり・数値
 - 却下した案：なし
 
+### R-054 automerge が「下書きを外したとき」にも動く。マージのあと Pages のビルドを頼む（KJ-029。相談チャット 2026-11-22 08:22。技術の直し）
+
+- きっかけ：PR #20（KJ-027）は 08:05 に下書きが外れ、test も success・mergeable なのに、08:21 までマージされなかった。automerge は test の終わり（workflow_run）で動いたが、そのとき #20 はまだ下書きだった。30分ごとの schedule は入れたばかりで一度も動いていなかった
+- 決めたこと：`automerge.yml` の on に `pull_request`（types: ready_for_review、branches: main）を足す。マージの条件・マージの仕方は R-052 のまま（緩めていない）。同じリポジトリの PR のイベントなので GITHUB_TOKEN で書ける
+- 係の仮決め：GITHUB_TOKEN のマージでは Pages の更新（pages build and deployment）が動かないことがあるので、マージに成功したあとで `repos.requestPagesBuild`（POST /repos/{owner}/{repo}/pages/builds）を呼ぶ。permissions に `pages: write` を足す。頼めなかったときは警告だけ残し、マージは済んだものとして続ける。test.yml は PR の opened・synchronize・reopened でしか動かないので、下書きを外しただけでは test は走り直さず、既にある最新の run を見る
+- 確かめ方（相談チャットが次の見回りで）：この PR が自動でマージされたあと、Actions の automerge の run のログに「Pages のビルドを頼んだ」が出ているか、`pages build and deployment` の run がマージの直後にあるか、公開 URL に反映されたか
+- 変えていないもの：マージの条件、test のワークフロー、遊びの決まり・数値
+- 却下した案：なし
