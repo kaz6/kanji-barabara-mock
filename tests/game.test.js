@@ -1269,3 +1269,40 @@ test("文言（KJ-024）：js/strings.js のボタンは8つで英語。角の�
   assert.equal(K.marks(T, "上"), "反音", "icons を渡さなければ 反・巡・音");
   assert.equal(K.marks(T, "国", S.ICONS), "", "印の無い字");
 });
+
+// ---------- KJ-036：画面が裏に回って時計が止まっても、時間どおりに終わる ----------
+test("KJ-036 裏から戻ると制限時間で終わる：終わりの秒は制限時間を超えない（1時間たっていても）", () => {
+  for (const opp of ["solo", "weak", "fair", "normal"]) {
+    const g = newGame(1, opp);
+    const lim = g.timeLimit;
+    g.clock.t += 3596.3; // 裏にいて、1時間近くたった
+    g.tick(); // 戻ったときの1回目の tick
+    assert.equal(g.over, true, opp);
+    const end = g.log[g.log.length - 1];
+    assert.equal(end.op, "終わり", opp);
+    assert.ok(end.t <= lim, `${opp}: 終わりの秒 ${end.t}`);
+    assert.equal(end.t, lim, `${opp}: 制限時間ちょうど`);
+    assert.ok(g.log.every((e) => e.t <= lim), `${opp}: ログの秒がどれも制限時間以内`);
+  }
+});
+
+test("KJ-036 時間切れのあと CPU は手を打たない（裏にいた間の手を取り戻さない）", () => {
+  const g = newGame(1, "normal");
+  const n0 = g.log.length;
+  g.clock.t += 3600;
+  assert.equal(g.cpuTurn(), null, "時間切れのあとは動かない");
+  assert.equal(g.over, true, "cpuTurn が呼ばれても時間切れで終わる");
+  assert.deepEqual(g.log.slice(n0).map((e) => e.op), ["終わり"], "増えたのは「終わり」だけ");
+  assert.equal(g.cpuTurn(), null, "終わったあとも動かない");
+  assert.equal(g.log.length, n0 + 1);
+});
+
+test("KJ-036 制限時間の前なら CPU は1回に1手だけ（まとめて動かない）", () => {
+  const g = newGame(1, "normal");
+  g.clock.t += g.timeLimit - 60; // 裏で長くいたが、まだ時間内
+  const n0 = g.log.filter((e) => e.who === "CPU").length;
+  g.cpuTurn();
+  assert.equal(g.over, false);
+  const n1 = g.log.filter((e) => e.who === "CPU" && e.op !== "動けない" && e.op !== "動ける").length;
+  assert.ok(n1 - n0 <= 3, `1回の cpuTurn で増えた手 ${n1 - n0}`); // 取る→放つ→取るの連なりまで
+});

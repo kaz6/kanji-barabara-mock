@@ -852,7 +852,7 @@ function buildHowto(){
   ].map(x=>`<li>${x}</li>`).join("");
 }
 let roomBusy=false;
-setInterval(()=>{
+function pump(){
   if(!G||G.over)return;
   if(MC){ // 合言葉の部屋：時間切れ・点の送り・まだいる（ping）は MC.tick
     if(roomBusy)return;roomBusy=true;const mc=MC;
@@ -860,7 +860,14 @@ setInterval(()=>{
     return;
   }
   if(G.tick())afterChange();else renderOps();
-},250);
+}
+setInterval(pump,250);
+// 画面が裏に回ると時計の処理が止まる。戻ったらすぐ時間切れを確かめる（制限時間をすぎていれば、その時刻で終わる）。CPU は新しく数え直す（KJ-036）
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden||!G||G.over)return;
+  pump();
+  if(!G.over&&!G.solo&&!G.match){clearTimeout(cpuTimer);scheduleCpu()} // 人と対戦は CPU を出さない
+});
 
 window.__KJ={get game(){return G},get row(){return row},get tables(){return T},get mc(){return MC},get room(){return ROOM},data:D,render}; // ブラウザのテスト用
 
