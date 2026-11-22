@@ -339,17 +339,15 @@ test("画面", { skip }, async (t) => {
   await t.test("KJ-036 裏から戻ると、制限時間をすぎていればすぐ終わる（終わりの秒は制限時間を超えない）", async () => {
     const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 }, "normal");
     // 裏にいて時計の処理が止まった形：interval を止め、制限時間の1時間後まで進んだ
-    await page.evaluate(() => { const G = __KJ.game; G.cpuTurn = () => null; G.endsAt = G.now() - 3596 + 0.0; window.__hold = true; });
+    await page.evaluate(() => { const G = __KJ.game; G.cpuTurn = () => null; G.endsAt = G.now() - 3596; window.__hold = true; });
     await page.evaluate(() => { const G = __KJ.game; G.tick = (orig => function () { return window.__hold ? false : orig.call(this); })(G.tick); });
     await page.waitForTimeout(600);
     assert.equal(await page.evaluate(() => __KJ.game.over), false, "止めているあいだは終わらない");
-    // 戻った一拍のうちに（setInterval を待たずに）終わる＝visibilitychange の処理が効いている。CPU の待ちも数え直す
+    // 戻った一拍のうちに（setInterval を待たずに）終わる＝visibilitychange の処理が効いている
     const r = await page.evaluate(() => {
       window.__hold = false; const G = __KJ.game;
-      const set = window.setTimeout; let n = 0; window.setTimeout = function (...a) { n++; return set.apply(this, a); };
       document.dispatchEvent(new Event("visibilitychange"));
-      window.setTimeout = set;
-      return { over: G.over, timers: n };
+      return { over: G.over };
     });
     assert.equal(r.over, true, "戻った直後に終わる");
     const end = await page.evaluate(() => { const G = __KJ.game; const e = G.log[G.log.length - 1]; return { op: e.op, t: e.t, lim: G.timeLimit }; });
