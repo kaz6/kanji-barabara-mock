@@ -181,6 +181,7 @@
   // ログの頭に書く仮置きの値
   function opponentLabel(D, key, limit) {
     limit = normTime(D, limit);
+    if (key === ROOM_OPPONENT.key) return `${ROOM_OPPONENT.label}（相手は人。CPU なし。場の札・言葉・勝ちの点は先に入れた方。相手の手は、こちらから見えたものだけ書く）`;
     if (key === "solo") return `ひとりで（CPU なし。場の取り合いなし。50点では終わらず、${limit / 60}分たったら終わって点を出す。CPU の列は 0）`;
     const [a, b] = cpuInterval(D, key);
     return key === "weak" ? `とても弱い（CPU は ${a}〜${b}秒に1回動く。動き方はいまの CPU のまま）` : `いまの強さ（CPU は ${a}〜${b}秒に1回動く）`;
@@ -200,23 +201,55 @@
       `引き直し ${R.redraw.cost}点で手札を全部入れ替え（${R.start_hand}枚）。${R.redraw.cost}点ない人は${R.redraw.free_wait_sec}秒待って0点で`,
       `勝ち 先に${R.win.score}点、または${limit / 60}分で点の多い方（同点は引き分け）。ひとりでは50点で終わらず${limit / 60}分で終わる`,
       `待ち時間 反転=${R.cooldown_sec.invert}秒 巡り=${R.cooldown_sec.cycle}秒 同音=${R.cooldown_sec.homophone}秒（その人の操作ごと）`,
-      key === "solo" ? "CPU なし" : `CPU ${a}〜${b}秒に1回動く`,
+      key === "solo" || key === ROOM_OPPONENT.key ? "CPU なし" : `CPU ${a}〜${b}秒に1回動く`,
     ];
   }
 
+  // ---------- 合言葉の部屋（KJ-033・D-049）：決まった種 ----------
+  // 文字列から 32bit の種（FNV-1a）。二人が同じ match_id から同じ「場の列」を作るのに使う
+  function strSeed(s) {
+    let h = 0x811c9dc5;
+    for (const ch of String(s)) { h ^= ch.codePointAt(0); h = Math.imul(h, 0x01000193) >>> 0; }
+    return h >>> 0;
+  }
+  // 決まった乱数（mulberry32）
+  function seededRand(seed) {
+    let a = seed >>> 0;
+    return () => {
+      a = (a + 0x6d2b79f5) >>> 0;
+      let t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  // match_id と用途（"field"＝場の列、"host"／"guest"＝その人の手札と引き直し）ごとの乱数
+  const matchRand = (matchId, tag) => seededRand(strSeed(matchId + ":" + tag));
+  const ROLES = ["host", "guest"];
+  const ROOM_OPPONENT = { key: "room", label: "人と（合言葉）" }; // 画面の「相手」にはまだ出さない（つなぎは次の回）
+  const ROOM_OPP_NAME = "相手";
+  // 時間切れのあと、相手の最後の点（end の行）を待つ秒数。届かなければ、最後に見えた相手の点で比べる（技術の値。遊びの数値ではない）
+  const MATCH_END_GRACE_SEC = 5;
+
   // ---------- 遊び ----------
   // env: { now: () => 秒, rand: () => 0..1, date: () => Date }
+  // 合言葉の部屋（KJ-033）：env.match = { id: match_id, role: "host"|"guest", startAt: 始まりの時刻（now と同じ秒の目盛り。'start' 行の created_at から） }
+  //   相手は人（この端末では点と手札の枚数だけ見える。g.cpu の欄に入れる）。場は試合の種から作る「場の列」で、取られていない番号の小さい field_size 枚。
+  //   手札・引き直しは自分の種から配る（取り合わない）。先着（場の札・言葉・勝ち）は createMatchClient が表 kj_claims の主キーで決める
   function createGame(D, T, env) {
     env = env || {};
+    const M = env.match && env.match.id && ROLES.includes(env.match.role) ? env.match : null;
     const now = env.now || (() => Date.now() / 1000);
-    const rand = env.rand || Math.random;
+    const rand = env.rand || (M ? matchRand(M.id, M.role) : Math.random);
     const R = D.rules;
     let uid = 0;
-    const opponent = OPPONENTS.some((o) => o.key === env.opponent) ? env.opponent : R.opponent_default;
+    const opponent = M ? ROOM_OPPONENT.key : OPPONENTS.some((o) => o.key === env.opponent) ? env.opponent : R.opponent_default;
     const g = { D, T, level: T.level, opponent, solo: opponent === "solo", log: [], events: [], used: new Set(), over: false, winner: null,
       startedAt: (env.date || (() => new Date()))() };
     g.timeLimit = normTime(D, env.timeLimit); // 制限時間（秒。KJ-007）
-    const t0 = now();
+    g.match = M ? { id: M.id, role: M.role, oppRole: M.role === "host" ? "guest" : "host" } : null;
+    g.hold = false; // 合言葉の部屋：先着の返事を待っているあいだ、自分の手を止める（createMatchClient が立てる）
+    const t0 = M && typeof M.startAt === "number" ? M.startAt : now();
     g.now = now;
     // はじめの1枚（KJ-013）は KJ-016 でやめた（作者 2026-11-21 20:14）。はじめたらすぐ時間が動く
     g.elapsed = () => now() - t0;
@@ -243,8 +276,15 @@
         score: 0, takes: 0, redrawAt: null, lastSpecial: null, stuck: false };
     }
     g.me = player("me", "あなた", R.start_hand);
-    g.cpu = player("cpu", "CPU", g.solo ? 0 : R.start_hand); // ひとりで：CPU は出さない（山からも引かない）
-    const players = () => (g.solo ? [g.me] : [g.me, g.cpu]);
+    if (M) {
+      // 相手は人。札はこの端末に無い（枚数だけ。相手が送る 'event' で更新）。山からも引かない
+      g.cpu = { key: "cpu", name: ROOM_OPP_NAME, cards: [], remote: true, count: R.start_hand + (env.startStock !== false ? R.start_stock_parts || 0 : 0),
+        cd: { invert: 0, cycle: 0, homophone: 0 }, score: 0, takes: 0, redrawAt: null, lastSpecial: null, stuck: false };
+    } else {
+      g.cpu = player("cpu", "CPU", g.solo ? 0 : R.start_hand); // ひとりで：CPU は出さない（山からも引かない）
+    }
+    const players = () => (g.solo || M ? [g.me] : [g.me, g.cpu]); // この端末が動かす人（相手が人なら自分だけ）
+    const nCards = (p) => (p.remote ? p.count : p.cards.length);
     // 手札の枠（上の8マス）と、ストック（下の4マス。KJ-004 の部品の置き場を、作者 2026-11-21、KJ-006 のあとに字も部品も置ける場所に）。札の tray が true ならストック
     // 台（机）は並べて見る場所（作者 2026-11-21 20:18「台は並べて見る場所にします」。KJ-016・D-034）。台に出した札は、出す前にいた段にいるままで、枚数にも数える
     const handCount = (p) => p.cards.filter((x) => !x.tray).length;
@@ -256,7 +296,29 @@
     g.handCount = handCount;
     g.trayCount = trayCount;
     g.fits = (p, ids, n) => fits(p, ids.map((id) => g.byId(p, id)).filter(Boolean), n); // 札 ids を n 枚に替えられる空きがあるか
-    g.field = draw(R.field_size).map((c) => card(c));
+    // 場：CPU 戦は山から field_size 枚。合言葉の部屋は「場の列」の、まだ取られていない番号の小さい field_size 枚（二人で同じに見える）
+    if (M) {
+      const fieldRand = matchRand(M.id, "field");
+      const seq = [], cardsAt = new Map();
+      g.taken = new Map(); // 番号 → "me"／"opp"（取った人）
+      g.fieldAt = (n) => { // 場の列の n 番目の字（0 から）
+        while (seq.length <= n) {
+          const a = fullSet();
+          for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(fieldRand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+          seq.push(...a);
+        }
+        return seq[n];
+      };
+      g.fieldCardAt = (n) => { if (!cardsAt.has(n)) { const x = card(g.fieldAt(n), n >= R.field_size); x.n = n; cardsAt.set(n, x); } return cardsAt.get(n); };
+      g.refreshField = () => {
+        const out = [];
+        for (let n = 0; out.length < R.field_size; n++) if (!g.taken.has(n)) out.push(g.fieldCardAt(n));
+        g.field = out;
+      };
+      g.refreshField();
+    } else {
+      g.field = draw(R.field_size).map((c) => card(c));
+    }
     // 下のストックに、使いやすい部品を1枚入れて始める（KJ-013。部品表で行き先が多い部品の上位から無作為に1枚）
     g.stockCandidates = stockCandidates(T, R.start_stock_top || 5);
     if (env.startStock !== false && (R.start_stock_parts || 0) > 0 && g.stockCandidates.length) {
@@ -277,7 +339,7 @@
     const QUIET = new Set(["はじまり", "ためした", "終わり", "動けない", "動ける", "入れ替え", "移す"]);
     function addLog(who, op, from, to, pts, note) {
       g.log.push({ t: g.elapsed(), who, op, from: from || [], to: to || [], pts: pts || 0,
-        meScore: g.me.score, cpuScore: g.cpu.score, me: g.me.cards.length, cpu: g.cpu.cards.length, note: note || "" });
+        meScore: g.me.score, cpuScore: g.cpu.score, me: nCards(g.me), cpu: nCards(g.cpu), note: note || "" });
       if (!QUIET.has(op)) checkStuck();
     }
     g.addLog = addLog;
@@ -318,18 +380,18 @@
         if (!w && !p.stuck) {
           p.stuck = true;
           g.log.push({ t: g.elapsed(), who: p.name, op: "動けない", from: p.cards.map((x) => x.c), to: [], pts: 0,
-            meScore: g.me.score, cpuScore: g.cpu.score, me: g.me.cards.length, cpu: g.cpu.cards.length,
+            meScore: g.me.score, cpuScore: g.cpu.score, me: nCards(g.me), cpu: nCards(g.cpu),
             note: "放てる言葉なし。使える手：" + g.movesInHand(p).join("・") });
         } else if (w && p.stuck) {
           p.stuck = false;
           g.log.push({ t: g.elapsed(), who: p.name, op: "動ける", from: p.cards.map((x) => x.c), to: [], pts: 0,
-            meScore: g.me.score, cpuScore: g.cpu.score, me: g.me.cards.length, cpu: g.cpu.cards.length, note: "放てる言葉：" + w });
+            meScore: g.me.score, cpuScore: g.cpu.score, me: nCards(g.me), cpu: nCards(g.cpu), note: "放てる言葉：" + w });
         }
       }
     }
     const hs = (p) => p.cards.filter((x) => !x.tray).map((x) => x.c).join("") + (trayCount(p) ? `（ストック ${p.cards.filter((x) => x.tray).map((x) => x.c).join("")}）` : "");
     addLog("—", "はじめ", [], [], 0,
-      `手札 ${hs(g.me)} / ${hs(g.cpu)}・場 ${g.field.map((x) => x.c).join("")}`);
+      `手札 ${hs(g.me)} / ${M ? "（相手の手札は見えない）" : hs(g.cpu)}・場 ${g.field.map((x) => x.c).join("")}`);
 
     function cardsOf(p, ids) {
       if (!Array.isArray(ids) || !ids.length || new Set(ids).size !== ids.length) return null;
@@ -347,7 +409,7 @@
       return nc;
     }
     const fail = (why) => ({ ok: false, why });
-    const live = () => !g.over;
+    const live = () => !g.over && !g.hold;
 
     g.split = (p, ids) => {
       const cs = cardsOf(p, ids);
@@ -417,12 +479,46 @@
     };
 
     // ---------- 放つ（D-017） ----------
-    g.release = (p, ids) => {
+    // 放てるか（放つ前の確かめ。合言葉の部屋では、このあと言葉の先着を確かめてから release）
+    g.canRelease = (p, ids) => {
+      if (g.hold && !g.over) return fail("通信中");
       const cs = cardsOf(p, ids);
       if (!live() || !cs) return fail("札がない");
       const text = cs.map((x) => x.c).join("");
       const r = releasable(T, g.used, text);
       if (!r.ok) return fail(r.why);
+      return { ok: true, text, pts: scoreOf(D, T, text).pts };
+    };
+    const oppWords = new Set();
+    if (M) {
+      // 相手が言葉を放った（相手の 'word' 行が届いた）。二人とももう使えない。相手の点はその行の点で見せる（いまの CPU と同じ見せ方）
+      g.remoteRelease = (text, pts, score) => {
+        if (oppWords.has(text)) return false; // 同じ行が二度届いた
+        oppWords.add(text);
+        g.used.add(text);
+        if (typeof score === "number") g.cpu.score = score; else g.cpu.score += pts || 0;
+        const n = [...text].length;
+        if (!g.over) addLog(g.cpu.name, "放つ", [...text], [], pts || 0, `${scoreOf(D, T, text).how}。場から${n * R.take_per_char}枚取れる`);
+        g.events.push({ type: "release", who: g.cpu.name, text, pts: pts || 0 });
+        return true;
+      };
+      // 言葉の先着で負けた（相手が先に放った）。点は入らない。札は手元に残る
+      g.lostWord = (p, text) => {
+        g.used.add(text);
+        if (!g.over) addLog(p.name, "ためした", [...text], [], 0, "相手が先に放った");
+      };
+      // 相手の点・手札の枚数（相手の 'event' 行）
+      g.remoteState = (st) => {
+        let ch = false;
+        if (st && typeof st.score === "number" && st.score !== g.cpu.score) { g.cpu.score = st.score; ch = true; }
+        if (st && typeof st.count === "number" && st.count !== g.cpu.count) { g.cpu.count = st.count; ch = true; }
+        return ch;
+      };
+    }
+    g.release = (p, ids) => {
+      const pre = g.canRelease(p, ids);
+      if (!pre.ok) return pre;
+      const text = pre.text;
       const { pts, how } = scoreOf(D, T, text);
       const n = [...text].length;
       p.cards = p.cards.filter((x) => !ids.includes(x.id));
@@ -452,10 +548,46 @@
       p.cards.push(got); // 手札の枠に入る（場から取るのは手札の枠だけ。ストックには入らない）
       return { got, x, nc };
     }
-    g.take = (p, fieldId) => {
+    // 取れるか（取る前の確かめ。合言葉の部屋では、このあと先着を確かめてから applyTake）
+    g.canTake = (p, fieldId) => {
+      if (g.hold && !g.over) return fail("通信中");
       if (!live()) return fail("終わった");
       if (p.takes <= 0) return fail("取れる枚数がない");
       if (handCount(p) >= R.hand_max) return fail("手札がいっぱい");
+      const x = g.field.find((f) => f.id === fieldId);
+      if (!x) return fail("場にない");
+      return { ok: true, card: x, n: x.n };
+    };
+    if (M) {
+      // 合言葉の部屋：先着で取れた場の列の n 番目を手札へ（createMatchClient が呼ぶ）
+      g.applyTake = (p, n) => {
+        if (g.over) return fail("終わった");
+        if (g.taken.has(n)) return fail("場にない");
+        const x = g.fieldCardAt(n);
+        g.taken.set(n, "me");
+        g.refreshField();
+        const got = card(x.c, true);
+        p.cards.push(got);
+        p.takes -= 1;
+        const nc = g.field[g.field.length - 1];
+        addLog(p.name, "取る", [x.c], [x.c], 0, `場に ${nc.c} が出た。残り${p.takes}枚取れる`);
+        return { ok: true, card: got, c: x.c };
+      };
+      // 相手が場の列の n 番目を取った（相手の行が届いた／こちらの先着がぶつかった）。こちらの場から消して、次の番号の札を出す
+      g.markTaken = (n) => {
+        if (g.taken.has(n)) return false;
+        const c = g.fieldAt(n);
+        g.taken.set(n, "opp");
+        const was = g.field.some((f) => f.n === n);
+        g.refreshField();
+        if (!g.over) addLog(g.cpu.name, "取る", [c], [c], 0, was ? `場に ${g.field[g.field.length - 1].c} が出た` : "");
+        return true;
+      };
+    }
+    g.take = (p, fieldId) => {
+      if (M) return fail("合言葉の部屋では先着を確かめて取る");
+      const pre = g.canTake(p, fieldId);
+      if (!pre.ok) return pre;
       const r = fromField(p, fieldId);
       if (!r) return fail("場にない");
       p.takes -= 1;
@@ -527,8 +659,10 @@
       addLog("—", "終わり", [], [], 0, g.solo ? `ひとりで ${g.me.score}点（${why}）` : (winner ? `${winner.name}の勝ち` : "引き分け") + `（${why}）`);
       g.events.push({ type: "over", winner, solo: g.solo });
     }
+    // 合言葉の部屋の終わり（createMatchClient が先着や時間切れで決めて呼ぶ）。winnerKey は "me"／"opp"／null（引き分け）
+    if (M) g.finishMatch = (winnerKey, why) => { if (!g.over) finish(winnerKey === "me" ? g.me : winnerKey === "opp" ? g.cpu : null, why); };
     function checkOver() {
-      if (g.over) return;
+      if (g.over || M) return; // 合言葉の部屋：先に勝ちの点に届いたかは 'end' 行の先着で決める（createMatchClient）
       const hit = [g.me, g.cpu].filter((p) => p.score >= R.win.score);
       if (g.solo) return; // ひとりでは50点で終わらない
       if (hit.length) finish(hit[0], `先に${R.win.score}点`);
@@ -540,6 +674,7 @@
       for (const p of players()) {
         if (p.redrawAt !== null && now() >= p.redrawAt) { doRedraw(p, 0, `${R.redraw.free_wait_sec}秒待った（0点）`); changed = true; }
       }
+      if (M) return changed; // 合言葉の部屋の時間切れは createMatchClient が二人の点をそろえてから終える
       if (now() >= g.endsAt && g.solo) {
         finish(null, `${g.timeLimit / 60}分`);
         changed = true;
@@ -565,7 +700,7 @@
       }
     }
     g.cpuTurn = () => {
-      if (!live() || g.solo) return null;
+      if (!live() || g.solo || M) return null; // 合言葉の部屋は CPU を出さない
       const p = g.cpu;
       if (p.takes > 0 && handCount(p) < R.hand_max) { cpuTakeAll(p); return { ok: true, op: "取る" }; }
       const ws = T.COMMON_WORDS.filter((w) => !g.used.has(w.w) && pickIds(p, w.w)); // CPU が知っていて、手札でいま放てる語
@@ -618,6 +753,139 @@
   }
 
 
+  // ---------- 合言葉の部屋（KJ-033・D-049）：先着の決め方 ----------
+  // 表 public.kj_claims（match_id, kind, key, player, payload, created_at。主キー (match_id, kind, key)。入れる・読むだけ）を使う。
+  //   取る＝(match_id, "card", 場の列の番号)／放つ＝(match_id, "word", 言葉)／勝ちの点に届いた＝(match_id, "end", "score")
+  //   時間切れ＝(match_id, "end", "time:" + 自分の役)／点・手札の枚数＝(match_id, "event", 送る側が作る一意の文字列)
+  //   入ったら先着。主キーでぶつかったら相手が先
+  // claims（つなぎ）は { insert(row) → Promise<{ ok: true, row } | { ok: false, conflict: true } | { ok: false, error }>, subscribe(match_id, fn) → 解除の関数 }。
+  //   本物は Supabase（index.html。次の回）。テストは memoryClaims（主キーの先着を同じ形でまねる、メモリの中の偽物）
+  function createMatchClient(g, claims, opts) {
+    opts = opts || {};
+    if (!g.match) throw new Error("合言葉の部屋の試合ではない");
+    const D = g.D, R = D.rules;
+    const mid = g.match.id, role = g.match.role, oppRole = g.match.oppRole;
+    const nonce = opts.nonce || Math.floor((opts.rand || Math.random)() * 1e9).toString(36);
+    const graceSec = typeof opts.graceSec === "number" ? opts.graceSec : MATCH_END_GRACE_SEC;
+    let seq = 0, sent = null, oppSeq = -1, timeSent = false, endScoreSent = false;
+    const oppTime = { got: false, score: null };
+    const c = { g, lastOppRowAt: null };
+    const send = (kind, key, payload) => claims.insert({ match_id: mid, kind, key: String(key), player: role, payload: payload || {} });
+    const fail = (why) => ({ ok: false, why });
+    const state = () => ({ score: g.me.score, count: g.me.cards.length });
+    // 点・手札の枚数が変わっていたら 'event' で送る（画面は手を打つたびに呼ぶ）
+    c.sendState = async () => {
+      const st = state();
+      if (sent && sent.score === st.score && sent.count === st.count) return { ok: true, skipped: true };
+      sent = st;
+      return send("event", `${role}-${nonce}-${seq}`, { type: "state", seq: seq++, ...st });
+    };
+    async function claim(kind, key, payload) {
+      g.hold = true;
+      try { return await send(kind, key, payload); } finally { g.hold = false; }
+    }
+    // 取る：場の列の番号を先に入れた方だけ取れる
+    c.take = async (fieldId) => {
+      const pre = g.canTake(g.me, fieldId);
+      if (!pre.ok) return pre;
+      const n = pre.n;
+      const r = await claim("card", n, { c: pre.card.c });
+      if (r.ok) {
+        const t = g.applyTake(g.me, n);
+        await c.sendState();
+        return t;
+      }
+      if (r.conflict) { g.markTaken(n); return { ok: false, why: "相手が先に取った", lost: true, c: pre.card.c }; }
+      return fail("つながらない");
+    };
+    // 放つ：言葉を先に入れた方だけ点が入る。負けたら札は手元に残る
+    c.release = async (ids) => {
+      const pre = g.canRelease(g.me, ids);
+      if (!pre.ok) return pre;
+      const score = g.me.score + pre.pts;
+      const r = await claim("word", pre.text, { pts: pre.pts, score });
+      if (r.ok) {
+        const out = g.release(g.me, ids);
+        if (!out.ok) return out; // 先着を確かめている間は手を止めているので、ここには来ない見込み
+        await c.sendState();
+        if (g.me.score >= R.win.score && !g.over) await claimWin();
+        return out;
+      }
+      if (r.conflict) { g.lostWord(g.me, pre.text); return { ok: false, why: "相手が先に放った", lost: true, text: pre.text }; }
+      return fail("つながらない");
+    };
+    // 先に勝ちの点に届いた方：'end' の "score" を先に入れた方（二人の画面で勝ちがそろう）
+    async function claimWin() {
+      if (endScoreSent) return;
+      endScoreSent = true;
+      const r = await send("end", "score", { winner: role, score: g.me.score });
+      if (r.ok) g.finishMatch("me", `先に${R.win.score}点`);
+      else if (r.conflict) g.finishMatch("opp", `先に${R.win.score}点`);
+    }
+    c.redraw = async () => { const r = g.redraw(g.me); if (r.ok) await c.sendState(); return r; };
+    // 届いた行（相手の行も、自分の行も届く）
+    c.onRow = (row) => {
+      if (!row || row.match_id !== mid) return false;
+      const p = row.payload || {};
+      if (row.player === oppRole) c.lastOppRowAt = g.now();
+      if (row.kind === "end") {
+        if (row.key === "score" && p.winner) { g.finishMatch(p.winner === role ? "me" : "opp", `先に${R.win.score}点`); return true; }
+        if (row.key === "time:" + oppRole) { oppTime.got = true; oppTime.score = p.score; if (typeof p.score === "number") g.cpu.score = p.score; return true; }
+        return false;
+      }
+      if (row.player !== oppRole) return false; // 自分の行は、もう手元で反映している
+      if (row.kind === "card") return g.markTaken(Number(row.key));
+      if (row.kind === "word") return g.remoteRelease(row.key, p.pts, p.score);
+      if (row.kind === "event" && p.type === "state") {
+        if (typeof p.seq === "number") { if (p.seq <= oppSeq) return false; oppSeq = p.seq; }
+        return g.remoteState(p);
+      }
+      return false;
+    };
+    // 画面が定期的に呼ぶ：0点の引き直しの待ちと、時間切れ。時間切れでは自分の点を 'end' で送り、相手の点が届くか graceSec たったら比べる
+    // 相手が抜けた・つながらないときも、時間はそのまま進み、時間切れで最後に見えた点を比べる
+    c.tick = async () => {
+      if (g.over) return false;
+      const changed = g.tick();
+      if (changed) await c.sendState();
+      if (g.now() < g.endsAt) return changed;
+      if (!timeSent) { timeSent = true; g.hold = true; await send("end", "time:" + role, { score: g.me.score }); }
+      if (g.over) return true;
+      if (oppTime.got || g.now() >= g.endsAt + graceSec) {
+        const a = g.me.score, b = g.cpu.score;
+        g.finishMatch(a === b ? null : a > b ? "me" : "opp", `${g.timeLimit / 60}分 ${a}対${b}${oppTime.got ? "" : "（相手の点は最後に見えたもの）"}`);
+        return true;
+      }
+      return changed;
+    };
+    c.stop = claims.subscribe(mid, c.onRow);
+    return c;
+  }
+  // 主キー (match_id, kind, key) の先着をまねる、メモリの中の偽物（テスト用。本物の Supabase には出さない）。
+  // insert は次の一拍（Promise）で入るので、同じ瞬間に二人が押したときは先に insert を呼んだ方が入る。入った行は全員の subscribe に届く
+  function memoryClaims(opts) {
+    opts = opts || {};
+    const now = opts.now || (() => Date.now() / 1000);
+    const rows = new Map(), subs = new Set();
+    let down = false;
+    const keyOf = (r) => [r.match_id, r.kind, r.key].join("\u0000");
+    return {
+      rows: () => [...rows.values()],
+      setDown: (v) => { down = !!v; }, // つながらない（テストで、相手が抜けた形）
+      insert: async (row) => {
+        await Promise.resolve();
+        if (down) return { ok: false, error: "つながらない" };
+        const k = keyOf(row);
+        if (rows.has(k)) return { ok: false, conflict: true };
+        const r = { ...row, created_at: now() };
+        rows.set(k, r);
+        for (const fn of [...subs]) if (fn.mid === row.match_id) fn(r);
+        return { ok: true, row: r };
+      },
+      subscribe: (mid, fn) => { const f = (r) => fn(r); f.mid = mid; subs.add(f); return () => subs.delete(f); },
+    };
+  }
+
   // ---------- ログの自動送信（KJ-020。D-038）----------
   // 送る中身の形と、送ってよい場所の判定。送る処理そのもの（fetch・端末への保存）は index.html
   const PLAY_LOG_LIMITS = { device_id: 64, result: 200, log: 200000 };
@@ -657,5 +925,6 @@
   return {
     FILES, OPPONENTS, LEVELS, timeChoices, normTime, timeLabel, levelLabel, makeTables, isN5, isLevelChar, isChar, splitOnce, canSplit, delivered, joinResults, joinReversed,
     releasable, scoreOf, homoChars, marks, cutSpec, FACES, FACE_LABEL, faceJoins, faceResults, rulesLabel, opponentLabel, createGame, playLogRow, logSendAllowed, playLogResult, PLAY_LOG_LIMITS,
+    strSeed, seededRand, matchRand, ROLES, ROOM_OPPONENT, MATCH_END_GRACE_SEC, createMatchClient, memoryClaims,
   };
 });
