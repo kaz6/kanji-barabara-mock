@@ -249,6 +249,7 @@
     g.timeLimit = normTime(D, env.timeLimit); // 制限時間（秒。KJ-007）
     g.match = M ? { id: M.id, role: M.role, oppRole: M.role === "host" ? "guest" : "host" } : null;
     g.hold = false; // 合言葉の部屋：先着の返事を待っているあいだ、自分の手を止める（createMatchClient が立てる）
+    g.closed = false; // 合言葉の部屋：時間切れで点を送ったあと（相手の点を待つあいだ）。もう手を打てない
     const t0 = M && typeof M.startAt === "number" ? M.startAt : now();
     g.now = now;
     // はじめの1枚（KJ-013）は KJ-016 でやめた（作者 2026-11-21 20:14）。はじめたらすぐ時間が動く
@@ -409,7 +410,7 @@
       return nc;
     }
     const fail = (why) => ({ ok: false, why });
-    const live = () => !g.over && !g.hold;
+    const live = () => !g.over && !g.hold && !g.closed;
 
     g.split = (p, ids) => {
       const cs = cardsOf(p, ids);
@@ -515,7 +516,9 @@
         return ch;
       };
     }
+    let releasing = false; // 合言葉の部屋：言葉の先着を確かめたあとだけ release を通す
     g.release = (p, ids) => {
+      if (M && !releasing) return fail("合言葉の部屋では先着を確かめて放つ");
       const pre = g.canRelease(p, ids);
       if (!pre.ok) return pre;
       const text = pre.text;
@@ -660,6 +663,7 @@
       g.events.push({ type: "over", winner, solo: g.solo });
     }
     // 合言葉の部屋の終わり（createMatchClient が先着や時間切れで決めて呼ぶ）。winnerKey は "me"／"opp"／null（引き分け）
+    if (M) g.releaseClaimed = (p, ids) => { releasing = true; try { return g.release(p, ids); } finally { releasing = false; } };
     if (M) g.finishMatch = (winnerKey, why) => { if (!g.over) finish(winnerKey === "me" ? g.me : winnerKey === "opp" ? g.cpu : null, why); };
     function checkOver() {
       if (g.over || M) return; // 合言葉の部屋：先に勝ちの点に届いたかは 'end' 行の先着で決める（createMatchClient）
@@ -769,6 +773,8 @@
     const graceSec = typeof opts.graceSec === "number" ? opts.graceSec : MATCH_END_GRACE_SEC;
     let seq = 0, sent = null, oppSeq = -1, timeSent = false, endScoreSent = false;
     const oppTime = { got: false, score: null };
+    const mine = new Set(); // 届いた自分の行（返事だけ落ちて押し直したとき、ぶつかった相手が自分の行かを見分ける）
+    const kk = (kind, key) => kind + "\u0000" + key;
     const c = { g, lastOppRowAt: null };
     const send = (kind, key, payload) => claims.insert({ match_id: mid, kind, key: String(key), player: role, payload: payload || {} });
     const fail = (why) => ({ ok: false, why });
@@ -777,8 +783,9 @@
     c.sendState = async () => {
       const st = state();
       if (sent && sent.score === st.score && sent.count === st.count) return { ok: true, skipped: true };
-      sent = st;
-      return send("event", `${role}-${nonce}-${seq}`, { type: "state", seq: seq++, ...st });
+      const r = await send("event", `${role}-${nonce}-${seq}`, { type: "state", seq: seq++, ...st });
+      if (r.ok) sent = st; // 届かなければ、次に呼んだときに送り直す
+      return r;
     };
     async function claim(kind, key, payload) {
       g.hold = true;
@@ -790,7 +797,7 @@
       if (!pre.ok) return pre;
       const n = pre.n;
       const r = await claim("card", n, { c: pre.card.c });
-      if (r.ok) {
+      if (r.ok || (r.conflict && mine.has(kk("card", String(n))))) {
         const t = g.applyTake(g.me, n);
         await c.sendState();
         return t;
@@ -804,8 +811,8 @@
       if (!pre.ok) return pre;
       const score = g.me.score + pre.pts;
       const r = await claim("word", pre.text, { pts: pre.pts, score });
-      if (r.ok) {
-        const out = g.release(g.me, ids);
+      if (r.ok || (r.conflict && mine.has(kk("word", pre.text)))) {
+        const out = g.releaseClaimed(g.me, ids);
         if (!out.ok) return out; // 先着を確かめている間は手を止めているので、ここには来ない見込み
         await c.sendState();
         if (g.me.score >= R.win.score && !g.over) await claimWin();
@@ -819,8 +826,9 @@
       if (endScoreSent) return;
       endScoreSent = true;
       const r = await send("end", "score", { winner: role, score: g.me.score });
-      if (r.ok) g.finishMatch("me", `先に${R.win.score}点`);
+      if (r.ok || (r.conflict && mine.has(kk("end", "score")))) g.finishMatch("me", `先に${R.win.score}点`);
       else if (r.conflict) g.finishMatch("opp", `先に${R.win.score}点`);
+      else endScoreSent = false; // つながらなかった。次の tick で送り直す
     }
     c.redraw = async () => { const r = g.redraw(g.me); if (r.ok) await c.sendState(); return r; };
     // 届いた行（相手の行も、自分の行も届く）
@@ -828,6 +836,7 @@
       if (!row || row.match_id !== mid) return false;
       const p = row.payload || {};
       if (row.player === oppRole) c.lastOppRowAt = g.now();
+      if (row.player === role) mine.add(kk(row.kind, String(row.key)));
       if (row.kind === "end") {
         if (row.key === "score" && p.winner) { g.finishMatch(p.winner === role ? "me" : "opp", `先に${R.win.score}点`); return true; }
         if (row.key === "time:" + oppRole) { oppTime.got = true; oppTime.score = p.score; if (typeof p.score === "number") g.cpu.score = p.score; return true; }
@@ -846,10 +855,16 @@
     // 相手が抜けた・つながらないときも、時間はそのまま進み、時間切れで最後に見えた点を比べる
     c.tick = async () => {
       if (g.over) return false;
+      if (g.hold) return false; // 先着の返事待ち。反映してから次の tick で
       const changed = g.tick();
-      if (changed) await c.sendState();
+      if (changed || sent === null || sent.score !== g.me.score || sent.count !== g.me.cards.length) await c.sendState();
+      if (!g.closed && g.me.score >= R.win.score) { await claimWin(); if (g.over) return true; }
       if (g.now() < g.endsAt) return changed;
-      if (!timeSent) { timeSent = true; g.hold = true; await send("end", "time:" + role, { score: g.me.score }); }
+      if (!timeSent) {
+        g.closed = true; // ここから手を打てない（送る点を最後の点にする）
+        const r = await send("end", "time:" + role, { score: g.me.score });
+        if (r.ok || (r.conflict && mine.has(kk("end", "time:" + role)))) timeSent = true; // 届かなければ次の tick で送り直す
+      }
       if (g.over) return true;
       if (oppTime.got || g.now() >= g.endsAt + graceSec) {
         const a = g.me.score, b = g.cpu.score;
@@ -868,18 +883,25 @@
     const now = opts.now || (() => Date.now() / 1000);
     const rows = new Map(), subs = new Set();
     let down = false;
+    const failKinds = [], dropKinds = [];
     const keyOf = (r) => [r.match_id, r.kind, r.key].join("\u0000");
     return {
       rows: () => [...rows.values()],
       setDown: (v) => { down = !!v; }, // つながらない（テストで、相手が抜けた形）
+      failNext: (kind) => { failKinds.push(kind); }, // 次のその kind の行は入らず、返事は「つながらない」
+      dropReplyNext: (kind) => { dropKinds.push(kind); }, // 次のその kind の行は入るが、返事だけ「つながらない」
       insert: async (row) => {
         await Promise.resolve();
         if (down) return { ok: false, error: "つながらない" };
+        const fi = failKinds.indexOf(row.kind);
+        if (fi >= 0) { failKinds.splice(fi, 1); return { ok: false, error: "つながらない" }; }
         const k = keyOf(row);
         if (rows.has(k)) return { ok: false, conflict: true };
         const r = { ...row, created_at: now() };
         rows.set(k, r);
         for (const fn of [...subs]) if (fn.mid === row.match_id) fn(r);
+        const di = dropKinds.indexOf(row.kind);
+        if (di >= 0) { dropKinds.splice(di, 1); return { ok: false, error: "つながらない" }; }
         return { ok: true, row: r };
       },
       subscribe: (mid, fn) => { const f = (r) => fn(r); f.mid = mid; subs.add(f); return () => subs.delete(f); },

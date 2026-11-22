@@ -216,3 +216,66 @@ test("CPU 戦はいまのまま（合言葉の部屋の決まりは効かない�
   assert.equal(g.winner, g.me);
   assert.throws(() => K.createMatchClient(g, K.memoryClaims()), /合言葉の部屋の試合ではない/);
 });
+
+test("合言葉の部屋：返事待ちの最中に時間切れが来ても、返事を反映してから最後の点を送り、そのあとは手を打てない", async () => {
+  const { A, B, claims, clock } = pair();
+  const ia = setHand(A.g, A.g.me, "学生大学");
+  const p = A.c.release(ia.slice(0, 2)); // 返事待ち
+  clock.t += A.g.timeLimit;
+  assert.equal(await A.c.tick(), false, "返事待ちの間は時間切れの行を送らない");
+  assert.equal((await p).ok, true);
+  await A.c.tick();
+  const tr = claims.rows().find((r) => r.kind === "end" && r.key === "time:host");
+  assert.equal(tr.payload.score, 3, "時間切れの行の点は最後の点");
+  assert.equal(A.g.closed, true);
+  assert.equal(A.g.canTake(A.g.me, A.g.field[0].id).ok, false);
+  const r = await A.c.release(A.g.me.cards.map((x) => x.id));
+  assert.equal(r.ok, false, "時間切れのあとは放てない");
+  assert.equal(A.g.me.score, 3);
+  await B.c.tick(); await A.c.tick();
+  assert.equal(A.g.winner, A.g.me); assert.equal(B.g.winner, B.g.cpu);
+});
+
+test("合言葉の部屋：勝ちの行が1回つながらなくても、次の tick で送り直して勝ちが決まる", async () => {
+  const { A, B, claims } = pair();
+  A.g.me.score = R.win.score - 3;
+  claims.failNext("end");
+  await A.c.release(setHand(A.g, A.g.me, "学生"));
+  assert.equal(A.g.me.score, R.win.score);
+  assert.equal(A.g.over, false, "まだ end が入っていない");
+  await A.c.tick();
+  assert.equal(A.g.over, true);
+  assert.equal(A.g.winner, A.g.me);
+  assert.equal(B.g.winner, B.g.cpu);
+});
+
+test("合言葉の部屋：入ったのに返事だけ落ちて押し直したら、自分の行とぶつかったので取れた・放てたとして扱う", async () => {
+  const { A, B, claims } = pair();
+  A.g.me.takes = 1;
+  setHand(A.g, A.g.me, "一");
+  const f = A.g.field[0];
+  claims.dropReplyNext("card");
+  assert.equal((await A.c.take(f.id)).why, "つながらない");
+  assert.equal(A.g.me.takes, 1, "返事が無いので、まだ取れていない扱い");
+  assert.equal(A.g.field[0].n, f.n, "札は場に見えたまま");
+  const r = await A.c.take(A.g.field[0].id); // 押し直す → 自分の行にぶつかる
+  assert.equal(r.ok, true, "自分の行なので取れた");
+  assert.equal(chars(A.g.me.cards), "一" + f.c);
+  assert.equal(B.g.field.some((x) => x.n === f.n), false, "相手の場からも消えている");
+  // 言葉：返事だけ落ちる → もう一度放つと、自分の行にぶつかるので点が入る
+  const ids = setHand(A.g, A.g.me, "学生");
+  claims.dropReplyNext("word");
+  assert.equal((await A.c.release(ids)).why, "つながらない");
+  assert.equal(A.g.me.score, 0);
+  const r2 = await A.c.release(ids);
+  assert.equal(r2.ok, true);
+  assert.equal(A.g.me.score, 3);
+  assert.equal(B.g.cpu.score, 3, "相手の画面の点と合う");
+});
+
+test("合言葉の部屋：画面が client を通さずに放っても点は入らない", () => {
+  const { A } = pair();
+  const r = A.g.release(A.g.me, setHand(A.g, A.g.me, "学生"));
+  assert.equal(r.ok, false);
+  assert.equal(A.g.me.score, 0);
+});
