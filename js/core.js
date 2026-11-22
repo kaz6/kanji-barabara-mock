@@ -803,6 +803,52 @@
       addLog(p.name, "ためした", chars, [], 0, why);
       if (p === g.me) { g.hintStreak++; maybeHint(p); } // 続けて3回はじかれたら、自動でヒント（KJ-037）
     };
+    // 押した操作がはじかれた理由（何も変えない）。割る・くっつける・反転・巡り・同音・引き直しのボタンを押したとき、画面がその操作を通さないときの理由を調べる。
+    // 理由と順番は g.split・g.join・g.invert・g.cycle・g.homophone・g.redraw と同じ（テストが突き合わせる）。通るなら null
+    g.whyNot = (p, op, ids) => {
+      if (!live()) return null;
+      if (op === "redraw") return locked(p) ? LOCK_WHY : p.redrawAt !== null ? "待っている" : null;
+      const cs = cardsOf(p, ids || []);
+      if (locked(p)) return LOCK_WHY;
+      if (op === "join") {
+        if (!cs || cs.length !== 2) return "2枚だけ";
+        const rs = joinResults(T, cs[0].c, cs[1].c);
+        if (!rs.length) return joinReversed(T, cs[0].c, cs[1].c) ? "並べる順が逆" : "くっつかない";
+        return fits(p, cs, 1) ? null : "手札もストックもいっぱい";
+      }
+      if (!cs || cs.length !== 1) return "1枚だけ";
+      const c = cs[0].c;
+      if (op === "split") {
+        if (!canSplit(T, c)) return "割れない";
+        return fits(p, cs, splitOnce(T, c).length) ? null : "手札もストックもいっぱい";
+      }
+      if (op === "homophone") {
+        if (!homoChars(T, c).length) return "同じ読みではない";
+        if (!g.ready(p, "homophone")) return "待ち時間";
+        return fits(p, cs, 1) ? null : "手札もストックもいっぱい";
+      }
+      const map = op === "invert" ? T.INV : op === "cycle" ? T.NEXT : null;
+      if (!map) return null;
+      if (!map.has(c)) return "できない字";
+      if (!g.ready(p, op)) return "待ち時間";
+      return fits(p, cs, 1) ? null : "手札もストックもいっぱい";
+    };
+    // 人が押した操作・取るがはじかれたら、「ためした」で残す（KJ-041・D-055）。使った札の欄に札、メモに「操作名：理由」。
+    // 同じ札・同じ理由が続けて（間に別の行が入らずに）押されたら1行にまとめ、メモの終わりに「×回数」。
+    // ヒントの数え方は変えない（g.tried だけが数える）。CPU は呼ばない。extra は理由のあとに足す文（くっつく面など）
+    let lastOpTry = null;
+    g.triedOp = (p, op, chars, why, extra) => {
+      if (!live() || !why || why === LOCK_WHY) return;
+      const base = `${op}：${why}${extra || ""}`, key = `${op}|${(chars || []).join("")}|${base}`;
+      const last = g.log[g.log.length - 1];
+      if (lastOpTry && lastOpTry.row === last && lastOpTry.key === key) {
+        lastOpTry.n++;
+        last.note = `${base} ×${lastOpTry.n}`;
+        return;
+      }
+      addLog(p.name, "ためした", chars || [], [], 0, base);
+      lastOpTry = { row: g.log[g.log.length - 1], key, n: 1 };
+    };
 
     function finish(winner, why) {
       g.over = true;
@@ -893,7 +939,7 @@
         `# 相手 ${opponentLabel(D, g.opponent, g.timeLimit)}`,
         `# 時間 ${timeLabel(g.timeLimit)}`,
         ...rulesLabel(D, g.opponent, g.level, g.timeLimit).map((x) => "# 仮置き " + x),
-        "# 手 はじめ・割る・くっつける・反転・巡り・同音・放つ・取る・引き直し・入れ替え（札の位置を替えた。手札とストックの間も）・移す（手札⇄ストックの空いたマスへ）・ためした（並べたのに放てず・くっつけられずにやめた並び）・動けない（放てる言葉が手札に無くなった。使った札＝その時の手札）・動ける・ヒント（続けて3回はじかれて自動で出した。光らせた札と、狙った言葉はメモに）・終わり",
+        "# 手 はじめ・割る・くっつける・反転・巡り・同音・放つ・取る・引き直し・入れ替え（札の位置を替えた。手札とストックの間も）・移す（手札⇄ストックの空いたマスへ）・ためした（放つ・くっつける・割る・反転・巡り・同音・取る・引き直しがはじかれた。並べてやめた並びも）・動けない（放てる言葉が手札に無くなった。使った札＝その時の手札）・動ける・ヒント（続けて3回はじかれて自動で出した。光らせた札と、狙った言葉はメモに）・終わり",
         "# 点＝その手で増えた点（引き直しで払った点はマイナス）",
         "# データ " + FILES.map((f) => `${f}=${D[f].version}`).join(" "),
         `# 字 ${T.CHARS.size}（手に持てる字 ${T.HOLD.size}）・語 ${T.WORDS.size}（巡り ${T.CYCLES.map((c) => c.name).join("・")}）`,

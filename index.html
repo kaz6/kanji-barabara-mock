@@ -100,9 +100,9 @@ h1{font-size:17px;margin:0 0 2px;font-weight:700}
 .info .pts{color:var(--accent);font-weight:700}
 .ops{display:flex;flex-wrap:wrap;gap:6px}
 button.op{font:inherit;font-size:14px;padding:8px 12px;border:1px solid var(--ink);background:#fff;color:var(--ink);border-radius:4px;cursor:pointer;min-width:64px}
-button.op:disabled{border-color:var(--line);color:var(--dim);cursor:default}
+button.op:disabled,button.op[aria-disabled=true]{border-color:var(--line);color:var(--dim);cursor:default}
 button.op.main{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
-button.op.main:disabled{background:#fff;border-color:var(--line);color:var(--dim);font-weight:400}
+button.op.main:disabled,button.op.main[aria-disabled=true]{background:#fff;border-color:var(--line);color:var(--dim);font-weight:400}
 .cdv{display:inline-block;width:2.2em;text-align:left;font-variant-numeric:tabular-nums;font-size:12px}
 #bRedraw .cdv{width:5.4em}
 /* 待ち時間のゲージ（KJ-034）：使ったあと、ボタンの地が左から右へ満ちていく。満ちたら押せる。満ちた瞬間に小さく光る（色は仮決め） */
@@ -650,11 +650,16 @@ function attachDrag(b,id){
       b.classList.remove("drag");if(over)over.classList.remove("over");
       if(!t||ev.type!=="pointerup"||!G||G.over)return;
       if(hit){
-        const tid=+t.dataset.id,done=(r)=>{hideChoices();if(r&&r.ok)lastTried="";afterChange()};
+        const tid=+t.dataset.id,done=(r)=>{hideChoices();if(r&&r.ok)lastTried="";else if(r&&r.why)G.triedOp(G.me,"面でくっつける",[myChar(),(G.byId(G.me,tid)||{}).c].filter(Boolean),r.why);afterChange()};
         if(hit.chars.length>1){showChoices([{label:"できる字",chars:hit.chars,pick:x=>done(G.joinFace(G.me,id,tid,hit.face,x))}]);return}
         done(G.joinFace(G.me,id,tid,hit.face));return;
       }
-      if(t.dataset.id)G.swap(G.me,id,+t.dataset.id);else G.move(G.me,id,t.parentNode===$("meTray"));afterChange();
+      if(t.dataset.id){
+        // くっつく面がある札の、光っていない面に落とした：入れ替えになるが、「ためした」にも残す（KJ-041）
+        const fs=Object.keys(facesOf(t));
+        if(fs.length)G.triedOp(G.me,"面でくっつける",[myChar(),G.byId(G.me,+t.dataset.id).c],"その面ではくっつかない",`（くっつく面：${fs.map(f=>K.FACE_LABEL[f]).join("・")}）`);
+        G.swap(G.me,id,+t.dataset.id);
+      }else G.move(G.me,id,t.parentNode===$("meTray"));afterChange();
     };
     document.addEventListener("pointermove",move);document.addEventListener("pointerup",up);document.addEventListener("pointercancel",up);
   });
@@ -662,9 +667,11 @@ function attachDrag(b,id){
 function tapRow(id){if(G.over||G.locked(G.me))return;noteTried();row=row.filter(x=>x!==id);hideChoices();afterChange()}
 function tapField(id){
   if(!G||G.over)return;
-  if(MC){const mc=MC;mc.take(id).then(r=>{if(stale(mc))return;if(!r.ok)showWhy(r.why);afterChange()});afterChange();return} // 合言葉の部屋：先に入れた方だけ取れる
-  const r=G.take(G.me,id);if(!r.ok)showWhy(r.why);afterChange()
+  if(MC){const mc=MC;mc.take(id).then(r=>{if(stale(mc))return;if(!r.ok){showWhy(r.why);triedTake(id,r.why,r.c)}afterChange()});afterChange();return} // 合言葉の部屋：先に入れた方だけ取れる
+  const r=G.take(G.me,id);if(!r.ok){showWhy(r.why);triedTake(id,r.why,r.c)}afterChange()
 }
+// 取るがはじかれた（KJ-041）：「ためした」に、場の札と理由を残す
+function triedTake(id,why,c){const f=G.field.find(x=>x.id===id);const ch=f?f.c:c;if(ch)G.triedOp(G.me,"取る",[ch],why)} // 先着に負けると場から消えているので、返事の c（取ろうとした字）を使う
 // 返事待ちのあいだに試合が終わった・捨てた・別の試合になったときの返事は、画面に反映しない（勝ち負けの表示を上書きしない）
 function stale(mc){if(MC===mc&&G&&!G.over)return false;if(G)afterChange();return true}
 function showWhy(why){const m=$("msg");m.textContent=why||"";m.className="msg"}
@@ -680,20 +687,23 @@ $("bRelease").onclick=()=>{
   if(MC){const mc=MC;mc.release([...row]).then(r=>{if(stale(mc))return;if(!r.ok&&r.why&&(r.lost||r.why==="つながらない"||r.why==="通信中"))showWhy(r.why);afterOp(r)});afterChange();return} // 合言葉の部屋：言葉は先に放った方だけ
   afterOp(G.release(G.me,[...row]));
 };
-$("bSplit").onclick=()=>afterOp(G.split(G.me,row));
-$("bJoin").onclick=()=>{
+$("bSplit").onclick=()=>press("bSplit","split","割る",()=>{const r=G.split(G.me,row);afterOp(r);return r});
+$("bJoin").onclick=()=>press("bJoin","join","くっつける",()=>{
   const s=rowState();
-  if(s.joins.length>1){showChoices([{label:"できる字",chars:s.joins,pick:x=>afterOp(G.join(G.me,row,x))}]);return}
-  afterOp(G.join(G.me,row));
-};
-$("bInvert").onclick=()=>afterOp(G.invert(G.me,row));
-$("bCycle").onclick=()=>afterOp(G.cycle(G.me,row));
+  if(s.joins.length>1){showChoices([{label:"できる字",chars:s.joins,pick:x=>afterOp(G.join(G.me,row,x))}]);return null}
+  const r=G.join(G.me,row);afterOp(r);return r;
+});
+$("bInvert").onclick=()=>press("bInvert","invert","反転",()=>{const r=G.invert(G.me,row);afterOp(r);return r});
+$("bCycle").onclick=()=>press("bCycle","cycle","巡り",()=>{const r=G.cycle(G.me,row);afterOp(r);return r});
 $("bBack").onclick=()=>{noteTried();row=[];hideChoices();afterChange()};
-$("bRedraw").onclick=()=>{row=[];hideChoices();if(MC){const mc=MC;mc.redraw().then(()=>{if(!stale(mc))afterChange()});afterChange();return}G.redraw(G.me);afterChange()}; // 部屋：手札はすぐ入れ替わる。点の送りの返事は待たずに描く
+$("bRedraw").onclick=()=>{
+  if(isOff("bRedraw")){if(!G.over){G.triedOp(G.me,"引き直し",[],G.whyNot(G.me,"redraw"));afterChange()}return} // 引き直しを待っているあいだに押した（KJ-041）
+  row=[];hideChoices();if(MC){const mc=MC;mc.redraw().then(()=>{if(!stale(mc))afterChange()});afterChange();return}G.redraw(G.me);afterChange()}; // 部屋：手札はすぐ入れ替わる。点の送りの返事は待たずに描く
 $("bHomo").onclick=()=>{
+  if(isOff("bHomo")){if(!G.over){G.triedOp(G.me,"同音",rowCards().map(x=>x.c),G.whyNot(G.me,"homophone",[...row]));afterChange()}return} // 押せない見た目：選びの一覧は出さず、理由を残す（KJ-041）
   const c=rowText();
   showChoices((T.HOMO.get(c)||[]).map(g=>({label:`${g.type==="on"?"音":"訓"}：${g.reading}`,chars:g.chars.filter(x=>x!==c),
-    pick:x=>{if(G.ready(G.me,"homophone")&&rowText()===c)afterOp(G.homophone(G.me,row,x))}})));
+    pick:x=>{if(rowText()!==c)return;const r=G.homophone(G.me,row,x);afterOp(r);if(!r.ok){G.triedOp(G.me,"同音",[c],r.why);afterChange()}}})));
 };
 function showChoices(groups){
   const box=$("choices");box.innerHTML="";
@@ -802,6 +812,16 @@ function render(){
   renderReleased();
   renderOps();
 }
+const setOff=(id,off)=>$(id).setAttribute("aria-disabled",off?"true":"false");
+const isOff=id=>$(id).getAttribute("aria-disabled")==="true";
+// 操作ボタンが押された（KJ-041）：押せない見た目なら何もせず、はじかれた理由を「ためした」に残す。押せるなら op を行い、通らなかったら理由を残す
+function press(id,op,name,run){
+  const chars=rowCards().map(x=>x.c);
+  if(G.over)return;
+  if(isOff(id)){G.triedOp(G.me,name,chars,G.whyNot(G.me,op,[...row]));afterChange();return}
+  const r=run();
+  if(r&&r.ok===false){G.triedOp(G.me,name,chars,r.why);afterChange()}
+}
 function renderOps(){
   const s=rowState(),one=s.rc.length===1?s.rc[0].c:null,me=G.me,live=!G.over&&!G.locked(G.me); // 放ったあと、場から取りきるまでは、ほかのボタンは全部押せない（KJ-039）
   const fit1=G.fits(me,row,1);
@@ -811,13 +831,14 @@ function renderOps(){
   $("cpuCds").textContent=gone?"相手の通信が切れた":cds.length?"待ち："+cds.join("・"):"";
   $("cpuCds").classList.toggle("gone",gone);
   $("bRelease").disabled=!(live&&(s.rl.ok||isSingleTry(s)));
-  $("bSplit").disabled=!(live&&one&&K.canSplit(T,one)&&G.fits(me,row,2));
-  $("bJoin").disabled=!(live&&s.joins.length&&fit1);
-  $("bInvert").disabled=!(live&&one&&T.INV.has(one)&&G.ready(me,"invert")&&fit1);
-  $("bCycle").disabled=!(live&&one&&T.NEXT.has(one)&&G.ready(me,"cycle")&&fit1);
-  $("bHomo").disabled=!(live&&one&&T.HOMO.has(one)&&G.ready(me,"homophone")&&fit1);
+  // 押せない見た目の操作ボタンは disabled でなく aria-disabled（見た目は同じ）。押すと何も起きず、「ためした」に理由が残る（KJ-041）
+  setOff("bSplit",!(live&&one&&K.canSplit(T,one)&&G.fits(me,row,2)));
+  setOff("bJoin",!(live&&s.joins.length&&fit1));
+  setOff("bInvert",!(live&&one&&T.INV.has(one)&&G.ready(me,"invert")&&fit1));
+  setOff("bCycle",!(live&&one&&T.NEXT.has(one)&&G.ready(me,"cycle")&&fit1));
+  setOff("bHomo",!(live&&one&&T.HOMO.has(one)&&G.ready(me,"homophone")&&fit1));
   $("bBack").disabled=!(live&&s.rc.length);
-  $("bRedraw").disabled=!(live&&me.redrawAt===null);
+  setOff("bRedraw",!(live&&me.redrawAt===null));
   // 待ち時間はボタンの地のゲージで見せる（KJ-034。秒数の文字は出さない）
   gauge($("bInvert"),G.cdLeft(me,"invert")>0,G.cdFrac(me,"invert"));
   gauge($("bCycle"),G.cdLeft(me,"cycle")>0,G.cdFrac(me,"cycle"));

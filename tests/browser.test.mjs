@@ -91,14 +91,14 @@ test("画面", { skip }, async (t) => {
       assert.match(await page.textContent("#meScore"), /^3 点/);
       assert.match(await page.textContent("#takes"), /場から あと 2 枚 取る/);
       assert.equal(await page.locator("#field.glow").count(), 1, "放ったあと、取りきるまで場が光る（KJ-039）");
-      assert.equal(await page.evaluate(() => [...document.querySelectorAll(".ops button")].every((b) => b.disabled)), true, "取りきるまで、ほかのボタンは全部押せない（KJ-039）");
+      assert.equal(await page.evaluate(() => [...document.querySelectorAll(".ops button")].every((b) => b.disabled || b.getAttribute("aria-disabled") === "true")), true, "取りきるまで、ほかのボタンは全部押せない（KJ-039）");
       assert.equal(await pos("#field > *"), field0);
       // 取ったあとのマスには山から無作為に字が出る（同じ字が出ることもある）ので、字ではなくマスの位置（山=1番目・川=2番目）で押す
       await page.locator("#field .tile").nth(0).click();
       await page.locator("#field .tile").nth(1).click();
       assert.equal(await page.textContent("#takes"), "");
       assert.equal(await page.locator("#field.glow").count(), 0, "取りきったら光りは消える");
-      assert.equal(await page.evaluate(() => document.getElementById("bRedraw").disabled), false, "取りきったら動ける");
+      assert.equal(await page.evaluate(() => document.getElementById("bRedraw").getAttribute("aria-disabled")), "false", "取りきったら動ける");
       assert.equal(await page.locator("#meHand .tile", { hasText: "山" }).count(), 1, "山 が手札に来た");
       assert.equal(await pos("#field > *"), field0, "取ったあとも場の位置は同じ");
       assert.match(await page.textContent("#released"), /休日.*\+3点/);
@@ -729,7 +729,7 @@ test("画面", { skip }, async (t) => {
     const st = () => page.evaluate(() => {
       const b = document.getElementById("bInvert"), r = b.getBoundingClientRect();
       const w = parseFloat(getComputedStyle(b, "::before").width) || 0;
-      return { cd: b.classList.contains("cd"), full: b.classList.contains("full"), g: parseFloat(b.style.getPropertyValue("--g") || "NaN"), disabled: b.disabled, text: b.textContent.trim(), w: r.width, before: w, l: r.left, r: r.right, t: r.top, b: r.bottom };
+      return { cd: b.classList.contains("cd"), full: b.classList.contains("full"), g: parseFloat(b.style.getPropertyValue("--g") || "NaN"), disabled: b.disabled || b.getAttribute("aria-disabled") === "true", text: b.textContent.trim(), w: r.width, before: w, l: r.left, r: r.right, t: r.top, b: r.bottom };
     });
     // 時計は差し替える代わりに、待ちが明ける時刻（cd）を G.now() からの秒で置く
     const setLeft = (sec) => page.evaluate((s) => { const G = __KJ.game; G.me.cd.invert = G.now() + s; __KJ.render(); }, sec);
@@ -1418,5 +1418,78 @@ test("画面", { skip }, async (t) => {
     await A.page.waitForFunction(() => document.getElementById("cpuCds").textContent === "相手の通信が切れた", null, { timeout: 5000 });
     assert.equal(await A.page.evaluate(() => __KJ.game.over), false, "試合は時間どおり続く");
     await A.ctx.close(); await B.ctx.close();
+  });
+  // KJ-041：押した操作がはじかれたら「ためした」に残る。ボタンは押せない見た目のまま（disabled でなく aria-disabled）で、押しても手札は動かない
+  await t.test("はじかれた操作もログに残す（KJ-041）：割れない Split・待ち時間の Flip・巡りの無い Cycle・読みの無い Sound conversion・待っている Redraw・取れない取る・光っていない面。続けて押すと1行。手札は動かない・ヒントは数えない", async () => {
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 }, "solo");
+    const setHand = (chars) => page.evaluate((cs) => { const G = __KJ.game; G.me.cards = [...cs].map((c, i) => ({ id: 8000 + i + Math.floor(Math.random() * 1e5) * 10, c, t: 0, fresh: false })); __KJ.row.length = 0; __KJ.render(); }, chars);
+    const tried = () => page.evaluate(() => __KJ.game.log.filter((e) => e.op === "ためした").map((e) => ({ from: e.from.join(""), note: e.note })));
+    const hand = () => page.locator("#meHand .tile").evaluateAll((els) => els.map((e) => e.title).join(""));
+    const pick = async (c) => { await page.locator("#meHand .tile:not(.sel)", { hasText: c }).first().click(); };
+    await setHand("一休田上月");
+    assert.equal(await page.getAttribute("#bSplit", "aria-disabled"), "true", "割れない字では押せない見た目");
+    assert.equal(await page.evaluate(() => document.getElementById("bSplit").disabled), false, "でも disabled ではない（押すと理由が残る）");
+    await pick("一");
+    for (let i = 0; i < 3; i++) await page.evaluate(() => document.getElementById("bSplit").click());
+    assert.deepEqual(await tried(), [{ from: "一", note: "割る：割れない ×3" }], "3回押しても1行");
+    assert.equal(await hand(), "一休田上月", "手札は動かない");
+    assert.equal(await page.locator("#meHand .tile.sel").count(), 1, "選びもそのまま");
+    await page.click("#bBack");
+    // 待ち時間中の Flip
+    await page.evaluate(() => { const G = __KJ.game; G.me.cd.invert = G.now() + 5; __KJ.render(); });
+    await pick("上");
+    await page.evaluate(() => document.getElementById("bInvert").click());
+    // 巡りの無い字の Cycle
+    await page.click("#bBack"); await pick("休");
+    await page.evaluate(() => document.getElementById("bCycle").click());
+    // 読みの無い字の Sound conversion
+    await page.click("#bBack"); await pick("月");
+    await page.evaluate(() => document.getElementById("bHomo").click());
+    await page.click("#bBack");
+    // 引き直しを待っている
+    await page.evaluate(() => { const G = __KJ.game; G.me.redrawAt = G.now() + 5; __KJ.render(); });
+    assert.equal(await page.getAttribute("#bRedraw", "aria-disabled"), "true");
+    await page.evaluate(() => document.getElementById("bRedraw").click());
+    // 場から取れる枚数が無いのに取る
+    await page.evaluate(() => { __KJ.game.me.redrawAt = null; __KJ.render(); });
+    await page.locator("#field .tile").first().click();
+    const t1 = await tried();
+    assert.deepEqual(t1.map((x) => x.note), ["割る：割れない ×3", "反転：待ち時間", "巡り：できない字", "同音：同じ読みではない", "引き直し：待っている", "取る：取れる枚数がない"]);
+    assert.deepEqual(t1.map((x) => x.from).slice(0, 4), ["一", "上", "休", "月"], "使った札の欄に札");
+    assert.equal(t1[5].from.length, 1, "取るは場の札");
+    assert.equal(await hand(), "一休田上月", "どれも手札は動かない");
+    assert.equal(await page.evaluate(() => __KJ.game.hintStreak), 0, "ヒントは数えない");
+    assert.equal(await page.evaluate(() => __KJ.game.log.filter((e) => e.op === "ヒント").length), 0);
+    // ログの頭の説明
+    await page.evaluate(() => { window.__logText = __KJ.game.logText(); });
+    assert.match(await page.evaluate(() => window.__logText), /# 手 .*ためした（放つ・くっつける・割る・反転・巡り・同音・取る・引き直しがはじかれた。並べてやめた並びも）/);
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+
+  await t.test("はじかれた操作もログに残す（KJ-041）：光っていない面に落とすと「ためした」（くっつく面つき）のあと「入れ替え」。くっつく面の無い札との入れ替えは残さない", async () => {
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 }, "solo");
+    await page.evaluate(() => { __KJ.game.me.cards = [..."十口休日"].map((c, i) => ({ id: 9300 + i, c, t: 0, fresh: false })); __KJ.row.length = 0; __KJ.render(); });
+    const drag = async (from, to, rx, ry) => {
+      await page.locator("#meHand").scrollIntoViewIfNeeded();
+      const f = await page.locator("#meHand .tile", { hasText: from }).first().boundingBox();
+      const tb = await page.locator("#meHand .tile", { hasText: to }).first().boundingBox();
+      const x1 = f.x + f.width / 2, y1 = f.y + f.height / 2, x2 = tb.x + tb.width * rx, y2 = tb.y + tb.height * ry;
+      await page.mouse.move(x1, y1); await page.mouse.down();
+      await page.mouse.move((x1 + x2) / 2, (y1 + y2) / 2, { steps: 4 });
+      await page.mouse.move(x2, y2, { steps: 4 });
+      await page.mouse.up();
+    };
+    const rows = () => page.evaluate(() => __KJ.game.log.filter((e) => e.op === "ためした" || e.op === "入れ替え").map((e) => [e.op, e.from.join(""), e.note]));
+    await drag("十", "口", 0.5, 0.9); // 口 の下の面（光っていない）
+    assert.deepEqual((await rows()).map((r) => r.slice(0, 2).join(":")), ["ためした:十口", "入れ替え:十口"]);
+    const r0 = await rows();
+    assert.equal(r0[0][2], "面でくっつける：その面ではくっつかない（くっつく面：上・中央）");
+    // くっつく面の無い札との入れ替え（休 と 日）は、ためしたに残さない
+    await drag("休", "日", 0.5, 0.5);
+    assert.deepEqual((await rows()).map((r) => r[0]), ["ためした", "入れ替え", "入れ替え"]);
+    assert.equal(await page.evaluate(() => __KJ.game.hintStreak), 0);
+    assert.deepEqual(errors, []);
+    await ctx.close();
   });
 });
