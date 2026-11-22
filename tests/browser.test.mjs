@@ -184,6 +184,17 @@ test("画面", { skip }, async (t) => {
     await page.reload();
     await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
     for (const [id, v] of [["opp", "solo"], ["lvl", "N5"], ["tim", "300"]]) assert.equal(await page.locator(`#${id} input:checked`).getAttribute("value"), v, `${id} を覚えている`);
+    // ふつう（KJ-035）：選ぶと端末に覚え、再読み込みでも選ばれていて、はじめるとログの頭に出る
+    await page.check('#opp input[value="fair"]');
+    assert.equal(await page.evaluate(() => localStorage.getItem("kj-opponent")), "fair");
+    await page.reload();
+    await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
+    assert.equal(await page.locator("#opp input:checked").getAttribute("value"), "fair", "ふつうを覚えている");
+    await page.click("#start");
+    await page.click("#bLog");
+    assert.match(await page.inputValue("#logText"), /# 相手 ふつう（CPU は 15〜20秒に1回動く）/);
+    await page.click("#bLog");
+    await page.click("#bSetup");
     // 知らない値が残っていても初期値で動く
     await page.evaluate(() => { localStorage.setItem("kj-time", "7"); localStorage.setItem("kj-opponent", "ばか"); });
     await page.reload();
