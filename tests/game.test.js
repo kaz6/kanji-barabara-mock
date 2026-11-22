@@ -1635,3 +1635,94 @@ test("KJ-037 ヒント：狙った言葉を先に使われたら、光りは消�
   g.used.add("休日"); // CPU・相手・先着の負けのどれでも、使った言葉は g.used に入る
   assert.equal(g.hintActive(), null, "もう放てない言葉は光らせ続けない");
 });
+
+// ---------- KJ-041 はじかれた操作もログに残す（D-055）----------
+const triedRows = (g) => g.log.filter((e) => e.op === "ためした");
+
+test("KJ-041：割れない字を Split→「ためした」（札・メモ「割る：割れない」）。手札は変わらない", () => {
+  const g = newGame(1, "weak", "N5");
+  const ids = setHand(g, g.me, "一口");
+  const why = g.whyNot(g.me, "split", [ids[0]]);
+  assert.equal(why, "割れない");
+  g.triedOp(g.me, "割る", ["一"], why);
+  const rows = triedRows(g);
+  assert.equal(rows.length, 1);
+  assert.deepEqual([rows[0].who, rows[0].from, rows[0].to, rows[0].pts, rows[0].note], [g.me.name, ["一"], [], 0, "割る：割れない"]);
+  assert.equal(chars(g.me.cards), "一口");
+});
+
+test("KJ-041：待ち時間中の Flip・巡りの無い字の Cycle・読みの無い字の Sound conversion→「ためした」", () => {
+  const g = newGame(1, "weak", "N5");
+  const [a] = setHand(g, g.me, "上");
+  assert.equal(g.invert(g.me, [a]).ok, true);
+  const [b] = setHand(g, g.me, "下");
+  assert.equal(g.whyNot(g.me, "invert", [b]), "待ち時間");
+  g.triedOp(g.me, "反転", ["下"], g.whyNot(g.me, "invert", [b]));
+  const [c] = setHand(g, g.me, "休");
+  g.triedOp(g.me, "巡り", ["休"], g.whyNot(g.me, "cycle", [c]));
+  const [d] = setHand(g, g.me, "田");
+  g.triedOp(g.me, "同音", ["田"], g.whyNot(g.me, "homophone", [d]));
+  assert.deepEqual(triedRows(g).map((e) => e.note), ["反転：待ち時間", "巡り：できない字", "同音：同じ読みではない"]);
+});
+
+test("KJ-041：同じ札・同じ理由が続けて押されたら1行（×回数）。間に別の行が入る・札が違う・理由が違うと新しい行", () => {
+  const g = newGame(1, "weak", "N5");
+  const t = (c, why) => g.triedOp(g.me, "割る", [c], why);
+  t("一", "割れない"); t("一", "割れない"); t("一", "割れない");
+  assert.deepEqual(triedRows(g).map((e) => e.note), ["割る：割れない ×3"]);
+  t("二", "割れない");
+  t("二", "手札もストックもいっぱい");
+  assert.deepEqual(triedRows(g).map((e) => e.note), ["割る：割れない ×3", "割る：割れない", "割る：手札もストックもいっぱい"]);
+  g.addLog(g.me.name, "入れ替え", ["山"], ["川"], 0, "");
+  t("二", "手札もストックもいっぱい");
+  assert.equal(triedRows(g).length, 4, "間に別の行が入ったら、まとめない");
+});
+
+test("KJ-041：面でくっつける：くっつく面を理由のあとに書く。ヒントの数え方は変わらない（g.tried だけが数える）", () => {
+  const g = newGame(1, "weak", "N5");
+  setHand(g, g.me, "十口山川");
+  for (let i = 0; i < 5; i++) g.triedOp(g.me, "面でくっつける", ["十", "口"], "その面ではくっつかない", "（くっつく面：上・中央）");
+  assert.deepEqual(triedRows(g).map((e) => e.note), ["面でくっつける：その面ではくっつかない（くっつく面：上・中央） ×5"]);
+  assert.equal(g.hintStreak, 0, "続けて5回でも数えない");
+  assert.equal(g.hint, null);
+  assert.equal(g.log.some((e) => e.op === "ヒント"), false);
+  g.tried(g.me, ["山", "川"], "辞書にない");
+  assert.equal(g.hintStreak, 1, "g.tried は今まで通り数える");
+});
+
+test("KJ-041：放ったあとの取りきるまで・終わったあとは残さない。取るは取りきるまでの間も残る（呼ぶ側が決める）", () => {
+  const g = newGame(1, "weak", "N5");
+  setHand(g, g.me, "休日");
+  assert.equal(g.release(g.me, g.me.cards.map((x) => x.id)).ok, true);
+  assert.ok(g.locked(g.me));
+  g.triedOp(g.me, "割る", ["一"], g.whyNot(g.me, "split", [1]));
+  assert.equal(g.whyNot(g.me, "split", [1]), "場から取りきるまで動けない");
+  assert.equal(triedRows(g).length, 0, "取りきるまでの「動けない」は残さない");
+  g.triedOp(g.me, "取る", ["山"], "手札もストックもいっぱい");
+  assert.equal(triedRows(g).length, 1, "取るのはじかれは残る");
+  takeAll(g, g.me);
+  const n = triedRows(g).length;
+  g.over = true;
+  g.triedOp(g.me, "割る", ["一"], "割れない");
+  assert.equal(triedRows(g).length, n, "終わったあとは残さない");
+});
+
+test("KJ-041：whyNot は、実際の操作がはじかれる理由と同じ（割る・くっつける・反転・巡り・同音・引き直し）", () => {
+  const cases = [];
+  for (const c of ["一", "休", "上", "田", "月", "語"]) for (const op of ["split", "invert", "cycle", "homophone"]) cases.push([op, c]);
+  for (const pair of ["人木", "木人", "一一", "卜一", "口十", "十口"]) cases.push(["join", pair]);
+  for (const [op, text] of cases) for (const wait of [false, true]) {
+    const g = newGame(1, "weak", "N5");
+    const ids = setHand(g, g.me, text);
+    if (wait) for (const k of ["invert", "cycle", "homophone"]) g.me.cd[k] = g.now() + 5;
+    const why = g.whyNot(g.me, op, ids);
+    const to = op === "homophone" ? [...(T.HOMO.get(text) || []).flatMap((x) => x.chars), "x"].find((x) => x !== text) : undefined; // 同じ読みの別の字（無ければ ない字）
+    const r = op === "homophone" ? g.homophone(g.me, ids, to) : g[op](g.me, ids);
+    assert.equal(why, r.ok ? null : r.why, `${op} ${text} 待ち${wait}`);
+  }
+  const g = newGame(1, "weak", "N5");
+  assert.equal(g.whyNot(g.me, "redraw"), null);
+  g.me.redrawAt = g.now() + 5;
+  assert.equal(g.whyNot(g.me, "redraw"), "待っている");
+  assert.equal(g.redraw(g.me).why, "待っている");
+});
