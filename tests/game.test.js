@@ -1450,7 +1450,8 @@ test("KJ-037 ヒント：段3 どれも無ければ Redraw のボタンが光る
   assert.ok(g2.redraw(g2.me).ok); // 5点ないので30秒待つ
   assert.notEqual(g2.me.redrawAt, null);
   tryN(g2, 3);
-  assert.equal(g2.hintActive().button, null, "引き直しを待っているときはボタンを光らせない");
+  assert.equal(g2.hint, null, "引き直しを待っているときは何も光らせず、札も出さない");
+  assert.ok(g2.log.some((e) => e.op === "ヒント" && e.note.includes("待っている")), "ログには残す");
 });
 
 test("KJ-037 ヒント：光るのは10秒か次に手札を動かすまで。選ぶ・外すだけ（画面）では消えない。ログに残る（狙った言葉はログにだけ）", () => {
@@ -1510,4 +1511,13 @@ test("KJ-037 ヒント：N4 でも出る（段1・段2・段3 のどれかにな
     }
   }
   assert.equal(tally[1] + tally[2] + tally[3], 60);
+});
+
+test("KJ-037 ヒント：狙った言葉を先に使われたら、光りは消える（CPU が放った・部屋で相手が放った・先着に負けた）", () => {
+  const g = newGame(1, "weak", "N5");
+  setHand(g, g.me, "休日山川");
+  tryN(g, 3);
+  assert.equal(g.hintActive().word, "休日");
+  g.used.add("休日"); // CPU・相手・先着の負けのどれでも、使った言葉は g.used に入る
+  assert.equal(g.hintActive(), null, "もう放てない言葉は光らせ続けない");
 });

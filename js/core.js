@@ -448,7 +448,7 @@
     g.hintStreak = 0;
     g.hintCount = 0;
     g.hint = null; // { tier: 1|2|3, ids: [光らせる札の id], button: ボタンの id（段1は無し）, op, word, until }
-    g.hintActive = () => (g.hint && !g.over && now() < g.hint.until ? g.hint : null);
+    g.hintActive = () => (g.hint && !g.over && now() < g.hint.until && !(g.hint.word && g.used.has(g.hint.word)) ? g.hint : null); // 狙った言葉を先に使われたら、光りは消える
     g.clearHint = () => { g.hint = null; };
     const solved = (p) => { if (p === g.me) { g.hintStreak = 0; g.hint = null; } }; // 通った：数え直し・光りを消す
     const countOf = (chs) => { const m = new Map(); for (const c of chs) m.set(c, (m.get(c) || 0) + 1); return m; };
@@ -523,7 +523,7 @@
       if (g.hintStreak < HR.fail_streak) return;
       g.hintStreak = 0; // ヒントを出したら数え直し
       const h = makeHint(p);
-      g.hint = { ...h, until: now() + HR.glow_sec };
+      g.hint = h.ids.length || h.button ? { ...h, until: now() + HR.glow_sec } : null; // 光らせる物が無いとき（引き直しを待っている）は、札も出さない
       g.hintCount++;
       const lit = h.ids.map((id) => g.byId(p, id)).filter(Boolean).map((x) => x.c);
       addLog(p.name, "ヒント", lit, [], 0, `段${h.tier}：${h.op}${h.word ? `。狙った言葉：${h.word}` : ""}`);
