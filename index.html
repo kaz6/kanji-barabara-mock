@@ -669,7 +669,7 @@ $("bJoin").onclick=()=>{
 $("bInvert").onclick=()=>afterOp(G.invert(G.me,row));
 $("bCycle").onclick=()=>afterOp(G.cycle(G.me,row));
 $("bBack").onclick=()=>{noteTried();row=[];hideChoices();afterChange()};
-$("bRedraw").onclick=()=>{row=[];hideChoices();if(MC){const mc=MC;mc.redraw().then(()=>{if(!stale(mc))afterChange()});return}G.redraw(G.me);afterChange()};
+$("bRedraw").onclick=()=>{row=[];hideChoices();if(MC){const mc=MC;mc.redraw().then(()=>{if(!stale(mc))afterChange()});afterChange();return}G.redraw(G.me);afterChange()}; // 部屋：手札はすぐ入れ替わる。点の送りの返事は待たずに描く
 $("bHomo").onclick=()=>{
   const c=rowText();
   showChoices((T.HOMO.get(c)||[]).map(g=>({label:`${g.type==="on"?"音":"訓"}：${g.reading}`,chars:g.chars.filter(x=>x!==c),
