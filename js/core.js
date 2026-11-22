@@ -275,6 +275,8 @@
     g.elapsed = () => now() - t0;
     g.endsAt = t0 + g.timeLimit;
     g.timeLeft = () => Math.max(0, g.endsAt - now());
+    // ログの秒は制限時間を超えない（画面が裏に回って時計が止まり、戻ったときに終わっても。KJ-036）
+    const logT = () => Math.min(g.elapsed(), g.timeLimit);
 
     const card = (c, fresh) => ({ id: ++uid, c, t: now(), fresh: !!fresh });
     function shuffle(a) {
@@ -362,7 +364,7 @@
 
     const QUIET = new Set(["はじまり", "ためした", "終わり", "動けない", "動ける", "入れ替え", "移す"]);
     function addLog(who, op, from, to, pts, note) {
-      g.log.push({ t: g.elapsed(), who, op, from: from || [], to: to || [], pts: pts || 0,
+      g.log.push({ t: logT(), who, op, from: from || [], to: to || [], pts: pts || 0,
         meScore: g.me.score, cpuScore: g.cpu.score, me: nCards(g.me), cpu: nCards(g.cpu), note: note || "" });
       if (!QUIET.has(op)) checkStuck();
     }
@@ -403,12 +405,12 @@
         const w = g.releasableInHand(p);
         if (!w && !p.stuck) {
           p.stuck = true;
-          g.log.push({ t: g.elapsed(), who: p.name, op: "動けない", from: p.cards.map((x) => x.c), to: [], pts: 0,
+          g.log.push({ t: logT(), who: p.name, op: "動けない", from: p.cards.map((x) => x.c), to: [], pts: 0,
             meScore: g.me.score, cpuScore: g.cpu.score, me: nCards(g.me), cpu: nCards(g.cpu),
             note: "放てる言葉なし。使える手：" + g.movesInHand(p).join("・") });
         } else if (w && p.stuck) {
           p.stuck = false;
-          g.log.push({ t: g.elapsed(), who: p.name, op: "動ける", from: p.cards.map((x) => x.c), to: [], pts: 0,
+          g.log.push({ t: logT(), who: p.name, op: "動ける", from: p.cards.map((x) => x.c), to: [], pts: 0,
             meScore: g.me.score, cpuScore: g.cpu.score, me: nCards(g.me), cpu: nCards(g.cpu), note: "放てる言葉：" + w });
         }
       }
@@ -729,6 +731,7 @@
     }
     g.cpuTurn = () => {
       if (!live() || g.solo || M) return null; // 合言葉の部屋は CPU を出さない
+      if (now() >= g.endsAt) { g.tick(); return null; } // 時間切れのあとは動かない（裏にいた間の手を取り戻さない。KJ-036）
       const p = g.cpu;
       if (p.takes > 0 && handCount(p) < R.hand_max) { cpuTakeAll(p); return { ok: true, op: "取る" }; }
       const ws = T.COMMON_WORDS.filter((w) => !g.used.has(w.w) && pickIds(p, w.w)); // CPU が知っていて、手札でいま放てる語

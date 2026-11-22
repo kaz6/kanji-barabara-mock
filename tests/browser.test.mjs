@@ -336,6 +336,22 @@ test("画面", { skip }, async (t) => {
     await ctx.close();
   });
 
+  await t.test("KJ-036 裏から戻ると、制限時間をすぎていればすぐ終わる（終わりの秒は制限時間を超えない）", async () => {
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 }, "normal");
+    // 裏にいて時計の処理が止まった形：interval を止め、制限時間の1時間後まで進んだことにする
+    await page.evaluate(() => { const G = __KJ.game; G.cpuTurn = () => null; G.endsAt = G.now() - 3596; window.__hold = true; });
+    await page.evaluate(() => { const G = __KJ.game; G.tick = (orig => function () { return window.__hold ? false : orig.call(this); })(G.tick); });
+    await page.waitForTimeout(600);
+    assert.equal(await page.evaluate(() => __KJ.game.over), false, "止めているあいだは終わらない");
+    await page.evaluate(() => { window.__hold = false; document.dispatchEvent(new Event("visibilitychange")); });
+    await page.waitForFunction(() => __KJ.game.over);
+    const end = await page.evaluate(() => { const G = __KJ.game; const e = G.log[G.log.length - 1]; return { op: e.op, t: e.t, lim: G.timeLimit }; });
+    assert.equal(end.op, "終わり");
+    assert.ok(end.t <= end.lim, `終わりの秒 ${end.t}`);
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+
   await t.test("ひとりで：localStorage が使えなくても終われる（自己ベストを出さないだけ）", async () => {
     const { ctx, page, errors } = await open(browser, url, { width: 760, height: 1100 }, "solo");
     await page.evaluate(() => {
