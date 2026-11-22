@@ -4,14 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>漢字版（仮）モック</title>
+<link rel="stylesheet" href="fonts/kj-glyphs.css">
 <style>
 :root{
-  --bg:#f6f4ef; --ink:#1d1b18; --sub:#6b665d; --line:#d9d4c9; --tile:#fffdf8; --cut:#8a6d3b;
+  --bg:#f6f4ef; --ink:#1d1b18; --sub:#6b665d; --line:#d9d4c9; --tile:#fffdf8; --cut:#aaa59a;
   --slot:#ebe7de; --accent:#c8402a; --ok:#2f6b4f; --dim:#a9a397;
-  --kanji:"Hiragino Mincho ProN","Yu Mincho","Noto Serif CJK JP","Noto Serif JP","Source Han Serif JP",serif;
+  --kanji:"KJ Glyphs","Hiragino Mincho ProN","Yu Mincho","Noto Serif CJK JP","Noto Serif JP","Source Han Serif JP",serif;
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 "KJ Glyphs",system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif}
 main{max-width:760px;margin:0 auto;padding:16px 14px 48px}
 h1{font-size:17px;margin:0 0 2px;font-weight:700}
 .lead{color:var(--sub);font-size:13px;margin:0 0 14px}
