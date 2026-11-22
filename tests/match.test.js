@@ -279,3 +279,20 @@ test("合言葉の部屋：画面が client を通さずに放っても点は入
   assert.equal(r.ok, false);
   assert.equal(A.g.me.score, 0);
 });
+
+test("合言葉の部屋：時間切れの tick が点を送っている間に放っても、反映してから最後の点を送る", async () => {
+  const { A, claims, clock } = pair();
+  const ids = setHand(A.g, A.g.me, "学生");
+  clock.t += A.g.timeLimit - 0.5;
+  await A.c.tick(); // 点の行を送り済みにしておく
+  clock.t += 0.5;
+  A.g.me.cards.push({ id: 999999, c: "一", t: clock.t, fresh: false }); // 枚数が変わって、tick が点の行を送る
+  const tk = A.c.tick();
+  const rl = A.c.release(ids); // tick の送信待ちの間に放つ
+  await tk;
+  const rr = await rl; assert.equal(rr.ok, true, JSON.stringify(rr));
+  await A.c.tick();
+  const tr = claims.rows().find((r) => r.kind === "end" && r.key === "time:host");
+  assert.equal(tr.payload.score, 3, "時間切れの行の点は放ったあとの点");
+  assert.equal(A.g.me.score, 3);
+});

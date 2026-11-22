@@ -787,9 +787,10 @@
       if (r.ok) sent = st; // 届かなければ、次に呼んだときに送り直す
       return r;
     };
+    // 先着を確かめる。返事を待つあいだ手を止める。止めを下ろすのは、呼んだ側が返事を反映する直前（同じ一拍で。間に tick が入らないように）
     async function claim(kind, key, payload) {
       g.hold = true;
-      try { return await send(kind, key, payload); } finally { g.hold = false; }
+      try { return await send(kind, key, payload); } catch (e) { return { ok: false, error: String(e) }; }
     }
     // 取る：場の列の番号を先に入れた方だけ取れる
     c.take = async (fieldId) => {
@@ -797,6 +798,7 @@
       if (!pre.ok) return pre;
       const n = pre.n;
       const r = await claim("card", n, { c: pre.card.c });
+      g.hold = false;
       if (r.ok || (r.conflict && mine.has(kk("card", String(n))))) {
         const t = g.applyTake(g.me, n);
         await c.sendState();
@@ -811,6 +813,7 @@
       if (!pre.ok) return pre;
       const score = g.me.score + pre.pts;
       const r = await claim("word", pre.text, { pts: pre.pts, score });
+      g.hold = false;
       if (r.ok || (r.conflict && mine.has(kk("word", pre.text)))) {
         const out = g.releaseClaimed(g.me, ids);
         if (!out.ok) return out; // 先着を確かめている間は手を止めているので、ここには来ない見込み
@@ -861,6 +864,7 @@
       if (!g.closed && g.me.score >= R.win.score) { await claimWin(); if (g.over) return true; }
       if (g.now() < g.endsAt) return changed;
       if (!timeSent) {
+        if (g.hold) return changed; // この tick が送っている間に取る・放つが始まった。反映してから次の tick で
         g.closed = true; // ここから手を打てない（送る点を最後の点にする）
         const r = await send("end", "time:" + role, { score: g.me.score });
         if (r.ok || (r.conflict && mine.has(kk("end", "time:" + role)))) timeSent = true; // 届かなければ次の tick で送り直す
