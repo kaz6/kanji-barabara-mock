@@ -30,18 +30,18 @@ h1{font-size:17px;margin:0 0 2px;font-weight:700}
 .opp{display:inline-flex;gap:10px;align-items:center;font-size:14px;flex-wrap:wrap}
 .opp label{cursor:pointer;white-space:nowrap}
 .slot{aspect-ratio:1;background:var(--slot);border-radius:4px}
-.slot.held{background:transparent;outline:1px dashed var(--dim);outline-offset:-1px;cursor:pointer}
 .tile{aspect-ratio:1;position:relative;background:var(--tile);border:1px solid var(--line);border-radius:4px;
   display:flex;align-items:center;justify-content:center;font-family:var(--kanji);font-size:clamp(20px,4.6vw,30px);
   cursor:pointer;user-select:none;padding:0;color:var(--ink);width:100%}
 .tile:hover{border-color:var(--ink)}
-/* 手札で選ぶ（KJ-005）：選んだ札は色が変わり、角に選んだ順の数字。指一本で札を引きずって入れ替える */
+/* 選んだ札は手札・ストックのマスに残り、色が変わって角に選んだ順の数字が付く（KJ-030）。指一本で札を引きずって入れ替える */
 .me .tile{touch-action:none}
 .tile.sel{background:var(--accent);border-color:var(--accent);color:#fff}
 .tile .ord{position:absolute;top:1px;left:3px;font:bold 12px/1.2 system-ui,sans-serif;color:#fff}
 .tile.drag{opacity:.55;border-style:dashed}
 .tile.over{border-color:var(--accent);border-width:2px}
 .tile.part{background:#f1ede4;color:#4a463f}
+.tile.part.sel{background:var(--accent);border-color:var(--accent);color:#fff} /* 部品の札も選ぶと赤地に白（部品の色に負けない） */
 .tile.new{border-color:var(--accent);border-width:2px}
 .tile .mk{position:absolute;top:1px;right:3px;font:10px/1.2 system-ui,sans-serif;color:var(--accent);letter-spacing:-1px}
 .tile .orig{position:absolute;bottom:1px;left:3px;font:10px/1 system-ui,sans-serif;color:var(--sub)}
@@ -145,10 +145,8 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
   .field .tile{font-size:24px}
   .fieldside .takes{flex:1;font-size:12px;line-height:1.35;min-width:0}
   .bar{gap:5px 6px;margin:4px 0}
-  .bar .opp{font-size:13px;gap:8px}
-  .bar .opp label{padding:2px 0}
   .bar button.op{font-size:13px;padding:4px 9px;min-width:0}
-  #layNow{order:0}.clock{order:1;font-size:13px;margin-left:auto}.bar #again,.bar #bSetup,.bar #bLog,.bar #bCopyEnd{order:2}
+  .clock{font-size:13px;margin-left:auto}
   .msgline{height:20px;font-size:13px}
   .stage{padding:8px;margin:6px 0}
   .row{height:52px;gap:4px}
@@ -175,14 +173,12 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
     <div class="grp"><p class="gt">相手</p><span class="opp" id="opp" role="radiogroup" aria-label="相手"></span></div>
     <div class="grp"><p class="gt">レベル</p><span class="opp" id="lvl" role="radiogroup" aria-label="レベル"></span></div>
     <div class="grp"><p class="gt">時間</p><span class="opp" id="tim" role="radiogroup" aria-label="時間"></span></div>
-    <div class="grp"><p class="gt">並べ方（遊んでいる途中でも切り替えられる）</p><span class="opp" id="lay" role="radiogroup" aria-label="並べ方"></span></div>
     <p class="note" id="setupInfo"></p>
     <button class="op main" id="start">はじめる</button>
   </section>
 
   <div id="game" hidden>
   <div class="bar">
-    <span class="opp" id="layNow" role="radiogroup" aria-label="並べ方（いま）"><span>並べ方</span></span>
     <button class="op" id="again">もう一度</button>
     <button class="op" id="bSetup">設定を変える</button>
     <button class="op" id="bLog">ログ</button>
@@ -254,10 +250,8 @@ let T=null, G=null; // 表・ゲームの状態
 const TABLES={};    // レベルごとの表（KJ-006）
 const LVL_KEY="kj-level";
 let level=null;     // レベル（"N5"／"N4"）。はじめるときに効く。端末に覚える
-let row=[];         // 台に並べた札の id（左から）
+let row=[];         // 選んだ札の id（選んだ順。台にはその写しを左から並べる）
 let lastTried="";
-const LAY_KEY="kj-layout";
-let layout=null;    // 並べ方（"hand"＝手札で選ぶ／"table"＝台に並べる）。端末に覚える
 const OPP_KEY="kj-opponent",TIME_KEY="kj-time";
 let opponent=null;  // 相手。端末に覚える（KJ-007）
 let timeLimit=null; // 制限時間（秒）。端末に覚える（KJ-007）
@@ -281,14 +275,13 @@ $("bCopy").onclick=copyLog;$("bCopyEnd").onclick=copyLog;
 
 // ---------- はじめる ----------
 let cpuTimer=null;
-// 端末に覚える4つ（KJ-007）。読めない・書けないときは初期値で動く
+// 端末に覚える3つ（KJ-007。並べ方は KJ-030 でなくした）。読めない・書けないときは初期値で動く
 function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
 function lsSet(k,v){try{localStorage.setItem(k,String(v))}catch(e){}}
 function loadSettings(){
   const o=lsGet(OPP_KEY);opponent=K.OPPONENTS.some(x=>x.key===o)?o:D.rules.opponent_default;
   const l=lsGet(LVL_KEY);level=K.LEVELS.some(x=>x.key===l)?l:(D.rules.level_default||"N4");
   timeLimit=K.normTime(D,lsGet(TIME_KEY));
-  const y=lsGet(LAY_KEY);layout=K.LAYOUTS.some(x=>x.key===y)?y:D.rules.layout_default;
 }
 // 選ぶものを並べる：name のラジオ。onPick は選んだ値を受け取る
 function radios(box,name,items,cur,onPick){
@@ -304,15 +297,6 @@ function buildPickers(){
   radios($("opp"),"opp",K.OPPONENTS.map(o=>({value:o.key,label:o.label})),opponent,v=>{opponent=v;lsSet(OPP_KEY,v)});
   radios($("lvl"),"lvl",K.LEVELS.map(o=>({value:o.key,label:o.key,title:o.label})),level,v=>{level=v;lsSet(LVL_KEY,v);T=tablesFor(level);showCounts()});
   radios($("tim"),"tim",K.timeChoices(D).map(sec=>({value:sec,label:K.timeLabel(sec)})),timeLimit,v=>{timeLimit=+v;lsSet(TIME_KEY,v);buildHowto()});
-  const lays=K.LAYOUTS.map(o=>({value:o.key,label:o.label}));
-  radios($("lay"),"lay",lays,layout,setLayout);
-  radios($("layNow"),"layNow",lays,layout,setLayout);
-}
-function setLayout(key){
-  layout=key;lsSet(LAY_KEY,key);
-  for(const n of ["lay","layNow"]){const r=document.querySelector(`#${n} input[value="${key}"]`);if(r)r.checked=true}
-  if(!G){return}
-  G.setLayout(key);hideChoices();afterChange();
 }
 function tablesFor(lv){return TABLES[lv]||(TABLES[lv]=K.makeTables(D,lv))}
 function showCounts(){$("setupInfo").textContent=`字 ${T.CHARS.size}・語 ${T.WORDS.size}（レベル ${K.levelLabel(T.level)}）`}
@@ -322,7 +306,7 @@ function start(){
   clearTimeout(cpuTimer);
   sendAbandoned();
   T=tablesFor(level);buildHowto();
-  G=K.createGame(D,T,{now:clock,opponent,layout,timeLimit});
+  G=K.createGame(D,T,{now:clock,opponent,timeLimit});
   row=[];lastTried="";
   $("msg").textContent="";$("msg").className="msg";
   $("bCopyEnd").hidden=true;
@@ -424,7 +408,7 @@ function noteTried(){
 let dragEnded=false; // 引きずって離したあとに出るタップを無視する
 function tapHand(id){
   if(G.over||dragEnded)return;
-  if(row.includes(id)){tapRow(id);return} // 手札で選ぶ：もう一度タップで外れる
+  if(row.includes(id)){tapRow(id);return} // もう一度タップで選びが外れる
   row.push(id);lastTried="";hideChoices();render();
 }
 // 入れ替え：札を引きずって、別の札の上で離すと入れ替わる（手札とストックの間も）。空いたマスの上で離すとそこへ移る。指一本でできる
@@ -519,14 +503,13 @@ function tileEl(x,{onClick,shown,ord}={}){
   b.title=x.c;
   return b;
 }
-// 手札は上限の数だけマスを置く。台に出した札のマスは点線で残す（位置が動かない）。
+// 手札は上限の数だけマスを置く。選んだ札はそのマスに残り、色が変わって選んだ順の数字が付く（KJ-030。台には写しを並べる）。
 // ストック（字も部品も置ける。手札が埋まっていると、割る・くっつけるでできた札が入る）は手札の下に別に見せる
 function renderHand(el,p,interactive,tray){
   el.innerHTML="";
   const inRow=interactive?new Set(row):new Set();
   const cards=p.cards.filter(x=>!!x.tray===!!tray);
   for(const x of cards){
-    if(inRow.has(x.id)&&layout==="table"){const s=document.createElement("div");s.className="slot held";s.title=x.c;s.onclick=()=>tapRow(x.id);el.appendChild(s);continue}
     const t=tileEl(x,interactive?{onClick:()=>tapHand(x.id),ord:inRow.has(x.id)?row.indexOf(x.id)+1:0}:{});
     if(interactive)attachDrag(t,x.id);
     el.appendChild(t);
@@ -556,14 +539,14 @@ function render(){
     ct.textContent=`手札 ${G.handCount(p)} / ${D.rules.hand_max}`;
   }
   $("trayHead").textContent=`ストック（字も部品も置ける。${G.trayCount(G.me)} / ${D.rules.split_extra}）`;
-  // 台（手札で選ぶときは使わない。選んだ札は手札の上で色が変わる）
-  const rowEl=$("row");rowEl.innerHTML="";rowEl.style.display=layout==="hand"?"none":"";
+  // 台：選んだ札の写しを、選んだ順に左から並べる（札そのものは手札・ストックのマスに残っている。KJ-030）
+  const rowEl=$("row");rowEl.innerHTML="";
   const s=rowState();
-  if(layout==="hand"){/* 台は出さない */}
-  else if(!s.rc.length)rowEl.innerHTML='<span class="empty">手札をタップして台に並べる</span>';
-  if(layout==="table")s.rc.forEach((x,i)=>{
+  if(!s.rc.length)rowEl.innerHTML='<span class="empty">手札をタップして選ぶ（選んだ順に台に並ぶ）</span>';
+  s.rc.forEach((x,i)=>{
     const shown=(i===0&&s.joins.length&&D.radical_forms.left[x.c])||null;
-    rowEl.appendChild(tileEl({...x,fresh:false},{onClick:()=>tapRow(x.id),shown}));
+    const t=tileEl({...x,fresh:false},{onClick:()=>tapRow(x.id),shown});
+    rowEl.appendChild(t);
   });
   const w=T.WORDS.get(s.text),info=$("info");
   const rev=s.reversed?' <span class="rev">並べる順が逆</span>':"";
@@ -621,14 +604,14 @@ function buildHowto(){
   const R=D.rules,S=R.score;
   $("lead").textContent=`手札を組み替えて言葉を作り、放つと点が入る。放った字数だけ場から字を取れる。先に ${R.win.score} 点か、${(timeLimit||R.win.time_limit_sec)/60} 分で点の多い方が勝ち。`;
   $("howto").innerHTML=[
-    `<b>並べ方</b>（上で切り替え。いつでも戻せる）：<b>手札で選ぶ</b>は、手札の札をタップすると色が変わって選ばれ、角に選んだ順の数字（1・2・3…）が出る。もう一度タップで外れる。ボタンは選んだ札に、選んだ順で働く。<b>台に並べる</b>は、手札の札をタップすると台に並ぶ（並べた順が左から）。台の札、または手札の点線のマスをタップすると手札に戻る。`,
-    `<b>入れ替え・移す</b>：札を指で引きずって、別の札の上で離すと位置が入れ替わる（手札とストックの間でもよい）。空いたマスの上で離すと、そこへ移る（どちらの並べ方でも使える）。`,
+    `<b>選ぶ</b>：手札・ストックの札をタップすると、札はそのマスに残ったまま色が変わって選ばれ、角に選んだ順の数字（1・2・3…）が出る。台には、選んだ札の写しが選んだ順に左から並ぶ。もう一度タップ（手札の札でも、台の写しでも）で外れる。ボタンは選んだ札に、選んだ順で働く。`,
+    `<b>入れ替え・移す</b>：札を指で引きずって、別の札の上で離すと位置が入れ替わる（手札とストックの間でもよい）。空いたマスの上で離すと、そこへ移る。`,
     `<b>放つ</b>：台の札が辞書の語（2〜4字）なら放てる。<b>1字では放てない</b>（くっつけて作った字でも同じ）。一度放った言葉は二人とも二度と使えない。放った札は消える（相手には届かない）。`,
     `<b>点数</b>：${Object.entries(S.by_length).map(([n,p])=>`${n}字 ${p}点`).join("・")}。四字熟語は ${S.yoji_mult} 倍、特別な語（天上天下）はさらに ${S.special_mult} 倍。`,
     `<b>取る</b>：放ったら、放った字数と同じ枚数を<b>場</b>から選んで取れる（手札は ${R.hand_max} 枚まで）。取ったところには山から次の字が出る。相手も同じ場から取るので早い者勝ち（ひとりでは取り合いなし）。`,
-    `<b>ストック</b>：手札（${R.hand_max} マス）の下の ${R.split_extra} マス。字も部品も置ける。割る・くっつけるでできた札は、手札に空きがなければストックに入る（全部で ${R.hand_max+R.split_extra} 枚まで）。場から取るのは手札の ${R.hand_max} マスまで。ストックの札も台に並べて使える。`,
+    `<b>ストック</b>：手札（${R.hand_max} マス）の下の ${R.split_extra} マス。字も部品も置ける。割る・くっつけるでできた札は、手札に空きがなければストックに入る（全部で ${R.hand_max+R.split_extra} 枚まで）。場から取るのは手札の ${R.hand_max} マスまで。ストックの札も選んで使える。`,
     `<b>はじまり</b>：はじめの手札は ${R.start_hand} 枚。はじめたらすぐ時間が動く。ストックには、使いやすい部品が ${R.start_stock_parts} 枚、最初から入っている。`,
-    `<b>台</b>（台に並べるとき）は並べて見る場所：台に出した札は、出す前の手札・ストックのマスにいるまま、枚数にも数える。`,
+    `<b>台</b>は並べて見る場所：選んだ札は手札・ストックのマスにいるまま、台にはその写しが出る（枚数は変わらない）。`,
     `<b>レベル</b>：はじめる前に選ぶ（N5／N4。N4 は N5＋N4 の字）。山に入る字・語・割り方・対義・巡り・同音がレベルで変わる。いまは ${K.levelLabel(T.level)}（字 ${T.CHARS.size}・語 ${T.WORDS.size}）。`,
     `<b>相手</b>：はじめる前に選ぶ。ひとりで（CPU なし。50 点では終わらず、${(timeLimit||R.win.time_limit_sec)/60} 分たったら点を出す。この端末の自己ベストを覚える）／とても弱い（CPU は ${R.cpu.weak_interval_sec[0]}〜${R.cpu.weak_interval_sec[1]} 秒に1回）／いまの強さ（${R.cpu.interval_sec[0]}〜${R.cpu.interval_sec[1]} 秒に1回）。`,
     `<b>割る</b>：台の1枚を部品表で一段だけ割る。<b>くっつける</b>：台の2枚を、左→右の順でくっつける。逆に並べたときは「並べる順が逆」と出る。十・口 のように2通りの字になるときは選ぶ。`,
