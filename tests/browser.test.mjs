@@ -589,6 +589,20 @@ test("画面", { skip }, async (t) => {
       assert.deepEqual(await lit(), { c: "口", faces: "center,top", on: "" });
     });
     assert.equal(await order(), "天上天下口十休日", "描き直しのあとも、光っていない面なら入れ替え");
+    // 1回の動きで札に入って、そのまま離す：濃く光る面と結果がそろう（口 の右寄り＝大きくなった札では中央）
+    await reset();
+    {
+      await page.locator("#meHand").scrollIntoViewIfNeeded();
+      const f = await page.locator("#meHand .tile", { hasText: "十" }).first().boundingBox();
+      const tb = await page.locator("#meHand .tile", { hasText: "口" }).first().boundingBox();
+      await page.mouse.move(f.x + f.width / 2, f.y + f.height / 2); await page.mouse.down();
+      await page.mouse.move(f.x + f.width / 2, f.y - 30, { steps: 3 });
+      await page.mouse.move(tb.x + tb.width * 0.75, tb.y + tb.height * 0.5);
+      const l = await lit();
+      await page.mouse.up();
+      assert.equal(l.on, "center", "大きくなった札で面を決める");
+      assert.equal(await order(), "天上天下田休日_", "濃く光った面（中央）のとおりになる");
+    }
     // 光っていない面（下）で離す → いまの入れ替え
     await reset();
     await dragTo("十", "口", 0.5, 0.9, async () => {

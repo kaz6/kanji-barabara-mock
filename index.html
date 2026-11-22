@@ -460,8 +460,10 @@ function attachDrag(b,id){
       if(!moved)return;
       markJoinable();
       if(jt&&!jt.isConnected)jt=null;
-      const t=under(ev),hit=target(ev,t);
-      if(t&&Object.keys(facesOf(t)).length)showJt(t,hit?hit.face:null);else clearJt();
+      const t=under(ev),can=t&&Object.keys(facesOf(t)).length;
+      if(can)showJt(t,null);else clearJt(); // 先に大きくしてから、大きくなった札で面を決める（離したときと同じ大きさで決める）
+      const hit=target(ev,t);
+      if(can)showJt(t,hit?hit.face:null);
       const sw=hit?null:t; // 光る面の上では入れ替えの印を出さない
       if(over&&over!==sw)over.classList.remove("over");over=sw;if(sw)sw.classList.add("over");
     };
