@@ -650,7 +650,7 @@ function attachDrag(b,id){
       b.classList.remove("drag");if(over)over.classList.remove("over");
       if(!t||ev.type!=="pointerup"||!G||G.over)return;
       if(hit){
-        const tid=+t.dataset.id,done=(r)=>{hideChoices();if(r&&r.ok)lastTried="";else if(r&&r.why)G.triedOp(G.me,"面でくっつける",[myChar(),G.byId(G.me,tid).c],r.why);afterChange()};
+        const tid=+t.dataset.id,done=(r)=>{hideChoices();if(r&&r.ok)lastTried="";else if(r&&r.why)G.triedOp(G.me,"面でくっつける",[myChar(),(G.byId(G.me,tid)||{}).c].filter(Boolean),r.why);afterChange()};
         if(hit.chars.length>1){showChoices([{label:"できる字",chars:hit.chars,pick:x=>done(G.joinFace(G.me,id,tid,hit.face,x))}]);return}
         done(G.joinFace(G.me,id,tid,hit.face));return;
       }
