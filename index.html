@@ -443,7 +443,7 @@ function attachDrag(b,id){
     if(!G||G.over||(e.pointerType==="mouse"&&e.button!==0))return;
     const sx=e.clientX,sy=e.clientY;let moved=false,over=null,jt=null;
     const rows=[$("meHand"),$("meTray")];
-    const under=(ev)=>{const t=document.elementFromPoint(ev.clientX,ev.clientY);const el=t&&t.closest("[data-id],.slot.free");return el&&el!==b&&rows.includes(el.parentNode)&&(el.dataset.id||el.parentNode!==b.parentNode)?el:null};
+    const under=(ev)=>{const t=document.elementFromPoint(ev.clientX,ev.clientY);const el=t&&t.closest("[data-id],.slot.free");return el&&el!==b&&+el.dataset.id!==id&&rows.includes(el.parentNode)&&(el.dataset.id||el.parentNode!==b.parentNode)?el:null};
     const myChar=()=>{const x=G.byId(G.me,id);return x?x.c:null};
     const facesOf=(el)=>{const x=el&&el.dataset.id&&G.byId(G.me,+el.dataset.id),c=myChar();return x&&c?K.faceJoins(T,c,x.c):{}};
     // いま離したら、どの面でくっつくか（字にならない面・札でない所は null）
@@ -453,14 +453,15 @@ function attachDrag(b,id){
       if(jt!==t){clearJt();jt=t;t.classList.add("jt");for(const f of Object.keys(facesOf(t))){const z=document.createElement("span");z.className="fz "+f;z.dataset.face=f;t.appendChild(z)}}
       jt.querySelectorAll(".fz").forEach(z=>z.classList.toggle("on",z.dataset.face===face));
     };
+    // くっつけられる相手の枠を青に。引きずっている途中で画面が描き直されても（CPU の手など）、動かすたびに付け直す
+    const markJoinable=()=>{for(const el of document.querySelectorAll("#meHand [data-id],#meTray [data-id]"))if(+el.dataset.id!==id&&!el.classList.contains("joinable")&&Object.keys(facesOf(el)).length)el.classList.add("joinable")};
     const move=ev=>{
-      if(!moved&&Math.hypot(ev.clientX-sx,ev.clientY-sy)>10){
-        moved=true;b.classList.add("drag");document.body.classList.add("dragging");
-        for(const el of document.querySelectorAll("#meHand [data-id],#meTray [data-id]"))if(el!==b&&Object.keys(facesOf(el)).length)el.classList.add("joinable");
-      }
+      if(!moved&&Math.hypot(ev.clientX-sx,ev.clientY-sy)>10){moved=true;b.classList.add("drag");document.body.classList.add("dragging")}
       if(!moved)return;
+      markJoinable();
+      if(jt&&!jt.isConnected)jt=null;
       const t=under(ev),hit=target(ev,t);
-      if(t&&t.classList.contains("joinable"))showJt(t,hit?hit.face:null);else clearJt();
+      if(t&&Object.keys(facesOf(t)).length)showJt(t,hit?hit.face:null);else clearJt();
       const sw=hit?null:t; // 光る面の上では入れ替えの印を出さない
       if(over&&over!==sw)over.classList.remove("over");over=sw;if(sw)sw.classList.add("over");
     };

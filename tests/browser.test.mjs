@@ -571,6 +571,24 @@ test("画面", { skip }, async (t) => {
       if (process.env.KJ_SHOT) await page.screenshot({ path: process.env.KJ_SHOT.replace(/\.png$/, "-center.png") });
     });
     assert.equal(await order(), "天上天下田休日_");
+    // 引きずっている途中で画面が描き直されても（CPU の手など）、動かせば光り直し、光った面でくっつく。光っていない面なら入れ替え
+    await reset();
+    await dragTo("十", "口", 0.5, 0.12, async () => {
+      await page.evaluate(() => __KJ.render());
+      const tb = await page.locator("#meHand .tile", { hasText: "口" }).first().boundingBox();
+      await page.mouse.move(tb.x + tb.width * 0.5, tb.y + tb.height * 0.15, { steps: 2 });
+      assert.deepEqual(await lit(), { c: "口", faces: "center,top", on: "top" }, "描き直しのあとも光る");
+      assert.match(await joinable(), /口/);
+    });
+    assert.equal(await order(), "天上天下古休日_");
+    await reset();
+    await dragTo("十", "口", 0.5, 0.9, async () => {
+      await page.evaluate(() => __KJ.render());
+      const tb = await page.locator("#meHand .tile", { hasText: "口" }).first().boundingBox();
+      await page.mouse.move(tb.x + tb.width * 0.5, tb.y + tb.height * 0.88, { steps: 2 });
+      assert.deepEqual(await lit(), { c: "口", faces: "center,top", on: "" });
+    });
+    assert.equal(await order(), "天上天下口十休日", "描き直しのあとも、光っていない面なら入れ替え");
     // 光っていない面（下）で離す → いまの入れ替え
     await reset();
     await dragTo("十", "口", 0.5, 0.9, async () => {
