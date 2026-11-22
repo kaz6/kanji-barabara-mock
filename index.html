@@ -41,6 +41,7 @@ h1{font-size:17px;margin:0 0 2px;font-weight:700}
 .tile.drag{opacity:.55;border-style:dashed}
 .tile.over{border-color:var(--accent);border-width:2px}
 .tile.part{background:#f1ede4;color:#4a463f}
+.tile.part.sel{background:var(--accent);border-color:var(--accent);color:#fff} /* 部品の札も選ぶと赤地に白（部品の色に負けない） */
 .tile.new{border-color:var(--accent);border-width:2px}
 .tile .mk{position:absolute;top:1px;right:3px;font:10px/1.2 system-ui,sans-serif;color:var(--accent);letter-spacing:-1px}
 .tile .orig{position:absolute;bottom:1px;left:3px;font:10px/1 system-ui,sans-serif;color:var(--sub)}
@@ -144,8 +145,6 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
   .field .tile{font-size:24px}
   .fieldside .takes{flex:1;font-size:12px;line-height:1.35;min-width:0}
   .bar{gap:5px 6px;margin:4px 0}
-  .bar .opp{font-size:13px;gap:8px}
-  .bar .opp label{padding:2px 0}
   .bar button.op{font-size:13px;padding:4px 9px;min-width:0}
   .clock{font-size:13px;margin-left:auto}
   .msgline{height:20px;font-size:13px}
@@ -547,7 +546,7 @@ function render(){
   s.rc.forEach((x,i)=>{
     const shown=(i===0&&s.joins.length&&D.radical_forms.left[x.c])||null;
     const t=tileEl({...x,fresh:false},{onClick:()=>tapRow(x.id),shown});
-    t.dataset.copy=x.id;rowEl.appendChild(t);
+    rowEl.appendChild(t);
   });
   const w=T.WORDS.get(s.text),info=$("info");
   const rev=s.reversed?' <span class="rev">並べる順が逆</span>':"";

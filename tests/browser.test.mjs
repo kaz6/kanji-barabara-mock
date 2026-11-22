@@ -389,7 +389,7 @@ test("画面", { skip }, async (t) => {
   }
 
 
-  // ---------- KJ-005：手札で選ぶ・入れ替え・切り替え ----------
+  // ---------- KJ-005・KJ-030：選ぶ・入れ替え ----------
   for (const vp of [{ width: 760, height: 1100, name: "広い画面" }, { width: 375, height: 900, name: "スマホ幅" }]) {
     await t.test(`${vp.name}：選ぶと色が変わり選んだ順の数字が出る。台には写しが並ぶ。放つ・割る・くっつけるの結果。外せる`, async () => {
       const { ctx, page, errors } = await open(browser, url, vp, null);
@@ -475,6 +475,14 @@ test("画面", { skip }, async (t) => {
       assert.equal(await tile("日").evaluate((e) => e.classList.contains("sel")), false);
       assert.equal(await tile("休").locator(".ord").textContent(), "1", "残りは詰める");
       assert.equal(await pos("#meHand > *"), hand0);
+      // 部品の札（色の薄い札）も選ぶと赤地に白になり、数字が読める
+      await page.evaluate(() => { const G = __KJ.game; G.me.cards.push({ id: 9300, c: "亻", t: 0, fresh: false, tray: true }); __KJ.render(); });
+      await page.locator("#meTray .tile", { hasText: "亻" }).click();
+      const pt = page.locator("#meTray .tile", { hasText: "亻" });
+      assert.equal(await pt.evaluate((e) => e.classList.contains("part")), true, "亻 は部品の札");
+      assert.equal(await pt.evaluate((e) => getComputedStyle(e).backgroundColor), await tile("休").evaluate((e) => getComputedStyle(e).backgroundColor), "部品でも選ぶと漢字の札と同じ赤地");
+      assert.equal(await pt.evaluate((e) => getComputedStyle(e).color), "rgb(255, 255, 255)");
+      assert.equal(await pt.locator(".ord").textContent(), "2");
       // 戻す＝全部外す
       await page.click("#bBack");
       assert.equal(await page.locator("#row .tile").count(), 0);
@@ -556,7 +564,7 @@ test("画面", { skip }, async (t) => {
     await ctx.close();
   });
 
-  await t.test("手札で選ぶ：スマホ幅の画像（選んだ札が目立つ）", async () => {
+  await t.test("選ぶ：スマホ幅の画像（選んだ札が目立つ）", async () => {
     const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 }, null);
     await page.locator("#meHand .tile", { hasText: "休" }).first().click();
     await page.locator("#meHand .tile", { hasText: "日" }).first().click();
