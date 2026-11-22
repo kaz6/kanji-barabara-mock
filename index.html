@@ -159,6 +159,7 @@ button.op.full{animation:kjGaugeFull .6s ease-out}
 .setup .opp label:has(input:focus-visible){outline:2px solid var(--on-table);outline-offset:2px}
 .setup .note{color:var(--on-table-sub)}
 .setup button.op{border:0;border-bottom:3px solid var(--btn-edge);background:var(--btn);color:var(--ink)}
+.setup button.op:disabled,.setup button.op[aria-disabled=true]{background:var(--btn-off);border-bottom-color:var(--btn-off);color:var(--btn-off-ink)}
 .setup button.op.main{width:100%;margin-top:6px;padding:14px;font-size:17px;background:var(--accent);border-bottom-color:var(--accent-edge);color:#fff}
 /* 合言葉の部屋（KJ-033 後半）：部屋を作る・合言葉で入る・待つ */
 .roomrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0}
@@ -214,6 +215,7 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
   .clock{font-size:12px;margin-left:auto}
   .msgline{height:20px;font-size:13px}
   .table{padding:8px 8px 10px;margin:6px 0}
+  .choices{left:-8px;right:-8px;top:calc(100% + 10px)}
   .table .side{margin:0 0 6px}
   .row{height:58px;gap:4px;padding:0 4px}
   .row .tile{width:46px;height:46px;font-size:30px}
@@ -915,7 +917,6 @@ function buildHowto(){
   $("lead").textContent=STR.TEXT.lead(R.win.score,(TL||R.win.time_limit_sec)/60);
   $("howto").innerHTML=[
     `<b>選ぶ</b>：手札・ストックの札をタップすると、札はそのマスに残ったまま色が変わって選ばれ、角に選んだ順の数字（1・2・3…）が出る。台には、選んだ札の写しが選んだ順に左から並ぶ。もう一度タップ（手札の札でも、台の写しでも）で外れる。ボタンは選んだ札に、選んだ順で働く。`,
-    `<b>ストック</b>：字も部品も置ける。手札が埋まっているとき、割る・くっつけるでできた札が入る。`,
     `<b>入れ替え・移す</b>：札を指で引きずって、別の札の上で離すと位置が入れ替わる（手札とストックの間でもよい）。空いたマスの上で離すと、そこへ移る。`,
     `<b>放つ</b>：台の札が辞書の語（2〜4字）なら放てる。<b>1字では放てない</b>（くっつけて作った字でも同じ）。一度放った言葉は二人とも二度と使えない。放った札は消える（相手には届かない）。`,
     `<b>点数</b>：${Object.entries(S.by_length).map(([n,p])=>`${n}字 ${p}点`).join("・")}。四字熟語は ${S.yoji_mult} 倍、特別な語（天上天下）はさらに ${S.special_mult} 倍。`,

@@ -1515,6 +1515,11 @@ test("画面", { skip }, async (t) => {
     assert.ok(parseFloat(on.edge) >= 2, "札の形（下の縁）");
     assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById("setup")).backgroundColor), "rgb(43, 41, 38)");
     assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById("setup")).borderTopWidth), "0px", "囲み線なし");
+    const host = (d) => page.evaluate((dis) => { const b = document.getElementById("bHost"); b.disabled = dis; const cs = getComputedStyle(b); return [cs.backgroundColor, cs.color]; }, d);
+    const [hOn, hOff] = [await host(false), await host(true)];
+    assert.notDeepEqual(hOn, hOff, "はじめる前でも、押せないボタンは見分けられる");
+    assert.ok(ratio(hOff[1], hOff[0]) >= 4.5, "押せなくても文字が読める");
+    await host(false);
     assert.ok(ratio(await page.evaluate(() => getComputedStyle(document.querySelector("#setup .gt")).color), "rgb(43, 41, 38)") >= 4.5, "はじめる前の小さな字が読める");
     // 色の役割は :root の変数にある
     for (const v of ["--accent", "--join", "--gauge", "--hint", "--table", "--tile", "--edge"]) assert.ok((await page.evaluate((n) => getComputedStyle(document.documentElement).getPropertyValue(n), v)).trim(), `${v} が :root にある`);
