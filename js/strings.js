@@ -27,5 +27,11 @@
     cost: (pt) => `-${pt}pt`,
     free: (sec) => `${sec}s`,
   };
-  return Object.freeze({ ICONS, BUTTONS, redrawNote });
+  // ボタン以外の短い文言（KJ-042。作者「文は仮」。ここ1か所で直せる）。ボタンではないので日本語のまま
+  const TEXT = Object.freeze({
+    title: "漢字版（仮）",
+    lead: (score, min) => `漢字を割ってくっつけて、言葉を放つ。先に ${score} 点か ${min} 分で、多い方が勝ち。`,
+    tray: (n, max) => `ストック ${n} / ${max}`,
+  });
+  return Object.freeze({ ICONS, BUTTONS, redrawNote, TEXT });
 });

@@ -691,7 +691,7 @@ test("画面", { skip }, async (t) => {
 
   await t.test("ストック（R-042）：手札の札を引きずってストックの空いたマスへ移す。ストックの札と手札の札を入れ替える。ストックの見出し", async () => {
     const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 }, null);
-    assert.match(await page.textContent("#trayHead"), /^ストック（字も部品も置ける/);
+    assert.match(await page.textContent("#trayHead"), /^ストック \d+ \/ \d+$/);
     const center = async (loc) => { const b = await loc.boundingBox(); return [b.x + b.width / 2, b.y + b.height / 2]; };
     const dragTo = async (from, to) => {
       await page.locator("#meTray").scrollIntoViewIfNeeded(); // 手札とストックが両方見える所で（先に動かしておかないと座標がずれる）
@@ -1489,6 +1489,101 @@ test("画面", { skip }, async (t) => {
     await drag("休", "日", 0.5, 0.5);
     assert.deepEqual((await rows()).map((r) => r[0]), ["ためした", "入れ替え", "入れ替え"]);
     assert.equal(await page.evaluate(() => __KJ.game.hintStreak), 0);
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+
+  await t.test("見た目（KJ-042）：墨色の卓・札の厚み・ボタンの重さ3段（押せないときも文字が読める）・色の役割・点と残り時間が大きい・はじめる前は札の形の選択ボタン・375×700 に収まる", async () => {
+    const lum = (c) => { const v = c.match(/[\d.]+/g).slice(0, 3).map(Number).map((n) => { n /= 255; return n <= 0.03928 ? n / 12.92 : ((n + 0.055) / 1.055) ** 2.4; }); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
+    const ratio = (a, b) => { const [p, q] = [lum(a), lum(b)].sort((m, n) => n - m); return (p + 0.05) / (q + 0.05); };
+    const ACCENT = "rgb(200, 64, 42)";
+    const ctx = await browser.newContext({ viewport: { width: 375, height: 700 } });
+    const page = await ctx.newPage();
+    const errors = [];
+    page.on("pageerror", (e) => errors.push(String(e)));
+    await page.goto(url);
+    await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
+    // はじめる前：題に「モック」がない・ラジオはブラウザの青ではなく札の形。選んだものが赤地に白
+    assert.doesNotMatch(await page.textContent("h1"), /モック/);
+    const lab = (v) => page.evaluate((val) => { const l = document.querySelector(`#opp input[value="${val}"]`).closest("label"), cs = getComputedStyle(l); return { bg: cs.backgroundColor, color: cs.color, edge: cs.borderBottomWidth, op: getComputedStyle(l.querySelector("input")).opacity }; }, v);
+    await page.check('#opp input[value="solo"]');
+    const on = await lab("solo"), off = await lab("normal");
+    assert.equal(on.bg, ACCENT, "選んだものは赤地");
+    assert.equal(on.color, "rgb(255, 255, 255)", "選んだものは白い字");
+    assert.notEqual(off.bg, ACCENT);
+    assert.equal(on.op, "0", "ブラウザのラジオは見せない");
+    assert.ok(parseFloat(on.edge) >= 2, "札の形（下の縁）");
+    assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById("setup")).backgroundColor), "rgb(43, 41, 38)");
+    assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById("setup")).borderTopWidth), "0px", "囲み線なし");
+    assert.ok(ratio(await page.evaluate(() => getComputedStyle(document.querySelector("#setup .gt")).color), "rgb(43, 41, 38)") >= 4.5, "はじめる前の小さな字が読める");
+    // 色の役割は :root の変数にある
+    for (const v of ["--accent", "--join", "--gauge", "--hint", "--table", "--tile", "--edge"]) assert.ok((await page.evaluate((n) => getComputedStyle(document.documentElement).getPropertyValue(n), v)).trim(), `${v} が :root にある`);
+    await page.click("#start");
+    await page.evaluate(() => {
+      const G = __KJ.game; G.cpuTurn = () => null;
+      G.me.cards = [..."上休十口日月天下"].map((c, i) => ({ id: 9600 + i, c, t: 0, fresh: false }));
+      G.field = [..."山川玉"].map((c, i) => ({ id: 9700 + i, c, t: 0, fresh: false }));
+      __KJ.row.length = 0; __KJ.render();
+    });
+    // 卓は墨色の単色・囲み線なし。場と台が卓の中にある
+    const table = await page.evaluate(() => { const e = document.querySelector(".table"), cs = getComputedStyle(e); return { bg: cs.backgroundColor, img: cs.backgroundImage, bw: cs.borderTopWidth, field: e.contains(document.getElementById("field")), row: e.contains(document.getElementById("row")), ops: e.contains(document.querySelector(".ops")) }; });
+    assert.deepEqual(table, { bg: "rgb(43, 41, 38)", img: "none", bw: "0px", field: true, row: true, ops: true });
+    // 札：下の縁だけ一段濃い（厚み）。影はない。角の印は墨色
+    const tile = await page.evaluate(() => { const e = document.querySelector("#meHand .tile"), cs = getComputedStyle(e), mk = getComputedStyle(e.querySelector(".mk")); return { b: cs.borderBottomWidth, side: cs.borderLeftWidth, bc: cs.borderBottomColor, sc: cs.borderLeftColor, shadow: cs.boxShadow, bg: cs.backgroundColor, mk: mk.color }; });
+    assert.ok(parseFloat(tile.b) >= 2 && parseFloat(tile.b) > parseFloat(tile.side), `下の縁が厚い（${tile.b}）`);
+    assert.notEqual(tile.bc, tile.sc, "下の縁だけ濃い");
+    assert.equal(tile.shadow, "none", "札に影はない");
+    assert.equal(tile.mk, "rgb(29, 27, 24)", "角の印は墨色");
+    assert.ok(ratio(tile.bg, "rgb(43, 41, 38)") >= 8, "札は卓の上でも見分けられる");
+    assert.ok(ratio(await page.evaluate(() => getComputedStyle(document.querySelector("#meTray .slot")).backgroundColor), await page.evaluate(() => getComputedStyle(document.body).backgroundColor)) < 1.3, "空きマスは背景に沈む");
+    // 点と残り時間は大きな数字。補足は小さい
+    const fs = await page.evaluate(() => ({ score: parseFloat(getComputedStyle(document.querySelector("#meScore .n")).fontSize), clock: parseFloat(getComputedStyle(document.querySelector("#clock .n")).fontSize), count: parseFloat(getComputedStyle(document.getElementById("meCount")).fontSize), tray: parseFloat(getComputedStyle(document.getElementById("trayHead")).fontSize) }));
+    assert.ok(fs.score >= 26 && fs.clock >= 20, `点と残り時間が大きい（${fs.score}・${fs.clock}）`);
+    assert.ok(fs.count <= 13 && fs.tray <= 12, "補足は小さい");
+    assert.match(await page.textContent("#meScore"), /^0 点/);
+    assert.equal((await page.textContent("#trayHead")).trim(), "ストック 0 / 8", "補足は短い");
+    // ボタンの重さ3段：Play は群より大きく赤・群は同じ大きさ・Back と Redraw は枠も地もない文字だけ（待ち時間のゲージを除く）
+    const sz = () => page.evaluate(() => { const r = (id) => { const b = document.getElementById(id).getBoundingClientRect(); return [Math.round(b.width), Math.round(b.height)]; }; return { play: r("bRelease"), set: ["bSplit", "bJoin", "bInvert", "bCycle", "bHomo"].map(r) }; });
+    const z = await sz();
+    assert.ok(z.play[1] > z.set[0][1] && z.play[0] > z.set[0][0] * 1.5, `Play は大きい（${z.play}・${z.set[0]}）`);
+    assert.ok(new Set(z.set.map((s) => s[1])).size === 1, "群は同じ高さ");
+    const quiet = await page.evaluate(() => ["bBack", "bRedraw"].map((id) => { const cs = getComputedStyle(document.getElementById(id)); return [cs.backgroundColor, cs.borderBottomWidth]; }));
+    assert.deepEqual(quiet, [["rgba(0, 0, 0, 0)", "0px"], ["rgba(0, 0, 0, 0)", "0px"]], "Back・Redraw は文字だけ");
+    // 文字が読める明暗差：押せるとき・押せないとき・待ち時間のゲージ（満ちた側とまだの側の両方）で 4.5 以上
+    const contrasts = () => page.evaluate(() => [...document.querySelectorAll(".ops button")].map((b) => {
+      const cs = getComputedStyle(b), bef = getComputedStyle(b, "::before");
+      return { id: b.id, off: b.disabled || b.getAttribute("aria-disabled") === "true", color: cs.color, bg: cs.backgroundColor, gauge: b.classList.contains("cd") && parseFloat(bef.width) > 0 ? bef.backgroundColor : null, edge: cs.borderBottomColor };
+    }));
+    const check = (rows, label) => { for (const r of rows) { const under = r.bg === "rgba(0, 0, 0, 0)" ? "rgb(43, 41, 38)" : r.bg; assert.ok(ratio(r.color, under) >= 4.5, `${label} ${r.id} 文字と地（${r.color} / ${under}）`); if (r.gauge) assert.ok(ratio(r.color, r.gauge) >= 4.5, `${label} ${r.id} 文字とゲージ（${r.gauge}）`); } };
+    let rows = await contrasts();
+    assert.ok(rows.filter((r) => r.id !== "bRedraw").every((r) => r.off), "何も選ばないと（Redraw のほかは）押せない");
+    check(rows, "押せないとき");
+    for (const r of rows.filter((q) => !["bBack", "bRedraw"].includes(q.id))) assert.notEqual(r.bg, "rgba(0, 0, 0, 0)", `${r.id} 押せなくても形が残る`);
+    await page.locator("#meHand .tile", { hasText: "上" }).first().click();
+    rows = await contrasts();
+    assert.ok(rows.some((r) => !r.off && r.id === "bInvert"), "上 を選ぶと Flip が押せる");
+    check(rows, "押せるとき");
+    const enabled = rows.find((r) => r.id === "bInvert"), disabled = rows.find((r) => r.off && !["bBack", "bRedraw"].includes(r.id));
+    assert.ok(disabled, "押せないボタンがある");
+    assert.notEqual(enabled.bg, disabled.bg, "押せるときと押せないときが見分けられる");
+    assert.ok(ratio(disabled.bg, "rgb(43, 41, 38)") > 1.2, "押せないボタンは卓に溶けない");
+    await page.click("#bInvert");
+    await page.evaluate(() => { const G = __KJ.game; G.me.cd.invert = G.now() + __KJ.data.rules.cooldown_sec.invert / 2; __KJ.render(); });
+    await page.waitForTimeout(350);
+    rows = await contrasts();
+    const w = rows.find((r) => r.id === "bInvert");
+    assert.ok(w.off && w.gauge, "待ち時間：押せず、ゲージが出ている");
+    check(rows, "待ち時間のゲージ");
+    // 色の役割：赤は選んだ札と Play だけ。取る・合体・ヒントは別の色
+    const reds = await page.evaluate((A) => [...document.querySelectorAll("#game *")].filter((e) => { const cs = getComputedStyle(e); return cs.color === A || cs.backgroundColor === A || cs.borderTopColor === A && parseFloat(cs.borderTopWidth) > 0; }).map((e) => e.id || e.className).filter((n) => typeof n === "string"), ACCENT);
+    for (const n of reds) assert.match(n, /\bsel\b|bRelease|^$|ord|^main|\bmain\b/, `赤を使っているのは選んだ札と Play だけ（${n}）`);
+    assert.ok(reds.some((n) => /sel/.test(n)), "選んだ札は赤");
+    assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById("takes")).color), "rgb(242, 237, 226)", "取る文字は赤ではない");
+    // 375×700 に収まる
+    const geo = await page.evaluate(() => { const r = document.querySelector(".table").getBoundingClientRect(), m = document.getElementById("meTray").getBoundingClientRect(); return { sw: document.documentElement.scrollWidth, tableBottom: r.bottom, trayBottom: m.bottom }; });
+    assert.ok(geo.sw <= 375, "横スクロールがない");
+    assert.ok(geo.trayBottom <= 700, `ストックまで 375×700 に収まる（${geo.trayBottom}）`);
+    if (process.env.KJ_SHOT) await page.screenshot({ path: process.env.KJ_SHOT.replace(/\.png$/, "-kj042.png") });
     assert.deepEqual(errors, []);
     await ctx.close();
   });
