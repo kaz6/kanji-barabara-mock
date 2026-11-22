@@ -12,6 +12,7 @@
   const OPPONENTS = [
     { key: "solo", label: "ひとりで" },
     { key: "weak", label: "とても弱い" },
+    { key: "fair", label: "ふつう" },
     { key: "normal", label: "いまの強さ" },
   ];
   // レベル（KJ-006）。N4＝N5＋N4 の字。レベルが変えるのは字・語・割り方・対義・巡り・同音の範囲だけ
@@ -24,7 +25,7 @@
   const timeChoices = (D) => (D.rules.win.time_choices_sec && D.rules.win.time_choices_sec.length ? D.rules.win.time_choices_sec : [D.rules.win.time_limit_sec]);
   const normTime = (D, v) => (timeChoices(D).includes(Number(v)) && v !== null && v !== "" ? Number(v) : D.rules.win.time_limit_sec);
   const timeLabel = (sec) => `${sec / 60}分`;
-  const cpuInterval = (D, key) => (key === "weak" ? D.rules.cpu.weak_interval_sec : D.rules.cpu.interval_sec);
+  const cpuInterval = (D, key) => (key === "weak" ? D.rules.cpu.weak_interval_sec : key === "fair" ? D.rules.cpu.fair_interval_sec : D.rules.cpu.interval_sec);
 
   const FILES = ["kanji", "words", "readings", "parts", "antonyms", "cycles", "radical_forms", "special", "rules", "split_shapes"];
 
@@ -184,6 +185,7 @@
     if (key === ROOM_OPPONENT.key) return `${ROOM_OPPONENT.label}（相手は人。CPU なし。場の札・言葉・勝ちの点は先に入れた方。相手の手は、こちらから見えたものだけ書く）`;
     if (key === "solo") return `ひとりで（CPU なし。場の取り合いなし。50点では終わらず、${limit / 60}分たったら終わって点を出す。CPU の列は 0）`;
     const [a, b] = cpuInterval(D, key);
+    if (key === "fair") return `ふつう（CPU は ${a}〜${b}秒に1回動く）`;
     return key === "weak" ? `とても弱い（CPU は ${a}〜${b}秒に1回動く。動き方はいまの CPU のまま）` : `いまの強さ（CPU は ${a}〜${b}秒に1回動く）`;
   }
   function rulesLabel(D, key, level, limit) {

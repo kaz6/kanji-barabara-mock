@@ -441,6 +441,30 @@ test("CPU（いまの強さ）：8〜12秒に1回", () => {
   for (let i = 0; i < 50; i++) { const d = g.cpuDelay(); assert.ok(d >= 8 && d <= 12, String(d)); }
 });
 
+test("CPU（ふつう・KJ-035）：15〜20秒に1回。とても弱い（30〜45）といまの強さ（8〜12）の間", () => {
+  const g = newGame(1, "fair");
+  assert.equal(g.opponent, "fair");
+  assert.deepEqual(D.rules.cpu.fair_interval_sec, [15, 20]);
+  for (let i = 0; i < 50; i++) { const d = g.cpuDelay(); assert.ok(d >= 15 && d <= 20, String(d)); }
+});
+
+test("CPU（ふつう・KJ-035）：決まった乱数（1・7・42）で ふつう × N5・N4 の10分。動く回数（CPU の番）は 600÷20〜600÷15 回で、とても弱い より多い（いまの強さ は 50点で早く終わるので比べない）。1回以上放つ", () => {
+  const run = (seed, opp, level) => {
+    const g = newGame(seed, opp, level, { startStock: true });
+    let turns = 0;
+    while (!g.over) { g.clock.t += g.cpuDelay(); g.tick(); if (g.over) break; g.cpuTurn(); turns++; }
+    return { turns, releases: cpuReleases(g).length, score: g.cpu.score };
+  };
+  for (const level of ["N5", "N4"]) {
+    for (const seed of [1, 7, 42]) {
+      const [w, f] = ["weak", "fair"].map((o) => run(seed, o, level));
+      assert.ok(f.turns >= 600 / 20 - 1 && f.turns <= 600 / 15 + 1, `${level} seed ${seed}: ふつうの番 ${f.turns}`);
+      assert.ok(w.turns < f.turns, `${level} seed ${seed}: 弱い ${w.turns} < ふつう ${f.turns}`);
+      assert.ok(f.releases >= 1, `${level} seed ${seed}: ふつうが放った回数 ${f.releases}`);
+    }
+  }
+});
+
 test("CPU：放ったらすぐ場から取る。放てる言葉がなければ引き直す", () => {
   const g = newGame();
   setHand(g, g.cpu, "休日");
@@ -622,9 +646,9 @@ test("動けない：手札が1字だけ（N5 の字でも）なら 動ける �
 });
 
 // ---------- KJ-004：相手の選び方 ----------
-test("相手：初期値は「とても弱い」。選べるのは ひとりで／とても弱い／いまの強さ", () => {
+test("相手：初期値は「とても弱い」。選べるのは ひとりで／とても弱い／ふつう／いまの強さ", () => {
   assert.equal(D.rules.opponent_default, "weak");
-  assert.deepEqual(K.OPPONENTS.map((o) => o.label), ["ひとりで", "とても弱い", "いまの強さ"]);
+  assert.deepEqual(K.OPPONENTS.map((o) => o.label), ["ひとりで", "とても弱い", "ふつう", "いまの強さ"]);
   const g = K.createGame(D, T, { now: () => 0, rand: () => 0.5 });
   assert.equal(g.opponent, "weak", "選ばなければ とても弱い");
   assert.equal(K.createGame(D, T, { now: () => 0, rand: () => 0.5, opponent: "ばか" }).opponent, "weak");
@@ -701,10 +725,11 @@ test("ひとりで：引き直しの待ちも動く。CPU の待ちは見ない"
   assert.equal(g.me.cards.length, D.rules.start_hand);
 });
 
-test("ログ：頭に選んだ相手を書く（ひとりで／とても弱い／いまの強さ）", () => {
+test("ログ：頭に選んだ相手を書く（ひとりで／とても弱い／ふつう／いまの強さ）", () => {
   const head = (opp) => newGame(1, opp).logText().split("\n").filter((l) => l.startsWith("# 相手")).join("");
   assert.match(head("solo"), /# 相手 ひとりで（CPU なし。場の取り合いなし。50点では終わらず、10分たったら終わって点を出す/);
   assert.match(head("weak"), /# 相手 とても弱い（CPU は 30〜45秒に1回動く。動き方はいまの CPU のまま）/);
+  assert.match(head("fair"), /# 相手 ふつう（CPU は 15〜20秒に1回動く）/);
   assert.match(head("normal"), /# 相手 いまの強さ（CPU は 8〜12秒に1回動く）/);
   assert.match(newGame(1, "weak").logText(), /# 仮置き CPU 30〜45秒に1回動く/);
   assert.match(newGame(1, "solo").logText(), /# 仮置き CPU なし/);
