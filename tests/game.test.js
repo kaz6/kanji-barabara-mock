@@ -1108,3 +1108,23 @@ test("ログの送信（KJ-020）：手元（localhost・127.0.0.1・file）と�
   assert.equal(K.logSendAllowed({ hostname: "kaz6.github.io", webdriver: true }), false, "テスト（webdriver）では送らない");
   assert.equal(K.logSendAllowed({ hostname: "127.0.0.1", webdriver: true, force: true }), true, "force は送る処理を確かめるときだけ");
 });
+
+// 画面の文言（KJ-024）：ボタンの文字は英語、角の印は ⇄・↻・♪。js/strings.js に置き、index.html はそこから出す
+test("文言（KJ-024）：js/strings.js のボタンは8つで英語。角の印のアイコンは core.marks に渡すと ⇄↻♪ になる。渡さなければ今まで通り", () => {
+  const fs = require("fs");
+  const path = require("path");
+  const S = require("../js/strings.js");
+  assert.deepEqual(S.ICONS, { invert: "⇄", cycle: "↻", homophone: "♪" });
+  assert.deepEqual(S.BUTTONS, { bRelease: "Play", bSplit: "Split", bJoin: "Join", bInvert: "⇄ Flip", bCycle: "↻ Cycle", bHomo: "♪ Sound conversion", bBack: "Back", bRedraw: "Redraw" });
+  assert.equal(S.redrawNote.cost(5), "5pt");
+  assert.equal(S.redrawNote.free(30), "30s");
+  assert.equal(S.redrawNote.wait(12), "wait 12s");
+  const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+  for (const id of Object.keys(S.BUTTONS)) assert.match(html, new RegExp(`<button class="op[^"]*" id="${id}"><span class="lb"></span>`), `${id} の文字は strings.js から入れる（直書きしない）`);
+  const ops = html.slice(html.indexOf('<div class="ops">'), html.indexOf('<div class="choices"'));
+  assert.doesNotMatch(ops.replace(/<!--[\s\S]*?-->/g, ""), /[぀-ヿ㐀-鿿]/, "ボタンの並びに日本語を直書きしていない");
+  assert.equal(K.marks(T, "上", S.ICONS), "⇄♪");
+  assert.equal(K.marks(T, "十", S.ICONS), "↻♪");
+  assert.equal(K.marks(T, "上"), "反音", "icons を渡さなければ 反・巡・音");
+  assert.equal(K.marks(T, "国", S.ICONS), "", "印の無い字");
+});

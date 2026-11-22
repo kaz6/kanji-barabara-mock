@@ -44,6 +44,7 @@ h1{font-size:17px;margin:0 0 2px;font-weight:700}
 .tile.part.sel{background:var(--accent);border-color:var(--accent);color:#fff} /* 部品の札も選ぶと赤地に白（部品の色に負けない） */
 .tile.new{border-color:var(--accent);border-width:2px}
 .tile .mk{position:absolute;top:1px;right:3px;font:10px/1.2 system-ui,sans-serif;color:var(--accent);letter-spacing:-1px}
+.tile.sel .mk{color:#fff} /* 選んだ札（赤地）の上でも角の印（⇄↻♪）が見える（KJ-024。PR #22 のレビューの気づき） */
 .tile .orig{position:absolute;bottom:1px;left:3px;font:10px/1 system-ui,sans-serif;color:var(--sub)}
 /* 割れる札の点線（KJ-014）：字に重ねる。角の印（反・巡・音＝右上、選んだ順＝左上、元の字＝左下）とぶつからないよう、その分だけ線を短くする */
 .tile .cut{position:absolute;pointer-events:none;z-index:1}
@@ -154,11 +155,14 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
   .info{height:38px;margin:4px 0 6px;font-size:13px;line-height:19px}
   .info .w{font-size:16px}
   /* ボタンは12列の2段に固定する（字の幅が環境でちがっても折り返さない） */
-  .ops{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:5px}
-  .ops button.op{font-size:13px;padding:6px 2px;min-width:0;white-space:nowrap;overflow:hidden;text-align:center}
-  #bRelease,#bSplit,#bBack{grid-column:span 2}
-  #bJoin,#bInvert,#bRedraw{grid-column:span 4}
-  #bCycle,#bHomo{grid-column:span 3}
+  .ops{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:4px}
+  .ops button.op{font-size:13px;padding:6px 1px;min-width:0;white-space:nowrap;overflow:hidden;text-align:center}
+  /* 英語の文字（KJ-024）に合わせた幅：上の段 Play・Split・Join・⇄ Flip・↻ Cycle、下の段 ♪ Sound conversion・Back・Redraw */
+  #bRelease,#bSplit,#bJoin,#bBack{grid-column:span 2}
+  #bInvert,#bCycle{grid-column:span 3}
+  #bHomo,#bRedraw{grid-column:span 5}
+  #bInvert,#bCycle,#bHomo{white-space:normal;line-height:1.25} /* Sound conversion（と、字体で幅が広いときの Flip・Cycle）は収まらなければ2行に折り返す（字は小さくしない） */
+  .ops .cdv{width:2em;font-size:11px}
   #bRedraw .cdv{width:3.8em}
   .trayhead{margin:4px 0 2px;line-height:1.3}
 </style>
@@ -207,14 +211,15 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
     <div class="row" id="row"></div>
     <div class="info" id="info"></div>
     <div class="ops">
-      <button class="op main" id="bRelease">放つ</button>
-      <button class="op" id="bSplit">割る</button>
-      <button class="op" id="bJoin">くっつける</button>
-      <button class="op" id="bInvert">反転 <span class="cdv" id="cdInvert"></span></button>
-      <button class="op" id="bCycle">巡り <span class="cdv" id="cdCycle"></span></button>
-      <button class="op" id="bHomo">同音 <span class="cdv" id="cdHomo"></span></button>
-      <button class="op" id="bBack">戻す</button>
-      <button class="op" id="bRedraw">引き直し <span class="cdv" id="cdRedraw"></span></button>
+      <!-- ボタンの文字は js/strings.js から入れる（英語。KJ-024） -->
+      <button class="op main" id="bRelease"><span class="lb"></span></button>
+      <button class="op" id="bSplit"><span class="lb"></span></button>
+      <button class="op" id="bJoin"><span class="lb"></span></button>
+      <button class="op" id="bInvert"><span class="lb"></span> <span class="cdv" id="cdInvert"></span></button>
+      <button class="op" id="bCycle"><span class="lb"></span> <span class="cdv" id="cdCycle"></span></button>
+      <button class="op" id="bHomo"><span class="lb"></span> <span class="cdv" id="cdHomo"></span></button>
+      <button class="op" id="bBack"><span class="lb"></span></button>
+      <button class="op" id="bRedraw"><span class="lb"></span> <span class="cdv" id="cdRedraw"></span></button>
     </div>
     <div class="choices" id="choices"></div>
   </section>
@@ -242,9 +247,12 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
 <div id="fx"><div class="who" id="fxWho"></div><div id="fxChars" style="display:flex;gap:2vw"></div></div>
 
 <script src="js/core.js"></script>
+<script src="js/strings.js"></script>
 <script>
 "use strict";
 const K=window.KJ;
+const STR=window.KJ_STR; // 画面の文言（ボタンの文字・角の印。KJ-024）
+for(const [id,text] of Object.entries(STR.BUTTONS))document.querySelector(`#${id} .lb`).textContent=text;
 const D={};
 let T=null, G=null; // 表・ゲームの状態
 const TABLES={};    // レベルごとの表（KJ-006）
@@ -484,7 +492,7 @@ function tileEl(x,{onClick,shown,ord}={}){
   const b=document.createElement(onClick?"button":"div");
   b.className="tile"+(K.isChar(T,x.c)?"":" part")+(x.fresh&&clock()-x.t<1.5?" new":"");
   b.textContent=shown||x.c;
-  const m=K.marks(T,x.c);
+  const m=K.marks(T,x.c,STR.ICONS);
   if(m){const s=document.createElement("span");s.className="mk";s.textContent=m;b.appendChild(s);b.classList.add("hasmk")}
   // 割れる札の点線（KJ-014）。左右に割れる字は縦、上下は横、1本で表せない字は角に「割」
   const cut=K.cutSpec(T,x.c);
@@ -578,7 +586,7 @@ function renderOps(){
   $("cdCycle").textContent=cdText(me,"cycle");
   $("cdHomo").textContent=cdText(me,"homophone");
   const rc=D.rules.redraw;
-  $("cdRedraw").textContent=me.redrawAt!==null?`待ち ${Math.ceil(G.redrawLeft(me))}s`:me.score>=rc.cost?`${rc.cost}点`:`${rc.free_wait_sec}秒`;
+  $("cdRedraw").textContent=me.redrawAt!==null?STR.redrawNote.wait(Math.ceil(G.redrawLeft(me))):me.score>=rc.cost?STR.redrawNote.cost(rc.cost):STR.redrawNote.free(rc.free_wait_sec);
   const left=Math.ceil(G.timeLeft());
   $("clock").textContent=`残り ${Math.floor(left/60)}:${String(left%60).padStart(2,"0")}`;
 }
@@ -615,7 +623,7 @@ function buildHowto(){
     `<b>レベル</b>：はじめる前に選ぶ（N5／N4。N4 は N5＋N4 の字）。山に入る字・語・割り方・対義・巡り・同音がレベルで変わる。いまは ${K.levelLabel(T.level)}（字 ${T.CHARS.size}・語 ${T.WORDS.size}）。`,
     `<b>相手</b>：はじめる前に選ぶ。ひとりで（CPU なし。50 点では終わらず、${(timeLimit||R.win.time_limit_sec)/60} 分たったら点を出す。この端末の自己ベストを覚える）／とても弱い（CPU は ${R.cpu.weak_interval_sec[0]}〜${R.cpu.weak_interval_sec[1]} 秒に1回）／いまの強さ（${R.cpu.interval_sec[0]}〜${R.cpu.interval_sec[1]} 秒に1回）。`,
     `<b>割る</b>：台の1枚を部品表で一段だけ割る。<b>くっつける</b>：台の2枚を、左→右の順でくっつける。逆に並べたときは「並べる順が逆」と出る。十・口 のように2通りの字になるときは選ぶ。`,
-    `<b>反転</b>（印：反）対義の字に。${R.cooldown_sec.invert} 秒待ち。<b>巡り</b>（印：巡）${T.CYCLES.map(c=>c.name).join("・")}を1つ先へ。${R.cooldown_sec.cycle} 秒待ち。<b>同音</b>（印：音）同じ読みの字から選ぶ。${R.cooldown_sec.homophone} 秒待ち。待ち時間は操作ごとで、二人は別々。`,
+    `<b>反転</b>（印：${STR.ICONS.invert}）対義の字に。${R.cooldown_sec.invert} 秒待ち。<b>巡り</b>（印：${STR.ICONS.cycle}）${T.CYCLES.map(c=>c.name).join("・")}を1つ先へ。${R.cooldown_sec.cycle} 秒待ち。<b>同音</b>（印：${STR.ICONS.homophone}）同じ読みの字から選ぶ。${R.cooldown_sec.homophone} 秒待ち。待ち時間は操作ごとで、二人は別々。`,
     `<b>引き直し</b>：${R.redraw.cost} 点払って手札を全部入れ替える（${R.start_hand} 枚）。${R.redraw.cost} 点ないときは ${R.redraw.free_wait_sec} 秒待てば 0 点で入れ替わる（待つあいだも動ける）。`,
     `<b>勝ち</b>：先に ${R.win.score} 点。または ${(timeLimit||R.win.time_limit_sec)/60} 分たって点の多い方。CPU の速さは相手の選び方で変わる。`,
     `${Object.keys(D.radical_forms.left).join("・")} を左に置いてくっつけられるときは、${Object.values(D.radical_forms.left).join("・")} の形で見せる（札はもとの字のまま）。色の薄い札は部品（字ではない）。`,

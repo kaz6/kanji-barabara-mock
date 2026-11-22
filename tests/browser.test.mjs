@@ -100,7 +100,7 @@ test("画面", { skip }, async (t) => {
       assert.match(await page.textContent("#released"), /休日.*\+3点/);
       // 引き直し（3点しかない → 30秒待ち）
       await page.click("#bRedraw");
-      assert.match(await page.textContent("#cdRedraw"), /待ち \d+s/);
+      assert.match(await page.textContent("#cdRedraw"), /^wait \d+s$/);
       // ログ
       await page.click("#bLog");
       const log = await page.inputValue("#logText");
@@ -609,7 +609,7 @@ test("画面", { skip }, async (t) => {
       // 字の幅が環境でちがっても、ボタンの中身が枠からはみ出さない（CI の Chromium で3段になった。KJ-010）
       assert.deepEqual(await page.evaluate(() => [...document.querySelectorAll(".ops button")].filter((b) => b.scrollWidth > b.clientWidth + 1).map((b) => b.id)), [], "ボタンの中身が枠に収まる");
       // 待ち時間の表示が入った形でも2段のまま
-      await page.evaluate(() => { for (const id of ["cdInvert", "cdCycle", "cdHomo"]) document.getElementById(id).textContent = "10s"; document.getElementById("cdRedraw").textContent = "待ち 30s"; });
+      await page.evaluate(() => { for (const id of ["cdInvert", "cdCycle", "cdHomo"]) document.getElementById(id).textContent = "10s"; document.getElementById("cdRedraw").textContent = "wait 30s"; });
       assert.ok(new Set(await page.evaluate(() => [...document.querySelectorAll(".ops button")].map((b) => Math.round(b.getBoundingClientRect().top)))).size <= 2, "待ち時間が出ても2段");
       assert.deepEqual(await page.evaluate(() => [...document.querySelectorAll(".ops button")].filter((b) => b.scrollWidth > b.clientWidth + 1).map((b) => b.id)), [], "待ち時間が出てもボタンの中身が枠に収まる");
       // 横にあふれない
@@ -864,6 +864,49 @@ test("画面", { skip }, async (t) => {
     await p2.waitForTimeout(300);
     assert.match(await p2.textContent("#msg"), /勝ち/, "通信が切れていても終われる");
     await c2.close();
+  });
+
+  await t.test("ボタンの文字は英語（KJ-024）。角の印は ⇄・↻・♪ でボタンと同じ。選んだ札でも印が見える。ほかの文言とログは日本語のまま", async () => {
+    for (const vp of [{ width: 760, height: 1100 }, { width: 375, height: 700 }]) {
+      const { ctx, page, errors } = await open(browser, url, vp);
+      const label = (id) => page.evaluate((i) => document.querySelector(`#${i} .lb`).textContent, id);
+      const want = { bRelease: "Play", bSplit: "Split", bJoin: "Join", bInvert: "⇄ Flip", bCycle: "↻ Cycle", bHomo: "♪ Sound conversion", bBack: "Back", bRedraw: "Redraw" };
+      for (const [id, text] of Object.entries(want)) assert.equal(await label(id), text, `${id} の文字`);
+      // ボタンの中に日本語（かな・漢字）が無い。待ち時間・引き直しの添え字が入っても
+      await page.evaluate(() => { __KJ.game.me.score = 9; __KJ.render(); });
+      assert.match(await page.textContent("#cdRedraw"), /^\d+pt$/, "点があるときは Redraw 5pt の形");
+      await page.evaluate(() => { __KJ.game.me.score = 0; __KJ.render(); });
+      assert.match(await page.textContent("#cdRedraw"), /^\d+s$/, "点がないときは Redraw 30s の形");
+      const jp = /[\u3040-\u30ff\u3400-\u9fff]/;
+      for (const t of await page.locator(".ops button").allTextContents()) assert.doesNotMatch(t, jp, `ボタンに日本語が無い（${t}）`);
+      // 角の印：上＝反転と同音 → ⇄♪、十＝巡りと同音 → ↻♪、口＝同音だけ → ♪。日本語の 反・巡・音 は出ない
+      const mk = (ch) => page.evaluate((c) => { const e = [...document.querySelectorAll("#meHand .tile")].find((x) => x.title === c).querySelector(".mk"); return e ? e.textContent : ""; }, ch);
+      assert.equal(await mk("上"), "⇄♪");
+      assert.equal(await mk("十"), "↻♪");
+      assert.equal(await mk("口"), "♪");
+      assert.equal(await mk("休"), "♪");
+      assert.equal(await page.evaluate(() => [...document.querySelectorAll(".tile .mk")].filter((e) => /[反巡音]/.test(e.textContent)).length), 0, "角の印に 反・巡・音 の字が無い");
+      // 印とボタンの前のアイコンが同じ形
+      for (const [id, ic] of [["bInvert", "⇄"], ["bCycle", "↻"], ["bHomo", "♪"]]) assert.ok((await label(id)).startsWith(ic + " "), `${id} の前に ${ic}`);
+      // 選んだ札（赤地）でも、角の印の色が地の色と違う（PR #22 の気づき）
+      await page.locator("#meHand .tile", { hasText: "上" }).first().click();
+      const c = await page.evaluate(() => { const t = [...document.querySelectorAll("#meHand .tile.sel")].find((x) => x.title === "上"); return { bg: getComputedStyle(t).backgroundColor, mk: getComputedStyle(t.querySelector(".mk")).color }; });
+      assert.notEqual(c.mk, c.bg, `選んだ札の印（${c.mk}）が地（${c.bg}）と違う色`);
+      // 台の写しにも同じ印
+      assert.equal(await page.evaluate(() => document.querySelector("#row .tile .mk").textContent), "⇄♪");
+      // ほかの画面の文言は日本語のまま
+      assert.equal(await page.textContent("#meSide .side-head b"), "あなた");
+      assert.match(await page.textContent("#trayHead"), /^ストック/);
+      assert.match(await page.textContent("#howto"), /（印：⇄）.*（印：↻）.*（印：♪）/, "しくみの印の説明もアイコン");
+      // ログの手の名前は日本語のまま
+      await page.click("#bBack");
+      await page.locator("#meHand .tile", { hasText: "休" }).click();
+      await page.click("#bSplit");
+      await page.click("#bLog");
+      assert.match(await page.inputValue("#logText"), /\t割る\t休\t人 木\t/);
+      assert.deepEqual(errors, []);
+      await ctx.close();
+    }
   });
 
   await t.test("ログの送信（KJ-020）：手元（127.0.0.1）とテスト（webdriver）では、force が無ければ送らない", async () => {
