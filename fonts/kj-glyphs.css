@@ -1,0 +1,2 @@
+/* KJ-027：tools/build_glyphs.py が作る。同梱した字（data/glyphs.json の embed）のときだけ使う */
+@font-face{font-family:"KJ Glyphs";src:url("kj-glyphs.otf") format("opentype");unicode-range:U+2E8C,U+2E8D,U+4E02,U+4E37,U+4E8D,U+4EA7,U+4EB2,U+4EBB,U+4EBC,U+5151,U+5173,U+5202,U+520D,U+53E6,U+5405,U+5723,U+5F00,U+624C,U+65A6,U+6C10,U+6C35,U+706C,U+725C,U+7535,U+7592,U+793B,U+7CF9,U+7F52,U+7FDF,U+8002,U+8279,U+867D,U+8A01,U+8FB6,U+91D2,U+961D,U+98E0,U+9FB6,U+9FBA,U+20089,U+201A2,U+20B1D,U+215D7,U+22016,U+26C29;font-display:block}
