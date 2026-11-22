@@ -289,6 +289,19 @@ test("split_shapes：割り方（parts.json）の字すべてに形がある。�
   }
 });
 
+// 面でくっつける（KJ-017）：囲みの字には外側の部品の番号 out がある。それ以外（辶・广 など）には無い
+test("split_shapes：囲みの字すべてに out（0＝左・上の部品／1＝右・下の部品が外側）。囲みでない字には無い", () => {
+  const sh = D.split_shapes.shapes;
+  let n = 0;
+  for (const [k, v] of Object.entries(sh)) {
+    if (v.kind === "囲み") { n++; assert.ok(v.out === 0 || v.out === 1, `${k} の out`); }
+    else assert.equal(v.out, undefined, `${k} は囲みでないのに out がある`);
+  }
+  assert.ok(n > 0);
+  assert.equal(sh["田"].out, 1, "田 は 口（2番目）が外側");
+  assert.equal(sh["国"].out, 0, "国 は 囗（1番目）が外側");
+});
+
 test("cutSpec：左右＝縦の点線、上下＝横の点線、その他＝角に「割」。割れない字は null（N5・N4）", () => {
   for (const lv of ["N5", "N4"]) {
     const TL = TT[lv];

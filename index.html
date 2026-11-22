@@ -8,7 +8,7 @@
 <style>
 :root{
   --bg:#f6f4ef; --ink:#1d1b18; --sub:#6b665d; --line:#d9d4c9; --tile:#fffdf8; --cut:#aaa59a;
-  --slot:#ebe7de; --accent:#c8402a; --ok:#2f6b4f; --dim:#a9a397;
+  --slot:#ebe7de; --accent:#c8402a; --ok:#2f6b4f; --dim:#a9a397; --join:#2f6fd6;
   --kanji:"KJ Glyphs","Hiragino Mincho ProN","Yu Mincho","Noto Serif CJK JP","Noto Serif JP","Source Han Serif JP",serif;
 }
 *{box-sizing:border-box}
@@ -40,6 +40,16 @@ h1{font-size:17px;margin:0 0 2px;font-weight:700}
 .tile .ord{position:absolute;top:1px;left:3px;font:bold 12px/1.2 system-ui,sans-serif;color:#fff}
 .tile.drag{opacity:.55;border-style:dashed}
 .tile.over{border-color:var(--accent);border-width:2px}
+/* 引きずってくっつける（KJ-017）：くっつけられる相手の札の枠は青。上に来た札は大きく見せ、落とすと字になる面だけ青く光る（指している面は濃く） */
+.tile.joinable{border-color:var(--join);box-shadow:0 0 0 1px var(--join)}
+.tile.jt{transform:scale(1.5);z-index:4;box-shadow:0 0 0 2px var(--join),0 4px 10px rgba(0,0,0,.18)}
+.tile .fz{position:absolute;inset:0;background:var(--join);opacity:.25;pointer-events:none;z-index:2}
+.tile .fz.on{opacity:.7}
+.tile .fz.top{clip-path:polygon(0 0,100% 0,70% 30%,30% 30%)}
+.tile .fz.bottom{clip-path:polygon(30% 70%,70% 70%,100% 100%,0 100%)}
+.tile .fz.left{clip-path:polygon(0 0,30% 30%,30% 70%,0 100%)}
+.tile .fz.right{clip-path:polygon(100% 0,100% 100%,70% 70%,70% 30%)}
+.tile .fz.center{inset:30%;border-radius:2px}
 .tile.part{background:#f1ede4;color:#4a463f}
 .tile.part.sel{background:var(--accent);border-color:var(--accent);color:#fff} /* 部品の札も選ぶと赤地に白（部品の色に負けない） */
 .tile.new{border-color:var(--accent);border-width:2px}
@@ -419,27 +429,56 @@ function tapHand(id){
   if(row.includes(id)){tapRow(id);return} // もう一度タップで選びが外れる
   row.push(id);lastTried="";hideChoices();render();
 }
+// 面でくっつける（KJ-017・D-035）：札の上のどこを指しているか。真ん中の四角（幅・高さの30%〜70%）が中央、まわりは対角線で上・下・左・右に分ける
+function faceAt(el,ev){
+  const r=el.getBoundingClientRect(),u=(ev.clientX-r.left)/r.width-.5,v=(ev.clientY-r.top)/r.height-.5;
+  if(Math.abs(u)<.2&&Math.abs(v)<.2)return"center";
+  return Math.abs(v)>=Math.abs(u)?(v<0?"top":"bottom"):(u<0?"left":"right");
+}
 // 入れ替え：札を引きずって、別の札の上で離すと入れ替わる（手札とストックの間も）。空いたマスの上で離すとそこへ移る。指一本でできる
+// 引きずってくっつける（KJ-017）：相手の札の、落とすと字になる面（青く光る）で離すとくっつく。光っていない所で離したら入れ替え・移す
 function attachDrag(b,id){
   b.dataset.id=id;
   b.addEventListener("pointerdown",e=>{
     if(!G||G.over||(e.pointerType==="mouse"&&e.button!==0))return;
-    const sx=e.clientX,sy=e.clientY;let moved=false,over=null;
+    const sx=e.clientX,sy=e.clientY;let moved=false,over=null,jt=null;
     const rows=[$("meHand"),$("meTray")];
     const under=(ev)=>{const t=document.elementFromPoint(ev.clientX,ev.clientY);const el=t&&t.closest("[data-id],.slot.free");return el&&el!==b&&rows.includes(el.parentNode)&&(el.dataset.id||el.parentNode!==b.parentNode)?el:null};
+    const myChar=()=>{const x=G.byId(G.me,id);return x?x.c:null};
+    const facesOf=(el)=>{const x=el&&el.dataset.id&&G.byId(G.me,+el.dataset.id),c=myChar();return x&&c?K.faceJoins(T,c,x.c):{}};
+    // いま離したら、どの面でくっつくか（字にならない面・札でない所は null）
+    const target=(ev,t)=>{if(!t||!t.dataset.id)return null;const fs=facesOf(t),f=faceAt(t,ev);return fs[f]?{face:f,chars:fs[f]}:null};
+    const clearJt=()=>{if(jt){jt.classList.remove("jt");jt.querySelectorAll(".fz").forEach(z=>z.remove());jt=null}};
+    const showJt=(t,face)=>{
+      if(jt!==t){clearJt();jt=t;t.classList.add("jt");for(const f of Object.keys(facesOf(t))){const z=document.createElement("span");z.className="fz "+f;z.dataset.face=f;t.appendChild(z)}}
+      jt.querySelectorAll(".fz").forEach(z=>z.classList.toggle("on",z.dataset.face===face));
+    };
     const move=ev=>{
-      if(!moved&&Math.hypot(ev.clientX-sx,ev.clientY-sy)>10){moved=true;b.classList.add("drag");document.body.classList.add("dragging")}
+      if(!moved&&Math.hypot(ev.clientX-sx,ev.clientY-sy)>10){
+        moved=true;b.classList.add("drag");document.body.classList.add("dragging");
+        for(const el of document.querySelectorAll("#meHand [data-id],#meTray [data-id]"))if(el!==b&&Object.keys(facesOf(el)).length)el.classList.add("joinable");
+      }
       if(!moved)return;
-      const t=under(ev);if(over&&over!==t)over.classList.remove("over");over=t;if(t)t.classList.add("over");
+      const t=under(ev),hit=target(ev,t);
+      if(t&&t.classList.contains("joinable"))showJt(t,hit?hit.face:null);else clearJt();
+      const sw=hit?null:t; // 光る面の上では入れ替えの印を出さない
+      if(over&&over!==sw)over.classList.remove("over");over=sw;if(sw)sw.classList.add("over");
     };
     const up=ev=>{
       document.removeEventListener("pointermove",move);document.removeEventListener("pointerup",up);document.removeEventListener("pointercancel",up);
       if(!moved){document.body.classList.remove("dragging");return}
       dragEnded=true;setTimeout(()=>{dragEnded=false},0);
-      const t=under(ev); // 落とす先は、空のストックが広いまま（引きずり中の形）で決めてから、元へ戻す
+      const t=under(ev),hit=target(ev,t); // 落とす先は、空のストックが広いまま（引きずり中の形）で決めてから、元へ戻す
       document.body.classList.remove("dragging");
+      clearJt();document.querySelectorAll(".tile.joinable").forEach(el=>el.classList.remove("joinable"));
       b.classList.remove("drag");if(over)over.classList.remove("over");
-      if(t&&ev.type==="pointerup"&&G&&!G.over){if(t.dataset.id)G.swap(G.me,id,+t.dataset.id);else G.move(G.me,id,t.parentNode===$("meTray"));afterChange()}
+      if(!t||ev.type!=="pointerup"||!G||G.over)return;
+      if(hit){
+        const tid=+t.dataset.id,done=(r)=>{hideChoices();if(r&&r.ok)lastTried="";afterChange()};
+        if(hit.chars.length>1){showChoices([{label:"できる字",chars:hit.chars,pick:x=>done(G.joinFace(G.me,id,tid,hit.face,x))}]);return}
+        done(G.joinFace(G.me,id,tid,hit.face));return;
+      }
+      if(t.dataset.id)G.swap(G.me,id,+t.dataset.id);else G.move(G.me,id,t.parentNode===$("meTray"));afterChange();
     };
     document.addEventListener("pointermove",move);document.addEventListener("pointerup",up);document.addEventListener("pointercancel",up);
   });
