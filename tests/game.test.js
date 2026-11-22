@@ -295,7 +295,8 @@ test("取りきるまで：取れる枚数はためられない。放てない�
   assert.equal(g.me.takes, 2, "取りきってから放てば、その字数だけ（前の残りは無い）");
   // 相手の動きは、自分の取りきりに関係しない
   assert.equal(g.locked(g.cpu), false);
-  assert.ok(g.split(g.cpu, [g.cpu.cards.find((x) => K.canSplit(T, x.c)).id]).ok || true);
+  setHand(g, g.cpu, "休日");
+  assert.ok(g.split(g.cpu, [g.cpu.cards[0].id]).ok, "自分が取りきる前でも、相手は割れる");
 });
 
 test("取りきるまで：「ためした」は数えない（取りきるまで手が打てないので、ヒントも出ない）", () => {
