@@ -866,7 +866,7 @@ setInterval(pump,250);
 document.addEventListener("visibilitychange",()=>{
   if(document.hidden||!G||G.over)return;
   pump();
-  if(!G.over&&!G.solo){clearTimeout(cpuTimer);scheduleCpu()}
+  if(!G.over&&!G.solo&&!G.match){clearTimeout(cpuTimer);scheduleCpu()} // 人と対戦は CPU を出さない
 });
 
 window.__KJ={get game(){return G},get row(){return row},get tables(){return T},get mc(){return MC},get room(){return ROOM},data:D,render}; // ブラウザのテスト用
