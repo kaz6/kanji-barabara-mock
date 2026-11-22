@@ -111,6 +111,11 @@ button.op.main:disabled{background:#fff;border-color:var(--line);color:var(--dim
 .setup .opp{gap:14px}
 .setup .opp label{padding:4px 0}
 .setup button.op.main{width:100%;margin-top:6px;padding:12px}
+/* 合言葉の部屋（KJ-033 後半）：部屋を作る・合言葉で入る・待つ */
+.roomrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0}
+.roomrow input{font:inherit;font-size:18px;width:7.5em;padding:6px 8px;border:1px solid var(--ink);border-radius:4px;letter-spacing:.15em;font-variant-numeric:tabular-nums}
+.roomcode{font-size:32px;font-weight:700;letter-spacing:.2em;font-variant-numeric:tabular-nums;margin:4px 0}
+.cds.gone{color:var(--accent);font-weight:700}
 [hidden]{display:none!important}
 /* 上の帯・ログ */
 .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
@@ -187,6 +192,14 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
     <div class="grp"><p class="gt">相手</p><span class="opp" id="opp" role="radiogroup" aria-label="相手"></span></div>
     <div class="grp"><p class="gt">レベル</p><span class="opp" id="lvl" role="radiogroup" aria-label="レベル"></span></div>
     <div class="grp"><p class="gt">時間</p><span class="opp" id="tim" role="radiogroup" aria-label="時間"></span></div>
+    <div class="grp" id="roomBox" hidden>
+      <p class="gt">合言葉の部屋（人と対戦。部屋を作った人のレベル・時間で遊ぶ）</p>
+      <div class="roomrow"><button class="op" id="bHost">部屋を作る</button></div>
+      <div class="roomrow"><input id="roomCode" inputmode="numeric" autocomplete="off" maxlength="4" placeholder="数字4けた" aria-label="合言葉"><button class="op" id="bEnter">合言葉で入る</button></div>
+      <p class="roomcode" id="roomShow" hidden></p>
+      <p class="note" id="roomMsg"></p>
+      <button class="op" id="bRoomCancel" hidden>やめる</button>
+    </div>
     <p class="note" id="setupInfo"></p>
     <button class="op main" id="start">はじめる</button>
   </section>
@@ -207,7 +220,7 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
   </section>
 
   <section class="side cpu" id="cpuSide">
-    <div class="side-head"><b>CPU</b><span class="score" id="cpuScore"></span><span class="count" id="cpuCount"></span><span class="cds" id="cpuCds"></span></div>
+    <div class="side-head"><b id="cpuName">CPU</b><span class="score" id="cpuScore"></span><span class="count" id="cpuCount"></span><span class="cds" id="cpuCds"></span></div>
     <div class="hand" id="cpuHand"></div>
   </section>
 
@@ -297,7 +310,7 @@ let cpuTimer=null;
 function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
 function lsSet(k,v){try{localStorage.setItem(k,String(v))}catch(e){}}
 function loadSettings(){
-  const o=lsGet(OPP_KEY);opponent=K.OPPONENTS.some(x=>x.key===o)?o:D.rules.opponent_default;
+  const o=lsGet(OPP_KEY);opponent=OPP_CHOICES().some(x=>x.key===o)?o:D.rules.opponent_default;
   const l=lsGet(LVL_KEY);level=K.LEVELS.some(x=>x.key===l)?l:(D.rules.level_default||"N4");
   timeLimit=K.normTime(D,lsGet(TIME_KEY));
 }
@@ -312,10 +325,11 @@ function radios(box,name,items,cur,onPick){
   }
 }
 function buildPickers(){
-  radios($("opp"),"opp",K.OPPONENTS.map(o=>({value:o.key,label:o.label})),opponent,v=>{opponent=v;lsSet(OPP_KEY,v)});
+  radios($("opp"),"opp",OPP_CHOICES().map(o=>({value:o.key,label:o.label})),opponent,v=>{cancelRoom();opponent=v;lsSet(OPP_KEY,v);roomUi()});
   radios($("lvl"),"lvl",K.LEVELS.map(o=>({value:o.key,label:o.key,title:o.label})),level,v=>{level=v;lsSet(LVL_KEY,v);T=tablesFor(level);showCounts()});
   radios($("tim"),"tim",K.timeChoices(D).map(sec=>({value:sec,label:K.timeLabel(sec)})),timeLimit,v=>{timeLimit=+v;lsSet(TIME_KEY,v);buildHowto()});
 }
+const OPP_CHOICES=()=>[...K.OPPONENTS,K.ROOM_OPPONENT]; // 「人と（合言葉）」はいまの強さの後ろ（KJ-033）
 function tablesFor(lv){return TABLES[lv]||(TABLES[lv]=K.makeTables(D,lv))}
 function showCounts(){$("setupInfo").textContent=`字 ${T.CHARS.size}・語 ${T.WORDS.size}（レベル ${K.levelLabel(T.level)}）`}
 // 画面は2つ：はじめる前の画面と、遊ぶ画面。「もう一度」は同じ設定ですぐ始まる。「設定を変える」で前の画面へ戻る
@@ -323,6 +337,7 @@ function showScreen(playing){$("setup").hidden=playing;$("game").hidden=!playing
 function start(){
   clearTimeout(cpuTimer);
   sendAbandoned();
+  leaveRoom();
   T=tablesFor(level);buildHowto();
   G=K.createGame(D,T,{now:clock,opponent,timeLimit});
   row=[];lastTried="";
@@ -333,8 +348,10 @@ function start(){
   if(!G.solo)scheduleCpu();
   render();
 }
-$("start").onclick=start;$("again").onclick=start;
-$("bSetup").onclick=()=>{clearTimeout(cpuTimer);sendAbandoned();G=null;row=[];hideChoices();$("logPanel").classList.remove("on");showScreen(false);T=tablesFor(level);showCounts();buildHowto()};
+$("start").onclick=start;
+$("again").onclick=()=>{if(G&&G.match)toSetup();else start()}; // 合言葉の部屋の「もう一度」は、はじめる前の画面へ（部屋を作り直す。仮）
+function toSetup(){clearTimeout(cpuTimer);sendAbandoned();leaveRoom();G=null;row=[];hideChoices();$("logPanel").classList.remove("on");showScreen(false);T=tablesFor(level);showCounts();buildHowto();roomUi()}
+$("bSetup").onclick=toSetup;
 function scheduleCpu(){cpuTimer=setTimeout(()=>{if(!G||G.over)return;G.cpuTurn();afterChange();if(!G.over)scheduleCpu()},G.cpuDelay()*1000)}
 function drain(){
   while(G.events.length){
@@ -390,6 +407,7 @@ function sendAbandoned(){if(G&&!G.over)sendLog(G)}
 function end(winner,solo){
   clearTimeout(cpuTimer);
   sendLog(G);
+  if(MC){MC.stop();MC=null;LINK.closeAll();ROOM=null}
   const m=$("msg"),sc=`${G.me.score} 対 ${G.cpu.score}`;
   if(solo){
     const b=soloBest(G.me.score);
@@ -404,6 +422,139 @@ function end(winner,solo){
   $("bCopyEnd").hidden=false;
 }
 function afterChange(){drain();render();refreshLogPanel()}
+
+// ---------- 合言葉の部屋（KJ-033 後半・D-049）：つなぎと、部屋を作る／入る ----------
+// 表 kj_claims（Supabase kanji-barabara）。入れる（REST の POST）・読む（REST の GET）だけ。鍵は play_logs と同じ publishable。
+// 相手の行は Realtime（supabase-js。版を固定して CDN から、必要になったときだけ読む）で受け取り、REST でも数秒ごとに取りこぼしを拾う。
+// Realtime が読めない・つながらないときは REST の読み直しだけで動く（少し遅れる）
+const SB_URL="https://ysxrdhzybzvucxwdqchw.supabase.co";
+const CLAIMS_URL=SB_URL+"/rest/v1/kj_claims";
+const SB_JS="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js";
+const SB_SRI="sha384-0w2KAL2YHP6wKOkUDzkCDGgVvfmHnj02DHeQ6XcHOgTfFsGyonKOpShMH1x6nk9o";
+const POLL_MS=()=>window.__KJ_POLL_MS||1500, POLL_RT_MS=()=>window.__KJ_POLL_MS||4000;
+const cryptoRand=()=>{try{return crypto.getRandomValues(new Uint32Array(1))[0]/4294967296}catch(e){return Math.random()}};
+const normRow=r=>r&&typeof r==="object"?{...r,created_at:typeof r.created_at==="string"?Date.parse(r.created_at)/1000:r.created_at}:null;
+async function claimsGet(mid,kind,key,sinceSec){
+  const q=new URLSearchParams({select:"match_id,kind,key,player,payload,created_at",match_id:"eq."+mid,order:"created_at.asc",limit:"1000"});
+  if(kind)q.set("kind","eq."+kind);
+  if(key!==undefined)q.set("key","eq."+key);
+  if(sinceSec)q.set("created_at","gte."+new Date((sinceSec-5)*1000).toISOString()); // 5秒前から読み直す（同じ行は捨てる）
+  try{const r=await fetch(CLAIMS_URL+"?"+q,{headers:{apikey:LOG_KEY}});if(!r.ok)return null;const j=await r.json();return Array.isArray(j)?j.map(normRow).filter(Boolean):null}catch(e){return null}
+}
+async function claimsInsert(row){
+  try{
+    const r=await fetch(CLAIMS_URL,{method:"POST",headers:{apikey:LOG_KEY,"content-type":"application/json",Prefer:"return=representation"},body:JSON.stringify(row)});
+    if(r.ok){let x=null;try{const j=await r.json();x=normRow(Array.isArray(j)?j[0]:j)}catch(e){}if(x)LINK.deliver(x);return {ok:true,row:x||row}}
+    if(r.status===409){const q=await claimsGet(row.match_id,row.kind,row.key);return {ok:false,conflict:true,player:q&&q[0]?q[0].player:undefined}} // ぶつかった行の player を返す（約束）
+    return {ok:false,error:"HTTP "+r.status};
+  }catch(e){return {ok:false,error:String(e)}}
+}
+let sbLib=null;
+function loadSb(){
+  if(!sbLib)sbLib=new Promise((res,rej)=>{
+    if(window.supabase&&window.supabase.createClient){res(window.supabase);return}
+    const s=document.createElement("script");s.src=SB_JS;s.integrity=SB_SRI;s.crossOrigin="anonymous";
+    s.onload=()=>window.supabase&&window.supabase.createClient?res(window.supabase):rej(new Error("supabase-js"));s.onerror=()=>rej(new Error("supabase-js"));
+    document.head.appendChild(s);
+  }).then(lib=>lib.createClient(SB_URL,LOG_KEY,{auth:{persistSession:false,autoRefreshToken:false}}));
+  return sbLib;
+}
+// match_id ごとに、届いた行を1回ずつ配る（Realtime と REST の読み直しで同じ行が二度来ても1回）
+const LINK=(()=>{
+  const subs=new Map();
+  function deliver(row){
+    const s=row&&subs.get(row.match_id);if(!s)return;
+    const k=row.kind+"\u0000"+row.key;if(s.seen.has(k))return;
+    s.seen.add(k);s.rows.push(row);
+    if(typeof row.created_at==="number"&&row.created_at>(s.since||0))s.since=row.created_at;
+    for(const fn of [...s.fns]){try{fn(row)}catch(e){console.error(e)}}
+    if(G)afterChange();
+  }
+  async function poll(mid){
+    const s=subs.get(mid);if(!s||s.busy)return;s.busy=true;
+    const rows=await claimsGet(mid,undefined,undefined,s.since);
+    s.busy=false;if(rows&&subs.get(mid)===s)rows.forEach(deliver);
+  }
+  function open(mid){
+    const s={fns:new Set(),seen:new Set(),rows:[],since:0,rt:false,ch:null,busy:false,timer:null};
+    subs.set(mid,s);
+    const loop=()=>{if(subs.get(mid)!==s)return;poll(mid);s.timer=setTimeout(loop,s.rt?POLL_RT_MS():POLL_MS())};
+    loop();
+    loadSb().then(sb=>{
+      if(subs.get(mid)!==s)return;
+      s.ch=sb.channel("kj-"+mid).on("postgres_changes",{event:"INSERT",schema:"public",table:"kj_claims",filter:"match_id=eq."+mid},p=>deliver(normRow(p.new)))
+        .subscribe(st=>{s.rt=st==="SUBSCRIBED";if(s.rt)poll(mid)});
+    }).catch(()=>{}); // 読めなければ REST の読み直しだけ
+    return s;
+  }
+  function close(mid){const s=subs.get(mid);if(!s)return;subs.delete(mid);clearTimeout(s.timer);if(s.ch)try{s.ch.unsubscribe()}catch(e){}}
+  return {
+    deliver,
+    subscribe(mid,fn){const s=subs.get(mid)||open(mid);s.fns.add(fn);for(const r of s.rows.slice())try{fn(r)}catch(e){}return()=>s.fns.delete(fn)},
+    closeAll(){for(const mid of [...subs.keys()])close(mid)},
+    pollNow(){for(const mid of subs.keys())poll(mid)},
+  };
+})();
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)LINK.pollNow()});
+const CLAIMS={insert:claimsInsert,subscribe:(mid,fn)=>LINK.subscribe(mid,fn),
+  select:async(mid,kind)=>{const rows=await claimsGet(mid,kind);return rows?{ok:true,rows}:{ok:false,error:"つながらない"}}};
+
+let MC=null;   // 合言葉の部屋の試合のつなぎ（KJ.createMatchClient）
+let ROOM=null; // 待っている部屋 { role, matchId, code, level, timeLimit }
+function setRoomMsg(t){$("roomMsg").textContent=t||""}
+function roomUi(){
+  const on=opponent===K.ROOM_OPPONENT.key,wait=!!ROOM;
+  $("roomBox").hidden=!on;$("start").hidden=on;
+  $("bHost").disabled=wait;$("bEnter").disabled=wait;$("roomCode").disabled=wait;
+  $("bRoomCancel").hidden=!wait;
+  $("roomShow").hidden=!(wait&&ROOM.role==="host"&&ROOM.code);$("roomShow").textContent=ROOM&&ROOM.code?ROOM.code:"";
+  if(!wait&&!on)setRoomMsg("");
+}
+function cancelRoom(){if(MC)return;LINK.closeAll();ROOM=null;roomUi()}
+// 遊んでいる部屋から抜ける（もう一度・設定を変える）。相手の画面には「相手の通信が切れた」と出る
+function leaveRoom(){if(MC){if(G&&!G.over)MC.leave();MC.stop();MC=null}LINK.closeAll();ROOM=null}
+$("bRoomCancel").onclick=()=>{cancelRoom();setRoomMsg("やめた")};
+$("bHost").onclick=async()=>{
+  if(ROOM)return;
+  const matchId=K.newMatchId(cryptoRand),me={role:"host",matchId,code:null,level,timeLimit};
+  ROOM=me;roomUi();setRoomMsg("部屋を作っている…");
+  LINK.subscribe(matchId,K.roomWaiter(CLAIMS,"host",matchId,beginRoom,{level,time:timeLimit}));
+  const h=await K.hostRoom(CLAIMS,{matchId,level,timeLimit,version:D.rules.version,nowSec:Date.now()/1000,rand:cryptoRand});
+  if(ROOM!==me)return;
+  if(!h.ok){cancelRoom();setRoomMsg(h.why);return}
+  me.code=h.code;roomUi();
+  setRoomMsg(`合言葉を相手に伝えてください（レベル ${level}・${K.timeLabel(timeLimit)}）。相手を待っています`);
+};
+$("bEnter").onclick=async()=>{
+  if(ROOM)return;
+  const code=$("roomCode").value.trim().replace(/[０-９]/g,d=>String.fromCharCode(d.charCodeAt(0)-0xFEE0)); // 全角の数字も受ける
+  const me={role:"guest",code};ROOM=me;roomUi();setRoomMsg("部屋を探している…");
+  const f=await K.findRoom(CLAIMS,code,Date.now()/1000);
+  if(ROOM!==me)return;
+  if(!f.ok){ROOM=null;roomUi();setRoomMsg(f.why);return}
+  if(f.version!==D.rules.version||!K.LEVELS.some(x=>x.key===f.level)){ROOM=null;roomUi();setRoomMsg("相手と版がちがう（二人とも読み込み直してから、もう一度）");return}
+  Object.assign(me,{matchId:f.matchId,level:f.level,timeLimit:K.normTime(D,f.timeLimit)});
+  const set=`相手の設定：レベル ${me.level}・${K.timeLabel(me.timeLimit)}`;
+  setRoomMsg(set+"。入っている…");
+  LINK.subscribe(me.matchId,K.roomWaiter(CLAIMS,"guest",me.matchId,beginRoom));
+  const j=await K.joinRoom(CLAIMS,me.matchId);
+  if(ROOM!==me)return;
+  if(!j.ok){cancelRoom();setRoomMsg(j.why);return}
+  setRoomMsg(set+"。始まるのを待っています");
+};
+// 二人とも 'start' 行が届いたときに始める。始まりの時刻はその行の created_at から
+function beginRoom(startRow){
+  const rm=ROOM;if(!rm||!rm.matchId||MC)return;
+  clearTimeout(cpuTimer);sendAbandoned();
+  const startAt=K.roomStartAt(startRow.created_at,Date.now()/1000,clock());
+  T=tablesFor(rm.level);
+  G=K.createGame(D,T,{now:clock,timeLimit:rm.timeLimit,match:{id:rm.matchId,role:rm.role,startAt}});
+  MC=K.createMatchClient(G,CLAIMS,{rand:cryptoRand});
+  row=[];lastTried="";
+  showWhy(rm.role==="guest"?`作った人の設定：レベル ${rm.level}・${K.timeLabel(rm.timeLimit)}`:"");
+  $("bCopyEnd").hidden=true;hideChoices();setRoomMsg("");
+  buildHowto();showScreen(true);render();
+}
 
 // ---------- 人の操作 ----------
 const rowCards=()=>row.map(id=>G.byId(G.me,id)).filter(Boolean);
@@ -489,8 +640,10 @@ function attachDrag(b,id){
 function tapRow(id){if(G.over)return;noteTried();row=row.filter(x=>x!==id);hideChoices();afterChange()}
 function tapField(id){
   if(!G||G.over)return;
-  const r=G.take(G.me,id);if(!r.ok){$("msg").textContent=r.why;$("msg").className="msg"}afterChange()
+  if(MC){MC.take(id).then(r=>{if(!r.ok)showWhy(r.why);afterChange()});afterChange();return} // 合言葉の部屋：先に入れた方だけ取れる
+  const r=G.take(G.me,id);if(!r.ok)showWhy(r.why);afterChange()
 }
+function showWhy(why){const m=$("msg");m.textContent=why||"";m.className="msg"}
 function afterOp(res){if(res&&res.ok){row=res.cards?res.cards.map(x=>x.id):[];lastTried=""}hideChoices();afterChange()}
 const isSingleTry=s=>s.rc.length===1&&!s.rl.ok&&[...s.text].length===1; // 1字は押せるが、はじかれる（KJ-008）
 $("bRelease").onclick=()=>{
@@ -500,6 +653,7 @@ $("bRelease").onclick=()=>{
     const why=s.rl.why;G.tried(G.me,[s.text],why);
     const m=$("msg");m.textContent=why;m.className="msg";hideChoices();afterChange();return;
   }
+  if(MC){MC.release([...row]).then(r=>{if(!r.ok&&r.why&&(r.lost||r.why==="つながらない"||r.why==="通信中"))showWhy(r.why);afterOp(r)});afterChange();return} // 合言葉の部屋：言葉は先に放った方だけ
   afterOp(G.release(G.me,[...row]));
 };
 $("bSplit").onclick=()=>afterOp(G.split(G.me,row));
@@ -511,7 +665,7 @@ $("bJoin").onclick=()=>{
 $("bInvert").onclick=()=>afterOp(G.invert(G.me,row));
 $("bCycle").onclick=()=>afterOp(G.cycle(G.me,row));
 $("bBack").onclick=()=>{noteTried();row=[];hideChoices();afterChange()};
-$("bRedraw").onclick=()=>{row=[];hideChoices();G.redraw(G.me);afterChange()};
+$("bRedraw").onclick=()=>{row=[];hideChoices();if(MC){MC.redraw().then(afterChange);return}G.redraw(G.me);afterChange()};
 $("bHomo").onclick=()=>{
   const c=rowText();
   showChoices((T.HOMO.get(c)||[]).map(g=>({label:`${g.type==="on"?"音":"訓"}：${g.reading}`,chars:g.chars.filter(x=>x!==c),
@@ -580,13 +734,14 @@ function render(){
   if(!G)return;
   row=row.filter(id=>G.byId(G.me,id));
   $("cpuSide").hidden=G.solo;
+  $("cpuName").textContent=G.cpu.name;
   renderHand($("cpuHand"),G.cpu,false,false);
   renderHand($("meHand"),G.me,true,false);
   renderHand($("meTray"),G.me,true,true);
   renderField();
   for(const [sc,ct,p] of [[$("meScore"),$("meCount"),G.me],[$("cpuScore"),$("cpuCount"),G.cpu]]){
     sc.textContent=`${p.score} 点`;
-    ct.textContent=`手札 ${G.handCount(p)} / ${D.rules.hand_max}`;
+    ct.textContent=`手札 ${p.remote?(typeof p.hand==="number"?p.hand:p.count):G.handCount(p)} / ${D.rules.hand_max}`;
   }
   $("trayHead").textContent=`ストック（字も部品も置ける。${G.trayCount(G.me)} / ${D.rules.split_extra}）`;
   // 台：選んだ札の写しを、選んだ順に左から並べる（札そのものは手札・ストックのマスに残っている。KJ-030）
@@ -615,7 +770,9 @@ function renderOps(){
   const fit1=G.fits(me,row,1);
   const cds=[["反転","invert"],["巡り","cycle"],["同音","homophone"]].map(([n,k])=>cdText(G.cpu,k)&&`${n} ${cdText(G.cpu,k)}`).filter(Boolean);
   if(G.cpu.redrawAt!==null)cds.push(`引き直し ${Math.ceil(G.redrawLeft(G.cpu))}s`);
-  $("cpuCds").textContent=cds.length?"待ち："+cds.join("・"):"";
+  const gone=!!(MC&&MC.oppGone()&&!G.over);
+  $("cpuCds").textContent=gone?"相手の通信が切れた":cds.length?"待ち："+cds.join("・"):"";
+  $("cpuCds").classList.toggle("gone",gone);
   $("bRelease").disabled=!(live&&(s.rl.ok||isSingleTry(s)));
   $("bSplit").disabled=!(live&&one&&K.canSplit(T,one)&&G.fits(me,row,2));
   $("bJoin").disabled=!(live&&s.joins.length&&fit1);
@@ -651,8 +808,8 @@ function showFx(who,text){
   clearTimeout(showFx.t);showFx.t=setTimeout(()=>fx.classList.remove("on"),400+text.length*380+900);
 }
 function buildHowto(){
-  const R=D.rules,S=R.score;
-  $("lead").textContent=`手札を組み替えて言葉を作り、放つと点が入る。放った字数だけ場から字を取れる。先に ${R.win.score} 点か、${(timeLimit||R.win.time_limit_sec)/60} 分で点の多い方が勝ち。`;
+  const R=D.rules,S=R.score,TL=(G&&G.timeLimit)||timeLimit; // 合言葉の部屋の入った側は、作った人の時間
+  $("lead").textContent=`手札を組み替えて言葉を作り、放つと点が入る。放った字数だけ場から字を取れる。先に ${R.win.score} 点か、${(TL||R.win.time_limit_sec)/60} 分で点の多い方が勝ち。`;
   $("howto").innerHTML=[
     `<b>選ぶ</b>：手札・ストックの札をタップすると、札はそのマスに残ったまま色が変わって選ばれ、角に選んだ順の数字（1・2・3…）が出る。台には、選んだ札の写しが選んだ順に左から並ぶ。もう一度タップ（手札の札でも、台の写しでも）で外れる。ボタンは選んだ札に、選んだ順で働く。`,
     `<b>入れ替え・移す</b>：札を指で引きずって、別の札の上で離すと位置が入れ替わる（手札とストックの間でもよい）。空いたマスの上で離すと、そこへ移る。`,
@@ -663,21 +820,30 @@ function buildHowto(){
     `<b>はじまり</b>：はじめの手札は ${R.start_hand} 枚。はじめたらすぐ時間が動く。ストックには、使いやすい部品が ${R.start_stock_parts} 枚、最初から入っている。`,
     `<b>台</b>は並べて見る場所：選んだ札は手札・ストックのマスにいるまま、台にはその写しが出る（枚数は変わらない）。`,
     `<b>レベル</b>：はじめる前に選ぶ（N5／N4。N4 は N5＋N4 の字）。山に入る字・語・割り方・対義・巡り・同音がレベルで変わる。いまは ${K.levelLabel(T.level)}（字 ${T.CHARS.size}・語 ${T.WORDS.size}）。`,
-    `<b>相手</b>：はじめる前に選ぶ。ひとりで（CPU なし。50 点では終わらず、${(timeLimit||R.win.time_limit_sec)/60} 分たったら点を出す。この端末の自己ベストを覚える）／とても弱い（CPU は ${R.cpu.weak_interval_sec[0]}〜${R.cpu.weak_interval_sec[1]} 秒に1回）／いまの強さ（${R.cpu.interval_sec[0]}〜${R.cpu.interval_sec[1]} 秒に1回）。`,
+    `<b>相手</b>：はじめる前に選ぶ。ひとりで（CPU なし。50 点では終わらず、${(TL||R.win.time_limit_sec)/60} 分たったら点を出す。この端末の自己ベストを覚える）／とても弱い（CPU は ${R.cpu.weak_interval_sec[0]}〜${R.cpu.weak_interval_sec[1]} 秒に1回）／いまの強さ（${R.cpu.interval_sec[0]}〜${R.cpu.interval_sec[1]} 秒に1回）。`,
     `<b>割る</b>：台の1枚を部品表で一段だけ割る。<b>くっつける</b>：台の2枚を、左→右の順でくっつける。逆に並べたときは「並べる順が逆」と出る。十・口 のように2通りの字になるときは選ぶ。`,
     `<b>反転</b>（印：${STR.ICONS.invert}）対義の字に。${R.cooldown_sec.invert} 秒待ち。<b>巡り</b>（印：${STR.ICONS.cycle}）${T.CYCLES.map(c=>c.name).join("・")}を1つ先へ。${R.cooldown_sec.cycle} 秒待ち。<b>同音</b>（印：${STR.ICONS.homophone}）同じ読みの字から選ぶ。${R.cooldown_sec.homophone} 秒待ち。待ち時間は操作ごとで、二人は別々。`,
     `<b>引き直し</b>：${R.redraw.cost} 点払って手札を全部入れ替える（${R.start_hand} 枚）。${R.redraw.cost} 点ないときは ${R.redraw.free_wait_sec} 秒待てば 0 点で入れ替わる（待つあいだも動ける）。`,
-    `<b>勝ち</b>：先に ${R.win.score} 点。または ${(timeLimit||R.win.time_limit_sec)/60} 分たって点の多い方。CPU の速さは相手の選び方で変わる。`,
+    `<b>勝ち</b>：先に ${R.win.score} 点。または ${(TL||R.win.time_limit_sec)/60} 分たって点の多い方。CPU の速さは相手の選び方で変わる。`,
     `${Object.keys(D.radical_forms.left).join("・")} を左に置いてくっつけられるときは、${Object.values(D.radical_forms.left).join("・")} の形で見せる（札はもとの字のまま）。色の薄い札は部品（字ではない）。`,
     `<b>ログ</b>：一手ごとの記録。上の「ログ」で見てコピーできる。終わったら「ログをコピー」が出る。`,
   ].map(x=>`<li>${x}</li>`).join("");
 }
-setInterval(()=>{if(!G||G.over)return;if(G.tick())afterChange();else renderOps()},250);
+let roomBusy=false;
+setInterval(()=>{
+  if(!G||G.over)return;
+  if(MC){ // 合言葉の部屋：時間切れ・点の送り・まだいる（ping）は MC.tick
+    if(roomBusy)return;roomBusy=true;const mc=MC;
+    mc.tick().then(ch=>{roomBusy=false;if(MC!==mc)return;if(ch)afterChange();else renderOps()},()=>{roomBusy=false});
+    return;
+  }
+  if(G.tick())afterChange();else renderOps();
+},250);
 
-window.__KJ={get game(){return G},get row(){return row},get tables(){return T},data:D,render}; // ブラウザのテスト用
+window.__KJ={get game(){return G},get row(){return row},get tables(){return T},get mc(){return MC},get room(){return ROOM},data:D,render}; // ブラウザのテスト用
 
 Promise.all(K.FILES.map(f=>fetch(`data/${f}.json`).then(r=>r.json()).then(j=>D[f]=j)))
-  .then(()=>{loadSettings();T=tablesFor(level);buildPickers();buildHowto();showCounts()})
+  .then(()=>{loadSettings();T=tablesFor(level);buildPickers();buildHowto();showCounts();roomUi()})
   .catch(e=>{$("setupInfo").textContent="データを読めませんでした（file:// では開けません。Pages かローカルのサーバーで開いてください）"});
 </script>
 </body>
