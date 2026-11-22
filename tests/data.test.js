@@ -262,7 +262,9 @@ test("決まり：数値がそろっている（KJ-003 の仮置き）", () => {
   assert.equal(r.start_hand, 8, "最初の手札は8（KJ-016。作者 2026-11-21 20:14 で、はじめの1枚をやめて8に戻した）");
   assert.equal(r.first_pick, undefined, "はじめの1枚（first_pick）はやめた（KJ-016）");
   assert.deepEqual(r.cpu.weak_interval_sec, [30, 45]);
-  assert.ok(["solo", "weak", "normal"].includes(r.opponent_default));
+  assert.deepEqual(r.cpu.fair_interval_sec, [15, 20], "ふつう（KJ-035）：15〜20秒に1回");
+  assert.ok(r.cpu.weak_interval_sec[0] >= r.cpu.fair_interval_sec[1] && r.cpu.fair_interval_sec[0] >= r.cpu.interval_sec[1], "間隔は とても弱い > ふつう > いまの強さ（重ならない）");
+  assert.ok(["solo", "weak", "fair", "normal"].includes(r.opponent_default));
   assert.equal(r.opponent_default, "weak");
 });
 

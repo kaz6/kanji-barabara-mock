@@ -118,10 +118,10 @@ test("画面", { skip }, async (t) => {
     });
   }
 
-  await t.test("相手の選び方：初期値は とても弱い。選べる4つが並ぶ（人と（合言葉）は いまの強さ の後ろ。KJ-033）", async () => {
+  await t.test("相手の選び方：初期値は とても弱い。選べる5つが並ぶ（人と（合言葉）は いまの強さ の後ろ。KJ-033）", async () => {
     const { ctx, page, errors } = await open(browser, url, { width: 760, height: 1100 });
     const labels = await page.locator("#opp label").allTextContents();
-    assert.deepEqual(labels.map((x) => x.trim()), ["ひとりで", "とても弱い", "いまの強さ", "人と（合言葉）"]);
+    assert.deepEqual(labels.map((x) => x.trim()), ["ひとりで", "とても弱い", "ふつう", "いまの強さ", "人と（合言葉）"]);
     assert.equal(await page.locator("#opp input:checked").getAttribute("value"), "weak");
     assert.equal(await page.evaluate(() => __KJ.game.opponent), "weak");
     assert.equal(await page.isVisible("#cpuSide"), true);
@@ -141,7 +141,7 @@ test("画面", { skip }, async (t) => {
     const ys = await page.evaluate(() => ["opp", "lvl", "tim", "start"].map((id) => document.getElementById(id).getBoundingClientRect().top));
     assert.deepEqual([...ys].sort((a, b) => a - b), ys, "相手・レベル・時間・はじめる の順に上から並ぶ");
     const labels = (id) => page.locator(`#${id} label`).allTextContents().then((a) => a.map((x) => x.trim()));
-    assert.deepEqual(await labels("opp"), ["ひとりで", "とても弱い", "いまの強さ", "人と（合言葉）"]);
+    assert.deepEqual(await labels("opp"), ["ひとりで", "とても弱い", "ふつう", "いまの強さ", "人と（合言葉）"]);
     assert.deepEqual(await labels("lvl"), ["N5", "N4"]);
     assert.deepEqual(await labels("tim"), ["5分", "10分", "15分"]);
     assert.equal(await page.locator("#lay").count(), 0, "並べ方の選びはない（KJ-030）");
