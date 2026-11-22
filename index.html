@@ -77,6 +77,10 @@ h1{font-size:17px;margin:0 0 2px;font-weight:700}
 .field .tile{cursor:default}
 .field.can .tile{cursor:pointer;border-color:var(--accent)}
 .field:not(.can) .tile:hover{border-color:var(--line)}
+/* 放ったあと、場から取りきるまで（KJ-039。仮決め）：場の札が光り、ほかのボタンは押せない */
+.field.glow .tile{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent),0 0 10px 2px rgba(0,0,0,.18);animation:kjTake 1s ease-in-out infinite alternate}
+@keyframes kjTake{from{box-shadow:0 0 0 2px var(--accent),0 0 3px 0 rgba(0,0,0,.08)}to{box-shadow:0 0 0 2px var(--accent),0 0 12px 3px rgba(0,0,0,.25)}}
+@media (prefers-reduced-motion:reduce){.field.glow .tile{animation:none}}
 @media (max-width:540px){
   .me .tile{font-size:26px}
   .cpu .hand{grid-template-columns:repeat(8,1fr)}
@@ -592,7 +596,7 @@ function noteTried(){
 }
 let dragEnded=false; // 引きずって離したあとに出るタップを無視する
 function tapHand(id){
-  if(G.over||dragEnded)return;
+  if(G.over||dragEnded||G.locked(G.me))return; // 放ったあと、場から取りきるまでは選べない（KJ-039）
   if(row.includes(id)){tapRow(id);return} // もう一度タップで選びが外れる
   row.push(id);lastTried="";hideChoices();render();
 }
@@ -607,7 +611,7 @@ function faceAt(el,ev){
 function attachDrag(b,id){
   b.dataset.id=id;
   b.addEventListener("pointerdown",e=>{
-    if(!G||G.over||(e.pointerType==="mouse"&&e.button!==0))return;
+    if(!G||G.over||G.locked(G.me)||(e.pointerType==="mouse"&&e.button!==0))return;
     const sx=e.clientX,sy=e.clientY;let moved=false,over=null,jt=null;
     const rows=[$("meHand"),$("meTray")];
     const under=(ev)=>{const t=document.elementFromPoint(ev.clientX,ev.clientY);const el=t&&t.closest("[data-id],.slot.free");return el&&el!==b&&+el.dataset.id!==id&&rows.includes(el.parentNode)&&(el.dataset.id||el.parentNode!==b.parentNode)?el:null};
@@ -653,7 +657,7 @@ function attachDrag(b,id){
     document.addEventListener("pointermove",move);document.addEventListener("pointerup",up);document.addEventListener("pointercancel",up);
   });
 }
-function tapRow(id){if(G.over)return;noteTried();row=row.filter(x=>x!==id);hideChoices();afterChange()}
+function tapRow(id){if(G.over||G.locked(G.me))return;noteTried();row=row.filter(x=>x!==id);hideChoices();afterChange()}
 function tapField(id){
   if(!G||G.over)return;
   if(MC){const mc=MC;mc.take(id).then(r=>{if(stale(mc))return;if(!r.ok)showWhy(r.why);afterChange()});afterChange();return} // 合言葉の部屋：先に入れた方だけ取れる
@@ -741,11 +745,11 @@ function renderHand(el,p,interactive,tray){
   for(let i=cards.length;i<max;i++){const s=document.createElement("div");s.className="slot"+(interactive?" free":"");el.appendChild(s)}
 }
 function renderField(){
-  const el=$("field"),can=!G.over&&G.me.takes>0&&G.handCount(G.me)<D.rules.hand_max;
-  el.className="field"+(can?" can":"");el.innerHTML="";
+  const el=$("field"),can=!G.over&&G.me.takes>0&&G.canTakeMore(G.me);
+  el.className="field"+(can?" can glow":"");el.innerHTML="";
   el.style.gridTemplateColumns=`repeat(${D.rules.field_size},1fr)`;
   for(const x of G.field)el.appendChild(tileEl(x,{onClick:()=>tapField(x.id)}));
-  $("takes").textContent=G.me.takes>0?(G.handCount(G.me)<D.rules.hand_max?`あなたは ${G.me.takes} 枚取れる（タップ）`:`${G.me.takes} 枚取れる（手札がいっぱい）`):"";
+  $("takes").textContent=!G.over&&G.me.takes>0?`場から あと ${G.me.takes} 枚 取る（タップ）`:"";
 }
 // ゲージ（KJ-034）：待っている間は class cd と --g（0〜1）。待ちが明けたら外して、小さく光らせる（full）
 function gauge(b,waiting,f){
@@ -793,7 +797,7 @@ function render(){
   renderOps();
 }
 function renderOps(){
-  const s=rowState(),one=s.rc.length===1?s.rc[0].c:null,me=G.me,live=!G.over;
+  const s=rowState(),one=s.rc.length===1?s.rc[0].c:null,me=G.me,live=!G.over&&!G.locked(G.me); // 放ったあと、場から取りきるまでは、ほかのボタンは全部押せない（KJ-039）
   const fit1=G.fits(me,row,1);
   const cds=[["反転","invert"],["巡り","cycle"],["同音","homophone"]].map(([n,k])=>cdText(G.cpu,k)&&`${n} ${cdText(G.cpu,k)}`).filter(Boolean);
   if(G.cpu.redrawAt!==null)cds.push(`引き直し ${Math.ceil(G.redrawLeft(G.cpu))}s`);
@@ -806,7 +810,7 @@ function renderOps(){
   $("bInvert").disabled=!(live&&one&&T.INV.has(one)&&G.ready(me,"invert")&&fit1);
   $("bCycle").disabled=!(live&&one&&T.NEXT.has(one)&&G.ready(me,"cycle")&&fit1);
   $("bHomo").disabled=!(live&&one&&T.HOMO.has(one)&&G.ready(me,"homophone")&&fit1);
-  $("bBack").disabled=!s.rc.length;
+  $("bBack").disabled=!(live&&s.rc.length);
   $("bRedraw").disabled=!(live&&me.redrawAt===null);
   // 待ち時間はボタンの地のゲージで見せる（KJ-034。秒数の文字は出さない）
   gauge($("bInvert"),G.cdLeft(me,"invert")>0,G.cdFrac(me,"invert"));
@@ -849,8 +853,8 @@ function buildHowto(){
     `<b>入れ替え・移す</b>：札を指で引きずって、別の札の上で離すと位置が入れ替わる（手札とストックの間でもよい）。空いたマスの上で離すと、そこへ移る。`,
     `<b>放つ</b>：台の札が辞書の語（2〜4字）なら放てる。<b>1字では放てない</b>（くっつけて作った字でも同じ）。一度放った言葉は二人とも二度と使えない。放った札は消える（相手には届かない）。`,
     `<b>点数</b>：${Object.entries(S.by_length).map(([n,p])=>`${n}字 ${p}点`).join("・")}。四字熟語は ${S.yoji_mult} 倍、特別な語（天上天下）はさらに ${S.special_mult} 倍。`,
-    `<b>取る</b>：放ったら、放った字数と同じ枚数を<b>場</b>から選んで取れる（手札は ${R.hand_max} 枚まで）。取ったところには山から次の字が出る。相手も同じ場から取るので早い者勝ち（ひとりでは取り合いなし）。`,
-    `<b>ストック</b>：手札（${R.hand_max} マス）の下の ${R.split_extra} マス。字も部品も置ける。割る・くっつけるでできた札は、手札に空きがなければストックに入る（全部で ${R.hand_max+R.split_extra} 枚まで）。場から取るのは手札の ${R.hand_max} マスまで。ストックの札も選んで使える。`,
+    `<b>取る</b>：放ったら、放った字数と同じ枚数を<b>場</b>から選んで取れる（上の段 ${R.hand_max} 枚・ストック ${R.split_extra} 枚の合わせて ${R.hand_max+R.split_extra} マスが埋まるまで）。<b>取りきるまで、ほかの手は何もできない</b>（場の札が光る）。取れる枚数はためられない。取ったところには山から次の字が出る。相手も同じ場から取るので早い者勝ち（ひとりでは取り合いなし）。`,
+    `<b>ストック</b>：手札（${R.hand_max} マス）の下の ${R.split_extra} マス。字も部品も置ける。割る・くっつけるでできた札は、手札に空きがなければストックに入る（全部で ${R.hand_max+R.split_extra} 枚まで）。場から取った札も、上の段が埋まっていればストックに入る。ストックの札も選んで使える。`,
     `<b>はじまり</b>：はじめの手札は ${R.start_hand} 枚。はじめたらすぐ時間が動く。ストックには、使いやすい部品が ${R.start_stock_parts} 枚、最初から入っている。`,
     `<b>台</b>は並べて見る場所：選んだ札は手札・ストックのマスにいるまま、台にはその写しが出る（枚数は変わらない）。`,
     `<b>レベル</b>：はじめる前に選ぶ（N5／N4。N4 は N5＋N4 の字）。山に入る字・語・割り方・対義・巡り・同音がレベルで変わる。いまは ${K.levelLabel(T.level)}（字 ${T.CHARS.size}・語 ${T.WORDS.size}）。`,

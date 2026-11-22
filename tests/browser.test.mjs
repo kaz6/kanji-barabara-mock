@@ -89,12 +89,16 @@ test("画面", { skip }, async (t) => {
       await tap("休"); await tap("日");
       await page.click("#bRelease");
       assert.match(await page.textContent("#meScore"), /^3 点/);
-      assert.match(await page.textContent("#takes"), /2 枚取れる/);
+      assert.match(await page.textContent("#takes"), /場から あと 2 枚 取る/);
+      assert.equal(await page.locator("#field.glow").count(), 1, "放ったあと、取りきるまで場が光る（KJ-039）");
+      assert.equal(await page.evaluate(() => [...document.querySelectorAll(".ops button")].every((b) => b.disabled)), true, "取りきるまで、ほかのボタンは全部押せない（KJ-039）");
       assert.equal(await pos("#field > *"), field0);
       // 取ったあとのマスには山から無作為に字が出る（同じ字が出ることもある）ので、字ではなくマスの位置（山=1番目・川=2番目）で押す
       await page.locator("#field .tile").nth(0).click();
       await page.locator("#field .tile").nth(1).click();
       assert.equal(await page.textContent("#takes"), "");
+      assert.equal(await page.locator("#field.glow").count(), 0, "取りきったら光りは消える");
+      assert.equal(await page.evaluate(() => document.getElementById("bRedraw").disabled), false, "取りきったら動ける");
       assert.equal(await page.locator("#meHand .tile", { hasText: "山" }).count(), 1, "山 が手札に来た");
       assert.equal(await pos("#field > *"), field0, "取ったあとも場の位置は同じ");
       assert.match(await page.textContent("#released"), /休日.*\+3点/);
@@ -406,14 +410,20 @@ test("画面", { skip }, async (t) => {
       await page.locator("#meTray .tile").click();
       assert.equal(await page.locator("#row .tile").count(), 2);
       assert.equal(await pos("#meTray > *"), tray0, "置いても置き場は動かない");
-      // 手札が8枚のときは場から取れない。台に置いた札も手札に数える（台は並べて見る場所。KJ-016）ので、台に置いても取れない
+      // 上の段が8枚でも、場から取れる。取った札はストックへ入る（KJ-039）。台に置いた札も段の枚数に数える（台は並べて見る場所。KJ-016）
       await page.click("#bBack");
       await page.evaluate(() => { __KJ.game.me.takes = 2; __KJ.render(); });
       assert.equal(await page.evaluate(() => __KJ.game.handCount(__KJ.game.me)), 8);
-      assert.match(await page.textContent("#takes"), /手札がいっぱい/);
+      assert.match(await page.textContent("#takes"), /場から あと 2 枚 取る/);
+      assert.equal(await page.locator("#field.glow").count(), 1, "場が光る");
+      await page.locator("#field .tile").nth(0).click();
+      assert.equal(await page.evaluate(() => __KJ.game.handCount(__KJ.game.me)), 8, "上の段は8のまま");
+      assert.equal(await page.evaluate(() => __KJ.game.trayCount(__KJ.game.me)), 2, "取った札はストックへ（木 のほかにもう1枚）");
+      await page.locator("#field .tile").nth(1).click();
+      assert.equal(await page.evaluate(() => __KJ.game.trayCount(__KJ.game.me)), 3);
+      assert.equal(await page.textContent("#takes"), "", "取りきった");
       await page.locator("#meHand .tile").first().click();
       assert.equal(await page.evaluate(() => __KJ.game.handCount(__KJ.game.me)), 8, "台の札も数える");
-      assert.match(await page.textContent("#takes"), /手札がいっぱい/, "台に置いても取れない");
       await page.click("#bBack");
       assert.equal(await page.evaluate(() => __KJ.game.handCount(__KJ.game.me)), 8, "台から戻しても8");
       assert.deepEqual(errors, []);
@@ -817,6 +827,8 @@ test("画面", { skip }, async (t) => {
     s = await st();
     assert.equal(s.tag, false, "放ったら（手札が動いたら）消える");
     assert.deepEqual(s.lit, []);
+    await page.locator("#field .tile").nth(0).click(); // 放ったら、取りきるまで次の手は打てない（KJ-039）
+    await page.locator("#field .tile").nth(1).click();
     // 段2：1手で放てる言葉になる。ボタンも光る。10秒たつと消える
     await setHand("日年刀");
     await tryPair("日", "刀");
@@ -875,11 +887,14 @@ test("画面", { skip }, async (t) => {
         const G = __KJ.game;
         G.me.cards = [..."天上天下十口休日"].map((c, i) => ({ id: 9000 + i, c, t: 0, fresh: false }));
         [..."山川二三四五六七"].forEach((c, i) => G.me.cards.push({ id: 9100 + i, c, t: 0, fresh: false, tray: true }));
-        G.me.takes = 2; // 「取れる」の文も出した形
         __KJ.render();
       });
       assert.equal(await page.evaluate(() => __KJ.game.trayCount(__KJ.game.me)), await page.evaluate(() => __KJ.data.rules.split_extra), "ストックは全部埋まっている");
       for (const ch of "天上天下") await page.locator("#meHand .tile:not(.sel)", { hasText: ch }).first().click(); // 4枚選ぶ（天 は2枚ある）。言葉の説明が2行になる
+      // 「取る」の文も出した形（放ったあとは札を選べないので、選んだあとに取れる枚数を足す。KJ-039）
+      await page.evaluate(() => { __KJ.game.me.takes = 2; __KJ.render(); });
+      assert.equal(await page.locator("#row .tile").count(), 4, "取れる枚数が付いても台の写しは残る");
+      assert.match(await page.textContent("#takes"), /場から あと 2 枚 取る/);
       const parts = await page.evaluate(() => {
         const box = (sel) => [...document.querySelectorAll(sel)].map((e) => { const r = e.getBoundingClientRect(); return { sel, l: r.left, t: r.top, r: r.right, b: r.bottom, w: r.width, h: r.height, shown: r.width > 0 && r.height > 0 }; });
         return [].concat(

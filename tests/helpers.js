@@ -40,4 +40,14 @@ function setHand(g, p, chars) {
   p.cards = [...chars].map((c) => ({ id: ++id, c, t: g.now(), fresh: false }));
   return p.cards.map((x) => x.id);
 }
-module.exports = { K, D, T, T4, newGame, setHand, ROOT };
+// 取れる枚数を、場の左の札から取りきる（KJ-039：放ったら取りきるまで、ほかの手はできない）
+function takeAll(g, p) {
+  let n = 0;
+  while (p.takes > 0) {
+    const r = g.take(p, g.field[0].id);
+    if (!r.ok) throw new Error("取りきれない：" + r.why);
+    n++;
+  }
+  return n;
+}
+module.exports = { K, D, T, T4, newGame, setHand, takeAll, ROOT };
