@@ -667,11 +667,11 @@ function attachDrag(b,id){
 function tapRow(id){if(G.over||G.locked(G.me))return;noteTried();row=row.filter(x=>x!==id);hideChoices();afterChange()}
 function tapField(id){
   if(!G||G.over)return;
-  if(MC){const mc=MC;mc.take(id).then(r=>{if(stale(mc))return;if(!r.ok){showWhy(r.why);triedTake(id,r.why)}afterChange()});afterChange();return} // 合言葉の部屋：先に入れた方だけ取れる
-  const r=G.take(G.me,id);if(!r.ok){showWhy(r.why);triedTake(id,r.why)}afterChange()
+  if(MC){const mc=MC;mc.take(id).then(r=>{if(stale(mc))return;if(!r.ok){showWhy(r.why);triedTake(id,r.why,r.c)}afterChange()});afterChange();return} // 合言葉の部屋：先に入れた方だけ取れる
+  const r=G.take(G.me,id);if(!r.ok){showWhy(r.why);triedTake(id,r.why,r.c)}afterChange()
 }
 // 取るがはじかれた（KJ-041）：「ためした」に、場の札と理由を残す
-function triedTake(id,why){const f=G.field.find(x=>x.id===id);if(f)G.triedOp(G.me,"取る",[f.c],why)}
+function triedTake(id,why,c){const f=G.field.find(x=>x.id===id);const ch=f?f.c:c;if(ch)G.triedOp(G.me,"取る",[ch],why)} // 先着に負けると場から消えているので、返事の c（取ろうとした字）を使う
 // 返事待ちのあいだに試合が終わった・捨てた・別の試合になったときの返事は、画面に反映しない（勝ち負けの表示を上書きしない）
 function stale(mc){if(MC===mc&&G&&!G.over)return false;if(G)afterChange();return true}
 function showWhy(why){const m=$("msg");m.textContent=why||"";m.className="msg"}
