@@ -45,7 +45,7 @@ file:// では data/ を読めない。
 ## PR の決まり
 
 - main に直接 push しない。ブランチ（名前は `kj-` で始める）を切って PR（下書き）にする。main に入ると Pages（公開 URL）に出る
-- PR は下書きで出す。テストと Actions が通ったら、下書きを外す（REST の POST /repos/kaz6/kanji-barabara-mock/pulls/{番号}/ccr/ready_for_review）。マージは `.github/workflows/automerge.yml` がする（test が success・下書きでない・base が main・同じリポジトリの `kj-` ブランチ・mergeable の PR を、30分ごと／test のあとにマージする）。係はマージの API を呼ばない
+- PR は下書きで出す。テストと Actions が通ったら、下書きを外す（REST の POST /repos/kaz6/kanji-barabara-mock/pulls/{番号}/ccr/ready_for_review）。マージは `.github/workflows/automerge.yml` がする（test が success・下書きでない・base が main・同じリポジトリの `kj-` ブランチ・mergeable の PR を、30分ごと／test のあと／下書きを外したときにマージする。マージのあと Pages のビルドも頼む）。係はマージの API を呼ばない
 - PR の説明に必ず書く
   - **確かめ方**：何を回して何を見たか（`npm test` の件数と結果、画面で見たこと）。確かめていないことも書く
   - **危ない所**：壊れうる所・遊びの決まりが変わる所・データを変えた所

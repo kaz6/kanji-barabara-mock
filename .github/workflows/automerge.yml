@@ -7,6 +7,10 @@ on:
   workflow_run:
     workflows: [test]
     types: [completed]
+  # 下書きを外したとき（テストが先に終わっていた PR をすぐ拾う。R-054）
+  pull_request:
+    types: [ready_for_review]
+    branches: [main]
   schedule:
     - cron: "*/30 * * * *"
   workflow_dispatch:
@@ -14,6 +18,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  pages: write
 
 concurrency:
   group: automerge
@@ -77,4 +82,13 @@ jobs:
                 owner, repo, issue_number: pr.number, body: '自動マージした',
               });
               core.info(`#${pr.number}: 自動マージした`);
+
+              // GITHUB_TOKEN のマージでは Pages の更新が動かないことがあるので、ビルドを頼む（R-054。仮決め）。
+              // 頼めなくてもマージは済んでいるので、警告だけ残して続ける
+              try {
+                await github.rest.repos.requestPagesBuild({ owner, repo });
+                core.info('Pages のビルドを頼んだ');
+              } catch (e) {
+                core.warning(`Pages のビルドを頼めなかった：${e.message}`);
+              }
             }
