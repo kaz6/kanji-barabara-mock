@@ -782,6 +782,37 @@ test("画面", { skip }, async (t) => {
     await ctx.close();
   });
 
+  await t.test("待ち時間の印（KJ-040）：使った直後は待っている操作の印だけ薄い・待っていない方は濃いまま・選んだ札でも薄い・手札/ストック/場/台に出る・満ちたら元の濃さ・相手の手札は変えない", async () => {
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 }, null);
+    await page.evaluate(() => { const G = __KJ.game; G.me.cards.push({ id: 9100, c: "月", t: 0, fresh: false, tray: true }); G.field = [..."上月玉"].map((c, i) => ({ id: 9500 + i, c, t: 0, fresh: false })); __KJ.render(); });
+    const op = (sel, ch, k) => page.evaluate(([s, c, kk]) => { const t = [...document.querySelectorAll(s + " .tile")].find((x) => x.title === c); return parseFloat(getComputedStyle(t.querySelector(`.mi[data-k="${kk}"]`)).opacity); }, [sel, ch, k]);
+    assert.equal(await op("#meHand", "上", "invert"), 1, "待っていないとき濃い");
+    assert.equal(await op("#field", "上", "invert"), 1);
+    assert.equal(await op("#meTray", "月", "cycle"), 1);
+    await page.locator("#meHand .tile", { hasText: "上" }).first().click();
+    await page.click("#bInvert"); // 上→下。反転の待ちが始まる。下 は選ばれたまま
+    assert.equal(await page.evaluate(() => __KJ.game.cdLeft(__KJ.game.me, "invert") > 0), true);
+    const pick = await page.evaluate(() => [...document.querySelectorAll("#row .tile")].map((x) => ({ t: x.title, k: [...x.querySelectorAll(".mi")].map((m) => m.dataset.k + ":" + getComputedStyle(m).opacity) })));
+    assert.ok(pick.length >= 1, "台に札がある");
+    assert.ok(pick.some((x) => x.k.some((kv) => kv.startsWith("invert"))), "台の札に反転の印がある");
+    for (const x of pick) for (const kv of x.k) { const [k, o] = kv.split(":"); assert.equal(+o, k === "invert" ? 0.3 : 1, `台の ${x.t} の ${k} の印の濃さ（${o}）`); }
+    const sel = await page.evaluate(() => { const t = document.querySelector("#meHand .tile.sel"); const m = t && t.querySelector('.mi[data-k="invert"]'); return { has: !!t, op: m ? parseFloat(getComputedStyle(m).opacity) : null }; });
+    assert.equal(sel.has, true, "選んだ札がある");
+    assert.equal(sel.op, 0.3, "選んだ札（赤地・白い印）の反転の印も薄い");
+    assert.equal(await op("#meHand", "上", "homophone"), 1, "同音の印は濃いまま");
+    assert.equal(await op("#field", "上", "invert"), 0.3, "場の札の反転の印も薄い");
+    assert.equal(await op("#field", "上", "homophone"), 1, "場の札の同音の印は濃いまま");
+    assert.equal(await op("#meTray", "月", "cycle"), 1, "巡りは待っていないのでストックの印は濃い");
+    await page.evaluate(() => { const G = __KJ.game; G.me.cd.cycle = G.now() + 5; __KJ.render(); });
+    assert.equal(await op("#meTray", "月", "cycle"), 0.3, "ストックの札の巡りの印が薄い");
+    assert.equal(await page.evaluate(() => document.querySelectorAll("#cpuHand.wait-invert,#cpuHand.wait-cycle,#cpuHand.wait-homophone").length), 0, "相手の手札には待ちの印を付けない");
+    await page.evaluate(() => { const G = __KJ.game; G.me.cd.invert = 0; G.me.cd.cycle = 0; G.me.cd.homophone = 0; __KJ.render(); });
+    assert.equal(await op("#field", "上", "invert"), 1, "待ちが明けたら元の濃さ");
+    assert.equal(await op("#meTray", "月", "cycle"), 1);
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+
   await t.test("ヒント（KJ-037）：続けて3回はじかれると札が光り「ヒント」の札が出る（2回では出ない）。言葉は文字で出ない。10秒か手札を動かすまで。375×700 に収まる", async () => {
     const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 }, "solo");
     const setHand = (chars) => page.evaluate((cs) => { const G = __KJ.game; G.me.cards = [...cs].map((c, i) => ({ id: 7000 + i, c, t: 0, fresh: false })); __KJ.row.length = 0; __KJ.render(); }, chars);

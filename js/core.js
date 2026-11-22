@@ -173,11 +173,15 @@
   // 角の印。icons を渡すとその字で出す（画面は js/strings.js の ⇄・↻・♪。KJ-024）。渡さなければ 反・巡・音
   function marks(T, c, icons) {
     const ic = icons || { invert: "反", cycle: "巡", homophone: "音" };
-    let m = "";
-    if (T.INV.has(c)) m += ic.invert;
-    if (T.NEXT.has(c)) m += ic.cycle;
-    if (T.HOMO.has(c)) m += ic.homophone;
-    return m;
+    return markKinds(T, c).map((k) => ic[k]).join("");
+  }
+  // 角の印の種類を、印の並びの順（反転・巡り・同音）で返す。画面が印ごとに待ち時間で薄くするために使う（KJ-040）
+  function markKinds(T, c) {
+    const ks = [];
+    if (T.INV.has(c)) ks.push("invert");
+    if (T.NEXT.has(c)) ks.push("cycle");
+    if (T.HOMO.has(c)) ks.push("homophone");
+    return ks;
   }
   // ログの頭に書く仮置きの値
   function opponentLabel(D, key, limit) {
@@ -1216,7 +1220,7 @@
 
   return {
     FILES, OPPONENTS, LEVELS, timeChoices, normTime, timeLabel, levelLabel, makeTables, isN5, isLevelChar, isChar, splitOnce, canSplit, delivered, joinResults, joinReversed,
-    releasable, scoreOf, homoChars, marks, cutSpec, FACES, FACE_LABEL, faceJoins, faceResults, rulesLabel, opponentLabel, createGame, playLogRow, logSendAllowed, playLogResult, PLAY_LOG_LIMITS,
+    releasable, scoreOf, homoChars, marks, markKinds, cutSpec, FACES, FACE_LABEL, faceJoins, faceResults, rulesLabel, opponentLabel, createGame, playLogRow, logSendAllowed, playLogResult, PLAY_LOG_LIMITS,
     strSeed, seededRand, matchRand, ROLES, ROOM_OPPONENT, MATCH_END_GRACE_SEC, MATCH_INSERT_TIMEOUT_SEC, MATCH_PING_SEC, MATCH_GONE_SEC, ROOM_LOBBY_TTL_SEC,
     createMatchClient, memoryClaims, newMatchId, newRoomCode, roomLobbyId, findRoom, hostRoom, joinRoom, startRoom, roomStartAt, roomWaiter,
   };
