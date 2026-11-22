@@ -26,7 +26,7 @@ npm test
 - 中身は `node --test "tests/*.test.js" "tests/*.test.mjs"`（Node 22 以上）
 - `tests/data.test.js`：データの整合（レベル・部品表〔輪がない〕・対義・巡り・偏の形・同じ読み・語・特別な語・決まり）
 - `tests/game.test.js`：割る・くっつける・待ち時間・放つ・点数・使用済み・取る・引き直し・勝ち・CPU・ログ。時計と乱数は差し替えている（`tests/helpers.js`）
-- `tests/browser.test.mjs`：画面（台に札を置いても手札と場が動かない・並べる順が逆・放つ→取る・引き直し・ログをコピー・手札で選ぶ・並べ方の切り替え・入れ替え）。Playwright の Chromium がないと skip になる。skip は「通った」ではない
+- `tests/browser.test.mjs`：画面（台に札を置いても手札と場が動かない・並べる順が逆・放つ→取る・引き直し・ログをコピー・選ぶと札はマスに残り台に写しが並ぶ・入れ替え）。Playwright の Chromium がないと skip になる。skip は「通った」ではない
 - 変えたら必ず `npm test` を回し、件数と結果を PR に書く
 
 ## ログの自動送信（KJ-020）

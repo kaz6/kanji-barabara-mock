@@ -14,18 +14,12 @@
     { key: "weak", label: "とても弱い" },
     { key: "normal", label: "いまの強さ" },
   ];
-  // 並べ方（KJ-005）。手札で選ぶ＝手札の上で選んだ順にそのまま操作する／台に並べる＝台に並べてから操作する
-  const LAYOUTS = [
-    { key: "hand", label: "手札で選ぶ" },
-    { key: "table", label: "台に並べる" },
-  ];
   // レベル（KJ-006）。N4＝N5＋N4 の字。レベルが変えるのは字・語・割り方・対義・巡り・同音の範囲だけ
   const LEVELS = [
     { key: "N5", label: "N5" },
     { key: "N4", label: "N4（N5＋N4 の字）" },
   ];
   const levelLabel = (key) => (LEVELS.find((l) => l.key === key) || LEVELS[0]).label;
-  const layoutLabel = (key) => (LAYOUTS.find((l) => l.key === key) || LAYOUTS[0]).label;
   // 制限時間（KJ-007）。選べる値は rules.win.time_choices_sec、既定は win.time_limit_sec（D-024）。知らない値は既定
   const timeChoices = (D) => (D.rules.win.time_choices_sec && D.rules.win.time_choices_sec.length ? D.rules.win.time_choices_sec : [D.rules.win.time_limit_sec]);
   const normTime = (D, v) => (timeChoices(D).includes(Number(v)) && v !== null && v !== "" ? Number(v) : D.rules.win.time_limit_sec);
@@ -198,7 +192,6 @@
     const g = { D, T, level: T.level, opponent, solo: opponent === "solo", log: [], events: [], used: new Set(), over: false, winner: null,
       startedAt: (env.date || (() => new Date()))() };
     g.timeLimit = normTime(D, env.timeLimit); // 制限時間（秒。KJ-007）
-    g.layout = LAYOUTS.some((l) => l.key === env.layout) ? env.layout : (R.layout_default || "hand");
     const t0 = now();
     g.now = now;
     // はじめの1枚（KJ-013）は KJ-016 でやめた（作者 2026-11-21 20:14）。はじめたらすぐ時間が動く
@@ -257,7 +250,7 @@
     g.redrawLeft = (p) => (p.redrawAt === null ? 0 : Math.max(0, p.redrawAt - now()));
     const useCd = (p, k) => { p.cd[k] = now() + R.cooldown_sec[k]; };
 
-    const QUIET = new Set(["はじまり", "ためした", "終わり", "動けない", "動ける", "入れ替え", "移す", "並べ方"]);
+    const QUIET = new Set(["はじまり", "ためした", "終わり", "動けない", "動ける", "入れ替え", "移す"]);
     function addLog(who, op, from, to, pts, note) {
       g.log.push({ t: g.elapsed(), who, op, from: from || [], to: to || [], pts: pts || 0,
         meScore: g.me.score, cpuScore: g.cpu.score, me: g.me.cards.length, cpu: g.cpu.cards.length, note: note || "" });
@@ -310,7 +303,6 @@
         }
       }
     }
-    g.startLayout = g.layout;
     const hs = (p) => p.cards.filter((x) => !x.tray).map((x) => x.c).join("") + (trayCount(p) ? `（ストック ${p.cards.filter((x) => x.tray).map((x) => x.c).join("")}）` : "");
     addLog("—", "はじめ", [], [], 0,
       `手札 ${hs(g.me)} / ${hs(g.cpu)}・場 ${g.field.map((x) => x.c).join("")}`);
@@ -463,14 +455,6 @@
       return { ok: true, waiting: R.redraw.free_wait_sec };
     };
 
-    // はじかれた並び。画面側が「並べたのにやめた」ときに呼ぶ
-    // 並べ方の切り替え（途中でもできる）。ログに残す
-    g.setLayout = (key) => {
-      if (!LAYOUTS.some((l) => l.key === key) || key === g.layout) return fail("同じ");
-      g.layout = key;
-      addLog("あなた", "並べ方", [], [], 0, `${layoutLabel(key)}に切り替え`);
-      return { ok: true };
-    };
     // 2枚の位置を入れ替える。手札とストックの間でもよい（入れ替えた札はそれぞれ相手の段へ）。持っている札も数も変わらない
     g.swap = (p, idA, idB) => {
       if (!live()) return fail("終わった");
@@ -581,9 +565,8 @@
         `# レベル ${levelLabel(g.level)}`,
         `# 相手 ${opponentLabel(D, g.opponent, g.timeLimit)}`,
         `# 時間 ${timeLabel(g.timeLimit)}`,
-        `# 並べ方 ${layoutLabel(g.startLayout)}（はじめたとき。途中で切り替えると「並べ方」の行が残る）`,
         ...rulesLabel(D, g.opponent, g.level, g.timeLimit).map((x) => "# 仮置き " + x),
-        "# 手 はじめ・割る・くっつける・反転・巡り・同音・放つ・取る・引き直し・入れ替え（札の位置を替えた。手札とストックの間も）・移す（手札⇄ストックの空いたマスへ）・並べ方（切り替えた）・ためした（並べたのに放てず・くっつけられずにやめた並び）・動けない（放てる言葉が手札に無くなった。使った札＝その時の手札）・動ける・終わり",
+        "# 手 はじめ・割る・くっつける・反転・巡り・同音・放つ・取る・引き直し・入れ替え（札の位置を替えた。手札とストックの間も）・移す（手札⇄ストックの空いたマスへ）・ためした（並べたのに放てず・くっつけられずにやめた並び）・動けない（放てる言葉が手札に無くなった。使った札＝その時の手札）・動ける・終わり",
         "# 点＝その手で増えた点（引き直しで払った点はマイナス）",
         "# データ " + FILES.map((f) => `${f}=${D[f].version}`).join(" "),
         `# 字 ${T.CHARS.size}（手に持てる字 ${T.HOLD.size}）・語 ${T.WORDS.size}（巡り ${T.CYCLES.map((c) => c.name).join("・")}）`,
@@ -599,9 +582,9 @@
   // ---------- ログの自動送信（KJ-020。D-038）----------
   // 送る中身の形と、送ってよい場所の判定。送る処理そのもの（fetch・端末への保存）は index.html
   const PLAY_LOG_LIMITS = { device_id: 64, result: 200, log: 200000 };
-  // 自分（人）が1手でも動いたか（はじめ・終わり・動けない・並べ方の切り替え・最初の1枚は数えない）
+  // 自分（人）が1手でも動いたか（はじめ・終わり・動けない・最初の1枚は数えない）
   function playedAny(g) {
-    return g.log.some((e) => e.who === g.me.name && e.op !== "並べ方" && e.op !== "最初の1枚");
+    return g.log.some((e) => e.who === g.me.name && e.op !== "最初の1枚");
   }
   // 終わりの1行（例：あなたの勝ち（10分 27対6））。終わっていなければ「途中でやめた」
   function playLogResult(g) {
@@ -633,7 +616,7 @@
   }
 
   return {
-    FILES, OPPONENTS, LAYOUTS, LEVELS, timeChoices, normTime, timeLabel, layoutLabel, levelLabel, makeTables, isN5, isLevelChar, isChar, splitOnce, canSplit, delivered, joinResults, joinReversed,
+    FILES, OPPONENTS, LEVELS, timeChoices, normTime, timeLabel, levelLabel, makeTables, isN5, isLevelChar, isChar, splitOnce, canSplit, delivered, joinResults, joinReversed,
     releasable, scoreOf, homoChars, marks, cutSpec, rulesLabel, opponentLabel, createGame, playLogRow, logSendAllowed, playLogResult, PLAY_LOG_LIMITS,
   };
 });

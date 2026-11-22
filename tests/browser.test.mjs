@@ -29,7 +29,7 @@ function serve() {
 
 const skip = chromium ? false : "Playwright が入っていない";
 
-async function open(browser, url, vp, opponent, layout = "table", pre = null) {
+async function open(browser, url, vp, opponent, pre = null) {
   const ctx = await browser.newContext({ viewport: vp });
   await ctx.grantPermissions(["clipboard-read", "clipboard-write"]).catch(() => {});
   const page = await ctx.newPage();
@@ -40,7 +40,6 @@ async function open(browser, url, vp, opponent, layout = "table", pre = null) {
   await page.goto(url);
   await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
   if (opponent) await page.check(`#opp input[value="${opponent}"]`);
-  await page.check(`#lay input[value="${layout}"]`); // 既存の画面テストは「台に並べる」で見る。手札で選ぶは KJ-005 の下のテスト
   await page.click("#start");
   // CPU を止め、手を決める
   await page.evaluate(() => {
@@ -63,7 +62,7 @@ test("画面", { skip }, async (t) => {
       const { ctx, page, errors } = await open(browser, url, vp);
       const pos = (sel) => page.evaluate((s) => [...document.querySelectorAll(s)].map((e) => { const r = e.getBoundingClientRect(); return Math.round(r.left + scrollX) + "," + Math.round(r.top + scrollY); }).join(" "), sel);
       const hand0 = await pos("#meHand > *"), field0 = await pos("#field > *");
-      const tap = async (ch) => page.locator("#meHand .tile", { hasText: ch }).first().click();
+      const tap = async (ch) => page.locator("#meHand .tile:not(.sel)", { hasText: ch }).first().click(); // 選んでいない札を押す（天 は2枚ある）
       // 天上天下（四字熟語、英語の説明が長い）
       for (const ch of "天上天下") {
         await tap(ch);
@@ -129,7 +128,7 @@ test("画面", { skip }, async (t) => {
     await ctx.close();
   });
 
-  await t.test("はじめる前の画面（KJ-007）：4つが上から並び、初期値は 相手=とても弱い・レベル=N4・時間=10分・並べ方=台に並べる。下に「はじめる」", async () => {
+  await t.test("はじめる前の画面（KJ-007）：3つが上から並び、初期値は 相手=とても弱い・レベル=N4・時間=10分。下に「はじめる」（並べ方の選びは KJ-030 でなくした）", async () => {
     const ctx = await browser.newContext({ viewport: { width: 375, height: 800 } });
     const page = await ctx.newPage();
     const errors = [];
@@ -138,14 +137,14 @@ test("画面", { skip }, async (t) => {
     await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
     assert.equal(await page.isVisible("#setup"), true);
     assert.equal(await page.isVisible("#game"), false, "遊ぶ画面はまだ出ない");
-    const ys = await page.evaluate(() => ["opp", "lvl", "tim", "lay", "start"].map((id) => document.getElementById(id).getBoundingClientRect().top));
-    assert.deepEqual([...ys].sort((a, b) => a - b), ys, "相手・レベル・時間・並べ方・はじめる の順に上から並ぶ");
+    const ys = await page.evaluate(() => ["opp", "lvl", "tim", "start"].map((id) => document.getElementById(id).getBoundingClientRect().top));
+    assert.deepEqual([...ys].sort((a, b) => a - b), ys, "相手・レベル・時間・はじめる の順に上から並ぶ");
     const labels = (id) => page.locator(`#${id} label`).allTextContents().then((a) => a.map((x) => x.trim()));
     assert.deepEqual(await labels("opp"), ["ひとりで", "とても弱い", "いまの強さ"]);
     assert.deepEqual(await labels("lvl"), ["N5", "N4"]);
     assert.deepEqual(await labels("tim"), ["5分", "10分", "15分"]);
-    assert.deepEqual(await labels("lay"), ["手札で選ぶ", "台に並べる"]);
-    for (const [id, v] of [["opp", "weak"], ["lvl", "N4"], ["tim", "600"], ["lay", "table"]]) assert.equal(await page.locator(`#${id} input:checked`).getAttribute("value"), v, id);
+    assert.equal(await page.locator("#lay").count(), 0, "並べ方の選びはない（KJ-030）");
+    for (const [id, v] of [["opp", "weak"], ["lvl", "N4"], ["tim", "600"]]) assert.equal(await page.locator(`#${id} input:checked`).getAttribute("value"), v, id);
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, "横にはみ出さない");
     assert.deepEqual(errors, []);
     await ctx.close();
@@ -170,21 +169,20 @@ test("画面", { skip }, async (t) => {
       await page.click("#bLog");
       await page.click("#bSetup");
     }
-    // 4つ選んで、ログの頭に4つとも出る
+    // 3つ選んで、ログの頭に3つとも出る
     await page.check('#opp input[value="solo"]');
     await page.check('#lvl input[value="N5"]');
     await page.check('#tim input[value="300"]');
-    await page.check('#lay input[value="hand"]');
     await page.click("#start");
     await page.click("#bLog");
     const log = await page.inputValue("#logText");
     assert.match(log, /# レベル N5\n# 相手 ひとりで（CPU なし。場の取り合いなし。50点では終わらず、5分たったら/);
-    assert.match(log, /# 時間 5分\n# 並べ方 手札で選ぶ（はじめたとき/);
-    // 4つが端末に残る
-    assert.deepEqual(await page.evaluate(() => ["kj-opponent", "kj-level", "kj-time", "kj-layout"].map((k) => localStorage.getItem(k))), ["solo", "N5", "300", "hand"]);
+    assert.match(log, /# 時間 5分\n# 仮置き /);
+    // 3つが端末に残る（並べ方の kj-layout はもう使わない）
+    assert.deepEqual(await page.evaluate(() => ["kj-opponent", "kj-level", "kj-time", "kj-layout"].map((k) => localStorage.getItem(k))), ["solo", "N5", "300", null]);
     await page.reload();
     await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
-    for (const [id, v] of [["opp", "solo"], ["lvl", "N5"], ["tim", "300"], ["lay", "hand"]]) assert.equal(await page.locator(`#${id} input:checked`).getAttribute("value"), v, `${id} を覚えている`);
+    for (const [id, v] of [["opp", "solo"], ["lvl", "N5"], ["tim", "300"]]) assert.equal(await page.locator(`#${id} input:checked`).getAttribute("value"), v, `${id} を覚えている`);
     // 知らない値が残っていても初期値で動く
     await page.evaluate(() => { localStorage.setItem("kj-time", "7"); localStorage.setItem("kj-opponent", "ばか"); });
     await page.reload();
@@ -203,7 +201,7 @@ test("画面", { skip }, async (t) => {
     await page.addInitScript(() => { Object.defineProperty(window, "localStorage", { get() { throw new Error("blocked"); } }); });
     await page.goto(url);
     await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
-    for (const [id, v] of [["opp", "weak"], ["lvl", "N4"], ["tim", "600"], ["lay", "table"]]) assert.equal(await page.locator(`#${id} input:checked`).getAttribute("value"), v, id);
+    for (const [id, v] of [["opp", "weak"], ["lvl", "N4"], ["tim", "600"]]) assert.equal(await page.locator(`#${id} input:checked`).getAttribute("value"), v, id);
     await page.check('#tim input[value="900"]'); // 選んでも壊れない（覚えないだけ）
     await page.click("#start");
     assert.equal(await page.evaluate(() => __KJ.game.timeLimit), 900);
@@ -212,8 +210,8 @@ test("画面", { skip }, async (t) => {
     await ctx.close();
   });
 
-  await t.test("はじめる前の画面（KJ-007）：「もう一度」は同じ設定ですぐ始まる。遊ぶ画面では並べ方だけ変えられる", async () => {
-    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 }, "normal", "hand");
+  await t.test("はじめる前の画面（KJ-007）：「もう一度」は同じ設定ですぐ始まる。遊ぶ画面では何も変えられない", async () => {
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 }, "normal");
     await page.click("#bSetup");
     await page.check('#lvl input[value="N5"]');
     await page.check('#tim input[value="300"]');
@@ -221,14 +219,13 @@ test("画面", { skip }, async (t) => {
     await page.click("#start");
     assert.equal(await page.isVisible("#setup"), false);
     for (const id of ["opp", "lvl", "tim"]) assert.equal(await page.isVisible("#" + id), false, `${id} は遊んでいる途中では変えられない`);
-    assert.equal(await page.isVisible("#layNow"), true, "並べ方の切り替えは残る");
-    await page.check('#layNow input[value="table"]');
+    assert.equal(await page.locator("#layNow").count(), 0, "並べ方の切り替えはなくした（KJ-030）");
     // 終わらせて もう一度
     await page.evaluate(() => { __KJ.game.endsAt = __KJ.game.now() - 1; });
     await page.waitForFunction(() => document.getElementById("msg").textContent.startsWith("ひとりで "));
     await page.click("#again");
-    const g = await page.evaluate(() => ({ lv: __KJ.game.level, t: __KJ.game.timeLimit, o: __KJ.game.opponent, l: __KJ.game.layout, over: __KJ.game.over, picking: __KJ.game.picking }));
-    assert.deepEqual(g, { lv: "N5", t: 300, o: "solo", l: "table", over: false, picking: undefined }, "同じ設定（並べ方は途中で変えた値）で新しく始まる");
+    const g = await page.evaluate(() => ({ lv: __KJ.game.level, t: __KJ.game.timeLimit, o: __KJ.game.opponent, over: __KJ.game.over, picking: __KJ.game.picking }));
+    assert.deepEqual(g, { lv: "N5", t: 300, o: "solo", over: false, picking: undefined }, "同じ設定で新しく始まる");
     assert.equal(await page.isVisible("#setup"), false);
     assert.equal(await page.textContent("#msg"), "", "はじめの1枚はない。始めてすぐ遊べる");
     assert.deepEqual(errors, []);
@@ -277,7 +274,6 @@ test("画面", { skip }, async (t) => {
     await page.goto(url);
     await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
     await page.check('#opp input[value="normal"]');
-    await page.check('#lay input[value="table"]');
     await page.click("#start");
     assert.equal(await page.evaluate(() => __KJ.game.picking), undefined);
     assert.doesNotMatch(await page.textContent("#msg"), /最初の1枚/);
@@ -360,17 +356,19 @@ test("画面", { skip }, async (t) => {
       await page.locator("#meHand .tile", { hasText: "休" }).click();
       assert.equal(await page.isEnabled("#bSplit"), true, "手札8枚でも割れる");
       await page.click("#bSplit");
-      // 割ってできた 人 木 は台に出る。手札側の 人 と、あふれた 木 のマスが点線で残る
-      assert.equal(await page.locator("#meTray .slot.held").count(), 1, "あふれた1枚が置き場に入る");
-      assert.equal(await page.locator("#meHand .slot.held").count(), 1);
+      // 割ってできた 人 木 は選ばれたまま。手札側の 人 と、あふれた 木（ストック）のマスに札がいて、台には写しが出る
+      assert.equal(await page.locator("#meTray .tile.sel").count(), 1, "あふれた1枚が置き場に入る");
+      assert.equal(await page.locator("#meHand .tile.sel").count(), 1);
+      assert.equal(await page.locator("#row .tile").count(), 2);
       assert.equal(await page.evaluate(() => __KJ.game.me.cards.filter((x) => x.tray).map((x) => x.c).join("")), "木");
       assert.equal(await page.evaluate(() => __KJ.game.me.cards.length), 9);
       assert.equal(await pos("#meHand > *"), hand0);
       assert.equal(await pos("#meTray > *"), tray0);
       assert.equal(await pos("#field > *"), field0);
-      // 置き場の札もタップして台に戻し・並べられる
-      await page.locator("#meTray .slot.held").click();
-      assert.equal(await page.locator("#meTray .tile").count(), 1, "台から置き場へ戻った");
+      // 置き場の札もタップして外し・選べる（札はずっとストックのマスにいる）
+      await page.locator("#meTray .tile.sel").click();
+      assert.equal(await page.locator("#meTray .tile").count(), 1, "外しても札はストックにいる");
+      assert.equal(await page.locator("#meTray .tile.sel").count(), 0);
       assert.equal(await page.locator("#row .tile").count(), 1);
       await page.locator("#meTray .tile").click();
       assert.equal(await page.locator("#row .tile").count(), 2);
@@ -393,12 +391,12 @@ test("画面", { skip }, async (t) => {
 
   // ---------- KJ-005：手札で選ぶ・入れ替え・切り替え ----------
   for (const vp of [{ width: 760, height: 1100, name: "広い画面" }, { width: 375, height: 900, name: "スマホ幅" }]) {
-    await t.test(`${vp.name}：手札で選ぶ。色が変わり選んだ順の数字が出る。台は出ない。放つ・割る・くっつけるが台と同じ結果。外せる`, async () => {
-      const { ctx, page, errors } = await open(browser, url, vp, null, "hand");
+    await t.test(`${vp.name}：選ぶと色が変わり選んだ順の数字が出る。台には写しが並ぶ。放つ・割る・くっつけるの結果。外せる`, async () => {
+      const { ctx, page, errors } = await open(browser, url, vp, null);
       const pos = (sel) => page.evaluate((s) => [...document.querySelectorAll(s)].map((e) => { const r = e.getBoundingClientRect(); return Math.round(r.left + scrollX) + "," + Math.round(r.top + scrollY); }).join(" "), sel);
       const hand0 = await pos("#meHand > *");
       const tile = (ch) => page.locator("#meHand .tile", { hasText: ch }).first();
-      assert.equal(await page.isVisible("#row"), false, "台は出さない");
+      assert.equal(await page.locator("#row .tile").count(), 0, "選ぶ前の台は空");
       // 休 → 日 の順に選ぶ：色が変わり 1・2
       await tile("休").click(); await tile("日").click();
       assert.equal(await tile("休").evaluate((e) => e.classList.contains("sel")), true);
@@ -442,10 +440,10 @@ test("画面", { skip }, async (t) => {
       assert.equal(await page.locator("#meHand .tile.sel").count(), 1, "札は選んだまま");
       await page.click("#bBack");
       assert.equal(await page.locator("#meHand .tile.sel").count(), 0);
-      // 放つ・割る・くっつけるがログに残る。頭に並べ方
+      // 放つ・割る・くっつけるがログに残る。並べ方の行はない（KJ-030）
       await page.click("#bLog");
       const log = await page.inputValue("#logText");
-      assert.match(log, /# 並べ方 手札で選ぶ（はじめたとき/);
+      assert.doesNotMatch(log, /並べ方/);
       assert.match(log, /\tくっつける\t十 口\t古\t/);
       assert.match(log, /\t割る\t休\t人 木\t/);
       assert.doesNotMatch(log, /\t放つ\t日\t/, "1字は放てないので 放つ の行はない");
@@ -455,82 +453,76 @@ test("画面", { skip }, async (t) => {
       await ctx.close();
     });
 
-    await t.test(`${vp.name}：切り替え。いつでも戻せる。選んだ札は引き継ぐ。端末に覚える。ログに残る`, async () => {
-      const { ctx, page, errors } = await open(browser, url, vp, null, "hand");
+    await t.test(`${vp.name}：台に写しが選んだ順に並ぶ（KJ-030）。選んでも札は手札・ストックのマスに残る。台の写しをタップでも外れる。並べ方の切り替えはない`, async () => {
+      const { ctx, page, errors } = await open(browser, url, vp, null);
+      const pos = (sel) => page.evaluate((s) => [...document.querySelectorAll(s)].map((e) => { const r = e.getBoundingClientRect(); return Math.round(r.left + scrollX) + "," + Math.round(r.top + scrollY); }).join(" "), sel);
+      const hand0 = await pos("#meHand > *");
       const tile = (ch) => page.locator("#meHand .tile", { hasText: ch }).first();
-      await tile("休").click(); await tile("日").click();
-      // 台に並べるへ：選んだ札が台に並ぶ
-      await page.check('#layNow input[value="table"]');
-      assert.equal(await page.isVisible("#row"), true);
-      assert.match(await page.textContent("#row"), /^休.*日/);
-      assert.equal(await page.locator("#meHand .slot.held").count(), 2);
-      // 手札で選ぶへ戻す
-      await page.check('#layNow input[value="hand"]');
-      assert.equal(await page.isVisible("#row"), false);
-      assert.equal(await page.locator("#meHand .tile.sel").count(), 2);
-      assert.equal(await page.evaluate(() => localStorage.getItem("kj-layout")), "hand");
-      await page.check('#layNow input[value="table"]');
-      assert.equal(await page.evaluate(() => localStorage.getItem("kj-layout")), "table");
-      // 再読み込みしても覚えている
-      await page.reload();
-      await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
-      assert.equal(await page.locator("#lay input:checked").getAttribute("value"), "table");
-      // 消して読み込み直すと初期値（台に並べる。追記 P-007 で手札で選ぶから戻した）
-      await page.evaluate(() => localStorage.clear());
-      await page.reload();
-      await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
-      assert.equal(await page.locator("#lay input:checked").getAttribute("value"), "table");
-      // 遊んでいる最中の切り替えがログに出る
-      await page.check('#lay input[value="hand"]');
-      await page.click("#start");
-      assert.equal(await page.locator("#layNow input:checked").getAttribute("value"), "hand", "遊ぶ画面の切り替えにも同じ値");
-      await page.check('#layNow input[value="table"]');
-      await page.click("#bLog");
-      assert.match(await page.inputValue("#logText"), /\t並べ方\t\t\t0\t.*台に並べるに切り替え/);
+      assert.equal(await page.locator("#lay, #layNow").count(), 0, "並べ方の切り替えはない");
+      assert.equal(await page.isVisible("#row"), true, "台はいつも出る");
+      // 日 → 休 の順に選ぶ：台には 日 休 の順の写し。手札の札は動かず、空きのマスもできない
+      await tile("日").click(); await tile("休").click();
+      assert.equal(await page.locator("#meHand .slot").count(), 0, "手札8枚のまま。点線の空きはできない");
+      assert.equal(await page.locator("#meHand .tile").count(), 8);
+      assert.equal(await pos("#meHand > *"), hand0);
+      assert.equal((await page.locator("#row .tile").allTextContents()).map((x) => x.trim()[0]).join(""), "日休", "台は選んだ順");
+      assert.equal(await tile("日").locator(".ord").textContent(), "1");
+      assert.equal(await tile("休").locator(".ord").textContent(), "2");
+      assert.equal(await page.locator("#row .tile.sel, #row .tile .ord").count(), 0, "台の写しには印も数字も付けない");
+      // 台の写しをタップすると、その札の選びが外れる（札は手札のマスのまま）
+      await page.locator("#row .tile").first().click();
+      assert.equal(await page.locator("#row .tile").count(), 1);
+      assert.equal(await tile("日").evaluate((e) => e.classList.contains("sel")), false);
+      assert.equal(await tile("休").locator(".ord").textContent(), "1", "残りは詰める");
+      assert.equal(await pos("#meHand > *"), hand0);
+      // 戻す＝全部外す
+      await page.click("#bBack");
+      assert.equal(await page.locator("#row .tile").count(), 0);
+      assert.equal(await page.locator("#meHand .tile.sel").count(), 0);
+      // 端末に並べ方を覚えない
+      assert.equal(await page.evaluate(() => localStorage.getItem("kj-layout")), null);
       assert.deepEqual(errors, []);
       await ctx.close();
     });
 
-    await t.test(`${vp.name}：入れ替え。札を引きずって別の札の上で離すと位置が替わる（どちらの並べ方でも。指一本）。ただのタップは選ぶだけ`, async () => {
-      for (const layout of ["hand", "table"]) {
-        const { ctx, page, errors } = await open(browser, url, vp, null, layout);
-        const order = () => page.locator("#meHand > *").evaluateAll((els) => els.map((e) => e.classList.contains("tile") ? e.title : "_").join(""));
-        assert.equal(await order(), "天上天下十口休日");
-        const center = async (loc) => { const b = await loc.boundingBox(); return [b.x + b.width / 2, b.y + b.height / 2]; };
-        const drag = async (from, to) => {
-          await page.locator("#meHand .tile", { hasText: to }).first().scrollIntoViewIfNeeded();
-          await page.locator("#meHand .tile", { hasText: from }).first().scrollIntoViewIfNeeded();
-          const [x1, y1] = await center(page.locator("#meHand .tile", { hasText: from }).first());
-          const [x2, y2] = await center(page.locator("#meHand .tile", { hasText: to }).first());
-          await page.mouse.move(x1, y1); await page.mouse.down();
-          await page.mouse.move((x1 + x2) / 2, (y1 + y2) / 2, { steps: 4 });
-          await page.mouse.move(x2, y2, { steps: 4 });
-          await page.mouse.up();
-        };
-        await drag("休", "天");
-        assert.equal(await order(), "休上天下十口天日", `${layout}：休と最初の天が入れ替わる`);
-        assert.equal(await page.locator("#row .tile").count(), 0, "引きずっても台には置かれない");
-        assert.equal(await page.locator("#meHand .tile.sel").count(), 0, "引きずっても選ばれない");
-        // ただのタップは今までどおり
-        await page.locator("#meHand .tile", { hasText: "口" }).click();
-        if (layout === "hand") assert.equal(await page.locator("#meHand .tile.sel").count(), 1);
-        else assert.equal(await page.locator("#row .tile").count(), 1);
-        // 入れ替えは選んだ順に響かない（選んだ札の id の順のまま）
-        await drag("日", "上");
-        assert.equal(await order(), layout === "hand" ? "休日天下十口天上" : "休日天下十_天上");
-        await page.click("#bLog");
-        const log = await page.inputValue("#logText");
-        assert.match(log, /\t入れ替え\t休 天\t天 休\t/);
-        assert.match(log, /\t入れ替え\t日 上\t上 日\t/);
-        assert.match(log, /\tはじめ\t/);
-        assert.deepEqual(errors, []);
-        await ctx.close();
-      }
+    await t.test(`${vp.name}：入れ替え。札を引きずって別の札の上で離すと位置が替わる（指一本）。ただのタップは選ぶだけ`, async () => {
+      const { ctx, page, errors } = await open(browser, url, vp, null);
+      const order = () => page.locator("#meHand > *").evaluateAll((els) => els.map((e) => e.classList.contains("tile") ? e.title : "_").join(""));
+      assert.equal(await order(), "天上天下十口休日");
+      const center = async (loc) => { const b = await loc.boundingBox(); return [b.x + b.width / 2, b.y + b.height / 2]; };
+      const drag = async (from, to) => {
+        await page.locator("#meHand .tile", { hasText: to }).first().scrollIntoViewIfNeeded();
+        await page.locator("#meHand .tile", { hasText: from }).first().scrollIntoViewIfNeeded();
+        const [x1, y1] = await center(page.locator("#meHand .tile", { hasText: from }).first());
+        const [x2, y2] = await center(page.locator("#meHand .tile", { hasText: to }).first());
+        await page.mouse.move(x1, y1); await page.mouse.down();
+        await page.mouse.move((x1 + x2) / 2, (y1 + y2) / 2, { steps: 4 });
+        await page.mouse.move(x2, y2, { steps: 4 });
+        await page.mouse.up();
+      };
+      await drag("休", "天");
+      assert.equal(await order(), "休上天下十口天日", "休と最初の天が入れ替わる");
+      assert.equal(await page.locator("#row .tile").count(), 0, "引きずっても台には出ない");
+      assert.equal(await page.locator("#meHand .tile.sel").count(), 0, "引きずっても選ばれない");
+      // ただのタップは今までどおり選ぶだけ
+      await page.locator("#meHand .tile", { hasText: "口" }).click();
+      assert.equal(await page.locator("#meHand .tile.sel").count(), 1);
+      assert.equal(await page.locator("#row .tile").count(), 1);
+      // 入れ替えは選んだ順に響かない（選んだ札の id の順のまま）
+      await drag("日", "上");
+      assert.equal(await order(), "休日天下十口天上");
+      await page.click("#bLog");
+      const log = await page.inputValue("#logText");
+      assert.match(log, /\t入れ替え\t休 天\t天 休\t/);
+      assert.match(log, /\t入れ替え\t日 上\t上 日\t/);
+      assert.match(log, /\tはじめ\t/);
+      assert.deepEqual(errors, []);
+      await ctx.close();
     });
   }
 
   await t.test("ストック（R-042）：手札の札を引きずってストックの空いたマスへ移す。ストックの札と手札の札を入れ替える。ストックの見出し", async () => {
-    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 }, null, "hand");
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 }, null);
     assert.match(await page.textContent("#trayHead"), /^ストック（字も部品も置ける/);
     const center = async (loc) => { const b = await loc.boundingBox(); return [b.x + b.width / 2, b.y + b.height / 2]; };
     const dragTo = async (from, to) => {
@@ -565,7 +557,7 @@ test("画面", { skip }, async (t) => {
   });
 
   await t.test("手札で選ぶ：スマホ幅の画像（選んだ札が目立つ）", async () => {
-    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 }, null, "hand");
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 }, null);
     await page.locator("#meHand .tile", { hasText: "休" }).first().click();
     await page.locator("#meHand .tile", { hasText: "日" }).first().click();
     if (process.env.KJ_SHOT) await page.screenshot({ path: process.env.KJ_SHOT, fullPage: true });
@@ -573,10 +565,10 @@ test("画面", { skip }, async (t) => {
     await ctx.close();
   });
 
-  // KJ-010：遊ぶ画面を 375×700 に収める。「台に並べる」「手札で選ぶ」の両方で、ストックが全部埋まった（札が一番多い）形で確かめる
-  for (const layout of ["table", "hand"]) {
-    await t.test(`375×700 に収まる（${layout === "table" ? "台に並べる" : "手札で選ぶ"}）：CPU の点と手札の枚数・場・台・ボタン・手札・ストック・残り時間がスクロールなしで見える`, async () => {
-      const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 }, "normal", layout);
+  // KJ-010：遊ぶ画面を 375×700 に収める。ストックが全部埋まった（札が一番多い）形で、4枚選んで台に写しが並んだ形で確かめる（並べ方は KJ-030 で1つになった）
+  {
+    await t.test(`375×700 に収まる：CPU の点と手札の枚数・場・台・ボタン・手札・ストック・残り時間がスクロールなしで見える`, async () => {
+      const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 }, "normal");
       await page.evaluate(() => {
         const G = __KJ.game;
         G.me.cards = [..."天上天下十口休日"].map((c, i) => ({ id: 9000 + i, c, t: 0, fresh: false }));
@@ -585,14 +577,15 @@ test("画面", { skip }, async (t) => {
         __KJ.render();
       });
       assert.equal(await page.evaluate(() => __KJ.game.trayCount(__KJ.game.me)), await page.evaluate(() => __KJ.data.rules.split_extra), "ストックは全部埋まっている");
-      for (const ch of "天上天下") await page.locator("#meHand .tile", { hasText: ch }).first().click(); // 台（または選び）に4枚。言葉の説明が2行になる
+      for (const ch of "天上天下") await page.locator("#meHand .tile:not(.sel)", { hasText: ch }).first().click(); // 4枚選ぶ（天 は2枚ある）。言葉の説明が2行になる
       const parts = await page.evaluate(() => {
         const box = (sel) => [...document.querySelectorAll(sel)].map((e) => { const r = e.getBoundingClientRect(); return { sel, l: r.left, t: r.top, r: r.right, b: r.bottom, w: r.width, h: r.height, shown: r.width > 0 && r.height > 0 }; });
         return [].concat(
           box("#clock"), box("#cpuScore"), box("#cpuCount"), box("#field > *"), box("#takes"), box("#info"), box(".ops button"),
           box("#meHand > *"), box("#meTray > *"), box("#meScore"), box("#meCount"), box("#msg").slice(0, 0));
       });
-      const rows = layout === "table" ? await page.evaluate(() => { const r = document.getElementById("row").getBoundingClientRect(); return [{ sel: "#row", l: r.left, t: r.top, r: r.right, b: r.bottom, shown: r.height > 0 }]; }) : [];
+      const rows = await page.evaluate(() => { const r = document.getElementById("row").getBoundingClientRect(); return [{ sel: "#row", l: r.left, t: r.top, r: r.right, b: r.bottom, shown: r.height > 0 }]; });
+      assert.equal(await page.locator("#row .tile").count(), 4, "台に写しが4枚");
       for (const p of parts.concat(rows)) {
         assert.ok(p.shown, `${p.sel} が見えている`);
         assert.ok(p.t >= 0 && p.b <= 700, `${p.sel} が縦に画面内（上${Math.round(p.t)}〜下${Math.round(p.b)}）`);
@@ -616,7 +609,7 @@ test("画面", { skip }, async (t) => {
       // 手札と場とストックの札の字が読める大きさ
       const fs = await page.evaluate(() => ["#meHand .tile", "#meTray .tile", "#field .tile"].map((s) => parseFloat(getComputedStyle(document.querySelector(s)).fontSize)));
       for (const f of fs) assert.ok(f >= 22, `字の大きさ ${f}px`);
-      if (process.env.KJ_SHOT) await page.screenshot({ path: process.env.KJ_SHOT.replace(/\.png$/, `-${layout}.png`) });
+      if (process.env.KJ_SHOT) await page.screenshot({ path: process.env.KJ_SHOT.replace(/\.png$/, ".png") });
       assert.deepEqual(errors, []);
       await ctx.close();
     });
@@ -624,7 +617,7 @@ test("画面", { skip }, async (t) => {
 
   await t.test("ストック：空のときは低く薄く、札が入ると手札と同じ形。16マス（手札8＋ストック8）。760px でも横にあふれない", async () => {
     for (const vp of [{ width: 375, height: 700 }, { width: 760, height: 1100 }]) {
-      const { ctx, page, errors } = await open(browser, url, vp, "normal", "table");
+      const { ctx, page, errors } = await open(browser, url, vp, "normal");
       await page.evaluate(() => { const G = __KJ.game; G.me.cards = [..."天上天下十口休日"].map((c, i) => ({ id: 9000 + i, c, t: 0, fresh: false })); __KJ.render(); });
       const R = await page.evaluate(() => __KJ.data.rules);
       assert.equal(await page.locator("#meHand > *").count() + await page.locator("#meTray > *").count(), R.hand_max + R.split_extra, "全部で16マス");
@@ -764,7 +757,7 @@ test("画面", { skip }, async (t) => {
 
   await t.test("ログの送信（KJ-020）：終わったら1行送る。中身の形・同じ端末は同じ device_id・何も表示しない", async () => {
     const posts = [];
-    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 }, null, "table", forced(posts));
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 }, null, forced(posts));
     const before = await page.evaluate(() => document.body.innerText);
     await winNow(page);
     await until(() => posts.length >= 1);
@@ -799,7 +792,7 @@ test("画面", { skip }, async (t) => {
 
   await t.test("ログの送信（KJ-020）：途中で捨てても、1手以上動いていれば送る。1手も動いていなければ送らない", async () => {
     const posts = [];
-    const { ctx, page } = await open(browser, url, { width: 375, height: 900 }, null, "table", forced(posts));
+    const { ctx, page } = await open(browser, url, { width: 375, height: 900 }, null, forced(posts));
     await page.click("#bSetup"); // 1手も動かず捨てる
     await page.waitForTimeout(300);
     assert.equal(posts.length, 0, "1手も動いていない");
@@ -824,7 +817,7 @@ test("画面", { skip }, async (t) => {
 
   await t.test("ログの送信（KJ-020）：失敗しても遊びは止まらない。1件だけ残し、次の試合の終わりに送り直す", async () => {
     const posts = [];
-    const { ctx, page } = await open(browser, url, { width: 375, height: 900 }, null, "table", forced(posts, (n) => (n === 1 ? 500 : 201)));
+    const { ctx, page } = await open(browser, url, { width: 375, height: 900 }, null, forced(posts, (n) => (n === 1 ? 500 : 201)));
     await winNow(page);
     await until(() => posts.length >= 1);
     await page.waitForTimeout(200);
@@ -846,7 +839,7 @@ test("画面", { skip }, async (t) => {
 
   await t.test("ログの送信（KJ-020）：通信が落ちていても遊びは止まらない／localStorage が読めなくても送れる", async () => {
     const posts = [];
-    const { ctx, page } = await open(browser, url, { width: 375, height: 900 }, null, "table", async (p) => {
+    const { ctx, page } = await open(browser, url, { width: 375, height: 900 }, null, async (p) => {
       await forced(posts)(p);
       await p.addInitScript(() => { Object.defineProperty(window, "localStorage", { get() { throw new Error("blocked"); } }); });
     });
@@ -855,7 +848,7 @@ test("画面", { skip }, async (t) => {
     assert.equal(posts.length, 1);
     assert.ok(posts[0].body.device_id.length >= 8, "読めないときは試合ごとの無作為");
     await ctx.close();
-    const { ctx: c2, page: p2 } = await open(browser, url, { width: 375, height: 900 }, null, "table", async (p) => {
+    const { ctx: c2, page: p2 } = await open(browser, url, { width: 375, height: 900 }, null, async (p) => {
       await p.addInitScript(() => { window.__KJ_LOG_FORCE = true; });
       await p.route(LOG_ROUTE, (route) => route.abort());
     });
@@ -867,7 +860,7 @@ test("画面", { skip }, async (t) => {
 
   await t.test("ログの送信（KJ-020）：手元（127.0.0.1）とテスト（webdriver）では、force が無ければ送らない", async () => {
     const posts = [];
-    const { ctx, page } = await open(browser, url, { width: 375, height: 900 }, null, "table", async (p) => {
+    const { ctx, page } = await open(browser, url, { width: 375, height: 900 }, null, async (p) => {
       await p.route(LOG_ROUTE, async (route) => { posts.push(1); await route.fulfill({ status: 201, body: "" }); });
     });
     await winNow(page);

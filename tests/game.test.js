@@ -594,22 +594,16 @@ test("ログ：頭に選んだ相手を書く（ひとりで／とても弱い�
   assert.match(newGame(1, "solo").logText(), /# 仮置き CPU なし/);
 });
 
-// ---------- KJ-005：並べ方・入れ替え ----------
-test("並べ方：初期値は 台に並べる（追記 P-007）。選べる・ログの頭に書く・途中で切り替えるとログに残る", () => {
+// ---------- KJ-005：入れ替え ／ KJ-030：並べ方の切り替えをなくした ----------
+test("並べ方の切り替えはない（KJ-030）：選び方は1つ。ログの頭にも手にも並べ方が出ない", () => {
   const g = newGame(1);
-  assert.equal(g.layout, "table");
-  assert.match(g.logText(), /# 並べ方 台に並べる（はじめたとき/);
-  assert.equal(K.createGame(D, T, { now: () => 0, layout: "hand" }).layout, "hand");
-  assert.equal(K.createGame(D, T, { now: () => 0, layout: "でたらめ" }).layout, D.rules.layout_default, "知らない値は初期値");
-  assert.deepEqual(K.LAYOUTS.map((l) => l.label), ["手札で選ぶ", "台に並べる"]);
-  assert.equal(g.setLayout("table").ok, false, "同じ並べ方への切り替えは何もしない");
-  assert.equal(g.setLayout("hand").ok, true);
-  assert.equal(g.layout, "hand");
-  const e = g.log[g.log.length - 1];
-  assert.deepEqual([e.op, e.note], ["並べ方", "手札で選ぶに切り替え"]);
-  assert.match(g.logText(), /# 並べ方 台に並べる（はじめたとき[^\n]*\n/, "頭は はじめたときの並べ方のまま");
-  assert.match(g.logText(), /\t並べ方\t\t\t0\t.*手札で選ぶに切り替え/);
-  assert.equal(g.me.stuck, false, "並べ方の切り替えで 動けない を出さない");
+  assert.equal(K.LAYOUTS, undefined);
+  assert.equal(K.layoutLabel, undefined);
+  assert.equal(g.setLayout, undefined);
+  assert.equal(g.layout, undefined);
+  assert.equal("layout_default" in D.rules, false, "rules.json から layout_default を消した");
+  assert.doesNotMatch(g.logText(), /並べ方/, "ログの頭にも手の説明にも 並べ方 は出ない");
+  assert.equal(K.createGame(D, T, { now: () => 0, layout: "hand" }).layout, undefined, "layout を渡しても何も起きない");
 });
 
 // ---------- KJ-007：制限時間を選ぶ ----------
@@ -647,37 +641,37 @@ test("時間：はじめたらすぐ時間が動く（はじめの1枚は KJ-016
   assert.equal(g2.elapsed(), 100);
 });
 
-test("ログの頭に 時間・相手・レベル・並べ方 の4つが出る（KJ-007）", () => {
+test("ログの頭に レベル・相手・時間 の3つが出る（KJ-007。並べ方は KJ-030 でなくした）", () => {
   const clock = { t: 1000 };
-  const g = K.createGame(D, T, { now: () => clock.t, rand: () => 0.5, opponent: "solo", timeLimit: 900, layout: "hand", date: () => new Date(2026, 10, 21, 9, 0, 0) });
-  const head = g.logText().split("\n").filter((l) => /^# (レベル|相手|時間|並べ方) /.test(l));
-  assert.equal(head.length, 4);
-  assert.deepEqual(head.map((l) => l.split(" ")[1]), ["レベル", "相手", "時間", "並べ方"]);
+  const g = K.createGame(D, T, { now: () => clock.t, rand: () => 0.5, opponent: "solo", timeLimit: 900, date: () => new Date(2026, 10, 21, 9, 0, 0) });
+  const head = g.logText().split("\n").filter((l) => /^# (レベル|相手|時間) /.test(l));
+  assert.equal(head.length, 3);
+  assert.deepEqual(head.map((l) => l.split(" ")[1]), ["レベル", "相手", "時間"]);
   assert.match(g.logText(), /# 時間 15分\n/);
   assert.match(g.logText(), /# 相手 ひとりで（CPU なし。場の取り合いなし。50点では終わらず、15分たったら終わって点を出す/);
   assert.match(g.logText(), /# 仮置き 勝ち 先に50点、または15分で点の多い方（同点は引き分け）。ひとりでは50点で終わらず15分で終わる/);
 });
 
-test("手札で選ぶ：選んだ順がそのまま効く。放つ・くっつける・割る は台に並べた時と同じ結果", () => {
+test("選んだ順がそのまま効く。放つ・くっつける・割る の結果（KJ-005。KJ-030 で選び方は1つ）", () => {
   // 画面は「選んだ札の id の並び」を台の並びと同じ形で core に渡す。順番ちがいで結果が変わることを確かめる
-  for (const layout of ["hand", "table"]) {
+  {
     const run = (chars, op) => {
-      const g = K.createGame(D, T, { now: () => 1000, rand: () => 0.5, layout, date: () => new Date(2026, 10, 21), firstPick: false, startStock: false });
+      const g = K.createGame(D, T, { now: () => 1000, rand: () => 0.5, date: () => new Date(2026, 10, 21), firstPick: false, startStock: false });
       const ids = setHand(g, g.me, "休日十口人木");
       const pick = (s) => [...s].map((c) => g.me.cards.find((x) => x.c === c).id);
       return { g, ids, r: op(g, pick(chars)) };
     };
     const a = run("休日", (g, ids) => g.release(g.me, ids));
-    assert.deepEqual([a.r.ok, a.r.text, a.r.pts], [true, "休日", 3], layout);
+    assert.deepEqual([a.r.ok, a.r.text, a.r.pts], [true, "休日", 3]);
     const b = run("日休", (g, ids) => g.release(g.me, ids));
-    assert.equal(b.r.ok, false, layout + "：日休 は放てない（選んだ順）");
+    assert.equal(b.r.ok, false, "日休 は放てない（選んだ順）");
     const c = run("十口", (g, ids) => g.join(g.me, ids));
-    assert.equal(c.r.ok, true, layout);
+    assert.equal(c.r.ok, true);
     assert.ok(["古", "田"].includes(c.r.cards[0].c));
     const d = run("口十", (g, ids) => g.join(g.me, ids));
-    assert.deepEqual([d.r.ok, d.r.why], [false, "並べる順が逆"], layout);
+    assert.deepEqual([d.r.ok, d.r.why], [false, "並べる順が逆"]);
     const e = run("休", (g, ids) => g.split(g.me, ids));
-    assert.deepEqual([e.r.ok, e.r.cards.map((x) => x.c).join("")], [true, "人木"], layout);
+    assert.deepEqual([e.r.ok, e.r.cards.map((x) => x.c).join("")], [true, "人木"]);
   }
 });
 
@@ -1075,8 +1069,6 @@ test("十二支：外の字を含む語が放てる（未来・丑年）。N5 �
 test("ログの送信（KJ-020）：1手も動いていなければ送らない。動いたら決まった形の1行", () => {
   const g = newGame(1, "normal");
   assert.equal(K.playLogRow(g, "dev-1"), null, "はじめただけでは送らない");
-  g.setLayout("hand"); // 並べ方の切り替えは手に数えない
-  assert.equal(K.playLogRow(g, "dev-1"), null);
   g.tried(g.me, ["天", "口"], "辞書にない");
   const row = K.playLogRow(g, "dev-1");
   assert.deepEqual(Object.keys(row).sort(), ["app_version", "device_id", "level", "log", "opponent", "result"]);
