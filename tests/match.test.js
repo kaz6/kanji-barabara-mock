@@ -5,6 +5,13 @@ const { K, D, T, newGame, setHand } = require("./helpers");
 
 const chars = (cards) => cards.map((x) => x.c).join("");
 const R = D.rules;
+// 放ったら、場から取りきるまで次の手ができない（KJ-039）。この端末の取れる枚数を、先着を通して取りきる
+async function takeAll(X) {
+  while (X.g.me.takes > 0) {
+    const r = await X.c.take(X.g.field[0].id);
+    if (!r.ok) throw new Error("取りきれない：" + r.why);
+  }
+}
 
 // 二人の端末（host と guest）。時計は同じ。つなぎは同じ偽物
 function pair(id = "m-test-1", opts = {}) {
@@ -133,6 +140,7 @@ test("合言葉の部屋：時間切れで点を比べる（二人の点をそ�
   const { A, B, clock } = pair();
   await A.c.release(setHand(A.g, A.g.me, "学生"));
   await B.c.release(setHand(B.g, B.g.me, "大学"));
+  await takeAll(B);
   await B.c.release(setHand(B.g, B.g.me, "先生"));
   clock.t += A.g.timeLimit - 1;
   assert.equal(await A.c.tick(), false);
@@ -163,6 +171,7 @@ test("合言葉の部屋：相手が抜けても、時間はそのまま進み�
   await B.c.release(setHand(B.g, B.g.me, "先生"));
   B.c.stop(); // B が抜けた（もう行を送らない・受けない）
   await A.c.release(setHand(A.g, A.g.me, "学生"));
+  await takeAll(A);
   await A.c.release(setHand(A.g, A.g.me, "大学"));
   clock.t += A.g.timeLimit;
   await A.c.tick();
@@ -489,4 +498,30 @@ test("KJ-037 合言葉の部屋でも、続けて3回はじかれるとヒント
   assert.equal(A.g.hintActive(), null, "相手が放った言葉の光りは消える");
   for (let i = 0; i < 3; i++) A.g.tried(A.g.me, ["休", "山"], "辞書にない");
   assert.notEqual(A.g.hintActive().word, "休日", "相手が放った言葉は狙わない");
+});
+
+test("KJ-039 合言葉の部屋でも：取りきるまで次の手ができない・上の段が8でもストックへ取れる", async () => {
+  const { A, B } = pair();
+  setHand(A.g, A.g.me, "学生山川口人木日"); // 上の段8
+  const ids = A.g.me.cards.slice(0, 2).map((x) => x.id);
+  const r = await A.c.release(ids);
+  assert.equal(r.ok, true);
+  assert.equal(A.g.me.takes, 2);
+  assert.equal(A.g.locked(A.g.me), true);
+  assert.equal(A.g.split(A.g.me, [A.g.me.cards[0].id]).why, "場から取りきるまで動けない");
+  assert.equal(A.g.canRelease(A.g.me, A.g.me.cards.slice(0, 2).map((x) => x.id)).why, "場から取りきるまで動けない");
+  assert.equal(A.g.redraw(A.g.me).why, "場から取りきるまで動けない");
+  // 上の段が埋まったら、あとはストックへ
+  const t1 = await A.c.take(A.g.field[0].id);
+  assert.equal(t1.ok, true);
+  assert.equal(A.g.handCount(A.g.me), 6 + 1);
+  setHand(A.g, A.g.me, "山川口人木日火水"); // 上の段8
+  A.g.me.takes = 1;
+  const t2 = await A.c.take(A.g.field[0].id);
+  assert.equal(t2.ok, true);
+  assert.equal(t2.card.tray, true, "上の段が8なら、取った札はストックへ");
+  assert.equal(A.g.handCount(A.g.me), 8);
+  assert.equal(A.g.trayCount(A.g.me), 1);
+  assert.equal(A.g.locked(A.g.me), false, "取りきったら動ける");
+  void B;
 });

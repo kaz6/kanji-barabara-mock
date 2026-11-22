@@ -195,11 +195,11 @@
     key = key || R.opponent_default;
     const [a, b] = cpuInterval(D, key);
     return [
-      `場=${R.field_size}枚 最初の手札=${R.start_hand}枚 手札の上限=${R.hand_max}枚＋ストック${R.split_extra}枚（全部で${R.hand_max + R.split_extra}マス。場から取るのは手札の${R.hand_max}枚まで。割る・くっつけるでできた札は、字も部品も、手札が埋まっていればストックへ。手札とストックの間は自分で動かせる）山=${level} の字を${R.same_char_in_deck}枚ずつ（尽きたら足す）`,
+      `場=${R.field_size}枚 最初の手札=${R.start_hand}枚 手札の上限=${R.hand_max}枚＋ストック${R.split_extra}枚（全部で${R.hand_max + R.split_extra}マス。場から取るのは上の段・ストックを合わせて${R.hand_max + R.split_extra}マスが埋まるまで（上の段が埋まっていればストックへ）。割る・くっつけるでできた札は、字も部品も、手札が埋まっていればストックへ。手札とストックの間は自分で動かせる）山=${level} の字を${R.same_char_in_deck}枚ずつ（尽きたら足す）`,
       `点数 ${Object.entries(S.by_length).map(([n, p]) => `${n}字${p}`).join("・")} 四字熟語×${S.yoji_mult} 特別な語×${S.special_mult}（1字は放てない）`,
       `はじまり：最初の手札${R.start_hand}枚で、すぐ時間が動く。ストックに使いやすい部品を${R.start_stock_parts}枚入れて始める（部品表で行き先が多い字でない部品の上位${R.start_stock_top}個から無作為）`,
       `台（机）は並べて見る場所。台に出した札は出す前の段にいるままで、上の段・下の段の枚数に数える`,
-      `放ったら 放った字数×${R.take_per_char}枚を場から選んで取れる。放った言葉は消える（相手には届かない）`,
+      `放ったら 放った字数×${R.take_per_char}枚を場から選んで、取りきるまで、ほかの手は何もできない（取れる枚数はためられない）。放った言葉は消える（相手には届かない）`,
       `引き直し ${R.redraw.cost}点で手札を全部入れ替え（${R.start_hand}枚）。${R.redraw.cost}点ない人は${R.redraw.free_wait_sec}秒待って0点で`,
       `勝ち 先に${R.win.score}点、または${limit / 60}分で点の多い方（同点は引き分け）。ひとりでは50点で終わらず${limit / 60}分で終わる`,
       `ヒント 人が続けて${R.hint.fail_streak}回はじかれたら、自動で札とボタンを光らせる（${R.hint.glow_sec}秒か次の操作まで。言葉は文字で出さない。点はかけない）`,
@@ -316,6 +316,13 @@
     const totalMax = R.hand_max + R.split_extra;
     // 札 srcs を n 枚に替えたあと、段に収まるか
     const fits = (p, srcs, n) => counted(p) - srcs.length + n <= totalMax;
+    // 放ったら、放った字数ぶんを場から取りきるまで、ほかの手は何もできない（KJ-039・D-053）。取れる枚数はためられない
+    const locked = (p) => p.takes > 0;
+    const LOCK_WHY = "場から取りきるまで動けない";
+    g.locked = locked;
+    g.canTakeMore = (p) => counted(p) < totalMax; // 上の段・ストックを合わせた16マスに空きがあるか
+    // 場から取った札は、上の段に空きがあれば上、無ければストックへ（割る・くっつけると同じ）
+    const settle = (p, x) => { if (handCount(p) >= R.hand_max) x.tray = true; p.cards.push(x); return x; };
     g.handCount = handCount;
     g.trayCount = trayCount;
     g.fits = (p, ids, n) => fits(p, ids.map((id) => g.byId(p, id)).filter(Boolean), n); // 札 ids を n 枚に替えられる空きがあるか
@@ -531,6 +538,7 @@
 
     g.split = (p, ids) => {
       const cs = cardsOf(p, ids);
+      if (live() && locked(p)) return fail(LOCK_WHY);
       if (!live() || !cs || cs.length !== 1) return fail("1枚だけ");
       const c = cs[0].c;
       if (!canSplit(T, c)) return fail("割れない");
@@ -543,6 +551,7 @@
     };
     g.join = (p, ids, choice) => {
       const cs = cardsOf(p, ids);
+      if (live() && locked(p)) return fail(LOCK_WHY);
       if (!live() || !cs || cs.length !== 2) return fail("2枚だけ");
       const rs = joinResults(T, cs[0].c, cs[1].c);
       if (!rs.length) return fail(joinReversed(T, cs[0].c, cs[1].c) ? "並べる順が逆" : "くっつかない");
@@ -558,6 +567,7 @@
     // 字にならない面ではくっつけない（画面はそのとき入れ替え・移すにする）。段が埋まっていて行き先が無ければくっつけない
     g.joinFace = (p, dragId, targetId, face, choice) => {
       const cs = cardsOf(p, [dragId, targetId]);
+      if (live() && locked(p)) return fail(LOCK_WHY);
       if (!live() || !cs) return fail("2枚だけ");
       const rs = faceResults(T, face, cs[0].c, cs[1].c);
       if (!rs.length) return fail("その面ではくっつかない");
@@ -573,6 +583,7 @@
     function oneStep(op, k, map) {
       return (p, ids) => {
         const cs = cardsOf(p, ids);
+        if (live() && locked(p)) return fail(LOCK_WHY);
         if (!live() || !cs || cs.length !== 1) return fail("1枚だけ");
         const c = cs[0].c;
         if (!map.has(c)) return fail("できない字");
@@ -589,6 +600,7 @@
     g.cycle = oneStep("巡り", "cycle", T.NEXT);
     g.homophone = (p, ids, to) => {
       const cs = cardsOf(p, ids);
+      if (live() && locked(p)) return fail(LOCK_WHY);
       if (!live() || !cs || cs.length !== 1) return fail("1枚だけ");
       const c = cs[0].c;
       if (!homoChars(T, c).includes(to)) return fail("同じ読みではない");
@@ -606,6 +618,7 @@
     g.canRelease = (p, ids) => {
       if (g.hold && !g.over) return fail("通信中");
       const cs = cardsOf(p, ids);
+      if (live() && locked(p)) return fail(LOCK_WHY);
       if (!live() || !cs) return fail("札がない");
       const text = cs.map((x) => x.c).join("");
       const r = releasable(T, g.used, text);
@@ -672,7 +685,7 @@
       const [nc] = draw(1).map((c) => card(c, true));
       g.field[i] = nc;
       const got = card(x.c, true);
-      p.cards.push(got); // 手札の枠に入る（場から取るのは手札の枠だけ。ストックには入らない）
+      settle(p, got); // 上の段に空きがあれば上、無ければストックへ（KJ-039）
       return { got, x, nc };
     }
     // 取れるか（取る前の確かめ。合言葉の部屋では、このあと先着を確かめてから applyTake）
@@ -680,7 +693,7 @@
       if (g.hold && !g.over) return fail("通信中");
       if (!live()) return fail("終わった");
       if (p.takes <= 0) return fail("取れる枚数がない");
-      if (handCount(p) >= R.hand_max) return fail("手札がいっぱい");
+      if (!g.canTakeMore(p)) return fail("手札もストックもいっぱい");
       const x = g.field.find((f) => f.id === fieldId);
       if (!x) return fail("場にない");
       return { ok: true, card: x, n: x.n };
@@ -694,7 +707,7 @@
         g.taken.set(n, "me");
         g.refreshField();
         const got = card(x.c, true);
-        p.cards.push(got);
+        settle(p, got);
         p.takes -= 1;
         const nc = g.field[g.field.length - 1];
         addLog(p.name, "取る", [x.c], [x.c], 0, `場に ${nc.c} が出た。残り${p.takes}枚取れる`);
@@ -742,6 +755,7 @@
     }
     g.redraw = (p) => {
       if (!live()) return fail("終わった");
+      if (locked(p)) return fail(LOCK_WHY);
       if (p.redrawAt !== null) return fail("待っている");
       if (p.score >= R.redraw.cost) {
         p.score -= R.redraw.cost;
@@ -756,6 +770,7 @@
     // 2枚の位置を入れ替える。手札とストックの間でもよい（入れ替えた札はそれぞれ相手の段へ）。持っている札も数も変わらない
     g.swap = (p, idA, idB) => {
       if (!live()) return fail("終わった");
+      if (locked(p)) return fail(LOCK_WHY);
       const a = g.byId(p, idA), b = g.byId(p, idB);
       if (!a || !b || a === b) return fail("札がない");
       const i = p.cards.indexOf(a), j = p.cards.indexOf(b);
@@ -768,6 +783,7 @@
     // 1枚を手札⇄ストックの空いたマスへ移す（toTray が true ならストックへ）
     g.move = (p, id, toTray) => {
       if (!live()) return fail("終わった");
+      if (locked(p)) return fail(LOCK_WHY);
       const a = g.byId(p, id);
       if (!a) return fail("札がない");
       if (!!a.tray === !!toTray) return fail("同じ段");
@@ -779,7 +795,7 @@
       return { ok: true };
     };
     g.tried = (p, chars, why) => {
-      if (!live()) return;
+      if (!live() || locked(p)) return;
       addLog(p.name, "ためした", chars, [], 0, why);
       if (p === g.me) { g.hintStreak++; maybeHint(p); } // 続けて3回はじかれたら、自動でヒント（KJ-037）
     };
@@ -827,7 +843,7 @@
       return ids;
     }
     function cpuTakeAll(p) {
-      while (p.takes > 0 && handCount(p) < R.hand_max) {
+      while (p.takes > 0 && g.canTakeMore(p)) {
         if (!g.take(p, cpuPickField(p).id).ok) break;
       }
     }
@@ -835,7 +851,7 @@
       if (!live() || g.solo || M) return null; // 合言葉の部屋は CPU を出さない
       if (now() >= g.endsAt) { g.tick(); return null; } // 時間切れのあとは動かない（裏にいた間の手を取り戻さない。KJ-036）
       const p = g.cpu;
-      if (p.takes > 0 && handCount(p) < R.hand_max) { cpuTakeAll(p); return { ok: true, op: "取る" }; }
+      if (p.takes > 0 && g.canTakeMore(p)) { cpuTakeAll(p); return { ok: true, op: "取る" }; }
       const ws = T.COMMON_WORDS.filter((w) => !g.used.has(w.w) && pickIds(p, w.w)); // CPU が知っていて、手札でいま放てる語
       if (ws.length) {
         const best = Math.max(...ws.map((w) => scoreOf(D, T, w.w).pts));
