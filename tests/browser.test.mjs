@@ -100,7 +100,8 @@ test("画面", { skip }, async (t) => {
       assert.match(await page.textContent("#released"), /休日.*\+3点/);
       // 引き直し（3点しかない → 30秒待ち）
       await page.click("#bRedraw");
-      assert.match(await page.textContent("#cdRedraw"), /^wait \d+s$/);
+      assert.equal(await page.textContent("#cdRedraw"), "30s", "待っているあいだも添え字は 30s のまま（秒数は数えない。KJ-034）");
+      assert.equal(await page.evaluate(() => document.getElementById("bRedraw").classList.contains("cd")), true, "Redraw の地がゲージになる");
       // ログ
       await page.click("#bLog");
       const log = await page.inputValue("#logText");
@@ -681,6 +682,64 @@ test("画面", { skip }, async (t) => {
     await ctx.close();
   });
 
+  await t.test("待ち時間のゲージ（KJ-034）：使った直後は空に近い・半分でおよそ半分・満ちる前は押せない・満ちたら押せて小さく光る・秒数の文字が出ない・375×700 に収まる", async () => {
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 }, null);
+    const st = () => page.evaluate(() => {
+      const b = document.getElementById("bInvert"), r = b.getBoundingClientRect();
+      const w = parseFloat(getComputedStyle(b, "::before").width) || 0;
+      return { cd: b.classList.contains("cd"), full: b.classList.contains("full"), g: parseFloat(b.style.getPropertyValue("--g") || "NaN"), disabled: b.disabled, text: b.textContent.trim(), w: r.width, before: w, l: r.left, r: r.right, t: r.top, b: r.bottom };
+    });
+    // 時計は差し替える代わりに、待ちが明ける時刻（cd）を G.now() からの秒で置く
+    const setLeft = (sec) => page.evaluate((s) => { const G = __KJ.game; G.me.cd.invert = G.now() + s; __KJ.render(); }, sec);
+    const total = await page.evaluate(() => __KJ.data.rules.cooldown_sec.invert);
+    await page.locator("#meHand .tile", { hasText: "上" }).first().click();
+    await page.click("#bInvert");
+    assert.equal(await page.evaluate(() => __KJ.row.length), 1, "反転でできた 下 は選ばれたまま（下 も反転できる）");
+    let s = await st();
+    assert.equal(s.cd, true, "使ったあとは地がゲージ");
+    assert.ok(s.g < 0.1, `使った直後は空に近い（${s.g}）`);
+    assert.equal(s.disabled, true, "満ちる前は押せない");
+    await setLeft(total / 2);
+    s = await st();
+    assert.ok(Math.abs(s.g - 0.5) < 0.05, `待ち時間の半分でおよそ半分（${s.g}）`);
+    assert.equal(s.disabled, true, "半分では押せない");
+    assert.equal(s.text, "⇄ Flip", "秒数の文字が出ない");
+    await page.waitForTimeout(350); // 幅の動き（.25s）が落ち着くのを待つ
+    s = await st();
+    assert.ok(Math.abs(s.before / s.w - 0.5) < 0.08, `ゲージの幅もおよそ半分（${Math.round(s.before)} / ${Math.round(s.w)}）`);
+    assert.ok(s.l >= 0 && s.r <= 375 && s.t >= 0 && s.b <= 700, "375×700 に収まる");
+    assert.ok(new Set(await page.evaluate(() => [...document.querySelectorAll(".ops button")].map((b) => Math.round(b.getBoundingClientRect().top)))).size <= 2, "ボタンは2段のまま");
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= 375), "横スクロールがない");
+    if (process.env.KJ_GAUGE_SHOT) await page.screenshot({ path: process.env.KJ_GAUGE_SHOT });
+    for (const t of await page.locator(".ops button:not(#bRedraw)").allTextContents()) assert.doesNotMatch(t, /\d|wait/, `ボタンに残りの秒数が出ない（${t}）`);
+    await setLeft(-0.01);
+    s = await st();
+    assert.equal(s.cd, false, "満ちたらゲージを外す");
+    assert.equal(s.disabled, false, "満ちたら押せる");
+    assert.equal(s.full, true, "満ちた瞬間に小さく光る");
+    assert.notEqual(await page.evaluate(() => getComputedStyle(document.getElementById("bInvert")).animationName), "none");
+    // 動きを減らす設定：光るのはやめる。ゲージの満ち方は出す
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.click("#bInvert");
+    assert.equal(await page.evaluate(() => __KJ.row.length), 1);
+    await setLeft(total / 2);
+    s = await st();
+    assert.equal(s.cd, true);
+    assert.ok(Math.abs(s.g - 0.5) < 0.05, "動きを減らす設定でもゲージは満ちていく");
+    await setLeft(-0.01);
+    assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById("bInvert")).animationName), "none", "動きを減らす設定では光らない");
+    // 引き直しの30秒待ちも同じゲージ（添え字 30s は残す）
+    await page.evaluate(() => { const G = __KJ.game; G.me.score = 0; __KJ.render(); });
+    await page.click("#bRedraw");
+    await page.evaluate(() => { const G = __KJ.game; G.me.redrawAt = G.now() + __KJ.data.rules.redraw.free_wait_sec / 2; __KJ.render(); });
+    const rd = await page.evaluate(() => { const b = document.getElementById("bRedraw"); return { cd: b.classList.contains("cd"), g: parseFloat(b.style.getPropertyValue("--g")), text: b.textContent.trim() }; });
+    assert.equal(rd.cd, true);
+    assert.ok(Math.abs(rd.g - 0.5) < 0.05, `Redraw の待ちも半分でおよそ半分（${rd.g}）`);
+    assert.equal(rd.text, "Redraw 30s", "Redraw の添え字は 30s のまま");
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+
   await t.test("選ぶ：スマホ幅の画像（選んだ札が目立つ）", async () => {
     const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 }, null);
     await page.locator("#meHand .tile", { hasText: "休" }).first().click();
@@ -726,7 +785,7 @@ test("画面", { skip }, async (t) => {
       // 字の幅が環境でちがっても、ボタンの中身が枠からはみ出さない（CI の Chromium で3段になった。KJ-010）
       assert.deepEqual(await page.evaluate(() => [...document.querySelectorAll(".ops button")].filter((b) => b.scrollWidth > b.clientWidth + 1).map((b) => b.id)), [], "ボタンの中身が枠に収まる");
       // 待ち時間の表示が入った形でも2段のまま
-      await page.evaluate(() => { for (const id of ["cdInvert", "cdCycle", "cdHomo"]) document.getElementById(id).textContent = "10s"; document.getElementById("cdRedraw").textContent = "wait 30s"; });
+      await page.evaluate(() => { const G = __KJ.game; for (const k of ["invert", "cycle", "homophone"]) G.me.cd[k] = G.now() + 0.5; G.me.score = 0; G.me.redrawAt = G.now() + 15; __KJ.render(); }); // ゲージが出ている形（KJ-034）
       assert.ok(new Set(await page.evaluate(() => [...document.querySelectorAll(".ops button")].map((b) => Math.round(b.getBoundingClientRect().top)))).size <= 2, "待ち時間が出ても2段");
       assert.deepEqual(await page.evaluate(() => [...document.querySelectorAll(".ops button")].filter((b) => b.scrollWidth > b.clientWidth + 1).map((b) => b.id)), [], "待ち時間が出てもボタンの中身が枠に収まる");
       // 横にあふれない
@@ -991,7 +1050,7 @@ test("画面", { skip }, async (t) => {
       for (const [id, text] of Object.entries(want)) assert.equal(await label(id), text, `${id} の文字`);
       // ボタンの中に日本語（かな・漢字）が無い。待ち時間・引き直しの添え字が入っても
       await page.evaluate(() => { __KJ.game.me.score = 9; __KJ.render(); });
-      assert.match(await page.textContent("#cdRedraw"), /^\d+pt$/, "点があるときは Redraw 5pt の形");
+      assert.match(await page.textContent("#cdRedraw"), /^-\d+pt$/, "点があるときは Redraw -5pt の形（KJ-034 追記）");
       await page.evaluate(() => { __KJ.game.me.score = 0; __KJ.render(); });
       assert.match(await page.textContent("#cdRedraw"), /^\d+s$/, "点がないときは Redraw 30s の形");
       const jp = /[\u3040-\u30ff\u3400-\u9fff]/;

@@ -352,6 +352,10 @@
     g.ready = (p, k) => now() >= p.cd[k];
     g.cdLeft = (p, k) => Math.max(0, p.cd[k] - now());
     g.redrawLeft = (p) => (p.redrawAt === null ? 0 : Math.max(0, p.redrawAt - now()));
+    // 待ち時間のゲージ（KJ-034）：0＝使った直後（空）〜1＝満ちた（押せる）。待っていなければ 1
+    const frac = (left, total) => (total > 0 ? Math.min(1, Math.max(0, 1 - left / total)) : 1);
+    g.cdFrac = (p, k) => frac(g.cdLeft(p, k), R.cooldown_sec[k]);
+    g.redrawFrac = (p) => (p.redrawAt === null ? 1 : frac(g.redrawLeft(p), R.redraw.free_wait_sec));
     const useCd = (p, k) => { p.cd[k] = now() + R.cooldown_sec[k]; };
 
     const QUIET = new Set(["はじまり", "ためした", "終わり", "動けない", "動ける", "入れ替え", "移す"]);
