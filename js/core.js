@@ -927,7 +927,7 @@
       if (changed || sent === null || sent.score !== g.me.score || sent.count !== g.me.cards.length || sent.hand !== g.handCount(g.me)) await c.sendState();
       if (!g.closed && g.me.score >= R.win.score) { await claimWin(); if (g.over) return true; }
       if (g.now() < g.endsAt) {
-        if (pingSec > 0 && g.now() - lastPing >= pingSec) { lastPing = g.now(); await c.ping(); }
+        if (pingSec > 0 && g.now() - lastPing >= pingSec) { lastPing = g.now(); c.ping(); } // 待たない（回線が悪くても tick を止めない）
         return changed;
       }
       if (!timeSent) {
@@ -995,7 +995,8 @@
   }
   // 始まりの時刻（画面の時計の目盛り）：'start' 行の created_at（サーバーの時刻・秒）から。端末の時計がずれているときは、届いた時刻で始める
   function roomStartAt(createdAtSec, epochNowSec, clockNowSec, maxLagSec) {
-    const lag = epochNowSec - createdAtSec, m = typeof maxLagSec === "number" ? maxLagSec : 10;
+    // 上限は時間切れの待ち（MATCH_END_GRACE_SEC）より短くする（端末の時計が進んでいる側だけ先に終わらないように）
+    const lag = epochNowSec - createdAtSec, m = typeof maxLagSec === "number" ? maxLagSec : 3;
     if (!Number.isFinite(lag) || lag < 0 || lag > m) return clockNowSec;
     return clockNowSec - lag;
   }

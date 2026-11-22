@@ -354,6 +354,7 @@ function toSetup(){clearTimeout(cpuTimer);sendAbandoned();leaveRoom();G=null;row
 $("bSetup").onclick=toSetup;
 function scheduleCpu(){cpuTimer=setTimeout(()=>{if(!G||G.over)return;G.cpuTurn();afterChange();if(!G.over)scheduleCpu()},G.cpuDelay()*1000)}
 function drain(){
+  if(!G)return;
   while(G.events.length){
     const e=G.events.shift();
     if(e.type==="fx")showFx(e.who,e.text);
@@ -433,17 +434,18 @@ const SB_JS="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/
 const SB_SRI="sha384-0w2KAL2YHP6wKOkUDzkCDGgVvfmHnj02DHeQ6XcHOgTfFsGyonKOpShMH1x6nk9o";
 const POLL_MS=()=>window.__KJ_POLL_MS||1500, POLL_RT_MS=()=>window.__KJ_POLL_MS||4000;
 const cryptoRand=()=>{try{return crypto.getRandomValues(new Uint32Array(1))[0]/4294967296}catch(e){return Math.random()}};
+const fetchTimeout=()=>{try{return AbortSignal.timeout(K.MATCH_INSERT_TIMEOUT_SEC*1000)}catch(e){return undefined}}; // 部屋の前の insert・読み直しも固まらないように
 const normRow=r=>r&&typeof r==="object"?{...r,created_at:typeof r.created_at==="string"?Date.parse(r.created_at)/1000:r.created_at}:null;
 async function claimsGet(mid,kind,key,sinceSec){
   const q=new URLSearchParams({select:"match_id,kind,key,player,payload,created_at",match_id:"eq."+mid,order:"created_at.asc",limit:"1000"});
   if(kind)q.set("kind","eq."+kind);
   if(key!==undefined)q.set("key","eq."+key);
   if(sinceSec)q.set("created_at","gte."+new Date((sinceSec-5)*1000).toISOString()); // 5秒前から読み直す（同じ行は捨てる）
-  try{const r=await fetch(CLAIMS_URL+"?"+q,{headers:{apikey:LOG_KEY}});if(!r.ok)return null;const j=await r.json();return Array.isArray(j)?j.map(normRow).filter(Boolean):null}catch(e){return null}
+  try{const r=await fetch(CLAIMS_URL+"?"+q,{headers:{apikey:LOG_KEY},signal:fetchTimeout()});if(!r.ok)return null;const j=await r.json();return Array.isArray(j)?j.map(normRow).filter(Boolean):null}catch(e){return null}
 }
 async function claimsInsert(row){
   try{
-    const r=await fetch(CLAIMS_URL,{method:"POST",headers:{apikey:LOG_KEY,"content-type":"application/json",Prefer:"return=representation"},body:JSON.stringify(row)});
+    const r=await fetch(CLAIMS_URL,{method:"POST",headers:{apikey:LOG_KEY,"content-type":"application/json",Prefer:"return=representation"},body:JSON.stringify(row),signal:fetchTimeout()});
     if(r.ok){let x=null;try{const j=await r.json();x=normRow(Array.isArray(j)?j[0]:j)}catch(e){}if(x)LINK.deliver(x);return {ok:true,row:x||row}}
     if(r.status===409){const q=await claimsGet(row.match_id,row.kind,row.key);return {ok:false,conflict:true,player:q&&q[0]?q[0].player:undefined}} // ぶつかった行の player を返す（約束）
     return {ok:false,error:"HTTP "+r.status};
@@ -640,9 +642,11 @@ function attachDrag(b,id){
 function tapRow(id){if(G.over)return;noteTried();row=row.filter(x=>x!==id);hideChoices();afterChange()}
 function tapField(id){
   if(!G||G.over)return;
-  if(MC){MC.take(id).then(r=>{if(!r.ok)showWhy(r.why);afterChange()});afterChange();return} // 合言葉の部屋：先に入れた方だけ取れる
+  if(MC){const mc=MC;mc.take(id).then(r=>{if(stale(mc))return;if(!r.ok)showWhy(r.why);afterChange()});afterChange();return} // 合言葉の部屋：先に入れた方だけ取れる
   const r=G.take(G.me,id);if(!r.ok)showWhy(r.why);afterChange()
 }
+// 返事待ちのあいだに試合が終わった・捨てた・別の試合になったときの返事は、画面に反映しない（勝ち負けの表示を上書きしない）
+function stale(mc){if(MC===mc&&G&&!G.over)return false;if(G)afterChange();return true}
 function showWhy(why){const m=$("msg");m.textContent=why||"";m.className="msg"}
 function afterOp(res){if(res&&res.ok){row=res.cards?res.cards.map(x=>x.id):[];lastTried=""}hideChoices();afterChange()}
 const isSingleTry=s=>s.rc.length===1&&!s.rl.ok&&[...s.text].length===1; // 1字は押せるが、はじかれる（KJ-008）
@@ -653,7 +657,7 @@ $("bRelease").onclick=()=>{
     const why=s.rl.why;G.tried(G.me,[s.text],why);
     const m=$("msg");m.textContent=why;m.className="msg";hideChoices();afterChange();return;
   }
-  if(MC){MC.release([...row]).then(r=>{if(!r.ok&&r.why&&(r.lost||r.why==="つながらない"||r.why==="通信中"))showWhy(r.why);afterOp(r)});afterChange();return} // 合言葉の部屋：言葉は先に放った方だけ
+  if(MC){const mc=MC;mc.release([...row]).then(r=>{if(stale(mc))return;if(!r.ok&&r.why&&(r.lost||r.why==="つながらない"||r.why==="通信中"))showWhy(r.why);afterOp(r)});afterChange();return} // 合言葉の部屋：言葉は先に放った方だけ
   afterOp(G.release(G.me,[...row]));
 };
 $("bSplit").onclick=()=>afterOp(G.split(G.me,row));
@@ -665,7 +669,7 @@ $("bJoin").onclick=()=>{
 $("bInvert").onclick=()=>afterOp(G.invert(G.me,row));
 $("bCycle").onclick=()=>afterOp(G.cycle(G.me,row));
 $("bBack").onclick=()=>{noteTried();row=[];hideChoices();afterChange()};
-$("bRedraw").onclick=()=>{row=[];hideChoices();if(MC){MC.redraw().then(afterChange);return}G.redraw(G.me);afterChange()};
+$("bRedraw").onclick=()=>{row=[];hideChoices();if(MC){const mc=MC;mc.redraw().then(()=>{if(!stale(mc))afterChange()});return}G.redraw(G.me);afterChange()};
 $("bHomo").onclick=()=>{
   const c=rowText();
   showChoices((T.HOMO.get(c)||[]).map(g=>({label:`${g.type==="on"?"音":"訓"}：${g.reading}`,chars:g.chars.filter(x=>x!==c),

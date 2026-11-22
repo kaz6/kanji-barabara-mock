@@ -385,9 +385,11 @@ test("合言葉の部屋：相手の行が届かないと「通信が切れた�
   assert.equal(A.c.oppGone(), false, "相手の ping が届いた");
   // tick が ping を送る
   const n0 = A.g.log.length;
-  clock.t += K.MATCH_PING_SEC;
-  await B.c.tick();
-  assert.equal(A.c.oppGone(), false);
+  clock.t += K.MATCH_GONE_SEC + 1;
+  assert.equal(A.c.oppGone(), true);
+  await B.c.tick(); // tick が ping を送る（待たない）
+  for (let i = 0; i < 3; i++) await Promise.resolve();
+  assert.equal(A.c.oppGone(), false, "tick が送った ping が届いた");
   assert.equal(A.g.log.length, n0, "ping はログに書かない");
   await B.c.leave();
   assert.equal(A.c.oppGone(), true, "相手が抜けた");
@@ -440,6 +442,7 @@ test("合言葉の部屋：部屋を作る→合言葉で入る→二人とも�
   assert.equal(K.roomStartAt(1000, 1002, 50), 48, "届くまでにかかった秒だけ前");
   assert.equal(K.roomStartAt(1000, 990, 50), 50, "端末の時計が遅れていれば届いた時刻");
   assert.equal(K.roomStartAt(1000, 1100, 50), 50, "ずれが大きければ届いた時刻");
+  assert.equal(K.roomStartAt(1000, 1005, 50), 50, "時間切れの待ち（5秒）より大きなずれも届いた時刻");
 });
 
 test("合言葉の部屋：古い合言葉・形の違う合言葉では入れない。同じ合言葉はいちばん新しい部屋に入る", async () => {
