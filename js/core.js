@@ -60,6 +60,18 @@
       if (!T.JOIN.has(key)) T.JOIN.set(key, []);
       T.JOIN.get(key).push(k);
     }
+    // 面でくっつける（KJ-017・D-035）：引きずった札を相手の札のどの面に落とすと何になるか。割り方の形（split_shapes）を逆に引く
+    // 上下の字 [上, 下]：上の札を下の札の「上」に／下の札を上の札の「下」に。左右も同じ。囲み：中の札を外の札の「中央」に（out＝外の部品の番号）
+    // 形が「それ以外」（辶・广 など）や out の無い囲みの字は、面ではくっつけない
+    T.FACE = new Map(); // "面\t引きずった字\t相手の字" → [できる字…]
+    const addFace = (f, d, t, k) => { const key = f + "\t" + d + "\t" + t; if (!T.FACE.has(key)) T.FACE.set(key, []); T.FACE.get(key).push(k); };
+    for (const [k, [a, b]] of Object.entries(T.parts)) {
+      const sp = T.SHAPES[k];
+      if (!sp) continue;
+      if (sp.s === "tb") { addFace("top", a, b, k); addFace("bottom", b, a, k); }
+      else if (sp.s === "lr") { addFace("left", a, b, k); addFace("right", b, a, k); }
+      else if (sp.kind === "囲み" && (sp.out === 0 || sp.out === 1)) { const pr = [a, b]; addFace("center", pr[1 - sp.out], pr[sp.out], k); }
+    }
     T.INV = new Map();
     for (const [a, b] of D.antonyms.pairs) { if (T.CHARS.has(a) && T.CHARS.has(b)) { T.INV.set(a, b); T.INV.set(b, a); } }
     T.NEXT = new Map();
@@ -115,6 +127,16 @@
     }
     return [...dest].map(([c, set]) => ({ c, n: set.size }))
       .sort((a, b) => b.n - a.n || a.c.codePointAt(0) - b.c.codePointAt(0)).slice(0, top);
+  }
+  // 面（KJ-017）。上＝引きずった札が上、下＝下、左＝左、右＝右、中央＝相手の中に入る（囲み）
+  const FACES = ["top", "bottom", "left", "right", "center"];
+  const FACE_LABEL = { top: "上", bottom: "下", left: "左", right: "右", center: "中央" };
+  const faceResults = (T, face, dragged, target) => (T.FACE && T.FACE.get(face + "\t" + dragged + "\t" + target)) || [];
+  // 引きずった字 dragged を相手の字 target に落としたとき、面ごとにできる字。字にならない面は入れない（光らせない）
+  function faceJoins(T, dragged, target) {
+    const out = {};
+    for (const f of FACES) { const rs = faceResults(T, f, dragged, target); if (rs.length) out[f] = rs.slice(); }
+    return out;
   }
   // 逆に並べればくっつく（順番の決まりは変えない。表示だけ）
   const joinReversed = (T, a, b) => joinResults(T, a, b).length === 0 && joinResults(T, b, a).length > 0;
@@ -348,6 +370,21 @@
       if (!fits(p, cs, 1)) return fail("手札もストックもいっぱい");
       const nc = replaceCards(p, ids, [to]);
       addLog(p.name, "くっつける", cs.map((x) => x.c), [to]);
+      return { ok: true, cards: nc };
+    };
+    // 引きずってくっつける（KJ-017・D-035）：札 dragId を札 targetId の面 face に落とす。できた札は相手の札の並びの位置に入る（手札に空きがあれば手札。R-032 と同じ）。
+    // 字にならない面ではくっつけない（画面はそのとき入れ替え・移すにする）。段が埋まっていて行き先が無ければくっつけない
+    g.joinFace = (p, dragId, targetId, face, choice) => {
+      const cs = cardsOf(p, [dragId, targetId]);
+      if (!live() || !cs) return fail("2枚だけ");
+      const rs = faceResults(T, face, cs[0].c, cs[1].c);
+      if (!rs.length) return fail("その面ではくっつかない");
+      const to = choice === undefined ? rs[0] : choice;
+      if (!rs.includes(to)) return fail("その字にはならない");
+      if (!fits(p, cs, 1)) return fail("手札もストックもいっぱい");
+      p.cards = p.cards.filter((x) => x !== cs[0]); // 先に引きずった札を抜き、相手の札の位置に入れる（段の行き先は割る・くっつけると同じ：手札に空きがあれば手札）
+      const nc = replaceCards(p, [targetId], [to]);
+      addLog(p.name, "くっつける", T.parts[to].slice(), [to], 0, `引きずって${FACE_LABEL[face]}の面に`);
       return { ok: true, cards: nc };
     };
     function oneStep(op, k, map) {
@@ -619,6 +656,6 @@
 
   return {
     FILES, OPPONENTS, LEVELS, timeChoices, normTime, timeLabel, levelLabel, makeTables, isN5, isLevelChar, isChar, splitOnce, canSplit, delivered, joinResults, joinReversed,
-    releasable, scoreOf, homoChars, marks, cutSpec, rulesLabel, opponentLabel, createGame, playLogRow, logSendAllowed, playLogResult, PLAY_LOG_LIMITS,
+    releasable, scoreOf, homoChars, marks, cutSpec, FACES, FACE_LABEL, faceJoins, faceResults, rulesLabel, opponentLabel, createGame, playLogRow, logSendAllowed, playLogResult, PLAY_LOG_LIMITS,
   };
 });

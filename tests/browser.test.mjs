@@ -529,6 +529,123 @@ test("画面", { skip }, async (t) => {
     });
   }
 
+  // KJ-017：引きずって相手の札の面に落とすとくっつく。字になる面だけ青く光る（D-035）
+  await t.test("引きずってくっつける（KJ-017）：十 を 口 の上で 古・中央で 田。光る面は 上・中央だけ。光っていない面なら入れ替え", async () => {
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 }, null);
+    const order = () => page.locator("#meHand > *").evaluateAll((els) => els.map((e) => e.classList.contains("tile") ? e.title : "_").join(""));
+    const reset = async () => {
+      await page.evaluate(() => { __KJ.game.me.cards = [..."天上天下十口休日"].map((c, i) => ({ id: 9100 + i + Math.floor(Math.random() * 1e5) * 10, c, t: 0, fresh: false })); __KJ.render(); });
+    };
+    // from の札を引きずって、to の札の (rx, ry)（0〜1。引きずる前の札の大きさで）に持っていく。hold の間に見る
+    const dragTo = async (from, to, rx, ry, hold) => {
+      await page.locator("#meHand").scrollIntoViewIfNeeded();
+      const f = await page.locator("#meHand .tile", { hasText: from }).first().boundingBox();
+      const tb = await page.locator("#meHand .tile", { hasText: to }).first().boundingBox();
+      const x1 = f.x + f.width / 2, y1 = f.y + f.height / 2;
+      const x2 = tb.x + tb.width * rx, y2 = tb.y + tb.height * ry;
+      await page.mouse.move(x1, y1); await page.mouse.down();
+      await page.mouse.move((x1 + x2) / 2, (y1 + y2) / 2, { steps: 4 });
+      await page.mouse.move(x2, y2, { steps: 4 });
+      if (hold) await hold();
+      await page.mouse.up();
+    };
+    const lit = () => page.evaluate(() => {
+      const t = document.querySelector("#meHand .tile.jt");
+      return t ? { c: t.title, faces: [...t.querySelectorAll(".fz")].map((z) => z.dataset.face).sort().join(","), on: [...t.querySelectorAll(".fz.on")].map((z) => z.dataset.face).join(",") } : null;
+    });
+    const joinable = () => page.locator("#meHand .tile.joinable").evaluateAll((els) => els.map((e) => e.title).join(""));
+    // 上の面 → 古
+    await dragTo("十", "口", 0.5, 0.12, async () => {
+      assert.deepEqual(await lit(), { c: "口", faces: "center,top", on: "top" }, "口 の上と中央だけ光り、上が濃い");
+      assert.match(await joinable(), /口/, "くっつけられる相手の枠が青");
+      assert.doesNotMatch(await joinable(), /[天上下休]/, "くっつかない札は青くならない");
+      assert.equal(await page.locator("#meHand .tile.over").count(), 0, "光る面の上では入れ替えの印を出さない");
+      if (process.env.KJ_SHOT) await page.screenshot({ path: process.env.KJ_SHOT.replace(/\.png$/, "-top.png") });
+    });
+    assert.equal(await order(), "天上天下古休日_", "十 と 口 が 古 になり、口 のいた所に入る");
+    assert.equal(await page.locator(".tile.joinable, .tile.jt, .fz").count(), 0, "離したら青は消える");
+    // 中央 → 田
+    await reset();
+    await dragTo("十", "口", 0.5, 0.5, async () => {
+      assert.deepEqual(await lit(), { c: "口", faces: "center,top", on: "center" });
+      if (process.env.KJ_SHOT) await page.screenshot({ path: process.env.KJ_SHOT.replace(/\.png$/, "-center.png") });
+    });
+    assert.equal(await order(), "天上天下田休日_");
+    // 引きずっている途中で画面が描き直されても（CPU の手など）、動かせば光り直し、光った面でくっつく。光っていない面なら入れ替え
+    await reset();
+    await dragTo("十", "口", 0.5, 0.12, async () => {
+      await page.evaluate(() => __KJ.render());
+      const tb = await page.locator("#meHand .tile", { hasText: "口" }).first().boundingBox();
+      await page.mouse.move(tb.x + tb.width * 0.5, tb.y + tb.height * 0.15, { steps: 2 });
+      assert.deepEqual(await lit(), { c: "口", faces: "center,top", on: "top" }, "描き直しのあとも光る");
+      assert.match(await joinable(), /口/);
+    });
+    assert.equal(await order(), "天上天下古休日_");
+    await reset();
+    await dragTo("十", "口", 0.5, 0.9, async () => {
+      await page.evaluate(() => __KJ.render());
+      const tb = await page.locator("#meHand .tile", { hasText: "口" }).first().boundingBox();
+      await page.mouse.move(tb.x + tb.width * 0.5, tb.y + tb.height * 0.88, { steps: 2 });
+      assert.deepEqual(await lit(), { c: "口", faces: "center,top", on: "" });
+    });
+    assert.equal(await order(), "天上天下口十休日", "描き直しのあとも、光っていない面なら入れ替え");
+    // 1回の動きで札に入って、そのまま離す：濃く光る面と結果がそろう（口 の右寄り＝大きくなった札では中央）
+    await reset();
+    {
+      await page.locator("#meHand").scrollIntoViewIfNeeded();
+      const f = await page.locator("#meHand .tile", { hasText: "十" }).first().boundingBox();
+      const tb = await page.locator("#meHand .tile", { hasText: "口" }).first().boundingBox();
+      await page.mouse.move(f.x + f.width / 2, f.y + f.height / 2); await page.mouse.down();
+      await page.mouse.move(f.x + f.width / 2, f.y - 30, { steps: 3 });
+      await page.mouse.move(tb.x + tb.width * 0.75, tb.y + tb.height * 0.5);
+      const l = await lit();
+      await page.mouse.up();
+      assert.equal(l.on, "center", "大きくなった札で面を決める");
+      assert.equal(await order(), "天上天下田休日_", "濃く光った面（中央）のとおりになる");
+    }
+    // 光っていない面（下）で離す → いまの入れ替え
+    await reset();
+    await dragTo("十", "口", 0.5, 0.9, async () => {
+      assert.deepEqual(await lit(), { c: "口", faces: "center,top", on: "" }, "下は光らない");
+      assert.equal(await page.locator("#meHand .tile.over").count(), 1, "入れ替えの印");
+    });
+    assert.equal(await order(), "天上天下口十休日", "入れ替わる（くっつかない）");
+    // くっつかない札同士（休 → 天）は光らず、入れ替え
+    await dragTo("休", "天", 0.5, 0.5, async () => { assert.equal(await lit(), null); });
+    assert.equal(await order(), "休上天下口十天日");
+    assert.equal(await page.locator("#meHand .tile.sel").count(), 0, "引きずっても選ばれない");
+    await page.click("#bLog");
+    const log = await page.inputValue("#logText");
+    assert.match(log, /\tくっつける\t十 口\t古\t.*引きずって上の面に/);
+    assert.match(log, /\tくっつける\t十 口\t田\t.*引きずって中央の面に/);
+    assert.match(log, /\t入れ替え\t十 口\t口 十\t/);
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+
+  await t.test("引きずってくっつける（KJ-017）：ストックの札にも落とせる。ボタンのくっつける（台に並べた順）は今のまま", async () => {
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 }, null);
+    await page.evaluate(() => { const G = __KJ.game; G.me.cards.push({ id: 9700, c: "口", t: 0, fresh: false, tray: true }); __KJ.render(); });
+    await page.locator("#meTray").scrollIntoViewIfNeeded();
+    const f = await page.locator("#meHand .tile", { hasText: "十" }).first().boundingBox();
+    const tb = await page.locator("#meTray .tile").first().boundingBox();
+    await page.mouse.move(f.x + f.width / 2, f.y + f.height / 2); await page.mouse.down();
+    await page.mouse.move(tb.x + tb.width / 2, tb.y + tb.height / 2, { steps: 8 });
+    await page.mouse.up();
+    assert.equal(await page.locator("#meTray .tile").count(), 0, "ストックの 口 と 十 が田になり、手札に空きがあるので手札へ");
+    assert.equal(await page.locator("#meHand .tile", { hasText: "田" }).count(), 1);
+    // ボタン：十・口 を選んで Join → 古 か 田 を選ぶ（今まで通り）
+    await page.evaluate(() => { __KJ.game.me.cards = [..."天上天下十口休日"].map((c, i) => ({ id: 9800 + i, c, t: 0, fresh: false })); __KJ.render(); });
+    await page.locator("#meHand .tile", { hasText: "十" }).click();
+    await page.locator("#meHand .tile", { hasText: "口" }).click();
+    await page.click("#bJoin");
+    assert.equal(await page.locator("#choices.on button").count(), 2);
+    await page.locator("#choices.on button", { hasText: "古" }).click();
+    assert.equal(await page.locator("#meHand .tile", { hasText: "古" }).count(), 1);
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+
   await t.test("ストック（R-042）：手札の札を引きずってストックの空いたマスへ移す。ストックの札と手札の札を入れ替える。ストックの見出し", async () => {
     const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 }, null);
     assert.match(await page.textContent("#trayHead"), /^ストック（字も部品も置ける/);

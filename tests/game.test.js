@@ -60,6 +60,94 @@ test("くっつける：3枚の字は中継ぎを経由して二回（十口→�
   assert.equal(chars(r2.cards), "男");
 });
 
+// ---- KJ-017：引きずって相手の札の面に落とすとくっつく（D-035）----
+test("面でくっつける：十 を 口 の上に落とすと 古、中央なら 田。字にならない面（下・左・右）は無い", () => {
+  assert.deepEqual(K.faceJoins(T, "十", "口"), { top: ["古"], center: ["田"] });
+  assert.deepEqual(K.faceJoins(T, "口", "十"), { bottom: ["古"] }, "口 を 十 の下に落とすと 古（口 は 十 の中には入らない）");
+  const g = newGame();
+  let [a, b] = setHand(g, g.me, "十口");
+  let r = g.joinFace(g.me, a, b, "top");
+  assert.ok(r.ok); assert.equal(chars(g.me.cards), "古");
+  [a, b] = setHand(g, g.me, "十口");
+  r = g.joinFace(g.me, a, b, "center");
+  assert.ok(r.ok); assert.equal(chars(g.me.cards), "田");
+  for (const f of ["bottom", "left", "right"]) {
+    [a, b] = setHand(g, g.me, "十口");
+    const x = g.joinFace(g.me, a, b, f);
+    assert.equal(x.ok, false, `${f} ではくっつかない`);
+    assert.equal(chars(g.me.cards), "十口", "札は変わらない");
+  }
+  const log = g.logText();
+  assert.match(log, /\tくっつける\t十 口\t古\t.*引きずって上の面に/);
+  assert.match(log, /\tくっつける\t十 口\t田\t.*引きずって中央の面に/);
+});
+
+test("面でくっつける：上下（卜一=上・一卜=下）、左右（人木=休）。面の向きが割り方の並びと合う", () => {
+  assert.deepEqual(K.faceJoins(T, "卜", "一"), { top: ["上"], bottom: ["下"] });
+  assert.deepEqual(K.faceJoins(T, "人", "木"), { left: ["休"] }, "人 を 木 の左に落とすと 休");
+  assert.deepEqual(K.faceJoins(T, "木", "人"), { right: ["休"] }, "木 を 人 の右に落とすと 休");
+  assert.deepEqual(K.faceJoins(T, "山", "山"), { top: ["出"], bottom: ["出"] }, "同じ2枚はどちらの面でも同じ字");
+  assert.deepEqual(K.faceJoins(T4, "木", "木"), { left: ["林"], right: ["林"] });
+  const g = newGame();
+  const [a, b] = setHand(g, g.me, "木人");
+  assert.equal(g.joinFace(g.me, a, b, "right").ok, true);
+  assert.equal(chars(g.me.cards), "休");
+});
+
+test("面でくっつける：どの面のどの組も、割ると元の2枚に戻る（割り方の形を逆に引いている）。N5・N4", () => {
+  for (const TL of [T, T4]) {
+    let n = 0;
+    for (const [key, rs] of TL.FACE) {
+      const [f, d, t] = key.split("\t");
+      for (const k of rs) {
+        const [a, b] = TL.parts[k];
+        const sp = TL.SHAPES[k];
+        if (f === "top" || f === "left") assert.deepEqual([d, t], [a, b], key);
+        else if (f === "bottom" || f === "right") assert.deepEqual([t, d], [a, b], key);
+        else { assert.equal(sp.kind, "囲み"); assert.equal(t, [a, b][sp.out], `${key} 相手が外側`); }
+        if (f === "top" || f === "bottom") assert.equal(sp.s, "tb", key);
+        if (f === "left" || f === "right") assert.equal(sp.s, "lr", key);
+        n++;
+      }
+    }
+    assert.ok(n > 0);
+  }
+});
+
+test("面でくっつける：形が「それ以外」の割り方（辶・广 など）は、どの面でもくっつかない。ボタンのくっつけるでは今まで通り", () => {
+  const T4f = [...T4.FACE.values()].flat();
+  for (const [k, sp] of Object.entries(D.split_shapes.shapes)) {
+    if (sp.kind === "それ以外" && T4.parts[k]) assert.ok(!T4f.includes(k), `${k} は面ではできない`);
+  }
+  const [a, b] = T4.parts["道"];
+  assert.deepEqual(K.faceJoins(T4, a, b), {});
+  assert.deepEqual(K.faceJoins(T4, b, a), {});
+  const g = newGame(1, "normal", "N4");
+  const ids = setHand(g, g.me, a + b);
+  assert.equal(chars(g.join(g.me, ids).cards), "道", "ボタンのくっつけるはそのまま");
+});
+
+test("面でくっつける：できた札は相手の札のいた所に入る。ストックの札とも（手札に空きがあれば手札へ）", () => {
+  const g = newGame();
+  setHand(g, g.me, "日十休口");
+  const [, ten, , kuchi] = g.me.cards.map((x) => x.id);
+  assert.equal(g.joinFace(g.me, ten, kuchi, "top").ok, true);
+  assert.equal(chars(g.me.cards), "日休古");
+  // ストックの 口 に、手札の 十 を落とす
+  setHand(g, g.me, "十日");
+  const x = { id: 777001, c: "口", t: g.now(), fresh: false, tray: true };
+  g.me.cards.push(x);
+  assert.equal(g.joinFace(g.me, g.me.cards[0].id, x.id, "center").ok, true);
+  assert.equal(chars(g.me.cards), "日田");
+  assert.equal(g.handCount(g.me) + g.trayCount(g.me), 2);
+  // 1枚だけ・同じ札・終わったあと はくっつかない
+  const [p, q] = setHand(g, g.me, "十口");
+  assert.equal(g.joinFace(g.me, p, p, "top").ok, false);
+  assert.equal(g.joinFace(g.me, p, 999, "top").ok, false);
+  g.over = true;
+  assert.equal(g.joinFace(g.me, p, q, "top").ok, false);
+});
+
 test("届き方（D-004。KJ-003 の遊びでは使わないが表引きは残す）：1〜2字はそのまま、3字は一段、4字は二段", () => {
   assert.deepEqual(K.delivered(T, "休"), ["休"]);
   assert.deepEqual(K.delivered(T, "休日"), ["休", "日"]);
