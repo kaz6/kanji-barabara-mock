@@ -296,3 +296,184 @@ test("合言葉の部屋：時間切れの tick が点を送っている間に�
   assert.equal(tr.payload.score, 3, "時間切れの行の点は放ったあとの点");
   assert.equal(A.g.me.score, 3);
 });
+
+// ---------- KJ-033 後半（受け箱 P-038）：つなぎの約束・届いた行の確かめ・部屋を作る／入る ----------
+
+test("合言葉の部屋：insert の返事が来なくても、時間切れで「つながらない」になり、試合は止まらない", async () => {
+  const clock = { t: 5000 };
+  const now = () => clock.t;
+  const claims = K.memoryClaims({ now });
+  const g = K.createGame(D, T, { now, match: { id: "m-hang", role: "host", startAt: clock.t } });
+  const c = K.createMatchClient(g, claims, { nonce: "h", timeoutSec: 0.05 });
+  setHand(g, g.me, "一二");
+  g.me.takes = 1;
+  claims.hangNext("card");
+  const r = await c.take(g.field[0].id);
+  assert.equal(r.ok, false);
+  assert.equal(r.why, "つながらない");
+  assert.equal(g.hold, false, "返事待ちの止めは下りる");
+  assert.equal(g.me.takes, 1, "取れる枚数は減らない");
+  const r2 = await c.take(g.field[0].id);
+  assert.equal(r2.ok, true, "もう一度押せば取れる");
+});
+
+test("合言葉の部屋：ぶつかった行の player を返すつなぎなら、自分の行が届いていなくても自分の行と分かる", async () => {
+  const clock = { t: 5000 };
+  const now = () => clock.t;
+  const mem = K.memoryClaims({ now });
+  // 自分の行が届かないつなぎ（subscribe は何も届けない）。返事だけ落ちる
+  const claims = { insert: mem.insert, subscribe: () => () => {} };
+  const g = K.createGame(D, T, { now, match: { id: "m-own", role: "guest", startAt: clock.t } });
+  const c = K.createMatchClient(g, claims, { nonce: "g" });
+  setHand(g, g.me, "一二");
+  g.me.takes = 1;
+  const f = g.field[0];
+  mem.dropReplyNext("card");
+  assert.equal((await c.take(f.id)).ok, false, "返事が落ちた");
+  const again = await c.take(f.id);
+  assert.equal(again.ok, true, "ぶつかった行の player が自分なので、取れたとして扱う");
+  assert.equal(mem.rows().filter((x) => x.kind === "card").length, 1);
+});
+
+test("合言葉の部屋：形の合わない行は捨てる（番号は0以上の整数だけ・点は0以上の整数・枚数は上限まで）", async () => {
+  const { A } = pair("m-bad");
+  const mid = "m-bad";
+  const before = A.g.field.map((x) => x.n).join(",");
+  const bad = [
+    { match_id: mid, kind: "card", key: "-1", player: "guest", payload: {} },
+    { match_id: mid, kind: "card", key: "1.5", player: "guest", payload: {} },
+    { match_id: mid, kind: "card", key: "abc", player: "guest", payload: {} },
+    { match_id: mid, kind: "card", key: "0", player: "someone", payload: {} },
+    { match_id: mid, kind: "card", key: "0", player: "guest", payload: [1] },
+    { match_id: "m-other", kind: "card", key: "0", player: "guest", payload: {} },
+    { match_id: mid, kind: "word", key: "学生", player: "guest", payload: { score: -3 } },
+    { match_id: mid, kind: "word", key: "学", player: "guest", payload: { score: 3 } },
+    { match_id: mid, kind: "event", key: "x1", player: "guest", payload: { type: "state", seq: 0, score: 3, count: 999 } },
+    { match_id: mid, kind: "event", key: "x2", player: "guest", payload: { type: "state", seq: 1.5, score: 3, count: 8 } },
+    { match_id: mid, kind: "end", key: "score", player: "guest", payload: { winner: "nobody" } },
+    null, "row", { match_id: mid },
+  ];
+  for (const r of bad) assert.equal(A.c.onRow(r), false, JSON.stringify(r));
+  assert.equal(A.g.field.map((x) => x.n).join(","), before, "場は変わらない");
+  assert.equal(A.g.cpu.score, 0);
+  assert.equal(A.g.used.has("学生"), false);
+  assert.equal(A.g.over, false);
+  // 形の合う行は通る。相手の言葉の点の重みは、こちらの表で数える（payload の pts は使わない）
+  assert.equal(A.c.onRow({ match_id: mid, kind: "word", key: "学生", player: "guest", payload: { pts: 999, score: 3 } }), true);
+  const e = A.g.log.filter((x) => x.who === "相手" && x.op === "放つ").pop();
+  assert.equal(e.pts, K.scoreOf(D, T, "学生").pts);
+  assert.equal(A.g.cpu.score, 3);
+  assert.equal(A.c.onRow({ match_id: mid, kind: "event", key: "x3", player: "guest", payload: { type: "state", seq: 2, score: 3, count: 10, hand: 7 } }), true);
+  assert.equal(A.g.cpu.count, 10);
+  assert.equal(A.g.cpu.hand, 7, "手札（上の段）の枚数も届く");
+});
+
+test("合言葉の部屋：送る点の行に、手札（上の段）の枚数も載る", async () => {
+  const { A, claims } = pair("m-hand");
+  await A.c.sendState();
+  const ev = claims.rows().filter((r) => r.kind === "event" && r.payload.type === "state").pop();
+  assert.equal(ev.payload.hand, A.g.handCount(A.g.me));
+  assert.equal(ev.payload.count, A.g.me.cards.length);
+});
+
+test("合言葉の部屋：相手の行が届かないと「通信が切れた」。まだいる（ping）で戻り、抜けた（leave）でまた切れる", async () => {
+  const { A, B, clock } = pair("m-gone");
+  assert.equal(A.c.oppGone(), false);
+  clock.t += K.MATCH_GONE_SEC + 1;
+  assert.equal(A.c.oppGone(), true, "相手の行が来ないまま時間がたった");
+  await B.c.ping();
+  assert.equal(A.c.oppGone(), false, "相手の ping が届いた");
+  // tick が ping を送る
+  const n0 = A.g.log.length;
+  clock.t += K.MATCH_GONE_SEC + 1;
+  assert.equal(A.c.oppGone(), true);
+  await B.c.tick(); // tick が ping を送る（待たない）
+  for (let i = 0; i < 3; i++) await Promise.resolve();
+  assert.equal(A.c.oppGone(), false, "tick が送った ping が届いた");
+  assert.equal(A.g.log.length, n0, "ping はログに書かない");
+  await B.c.leave();
+  assert.equal(A.c.oppGone(), true, "相手が抜けた");
+  assert.equal(A.g.over, false, "試合は時間どおり進む");
+});
+
+test("合言葉の部屋：match_id は試合ごとに一意（合言葉とは別）。別の match_id は別の場の列", () => {
+  const ids = new Set();
+  for (let i = 0; i < 200; i++) ids.add(K.newMatchId());
+  assert.equal(ids.size, 200);
+  for (const id of ids) assert.match(id, /^m-[0-9a-z]{16}$/);
+  const [a, b] = [...ids];
+  const ga = K.createGame(D, T, { match: { id: a, role: "host" } }), gb = K.createGame(D, T, { match: { id: b, role: "host" } });
+  const seq = (g) => Array.from({ length: 12 }, (_, n) => g.fieldAt(n)).join("");
+  assert.notEqual(seq(ga), seq(gb));
+  for (let i = 0; i < 100; i++) assert.match(K.newRoomCode(), /^[1-9][0-9]{3}$/);
+});
+
+test("合言葉の部屋：部屋を作る→合言葉で入る→二人とも同じ時に始まる。二人目は入れない", async () => {
+  const clock = { t: 1.8e9 };
+  const now = () => clock.t;
+  const claims = K.memoryClaims({ now });
+  const matchId = K.newMatchId();
+  const h = await K.hostRoom(claims, { matchId, level: "N4", timeLimit: 600, version: D.rules.version, nowSec: now() });
+  assert.equal(h.ok, true);
+  assert.match(h.code, /^[0-9]{4}$/);
+  const lobby = claims.rows().find((r) => r.match_id === K.roomLobbyId(h.code));
+  assert.deepEqual({ kind: lobby.kind, key: lobby.key, player: lobby.player }, { kind: "join", key: matchId, player: "host" });
+  assert.deepEqual(lobby.payload, { level: "N4", time: 600, v: D.rules.version });
+  // 作った側の待ち
+  const started = [];
+  const hw = K.roomWaiter(claims, "host", matchId, (row) => started.push(["host", row.created_at]), { level: "N4", time: 600 });
+  claims.subscribe(matchId, hw);
+  // 入る側
+  clock.t += 20;
+  const f = await K.findRoom(claims, h.code, now());
+  assert.equal(f.ok, true);
+  assert.deepEqual({ m: f.matchId, l: f.level, t: f.timeLimit, v: f.version }, { m: matchId, l: "N4", t: 600, v: D.rules.version });
+  const gw = K.roomWaiter(claims, "guest", matchId, (row) => started.push(["guest", row.created_at]));
+  claims.subscribe(matchId, gw);
+  assert.equal((await K.joinRoom(claims, matchId)).ok, true);
+  for (let i = 0; i < 5; i++) await Promise.resolve();
+  assert.equal(started.length, 2, "二人とも始まった");
+  assert.equal(started[0][1], started[1][1], "同じ 'start' 行で始まる");
+  assert.equal(claims.rows().filter((r) => r.kind === "start").length, 1);
+  // 三人目
+  const j3 = await K.joinRoom(claims, matchId);
+  assert.deepEqual(j3, { ok: false, why: "その部屋はもう始まっている" });
+  // 始まりの時刻（端末の時計で）
+  assert.equal(K.roomStartAt(1000, 1002, 50), 48, "届くまでにかかった秒だけ前");
+  assert.equal(K.roomStartAt(1000, 990, 50), 50, "端末の時計が遅れていれば届いた時刻");
+  assert.equal(K.roomStartAt(1000, 1100, 50), 50, "ずれが大きければ届いた時刻");
+  assert.equal(K.roomStartAt(1000, 1005, 50), 50, "時間切れの待ち（5秒）より大きなずれも届いた時刻");
+});
+
+test("合言葉の部屋：古い合言葉・形の違う合言葉では入れない。同じ合言葉はいちばん新しい部屋に入る", async () => {
+  const clock = { t: 1.8e9 };
+  const now = () => clock.t;
+  const claims = K.memoryClaims({ now });
+  assert.deepEqual(await K.findRoom(claims, "12a4", now()), { ok: false, why: "合言葉は数字4けた" });
+  assert.deepEqual(await K.findRoom(claims, "1234", now()), { ok: false, why: "その合言葉の部屋がない" });
+  const old = K.newMatchId();
+  assert.equal((await K.hostRoom(claims, { code: "1234", matchId: old, level: "N5", timeLimit: 300, version: "x", nowSec: now() })).code, "1234");
+  clock.t += K.ROOM_LOBBY_TTL_SEC + 1;
+  assert.equal((await K.findRoom(claims, "1234", now())).ok, false, "時間がたった合言葉は効かない");
+  const neu = K.newMatchId();
+  const h = await K.hostRoom(claims, { code: "1234", matchId: neu, level: "N5", timeLimit: 300, version: "x", nowSec: now() });
+  assert.equal(h.code, "1234", "古い部屋の合言葉は使い回せる");
+  assert.equal((await K.findRoom(claims, "1234", now())).matchId, neu);
+  // いま使われている合言葉は避ける
+  let k = 0; const seqRand = () => [0.0, 0.0, 0.5][k++ % 3]; // 1000, 1000, 5500
+  await K.hostRoom(claims, { code: "1000", matchId: K.newMatchId(), level: "N5", timeLimit: 300, version: "x", nowSec: now() });
+  const h2 = await K.hostRoom(claims, { matchId: K.newMatchId(), level: "N5", timeLimit: 300, version: "x", nowSec: now(), rand: seqRand });
+  assert.equal(h2.code, "5500", "使われている 1000 を避けた");
+  claims.setDown(true);
+  assert.equal((await K.findRoom(claims, "1234", now())).why, "つながらない");
+});
+
+test("合言葉の部屋：止めたら（stop）、そのあと届いた行は反映しない", async () => {
+  const { A, B } = pair("m-stop");
+  A.c.stop();
+  setHand(B.g, B.g.me, "一二");
+  B.g.me.takes = 1;
+  assert.equal((await B.c.take(B.g.field[0].id)).ok, true);
+  assert.equal(B.g.field[0].n, 1);
+  assert.equal(A.g.field[0].n, 0, "A の場は変わらない");
+});

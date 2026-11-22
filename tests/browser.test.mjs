@@ -117,10 +117,10 @@ test("画面", { skip }, async (t) => {
     });
   }
 
-  await t.test("相手の選び方：初期値は とても弱い。選べる3つが並ぶ", async () => {
+  await t.test("相手の選び方：初期値は とても弱い。選べる4つが並ぶ（人と（合言葉）は いまの強さ の後ろ。KJ-033）", async () => {
     const { ctx, page, errors } = await open(browser, url, { width: 760, height: 1100 });
     const labels = await page.locator("#opp label").allTextContents();
-    assert.deepEqual(labels.map((x) => x.trim()), ["ひとりで", "とても弱い", "いまの強さ"]);
+    assert.deepEqual(labels.map((x) => x.trim()), ["ひとりで", "とても弱い", "いまの強さ", "人と（合言葉）"]);
     assert.equal(await page.locator("#opp input:checked").getAttribute("value"), "weak");
     assert.equal(await page.evaluate(() => __KJ.game.opponent), "weak");
     assert.equal(await page.isVisible("#cpuSide"), true);
@@ -140,7 +140,7 @@ test("画面", { skip }, async (t) => {
     const ys = await page.evaluate(() => ["opp", "lvl", "tim", "start"].map((id) => document.getElementById(id).getBoundingClientRect().top));
     assert.deepEqual([...ys].sort((a, b) => a - b), ys, "相手・レベル・時間・はじめる の順に上から並ぶ");
     const labels = (id) => page.locator(`#${id} label`).allTextContents().then((a) => a.map((x) => x.trim()));
-    assert.deepEqual(await labels("opp"), ["ひとりで", "とても弱い", "いまの強さ"]);
+    assert.deepEqual(await labels("opp"), ["ひとりで", "とても弱い", "いまの強さ", "人と（合言葉）"]);
     assert.deepEqual(await labels("lvl"), ["N5", "N4"]);
     assert.deepEqual(await labels("tim"), ["5分", "10分", "15分"]);
     assert.equal(await page.locator("#lay").count(), 0, "並べ方の選びはない（KJ-030）");
@@ -1037,5 +1037,163 @@ test("画面", { skip }, async (t) => {
     assert.equal(posts.length, 0, "送っていない");
     assert.equal(await page.evaluate(() => localStorage.getItem("kj-device")), null, "端末の印も作らない");
     await ctx.close();
+  });
+
+  // 合言葉の部屋（KJ-033 後半）：2つのページで1試合。kj_claims への REST は page.route で Node の中の偽物（主キーの先着）に回す。
+  // Realtime は差し替え（つながらない形）にして、REST の読み直しだけで動くことも確かめる。本物の Supabase には出さない
+  await t.test("合言葉の部屋：部屋を作る→合言葉で入る→二人で同じ場・先に取った方だけ取れる・言葉の点が相手に届く・時間切れで勝ち負けがそろう", async () => {
+    const store = new Map(), hits = [];
+    const pk = (r) => [r.match_id, r.kind, r.key].join("\u0000");
+    let tick = Date.now();
+    const handler = async (route) => {
+      const req = route.request(), u = new URL(req.url());
+      hits.push(req.method());
+      if (req.method() === "POST") {
+        const row = JSON.parse(req.postData());
+        if (store.has(pk(row))) return route.fulfill({ status: 409, contentType: "application/json", body: JSON.stringify({ code: "23505" }) });
+        tick += 10;
+        const r = { ...row, created_at: new Date(Math.max(tick, Date.now())).toISOString().replace("Z", "+00:00") };
+        store.set(pk(r), r);
+        return route.fulfill({ status: 201, contentType: "application/json", body: JSON.stringify([r]) });
+      }
+      const eq = (k) => { const v = u.searchParams.get(k); return v === null ? null : v.replace(/^eq\./, ""); };
+      const since = u.searchParams.get("created_at");
+      let rows = [...store.values()].filter((r) => r.match_id === eq("match_id") && (eq("kind") === null || r.kind === eq("kind")) && (eq("key") === null || r.key === eq("key")));
+      if (since) rows = rows.filter((r) => Date.parse(r.created_at) >= Date.parse(since.replace(/^gte\./, "")));
+      rows.sort((a, b) => Date.parse(a.created_at) - Date.parse(b.created_at));
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(rows) });
+    };
+    const mk = async () => {
+      const ctx = await browser.newContext({ viewport: { width: 375, height: 760 } });
+      const page = await ctx.newPage();
+      const errors = [];
+      page.on("pageerror", (e) => errors.push(String(e)));
+      page.on("console", (m) => { if (m.type() === "error") errors.push(m.text()); });
+      await page.route("https://ysxrdhzybzvucxwdqchw.supabase.co/rest/v1/kj_claims**", handler);
+      await page.route("https://cdn.jsdelivr.net/**", (r) => { errors.push("CDN を読みに行った"); return r.abort(); });
+      await page.addInitScript(() => {
+        window.__KJ_POLL_MS = 150;
+        // Realtime の差し替え：つながらない（REST の読み直しだけで動く）
+        window.supabase = { createClient: () => ({ channel: () => { const ch = { on: () => ch, subscribe: (cb) => { setTimeout(() => cb("CHANNEL_ERROR"), 0); return ch; }, unsubscribe: () => {} }; return ch; } }) };
+      });
+      await page.goto(url);
+      await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
+      await page.check('#opp input[value="room"]');
+      return { ctx, page, errors };
+    };
+    const A = await mk(), B = await mk();
+    assert.equal(await A.page.isVisible("#start"), false, "人と（合言葉）では「はじめる」の代わりに部屋の選び");
+    assert.equal(await A.page.isVisible("#bHost"), true);
+    await A.page.check('#lvl input[value="N5"]');
+    await A.page.check('#tim input[value="300"]');
+    await A.page.click("#bHost");
+    await A.page.waitForSelector("#roomShow:not([hidden])");
+    const code = (await A.page.textContent("#roomShow")).trim();
+    assert.match(code, /^[0-9]{4}$/);
+    assert.match(await A.page.textContent("#roomMsg"), /相手を待っています/);
+    // 入る側（設定は N4・10分のまま。作った人の N5・5分 で遊ぶ）
+    await B.page.fill("#roomCode", "99");
+    await B.page.click("#bEnter");
+    await B.page.waitForFunction(() => /数字4けた/.test(document.getElementById("roomMsg").textContent));
+    await B.page.fill("#roomCode", code);
+    await B.page.click("#bEnter");
+    for (const P of [A, B]) await P.page.waitForSelector("#game:not([hidden])", { timeout: 8000 });
+    assert.match(await B.page.textContent("#msg"), /作った人の設定：レベル N5・5分/);
+    for (const P of [A, B]) {
+      assert.equal(await P.page.textContent("#cpuName"), "相手");
+      assert.equal(await P.page.evaluate(() => __KJ.game.level), "N5");
+      assert.equal(await P.page.evaluate(() => __KJ.game.timeLimit), 300);
+    }
+    const roles = await Promise.all([A, B].map((P) => P.page.evaluate(() => __KJ.game.match.role)));
+    assert.deepEqual(roles, ["host", "guest"]);
+    const left = await Promise.all([A, B].map((P) => P.page.evaluate(() => __KJ.game.timeLeft())));
+    assert.ok(Math.abs(left[0] - left[1]) < 2, "二人の残り時間がそろう " + left.join(" "));
+    const fieldOf = (P) => P.page.evaluate(() => __KJ.game.field.map((x) => x.n + x.c).join(" "));
+    assert.equal(await fieldOf(A), await fieldOf(B), "場は二人で同じ3枚");
+    // 二人とも取れる枚数1・手札に空き。同じ場の札（左の1枚）を A が先に押す
+    for (const P of [A, B]) await P.page.evaluate(() => { const G = __KJ.game; G.me.cards = G.me.cards.slice(0, 5); G.me.takes = 1; __KJ.render(); });
+    await A.page.click("#field .tile >> nth=0");
+    await A.page.waitForFunction(() => __KJ.game.me.takes === 0);
+    await B.page.waitForFunction(() => !__KJ.game.field.some((x) => x.n === 0), null, { timeout: 5000 });
+    assert.equal(await fieldOf(A), await fieldOf(B), "取ったあとも二人の場は同じ");
+    // B の画面が古いまま同じ札を押した形：番号0 を直に取りに行くと「相手が先に取った」
+    const lost = await B.page.evaluate(async () => { const G = __KJ.game; const x = G.fieldCardAt(0); G.field = [x, ...G.field.slice(1)]; return (await __KJ.mc.take(x.id)).why; });
+    assert.equal(lost, "相手が先に取った");
+    // A が 学生 を放つ → B の画面に相手の点
+    await A.page.evaluate(() => { const G = __KJ.game; G.me.cards = [..."学生"].map((c, i) => ({ id: 9100 + i, c, t: 0, fresh: false })); __KJ.render(); });
+    await A.page.locator("#meHand .tile", { hasText: "学" }).click();
+    await A.page.locator("#meHand .tile", { hasText: "生" }).click();
+    await A.page.click("#bRelease");
+    await A.page.waitForFunction(() => __KJ.game.me.score === 3);
+    await B.page.waitForFunction(() => /3 点/.test(document.getElementById("cpuScore").textContent), null, { timeout: 5000 });
+    assert.match(await B.page.textContent("#released"), /相手.*学生/);
+    // 時間切れ：二人とも終わりの時刻を今に
+    for (const P of [A, B]) await P.page.evaluate(() => { const G = __KJ.game; G.endsAt = G.now() - 0.1; });
+    await A.page.waitForFunction(() => /勝ち/.test(document.getElementById("msg").textContent), null, { timeout: 8000 });
+    await B.page.waitForFunction(() => /負け/.test(document.getElementById("msg").textContent), null, { timeout: 8000 });
+    assert.match(await A.page.textContent("#msg"), /勝ち（3 対 0）/);
+    assert.match(await B.page.textContent("#msg"), /負け（0 対 3）/);
+    // 表に入った行の形
+    const rows = [...store.values()];
+    const kinds = (k) => rows.filter((r) => r.kind === k);
+    assert.equal(kinds("start").length, 1);
+    assert.deepEqual(kinds("card").map((r) => [r.key, r.player]), [["0", "host"]]);
+    assert.deepEqual(kinds("word").map((r) => [r.key, r.player, r.payload.pts, r.payload.score]), [["学生", "host", 3, 3]]);
+    assert.equal(kinds("end").length, 2, "二人とも時間切れの点を送った");
+    const lobby = rows.find((r) => r.match_id === "room-" + code);
+    assert.deepEqual([lobby.kind, lobby.player, lobby.payload.level, lobby.payload.time], ["join", "host", "N5", 300]);
+    for (const P of [A, B]) {
+      await P.page.click("#bLog");
+      const log = await P.page.inputValue("#logText");
+      assert.match(log, /# 相手 人と（合言葉）/);
+      assert.equal(log.includes(code), false, "合言葉はログに書かない");
+      // 先着でぶつかった（409）ときにブラウザが出す読み込みの失敗の文だけは、決まりどおりの動きなので除く
+      assert.deepEqual(P.errors.filter((e) => !/status of 409/.test(e)), []);
+    }
+    // 「もう一度」は、はじめる前の画面へ（部屋を作り直す）
+    await A.page.click("#again");
+    assert.equal(await A.page.isVisible("#setup"), true);
+    assert.equal(await A.page.isVisible("#bHost"), true);
+    assert.equal(await A.page.evaluate(() => __KJ.mc), null);
+    await A.ctx.close(); await B.ctx.close();
+  });
+
+  await t.test("合言葉の部屋：遊んでいる途中で相手が抜けると「相手の通信が切れた」。試合は続く", async () => {
+    const store = new Map();
+    const pk = (r) => [r.match_id, r.kind, r.key].join("\u0000");
+    const handler = async (route) => {
+      const req = route.request(), u = new URL(req.url());
+      if (req.method() === "POST") {
+        const row = JSON.parse(req.postData());
+        if (store.has(pk(row))) return route.fulfill({ status: 409, body: "{}" });
+        const r = { ...row, created_at: new Date().toISOString() };
+        store.set(pk(r), r);
+        return route.fulfill({ status: 201, contentType: "application/json", body: JSON.stringify([r]) });
+      }
+      const eq = (k) => { const v = u.searchParams.get(k); return v === null ? null : v.replace(/^eq\./, ""); };
+      const rows = [...store.values()].filter((r) => r.match_id === eq("match_id") && (eq("kind") === null || r.kind === eq("kind")) && (eq("key") === null || r.key === eq("key")));
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(rows) });
+    };
+    const mk = async () => {
+      const ctx = await browser.newContext({ viewport: { width: 375, height: 760 } });
+      const page = await ctx.newPage();
+      await page.route("https://ysxrdhzybzvucxwdqchw.supabase.co/rest/v1/kj_claims**", handler);
+      await page.addInitScript(() => { window.__KJ_POLL_MS = 150; window.supabase = { createClient: () => ({ channel: () => { const ch = { on: () => ch, subscribe: () => ch, unsubscribe: () => {} }; return ch; } }) }; });
+      await page.goto(url);
+      await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
+      await page.check('#opp input[value="room"]');
+      return { ctx, page };
+    };
+    const A = await mk(), B = await mk();
+    await A.page.click("#bHost");
+    await A.page.waitForSelector("#roomShow:not([hidden])");
+    await B.page.fill("#roomCode", (await A.page.textContent("#roomShow")).trim());
+    await B.page.click("#bEnter");
+    for (const P of [A, B]) await P.page.waitForSelector("#game:not([hidden])", { timeout: 8000 });
+    assert.equal(await A.page.textContent("#cpuCds"), "");
+    await B.page.click("#bSetup"); // B が抜ける
+    await A.page.waitForFunction(() => document.getElementById("cpuCds").textContent === "相手の通信が切れた", null, { timeout: 5000 });
+    assert.equal(await A.page.evaluate(() => __KJ.game.over), false, "試合は時間どおり続く");
+    await A.ctx.close(); await B.ctx.close();
   });
 });
