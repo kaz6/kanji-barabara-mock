@@ -56,9 +56,9 @@ h1{font-size:17px;margin:0 0 2px;font-weight:700}
 .tile.part.sel{background:var(--accent);border-color:var(--accent);color:#fff} /* 部品の札も選ぶと赤地に白（部品の色に負けない） */
 .tile.new{border-color:var(--accent);border-width:2px}
 .tile .mk{position:absolute;top:1px;right:3px;font:10px/1.2 system-ui,sans-serif;color:var(--accent);letter-spacing:-1px}
-.tile.sel .mk{color:#fff}
+.tile.sel .mk{color:#fff} /* 選んだ札（赤地）の上でも角の印（⇄↻♪）が見える（KJ-024。PR #22 のレビューの気づき） */
 /* 待ち時間のあいだ（KJ-040）：待っている操作の印だけ薄くする。ゲージが満ちたら外れて元の濃さ。選んだ札（赤地・白い印）でも薄くなる。薄さは仮 */
-.wait-invert .mi[data-k="invert"],.wait-cycle .mi[data-k="cycle"],.wait-homophone .mi[data-k="homophone"]{opacity:.3} /* 選んだ札（赤地）の上でも角の印（⇄↻♪）が見える（KJ-024。PR #22 のレビューの気づき） */
+.wait-invert .mi[data-k="invert"],.wait-cycle .mi[data-k="cycle"],.wait-homophone .mi[data-k="homophone"]{opacity:.3}
 .tile .orig{position:absolute;bottom:1px;left:3px;font:10px/1 system-ui,sans-serif;color:var(--sub)}
 /* 割れる札の点線（KJ-014）：字に重ねる。角の印（反・巡・音＝右上、選んだ順＝左上、元の字＝左下）とぶつからないよう、その分だけ線を短くする */
 .tile .cut{position:absolute;pointer-events:none;z-index:1}

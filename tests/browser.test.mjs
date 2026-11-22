@@ -799,7 +799,7 @@ test("画面", { skip }, async (t) => {
     const sel = await page.evaluate(() => { const t = document.querySelector("#meHand .tile.sel"); const m = t && t.querySelector('.mi[data-k="invert"]'); return { has: !!t, op: m ? parseFloat(getComputedStyle(m).opacity) : null }; });
     assert.equal(sel.has, true, "選んだ札がある");
     assert.equal(sel.op, 0.3, "選んだ札（赤地・白い印）の反転の印も薄い");
-    assert.equal(await op("#meHand", "上", "homophone"), 1, "同音の印は濃いまま");
+    assert.equal(await op("#meHand", "休", "homophone"), 1, "待っていない同音の印は濃いまま");
     assert.equal(await op("#field", "上", "invert"), 0.3, "場の札の反転の印も薄い");
     assert.equal(await op("#field", "上", "homophone"), 1, "場の札の同音の印は濃いまま");
     assert.equal(await op("#meTray", "月", "cycle"), 1, "巡りは待っていないのでストックの印は濃い");
