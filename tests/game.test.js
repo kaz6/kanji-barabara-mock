@@ -185,6 +185,34 @@ test("待ち時間：反転10秒・巡り1秒・同音20秒（値は rules.json 
   assert.equal(g.homophone(g.me, setHand(g, g.me, "言"), "木").ok, false, "同じ読みでない字には変えられない");
 });
 
+test("待ち時間のゲージ（KJ-034）：使った直後は空に近い・半分でおよそ半分・満ちたら押せる・満ちる前は押せない。引き直しの30秒待ちも同じ", () => {
+  const g = newGame();
+  for (const k of ["invert", "cycle", "homophone"]) assert.equal(g.cdFrac(g.me, k), 1, `${k}：使う前は満ちている`);
+  const total = D.rules.cooldown_sec.invert;
+  let [id] = setHand(g, g.me, "上");
+  assert.ok(g.invert(g.me, [id]).ok);
+  assert.ok(g.cdFrac(g.me, "invert") < 0.05, "使った直後は空に近い");
+  assert.equal(g.cdFrac(g.cpu, "invert"), 1, "CPU のゲージは別");
+  g.clock.t += total / 2;
+  assert.ok(Math.abs(g.cdFrac(g.me, "invert") - 0.5) < 0.01, "半分でおよそ半分");
+  [id] = setHand(g, g.me, "上");
+  assert.equal(g.ready(g.me, "invert"), false);
+  assert.equal(g.invert(g.me, [id]).why, "待ち時間", "満ちる前は押せない");
+  g.clock.t += total / 2 - 0.1;
+  assert.ok(g.cdFrac(g.me, "invert") < 1);
+  assert.equal(g.invert(g.me, [id]).ok, false);
+  g.clock.t += 0.1;
+  assert.equal(g.cdFrac(g.me, "invert"), 1, "満ちた");
+  assert.ok(g.invert(g.me, [id]).ok, "満ちたら押せる");
+  // 引き直し（点がないとき30秒待ち）
+  g.me.score = 0;
+  assert.equal(g.redrawFrac(g.me), 1);
+  assert.equal(g.redraw(g.me).waiting, D.rules.redraw.free_wait_sec);
+  assert.ok(g.redrawFrac(g.me) < 0.05);
+  g.clock.t += D.rules.redraw.free_wait_sec / 2;
+  assert.ok(Math.abs(g.redrawFrac(g.me) - 0.5) < 0.01);
+});
+
 
 test("はじめ：手札は二人とも8枚、場は3枚、点は0。山は N5 の字を2枚ずつ（KJ-004 で場3）", () => {
   const g = newGame();
@@ -1204,9 +1232,9 @@ test("文言（KJ-024）：js/strings.js のボタンは8つで英語。角の�
   const S = require("../js/strings.js");
   assert.deepEqual(S.ICONS, { invert: "⇄", cycle: "↻", homophone: "♪" });
   assert.deepEqual(S.BUTTONS, { bRelease: "Play", bSplit: "Split", bJoin: "Join", bInvert: "⇄ Flip", bCycle: "↻ Cycle", bHomo: "♪ Sound conversion", bBack: "Back", bRedraw: "Redraw" });
-  assert.equal(S.redrawNote.cost(5), "5pt");
+  assert.equal(S.redrawNote.cost(5), "-5pt", "点が減ることが分かる添え字（KJ-034 追記）");
   assert.equal(S.redrawNote.free(30), "30s");
-  assert.equal(S.redrawNote.wait(12), "wait 12s");
+  assert.equal(S.redrawNote.wait, undefined, "待っているあいだの秒数の文字は出さない（KJ-034）");
   const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
   for (const id of Object.keys(S.BUTTONS)) assert.match(html, new RegExp(`<button class="op[^"]*" id="${id}"><span class="lb"></span>`), `${id} の文字は strings.js から入れる（直書きしない）`);
   const ops = html.slice(html.indexOf('<div class="ops">'), html.indexOf('<div class="choices"'));

@@ -21,11 +21,11 @@
     bBack: "Back",
     bRedraw: "Redraw",
   });
-  // 引き直しの添え字（Redraw 5pt・Redraw 30s・待っているあいだは Redraw wait 12s）
+  // 引き直しの添え字（点があるとき Redraw -5pt〔作者「Redraw には『-5pt』で。」〕・点がないとき Redraw 30s）。
+  // 30秒待っているあいだは添え字 30s のまま、ボタンの地のゲージで残りを見せる（KJ-034。秒数の文字は出さない）
   const redrawNote = {
-    cost: (pt) => `${pt}pt`,
+    cost: (pt) => `-${pt}pt`,
     free: (sec) => `${sec}s`,
-    wait: (sec) => `wait ${sec}s`,
   };
   return Object.freeze({ ICONS, BUTTONS, redrawNote });
 });
