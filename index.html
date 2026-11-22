@@ -57,6 +57,8 @@ h1{font-size:17px;margin:0 0 2px;font-weight:700}
 .tile.new{border-color:var(--accent);border-width:2px}
 .tile .mk{position:absolute;top:1px;right:3px;font:10px/1.2 system-ui,sans-serif;color:var(--accent);letter-spacing:-1px}
 .tile.sel .mk{color:#fff} /* 選んだ札（赤地）の上でも角の印（⇄↻♪）が見える（KJ-024。PR #22 のレビューの気づき） */
+/* 待ち時間のあいだ（KJ-040）：待っている操作の印だけ薄くする。ゲージが満ちたら外れて元の濃さ。選んだ札（赤地・白い印）でも薄くなる。薄さは仮 */
+.wait-invert .mi[data-k="invert"],.wait-cycle .mi[data-k="cycle"],.wait-homophone .mi[data-k="homophone"]{opacity:.3}
 .tile .orig{position:absolute;bottom:1px;left:3px;font:10px/1 system-ui,sans-serif;color:var(--sub)}
 /* 割れる札の点線（KJ-014）：字に重ねる。角の印（反・巡・音＝右上、選んだ順＝左上、元の字＝左下）とぶつからないよう、その分だけ線を短くする */
 .tile .cut{position:absolute;pointer-events:none;z-index:1}
@@ -710,8 +712,12 @@ function tileEl(x,{onClick,shown,ord}={}){
   const b=document.createElement(onClick?"button":"div");
   b.className="tile"+(K.isChar(T,x.c)?"":" part")+(x.fresh&&clock()-x.t<1.5?" new":"");
   b.textContent=shown||x.c;
-  const m=K.marks(T,x.c,STR.ICONS);
-  if(m){const s=document.createElement("span");s.className="mk";s.textContent=m;b.appendChild(s);b.classList.add("hasmk")}
+  const ks=K.markKinds(T,x.c);
+  if(ks.length){ // 印ごとに別の span（待ち時間のあいだ、待っている印だけ薄くする。KJ-040）
+    const s=document.createElement("span");s.className="mk";
+    for(const k of ks){const i=document.createElement("span");i.className="mi";i.dataset.k=k;i.textContent=STR.ICONS[k];s.appendChild(i)}
+    b.appendChild(s);b.classList.add("hasmk");
+  }
   // 割れる札の点線（KJ-014）。左右に割れる字は縦、上下は横、1本で表せない字は角に「割」
   const cut=K.cutSpec(T,x.c);
   if(cut){
@@ -817,6 +823,8 @@ function renderOps(){
   gauge($("bCycle"),G.cdLeft(me,"cycle")>0,G.cdFrac(me,"cycle"));
   gauge($("bHomo"),G.cdLeft(me,"homophone")>0,G.cdFrac(me,"homophone"));
   gauge($("bRedraw"),me.redrawAt!==null,G.redrawFrac(me));
+  // 札の角の印も、待っているあいだ薄くする（KJ-040）。手札・ストック・場・台の札（相手の手札は対象外）
+  for(const id of ["meHand","meTray","field","row"])for(const k of ["invert","cycle","homophone"])$(id).classList.toggle("wait-"+k,G.cdLeft(me,k)>0);
   const rc=D.rules.redraw;
   // ヒント（KJ-037）：光らせる札とボタン。言葉は出さない。光りは core が決め、10秒か次の操作で消える
   const hint=G.hintActive();

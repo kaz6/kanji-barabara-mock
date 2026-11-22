@@ -1378,6 +1378,9 @@ test("文言（KJ-024）：js/strings.js のボタンは8つで英語。角の�
   assert.equal(K.marks(T, "十", S.ICONS), "↻♪");
   assert.equal(K.marks(T, "上"), "反音", "icons を渡さなければ 反・巡・音");
   assert.equal(K.marks(T, "国", S.ICONS), "", "印の無い字");
+  assert.deepEqual(K.markKinds(T, "上"), ["invert", "homophone"], "印の種類（KJ-040）：反転・巡り・同音の順");
+  assert.deepEqual(K.markKinds(T, "十"), ["cycle", "homophone"]);
+  assert.deepEqual(K.markKinds(T, "国"), []);
 });
 
 // ---------- KJ-036：画面が裏に回って時計が止まっても、時間どおりに終わる ----------
