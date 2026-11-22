@@ -202,6 +202,7 @@
       `放ったら 放った字数×${R.take_per_char}枚を場から選んで取れる。放った言葉は消える（相手には届かない）`,
       `引き直し ${R.redraw.cost}点で手札を全部入れ替え（${R.start_hand}枚）。${R.redraw.cost}点ない人は${R.redraw.free_wait_sec}秒待って0点で`,
       `勝ち 先に${R.win.score}点、または${limit / 60}分で点の多い方（同点は引き分け）。ひとりでは50点で終わらず${limit / 60}分で終わる`,
+      `ヒント 人が続けて${R.hint.fail_streak}回はじかれたら、自動で札とボタンを光らせる（${R.hint.glow_sec}秒か次の操作まで。言葉は文字で出さない。点はかけない）`,
       `待ち時間 反転=${R.cooldown_sec.invert}秒 巡り=${R.cooldown_sec.cycle}秒 同音=${R.cooldown_sec.homophone}秒（その人の操作ごと）`,
       key === "solo" || key === ROOM_OPPONENT.key ? "CPU なし" : `CPU ${a}〜${b}秒に1回動く`,
     ];
@@ -362,10 +363,12 @@
     g.redrawFrac = (p) => (p.redrawAt === null ? 1 : frac(g.redrawLeft(p), R.redraw.free_wait_sec));
     const useCd = (p, k) => { p.cd[k] = now() + R.cooldown_sec[k]; };
 
-    const QUIET = new Set(["はじまり", "ためした", "終わり", "動けない", "動ける", "入れ替え", "移す"]);
+    const QUIET = new Set(["はじまり", "ためした", "ヒント", "終わり", "動けない", "動ける", "入れ替え", "移す"]);
+    const HINT_KEEP = new Set(["はじめ", "はじまり", "ためした", "ヒント", "動けない", "動ける", "終わり"]);
     function addLog(who, op, from, to, pts, note) {
       g.log.push({ t: logT(), who, op, from: from || [], to: to || [], pts: pts || 0,
         meScore: g.me.score, cpuScore: g.cpu.score, me: nCards(g.me), cpu: nCards(g.cpu), note: note || "" });
+      if (who === g.me.name && !HINT_KEEP.has(op)) g.hint = null; // 手札を動かしたら、ヒントの光りは消える（選ぶ・外すだけでは動かない。KJ-037）
       if (!QUIET.has(op)) checkStuck();
     }
     g.addLog = addLog;
@@ -437,6 +440,95 @@
     const fail = (why) => ({ ok: false, why });
     const live = () => !g.over && !g.hold && !g.closed;
 
+    // ---------- ヒント（KJ-037・D-052）：人が続けて3回はじかれたら、自動で札と操作のボタンを光らせる ----------
+    // 数える＝自分の「ためした」（g.tried）。放つ・割る・くっつける・反転・巡り・同音が通ったら数え直し。ヒントを出したら数え直し。
+    // 言葉は文字で出さない（光る札・ボタンだけ。狙った言葉はログにだけ書く）。CPU は関係しない
+    const HINT_OPS = [["割る", "split", "bSplit"], ["反転", "invert", "bInvert"], ["巡り", "cycle", "bCycle"], ["同音", "homophone", "bHomo"]];
+    const HR = R.hint || { fail_streak: 3, glow_sec: 10 };
+    g.hintStreak = 0;
+    g.hintCount = 0;
+    g.hint = null; // { tier: 1|2|3, ids: [光らせる札の id], button: ボタンの id（段1は無し）, op, word, until }
+    g.hintActive = () => (g.hint && !g.over && now() < g.hint.until && !(g.hint.word && g.used.has(g.hint.word)) ? g.hint : null); // 狙った言葉を先に使われたら、光りは消える
+    g.clearHint = () => { g.hint = null; };
+    const solved = (p) => { if (p === g.me) { g.hintStreak = 0; g.hint = null; } }; // 通った：数え直し・光りを消す
+    const countOf = (chs) => { const m = new Map(); for (const c of chs) m.set(c, (m.get(c) || 0) + 1); return m; };
+    const fitsIn = (word, have) => { // word の字が have（字→枚数）に収まるか
+      const need = new Map();
+      for (const c of word) { const n = (need.get(c) || 0) + 1; need.set(c, n); if ((have.get(c) || 0) < n) return false; }
+      return true;
+    };
+    // 語の候補（よく使う語を先に。放てない語・放った語は除く）
+    const hintWords = () => {
+      const seen = new Set(), out = [];
+      for (const w of T.COMMON_WORDS) { if (!seen.has(w.w)) { seen.add(w.w); out.push(w.w); } }
+      for (const w of T.WORDS.values()) { if (!seen.has(w.w)) { seen.add(w.w); out.push(w.w); } }
+      return out.filter((w) => [...w].length >= 2 && !g.used.has(w));
+    };
+    // 札（pool）から word の字ぶんを順に選ぶ（手札を先に）。選べなければ null
+    const pickFrom = (pool, word) => {
+      const left = pool.slice(), ids = [];
+      for (const c of word) { const i = left.findIndex((x) => x.c === c); if (i < 0) return null; ids.push(left[i].id); left.splice(i, 1); }
+      return ids;
+    };
+    const makeHint = (p) => {
+      const cards = p.cards.slice().sort((a, b) => (a.tray ? 1 : 0) - (b.tray ? 1 : 0)); // 手札（上の段）を先に
+      const words = hintWords();
+      const have = countOf(cards.map((x) => x.c));
+      // 段1：いま並べれば放てる
+      for (const w of words) {
+        if (!fitsIn(w, have)) continue;
+        const ids = pickFrom(cards, w);
+        if (ids) return { tier: 1, ids, button: null, op: "放つ", word: w };
+      }
+      // 段2：1手（割る・反転・巡り・同音）で放てる言葉になる。その試合でまだ使っていない操作を先に。同じなら、よく使う語を先に
+      const usedOps = new Set(g.log.filter((e) => e.who === p.name).map((e) => e.op));
+      let best = null;
+      for (const [opName, k, btn] of HINT_OPS) {
+        if (k !== "split" && !g.ready(p, k)) continue;
+        const seenChars = new Set();
+        for (const x of cards) {
+          if (seenChars.has(x.c)) continue;
+          seenChars.add(x.c);
+          let outs = [];
+          if (k === "split") { if (canSplit(T, x.c) && fits(p, [x], splitOnce(T, x.c).length)) outs = [splitOnce(T, x.c)]; }
+          else if (k === "invert") { if (T.INV.has(x.c) && fits(p, [x], 1)) outs = [[T.INV.get(x.c)]]; }
+          else if (k === "cycle") { if (T.NEXT.has(x.c) && fits(p, [x], 1)) outs = [[T.NEXT.get(x.c)]]; }
+          else if (fits(p, [x], 1)) outs = homoChars(T, x.c).map((c) => [c]);
+          for (const out of outs) {
+            const rest = cards.filter((y) => y !== x);
+            const after = countOf(rest.map((y) => y.c).concat(out));
+            for (let wi = 0; wi < words.length; wi++) {
+              const w = words[wi];
+              if (!fitsIn(w, after)) continue;
+              // 光らせる札：操作する札＋言葉に使う残りの札（できる字のぶんは、操作したあとに出る）
+              const virtual = rest.concat(out.map((c, i) => ({ id: -1 - i, c })));
+              const ids = pickFrom(virtual, w);
+              if (!ids) continue;
+              const lit = [x.id, ...ids.filter((id) => id >= 0)];
+              const rank = [usedOps.has(opName) ? 1 : 0, wi];
+              if (!best || rank[0] < best.rank[0] || (rank[0] === best.rank[0] && rank[1] < best.rank[1])) {
+                best = { tier: 2, ids: lit, button: btn, op: opName, word: w, rank };
+              }
+              break; // この操作・この札の最初の語（よく使う語が先）
+            }
+          }
+        }
+      }
+      if (best) return best;
+      // 段3：引き直し
+      if (p.redrawAt === null) return { tier: 3, ids: [], button: "bRedraw", op: "引き直し", word: "" };
+      return { tier: 3, ids: [], button: null, op: "引き直し（待っている）", word: "" };
+    };
+    const maybeHint = (p) => {
+      if (g.hintStreak < HR.fail_streak) return;
+      g.hintStreak = 0; // ヒントを出したら数え直し
+      const h = makeHint(p);
+      g.hint = h.ids.length || h.button ? { ...h, until: now() + HR.glow_sec } : null; // 光らせる物が無いとき（引き直しを待っている）は、札も出さない
+      g.hintCount++;
+      const lit = h.ids.map((id) => g.byId(p, id)).filter(Boolean).map((x) => x.c);
+      addLog(p.name, "ヒント", lit, [], 0, `段${h.tier}：${h.op}${h.word ? `。狙った言葉：${h.word}` : ""}`);
+    };
+
     g.split = (p, ids) => {
       const cs = cardsOf(p, ids);
       if (!live() || !cs || cs.length !== 1) return fail("1枚だけ");
@@ -446,6 +538,7 @@
       if (!fits(p, cs, parts.length)) return fail("手札もストックもいっぱい");
       const nc = replaceCards(p, ids, parts);
       addLog(p.name, "割る", [c], nc.map((x) => x.c));
+      solved(p);
       return { ok: true, cards: nc };
     };
     g.join = (p, ids, choice) => {
@@ -458,6 +551,7 @@
       if (!fits(p, cs, 1)) return fail("手札もストックもいっぱい");
       const nc = replaceCards(p, ids, [to]);
       addLog(p.name, "くっつける", cs.map((x) => x.c), [to]);
+      solved(p);
       return { ok: true, cards: nc };
     };
     // 引きずってくっつける（KJ-017・D-035）：札 dragId を札 targetId の面 face に落とす。できた札は相手の札の並びの位置に入る（手札に空きがあれば手札。R-032 と同じ）。
@@ -473,6 +567,7 @@
       p.cards = p.cards.filter((x) => x !== cs[0]); // 先に引きずった札を抜き、相手の札の位置に入れる（段の行き先は割る・くっつけると同じ：手札に空きがあれば手札）
       const nc = replaceCards(p, [targetId], [to]);
       addLog(p.name, "くっつける", T.parts[to].slice(), [to], 0, `引きずって${FACE_LABEL[face]}の面に`);
+      solved(p);
       return { ok: true, cards: nc };
     };
     function oneStep(op, k, map) {
@@ -486,6 +581,7 @@
         useCd(p, k);
         const nc = replaceCards(p, ids, [map.get(c)]);
         addLog(p.name, op, [c], [nc[0].c]);
+        solved(p);
         return { ok: true, cards: nc };
       };
     }
@@ -501,6 +597,7 @@
       useCd(p, "homophone");
       const nc = replaceCards(p, ids, [to]);
       addLog(p.name, "同音", [c], [to]);
+      solved(p);
       return { ok: true, cards: nc };
     };
 
@@ -560,6 +657,7 @@
       if (prev && prev.next.includes(text)) g.events.push({ type: "fx", who: p.name, text: p.lastSpecial + text });
       else if (T.SPECIAL.has(text)) g.events.push({ type: "fx", who: p.name, text });
       p.lastSpecial = T.SPECIAL.has(text) ? text : null;
+      solved(p);
       g.events.push({ type: "release", who: p.name, text, pts });
       checkOver();
       return { ok: true, text, pts };
@@ -680,7 +778,11 @@
       addLog(p.name, "移す", [a.c], [a.c], 0, toTray ? "手札→ストック" : "ストック→手札");
       return { ok: true };
     };
-    g.tried = (p, chars, why) => { if (live()) addLog(p.name, "ためした", chars, [], 0, why); };
+    g.tried = (p, chars, why) => {
+      if (!live()) return;
+      addLog(p.name, "ためした", chars, [], 0, why);
+      if (p === g.me) { g.hintStreak++; maybeHint(p); } // 続けて3回はじかれたら、自動でヒント（KJ-037）
+    };
 
     function finish(winner, why) {
       g.over = true;
@@ -771,7 +873,7 @@
         `# 相手 ${opponentLabel(D, g.opponent, g.timeLimit)}`,
         `# 時間 ${timeLabel(g.timeLimit)}`,
         ...rulesLabel(D, g.opponent, g.level, g.timeLimit).map((x) => "# 仮置き " + x),
-        "# 手 はじめ・割る・くっつける・反転・巡り・同音・放つ・取る・引き直し・入れ替え（札の位置を替えた。手札とストックの間も）・移す（手札⇄ストックの空いたマスへ）・ためした（並べたのに放てず・くっつけられずにやめた並び）・動けない（放てる言葉が手札に無くなった。使った札＝その時の手札）・動ける・終わり",
+        "# 手 はじめ・割る・くっつける・反転・巡り・同音・放つ・取る・引き直し・入れ替え（札の位置を替えた。手札とストックの間も）・移す（手札⇄ストックの空いたマスへ）・ためした（並べたのに放てず・くっつけられずにやめた並び）・動けない（放てる言葉が手札に無くなった。使った札＝その時の手札）・動ける・ヒント（続けて3回はじかれて自動で出した。光らせた札と、狙った言葉はメモに）・終わり",
         "# 点＝その手で増えた点（引き直しで払った点はマイナス）",
         "# データ " + FILES.map((f) => `${f}=${D[f].version}`).join(" "),
         `# 字 ${T.CHARS.size}（手に持てる字 ${T.HOLD.size}）・語 ${T.WORDS.size}（巡り ${T.CYCLES.map((c) => c.name).join("・")}）`,

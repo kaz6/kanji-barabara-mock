@@ -772,6 +772,92 @@ test("画面", { skip }, async (t) => {
     await ctx.close();
   });
 
+  await t.test("ヒント（KJ-037）：続けて3回はじかれると札が光り「ヒント」の札が出る（2回では出ない）。言葉は文字で出ない。10秒か手札を動かすまで。375×700 に収まる", async () => {
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 }, "solo");
+    const setHand = (chars) => page.evaluate((cs) => { const G = __KJ.game; G.me.cards = [...cs].map((c, i) => ({ id: 7000 + i, c, t: 0, fresh: false })); __KJ.row.length = 0; __KJ.render(); }, chars);
+    const tryPair = async (a, b) => { // 2枚を選んで外す＝並べたのに放てない・くっつかない（ためした）
+      await page.locator("#meHand .tile:not(.sel)", { hasText: a }).first().click();
+      await page.locator("#meHand .tile:not(.sel)", { hasText: b }).first().click();
+      await page.click("#bBack");
+    };
+    const st = () => page.evaluate(() => {
+      const G = __KJ.game, tag = document.getElementById("hintTag");
+      return { tag: !tag.hidden, tagText: tag.textContent, lit: [...document.querySelectorAll("#meHand .hint,#meTray .hint")].map((e) => +e.dataset.id), litBtn: [...document.querySelectorAll("button.op.hint")].map((b) => b.id),
+        tried: G.log.filter((e) => e.op === "ためした").length, hints: G.log.filter((e) => e.op === "ヒント").length, hint: G.hintActive() && { tier: G.hintActive().tier, ids: G.hintActive().ids, button: G.hintActive().button, word: G.hintActive().word },
+        visible: ["msg", "info", "row", "hintTag"].map((i) => document.getElementById(i).textContent).join("|") };
+    });
+    // 段1：いま並べれば放てる（休日）
+    await setHand("休日山川刀国");
+    await tryPair("刀", "国");
+    await tryPair("刀", "山");
+    let s = await st();
+    assert.equal(s.tried, 2);
+    assert.equal(s.tag, false, "2回では出ない");
+    assert.deepEqual(s.lit, []);
+    await tryPair("国", "川");
+    s = await st();
+    assert.equal(s.tried, 3);
+    assert.equal(s.hints, 1);
+    assert.equal(s.tag, true, "3回で「ヒント」の札が出る");
+    assert.equal(s.tagText, "ヒント");
+    assert.equal(s.hint.tier, 1);
+    assert.deepEqual([...s.lit].sort(), [...s.hint.ids].sort(), "光る札は ids のとおり");
+    assert.equal(s.lit.length, 2);
+    assert.deepEqual(s.litBtn, [], "段1 はボタンを光らせない");
+    assert.ok(!s.visible.includes(s.hint.word), `言葉（${s.hint.word}）は文字で出ない（${s.visible}）`);
+    assert.notEqual(await page.evaluate(() => getComputedStyle(document.querySelector("#meHand .hint")).boxShadow), "none");
+    const lit = await page.evaluate(() => __KJ.game.hintActive().ids);
+    if (process.env.KJ_HINT_SHOT) await page.screenshot({ path: process.env.KJ_HINT_SHOT.replace(/\.png$/, "-1.png") });
+    // 光った札を選んでも光りは消えない。そのまま放てる（言葉は光った札の順）
+    for (const id of lit) await page.locator(`#meHand [data-id="${id}"]`).click();
+    s = await st();
+    assert.equal(s.tag, true, "選んでも消えない");
+    assert.equal(await page.evaluate(() => document.getElementById("bRelease").disabled), false, "光った札を選ぶと放てる");
+    await page.click("#bRelease");
+    s = await st();
+    assert.equal(s.tag, false, "放ったら（手札が動いたら）消える");
+    assert.deepEqual(s.lit, []);
+    // 段2：1手で放てる言葉になる。ボタンも光る。10秒たつと消える
+    await setHand("日年刀");
+    await tryPair("日", "刀");
+    await tryPair("年", "刀");
+    assert.equal((await st()).tag, false);
+    await tryPair("日", "年");
+    s = await st();
+    assert.equal(s.hint.tier, 2);
+    assert.equal(s.hint.button, "bHomo");
+    assert.deepEqual(s.litBtn, ["bHomo"], "同音のボタンが光る");
+    assert.equal(s.lit.length, s.hint.ids.length);
+    assert.ok(!s.visible.includes(s.hint.word));
+    const geo = await page.evaluate(() => ({ sw: document.documentElement.scrollWidth, sh: document.documentElement.scrollHeight, h: innerHeight }));
+    assert.ok(geo.sw <= 375, "横スクロールがない");
+    assert.ok(geo.sh <= 700, `375×700 に収まる（${geo.sh}）`);
+    if (process.env.KJ_HINT_SHOT) await page.screenshot({ path: process.env.KJ_HINT_SHOT.replace(/\.png$/, "-2.png") });
+    await page.evaluate(() => { const G = __KJ.game; G.hint.until = G.now() - 0.01; __KJ.render(); });
+    s = await st();
+    assert.equal(s.tag, false, "10秒たったら消える");
+    assert.deepEqual(s.litBtn, []);
+    // 段3：Redraw が光る（札は光らない）
+    await setHand("刀刀");
+    await page.evaluate(() => { const G = __KJ.game; for (let i = 0; i < 3; i++) G.tried(G.me, ["刀", "刀"], "辞書にない"); __KJ.render(); });
+    s = await st();
+    assert.equal(s.hint.tier, 3);
+    assert.deepEqual(s.litBtn, ["bRedraw"]);
+    assert.deepEqual(s.lit, []);
+    // 動きを減らす設定でも光りは出る（点滅だけやめる）
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById("bRedraw")).animationName), "none");
+    assert.notEqual(await page.evaluate(() => getComputedStyle(document.getElementById("bRedraw")).boxShadow), "none");
+    // ログに残る（狙った言葉はログにだけ）
+    await page.click("#bLog");
+    const log = await page.inputValue("#logText");
+    assert.match(log, /\tヒント\t休 日\t\t0\t.*段1：放つ。狙った言葉：休日/);
+    assert.match(log, /\tヒント\t.*段2：同音。狙った言葉：/);
+    assert.match(log, /\tヒント\t\t\t0\t.*段3：引き直し/);
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+
   await t.test("選ぶ：スマホ幅の画像（選んだ札が目立つ）", async () => {
     const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 }, null);
     await page.locator("#meHand .tile", { hasText: "休" }).first().click();

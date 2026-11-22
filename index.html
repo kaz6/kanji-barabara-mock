@@ -9,6 +9,7 @@
 :root{
   --bg:#f6f4ef; --ink:#1d1b18; --sub:#6b665d; --line:#d9d4c9; --tile:#fffdf8; --cut:#aaa59a;
   --slot:#ebe7de; --accent:#c8402a; --ok:#2f6b4f; --dim:#a9a397; --join:#2f6fd6;
+  --hint:#d99a00; /* ヒントの光り（KJ-037。仮決め。青＝くっつけられる・赤＝選んだ札とは別の色） */
   --gauge:#cfe3d6; /* 待ち時間のゲージ（KJ-034。仮決め） */
   --kanji:"KJ Glyphs","Hiragino Mincho ProN","Yu Mincho","Noto Serif CJK JP","Noto Serif JP","Source Han Serif JP",serif;
 }
@@ -104,6 +105,12 @@ button.op.cd::before{content:"";position:absolute;left:0;top:0;bottom:0;width:ca
 button.op.full{animation:kjGaugeFull .6s ease-out}
 @keyframes kjGaugeFull{0%{box-shadow:0 0 0 0 rgba(47,107,79,.55)}100%{box-shadow:0 0 0 6px rgba(47,107,79,0)}}
 @media (prefers-reduced-motion:reduce){button.op.full{animation:none}} /* 動きを減らす設定：光るのだけやめる（ゲージの満ち方は出す） */
+/* ヒント（KJ-037）：続けて3回はじかれたら、使う札と操作のボタンが金色に光る（10秒か次の操作まで）。言葉は文字で出さない */
+.tile.hint,button.op.hint{border-color:var(--hint);box-shadow:0 0 0 2px var(--hint),0 0 10px 2px rgba(217,154,0,.55);animation:kjHint 1.2s ease-in-out infinite alternate}
+.tile.sel.hint{border-color:var(--hint)}
+@keyframes kjHint{from{box-shadow:0 0 0 2px var(--hint),0 0 4px 0 rgba(217,154,0,.3)}to{box-shadow:0 0 0 2px var(--hint),0 0 12px 3px rgba(217,154,0,.7)}}
+@media (prefers-reduced-motion:reduce){.tile.hint,button.op.hint{animation:none}}
+.hint-tag{display:inline-block;margin-right:8px;padding:0 8px;border:1px solid var(--hint);border-radius:10px;color:#7a5600;background:#fff6dc;font-size:12px;font-weight:700;line-height:18px;vertical-align:1px}
 /* 選ぶ札（同音・くっつけて2通り）は台の下に重ねて出す。手札を押し下げない */
 .choices{display:none;position:absolute;left:-1px;right:-1px;top:calc(100% - 4px);z-index:5;background:#fff;border:1px solid var(--line);border-radius:0 0 6px 6px;padding:8px 12px;box-shadow:0 6px 14px rgba(0,0,0,.12)}
 .choices.on{display:block}
@@ -219,7 +226,7 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
     <button class="op" id="bCopyEnd" hidden>ログをコピー</button>
     <span class="clock" id="clock"></span>
   </div>
-  <div class="msgline"><span class="msg" id="msg"></span></div>
+  <div class="msgline"><span class="hint-tag" id="hintTag" hidden>ヒント</span><span class="msg" id="msg"></span></div>
 
   <section class="panel" id="logPanel">
     <textarea id="logText" readonly></textarea>
@@ -807,6 +814,11 @@ function renderOps(){
   gauge($("bHomo"),G.cdLeft(me,"homophone")>0,G.cdFrac(me,"homophone"));
   gauge($("bRedraw"),me.redrawAt!==null,G.redrawFrac(me));
   const rc=D.rules.redraw;
+  // ヒント（KJ-037）：光らせる札とボタン。言葉は出さない。光りは core が決め、10秒か次の操作で消える
+  const hint=G.hintActive();
+  for(const el of document.querySelectorAll("#meHand [data-id],#meTray [data-id]"))el.classList.toggle("hint",!!hint&&hint.ids.includes(+el.dataset.id));
+  for(const id of ["bSplit","bInvert","bCycle","bHomo","bRedraw"])$(id).classList.toggle("hint",!!hint&&hint.button===id);
+  $("hintTag").hidden=!hint;
   $("cdRedraw").textContent=me.redrawAt!==null||me.score<rc.cost?STR.redrawNote.free(rc.free_wait_sec):STR.redrawNote.cost(rc.cost);
   const left=Math.ceil(G.timeLeft());
   $("clock").textContent=`残り ${Math.floor(left/60)}:${String(left%60).padStart(2,"0")}`;
@@ -848,6 +860,7 @@ function buildHowto(){
     `<b>引き直し</b>：${R.redraw.cost} 点払って手札を全部入れ替える（${R.start_hand} 枚）。${R.redraw.cost} 点ないときは ${R.redraw.free_wait_sec} 秒待てば 0 点で入れ替わる（待つあいだも動ける）。`,
     `<b>勝ち</b>：先に ${R.win.score} 点。または ${(TL||R.win.time_limit_sec)/60} 分たって点の多い方。CPU の速さは相手の選び方で変わる。`,
     `${Object.keys(D.radical_forms.left).join("・")} を左に置いてくっつけられるときは、${Object.values(D.radical_forms.left).join("・")} の形で見せる（札はもとの字のまま）。色の薄い札は部品（字ではない）。`,
+    `<b>ヒント</b>：続けて ${R.hint.fail_streak} 回はじかれると、使う札と操作のボタンが光る（${R.hint.glow_sec} 秒か、次に手札を動かすまで）。言葉は文字では出ない。点はかからない。`,
     `<b>ログ</b>：一手ごとの記録。上の「ログ」で見てコピーできる。終わったら「ログをコピー」が出る。`,
   ].map(x=>`<li>${x}</li>`).join("");
 }

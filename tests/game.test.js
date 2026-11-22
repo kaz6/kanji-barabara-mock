@@ -1306,3 +1306,218 @@ test("KJ-036 制限時間の前なら CPU は1回に1手だけ（まとめて動
   const n1 = g.log.filter((e) => e.who === "CPU" && e.op !== "動けない" && e.op !== "動ける").length;
   assert.ok(n1 - n0 <= 3, `1回の cpuTurn で増えた手 ${n1 - n0}`); // 取る→放つ→取るの連なりまで
 });
+
+// ---------- KJ-037 ヒント（D-052）：続けて3回はじかれたら、自動で札とボタンを光らせる ----------
+const tryN = (g, n, p = g.me) => { for (let i = 0; i < n; i++) g.tried(p, [p.cards[0].c, p.cards[1].c], "辞書にない"); };
+const idsOf = (g, text) => [...text].map((c) => g.me.cards.find((x) => x.c === c).id);
+
+test("KJ-037 ヒント：決まり（rules.json の hint）。3回・10秒", () => {
+  assert.deepEqual(D.rules.hint, { fail_streak: 3, glow_sec: 10 });
+});
+
+test("KJ-037 ヒント：3回はじかれると出る。2回では出ない", () => {
+  const g = newGame(1, "weak", "N5");
+  setHand(g, g.me, "休日山川");
+  tryN(g, 2);
+  assert.equal(g.hint, null, "2回では出ない");
+  assert.equal(g.log.some((e) => e.op === "ヒント"), false);
+  tryN(g, 1);
+  assert.ok(g.hintActive(), "3回目で出る");
+  assert.equal(g.hintCount, 1);
+});
+
+test("KJ-037 ヒント：放つ・割る・くっつける・反転・巡り・同音が通ったら数え直し。ヒントを出したら数え直し", () => {
+  const g = newGame(1, "weak", "N5");
+  setHand(g, g.me, "休日山川人木");
+  tryN(g, 2);
+  assert.ok(g.split(g.me, idsOf(g, "休")).ok, "割るが通る");
+  assert.equal(g.hintStreak, 0, "数え直し");
+  tryN(g, 2);
+  assert.equal(g.hint, null, "通ったあとは、また3回はじかれるまで出ない");
+  g.clock.t += 1;
+  tryN(g, 1);
+  assert.ok(g.hint, "数え直して3回");
+  assert.equal(g.hintStreak, 0, "出したら数え直し");
+  tryN(g, 2);
+  assert.equal(g.hintCount, 1, "出した直後の2回では、もう一度は出ない");
+  tryN(g, 1);
+  assert.equal(g.hintCount, 2, "さらに3回で、もう一度");
+  // 放つ・くっつける・反転・巡り・同音
+  setHand(g, g.me, "休日");
+  tryN(g, 2);
+  assert.ok(g.release(g.me, g.me.cards.map((x) => x.id)).ok);
+  assert.equal(g.hintStreak, 0, "放つが通ったら数え直し");
+  setHand(g, g.me, "人木");
+  tryN(g, 2);
+  assert.ok(g.join(g.me, g.me.cards.map((x) => x.id)).ok);
+  assert.equal(g.hintStreak, 0, "くっつけるが通ったら数え直し");
+  for (const [op, hand] of [["invert", "男"], ["cycle", "日"], ["homophone", "日"]]) {
+    setHand(g, g.me, hand);
+    g.clock.t += 60;
+    tryN(g, 1, { ...g.me, cards: [{ c: "一" }, { c: "二" }], name: g.me.name }); // 数えるのは g.me だけ（別の人は数えない）
+    assert.equal(g.hintStreak, 0, "別の人（CPU）のためしは数えない");
+    g.hintStreak = 2;
+    const r = op === "homophone" ? g.homophone(g.me, g.me.cards.map((x) => x.id), "書") : g[op](g.me, g.me.cards.map((x) => x.id));
+    assert.ok(r.ok, op);
+    assert.equal(g.hintStreak, 0, `${op} が通ったら数え直し`);
+  }
+});
+
+test("KJ-037 ヒント：CPU のはじかれは数えない。CPU は自分でヒントを出さない", () => {
+  const g = newGame(1, "normal", "N5");
+  tryN(g, 5, g.cpu);
+  assert.equal(g.hint, null);
+  assert.equal(g.hintStreak, 0);
+  assert.equal(g.log.some((e) => e.op === "ヒント"), false);
+});
+
+test("KJ-037 ヒント：段1 いま並べれば放てる札の組が光る（手札とストックから）。言葉は ids に出さない", () => {
+  const g = newGame(1, "weak", "N5");
+  const ids = setHand(g, g.me, "休日山川");
+  g.me.cards[1].tray = true; // 日 はストックにいる
+  tryN(g, 3);
+  const h = g.hintActive();
+  assert.equal(h.tier, 1);
+  assert.deepEqual([...h.ids].sort(), [ids[0], ids[1]].sort(), "休 と 日（ストックの札も使う）");
+  assert.equal(h.button, null, "段1 はボタンを光らせない（札だけ）");
+  assert.equal(h.word, "休日");
+});
+
+test("KJ-037 ヒント：放った言葉は狙わない。よく使う語を先に", () => {
+  const g = newGame(1, "weak", "N5");
+  setHand(g, g.me, "休日山川");
+  g.used.add("休日");
+  tryN(g, 3);
+  assert.notEqual(g.hint.word, "休日", "放った言葉は狙わない");
+  const g2 = newGame(1, "weak", "N5");
+  setHand(g2, g2.me, "休日山川");
+  tryN(g2, 3);
+  assert.ok(T.COMMON_WORDS.some((w) => w.w === g2.hint.word), "段1 の語はよく使う語（common）から");
+});
+
+test("KJ-037 ヒント：段2 1手（割る・反転・巡り・同音）で放てる言葉になる札と、その操作のボタンが光る", () => {
+  for (const [hand, op, btn, word] of [["日年", "巡り", "bCycle", "年月"], ["日分", "割る", "bSplit", "八日"], ["日男", "反転", "bInvert", "日女"], ["日国", "同音", "bHomo", "国書"]]) {
+    const g = newGame(1, "weak", "N5");
+    const ids = setHand(g, g.me, hand);
+    tryN(g, 3);
+    const h = g.hintActive();
+    assert.equal(h.tier, 2, hand);
+    assert.equal(h.op, op, hand);
+    assert.equal(h.button, btn, hand);
+    assert.equal(h.word, word, hand);
+    assert.deepEqual([...h.ids].sort(), [...ids].sort(), `${hand}：操作する札と、言葉に使う残りの札が光る`);
+    assert.ok(g.log.some((e) => e.op === "ヒント" && e.note.includes(`段2：${op}`)), "ログに段2");
+  }
+});
+
+test("KJ-037 ヒント：段2 は、その試合でまだ使っていない操作を先にする", () => {
+  const first = newGame(1, "weak", "N5");
+  setHand(first, first.me, "日年国");
+  tryN(first, 3);
+  assert.equal(first.hint.op, "巡り", "まだどれも使っていないときは、よく使う語が先（年月）");
+  const g = newGame(1, "weak", "N5");
+  setHand(g, g.me, "日年国");
+  g.log.push({ t: 0, who: g.me.name, op: "巡り", from: ["一"], to: ["二"], pts: 0, meScore: 0, cpuScore: 0, me: 0, cpu: 0, note: "" }); // 巡りは使った
+  tryN(g, 3);
+  assert.equal(g.hint.tier, 2);
+  assert.equal(g.hint.op, "同音", "巡りは使ったので、まだ使っていない 同音 を先に");
+  assert.equal(g.hint.button, "bHomo");
+});
+
+test("KJ-037 ヒント：待ち時間の操作・手札がいっぱいで割れない操作は狙わない", () => {
+  const g = newGame(1, "weak", "N5");
+  setHand(g, g.me, "日年");
+  g.me.cd.cycle = g.now() + 5; // 巡りは待っている
+  tryN(g, 3);
+  assert.notEqual(g.hint.op, "巡り", "待っている操作は光らせない");
+  const g2 = newGame(1, "weak", "N5");
+  setHand(g2, g2.me, "日分" + "山".repeat(14)); // 16枚（手札8＋ストック8）。割ると17枚になる
+  g2.me.cards.slice(8).forEach((x) => { x.tray = true; });
+  tryN(g2, 3);
+  assert.notEqual(g2.hint.op, "割る", "いっぱいで割れないときは割るを光らせない");
+});
+
+test("KJ-037 ヒント：段3 どれも無ければ Redraw のボタンが光る。待っているときは札もボタンも光らない", () => {
+  const g = newGame(1, "weak", "N5");
+  setHand(g, g.me, "日刀");
+  tryN(g, 3);
+  const h = g.hintActive();
+  assert.equal(h.tier, 3);
+  assert.deepEqual(h.ids, []);
+  assert.equal(h.button, "bRedraw");
+  const g2 = newGame(1, "weak", "N5");
+  setHand(g2, g2.me, "日刀");
+  assert.ok(g2.redraw(g2.me).ok); // 5点ないので30秒待つ
+  assert.notEqual(g2.me.redrawAt, null);
+  tryN(g2, 3);
+  assert.equal(g2.hint, null, "引き直しを待っているときは何も光らせず、札も出さない");
+  assert.ok(g2.log.some((e) => e.op === "ヒント" && e.note.includes("待っている")), "ログには残す");
+});
+
+test("KJ-037 ヒント：光るのは10秒か次に手札を動かすまで。選ぶ・外すだけ（画面）では消えない。ログに残る（狙った言葉はログにだけ）", () => {
+  const g = newGame(1, "weak", "N5");
+  const ids = setHand(g, g.me, "休日山川");
+  tryN(g, 3);
+  assert.ok(g.hintActive());
+  g.clock.t += 9;
+  assert.ok(g.hintActive(), "9秒ではまだ光る");
+  g.clock.t += 1.5;
+  assert.equal(g.hintActive(), null, "10秒たったら消える");
+  tryN(g, 3);
+  assert.ok(g.hintActive());
+  assert.ok(g.swap(g.me, ids[0], ids[2]).ok);
+  assert.equal(g.hintActive(), null, "札を動かしたら消える");
+  tryN(g, 3);
+  assert.ok(g.hintActive());
+  g.tried(g.me, ["山"], "1字では放てない");
+  assert.ok(g.hintActive(), "はじかれる（ためした）では消えない");
+  const e = g.log.filter((x) => x.op === "ヒント");
+  assert.equal(e.length, 3, "出した回数だけ ヒント の行がある（3回目は札を動かしたあと）");
+  assert.match(e[0].note, /^段1：放つ。狙った言葉：休日$/);
+  assert.deepEqual(e[0].from, ["休", "日"], "光らせた札");
+  assert.match(g.logText(), /ヒント\t休 日\t\t0\t.*段1：放つ。狙った言葉：休日/);
+  assert.match(g.logText(), /# 手 .*ヒント/, "ログの頭に ヒント の説明");
+  assert.match(g.logText(), /# 仮置き ヒント 人が続けて3回はじかれたら/);
+});
+
+test("KJ-037 ヒント：終わったあとは出ない。ためした（1字）も数える。点はかからない", () => {
+  const g = newGame(1, "weak", "N5");
+  setHand(g, g.me, "休日山川");
+  g.me.score = 7;
+  g.tried(g.me, ["山"], "1字では放てない");
+  g.tried(g.me, ["山"], "1字では放てない");
+  g.tried(g.me, ["山", "川"], "辞書にない");
+  assert.ok(g.hint, "1字のためしも数える");
+  assert.equal(g.me.score, 7, "ヒントに点はかけない");
+  const over = newGame(1, "weak", "N5");
+  setHand(over, over.me, "休日山川");
+  over.clock.t += over.timeLimit + 1;
+  over.tick();
+  tryN(over, 5);
+  assert.equal(over.hint, null, "終わったあとは出ない");
+});
+
+test("KJ-037 ヒント：N4 でも出る（段1・段2・段3 のどれかになる）。無作為の手札で、必ず札か Redraw が光る", () => {
+  const tally = { 1: 0, 2: 0, 3: 0 };
+  for (const seed of [1, 7, 42]) {
+    for (let i = 0; i < 20; i++) {
+      const g = newGame(seed * 1000 + i, "weak", "N4", { startStock: true });
+      tryN(g, 3);
+      const h = g.hint;
+      assert.ok(h, `seed ${seed}-${i}`);
+      tally[h.tier]++;
+      if (h.tier === 3) assert.equal(h.button, "bRedraw");
+      else assert.ok(h.ids.length >= 1 && h.ids.every((id) => g.byId(g.me, id)), "光る札は手札かストックにある");
+    }
+  }
+  assert.equal(tally[1] + tally[2] + tally[3], 60);
+});
+
+test("KJ-037 ヒント：狙った言葉を先に使われたら、光りは消える（CPU が放った・部屋で相手が放った・先着に負けた）", () => {
+  const g = newGame(1, "weak", "N5");
+  setHand(g, g.me, "休日山川");
+  tryN(g, 3);
+  assert.equal(g.hintActive().word, "休日");
+  g.used.add("休日"); // CPU・相手・先着の負けのどれでも、使った言葉は g.used に入る
+  assert.equal(g.hintActive(), null, "もう放てない言葉は光らせ続けない");
+});
