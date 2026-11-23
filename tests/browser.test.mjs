@@ -1246,7 +1246,7 @@ test("画面", { skip }, async (t) => {
     }
   });
 
-  await t.test("点線は薄いグレー。端末に無い字（𢀖・⺍・电 など）は同梱の字体で出る（KJ-027）", async () => {
+  await t.test("点線は薄い茶色（KJ-052）。端末に無い字（𢀖・⺍・电 など）は同梱の字体で出る（KJ-027）", async () => {
     for (const vp of [{ width: 760, height: 1100 }, { width: 375, height: 700 }]) {
       const { ctx, page, errors } = await open(browser, url, vp);
       await page.evaluate(() => {
@@ -1256,7 +1256,7 @@ test("画面", { skip }, async (t) => {
         G.field = [..."国古山"].map((c, i) => ({ id: 9500 + i, c, t: 0, fresh: false }));
         __KJ.render();
       });
-      // 点線の色：茶色ではなく、赤青の差が小さい薄いグレー
+      // 点線の色：薄い茶色（#b48f62 前後）。前のグレー #aaa59a ほど無彩色ではなく、最初の茶色 #8a6d3b ほど濃くない
       const col = await page.evaluate(() => {
         const out = {};
         for (const sel of [".cutv", ".cuth"]) {
@@ -1268,8 +1268,8 @@ test("画面", { skip }, async (t) => {
       });
       for (const [k, v] of Object.entries(col)) {
         const [r, g, b] = v.match(/\d+/g).map(Number);
-        assert.ok(Math.abs(r - b) <= 24 && Math.abs(r - g) <= 16, `${k} の色 ${v} はグレー`);
-        assert.ok(r >= 120 && r <= 200, `${k} の色 ${v} は字が読める薄さ`);
+        assert.ok(r > g && g > b && r - b >= 40 && r - b <= 110, `${k} の色 ${v} は茶色（赤>緑>青で、赤と青の差が大きい。グレーでも濃い茶でもない）`);
+        assert.ok(r >= 150 && r <= 210, `${k} の色 ${v} は字の線を邪魔しない薄さ`);
       }
       // 同梱の字体が読み込まれ、𢀖・⺍・电・𠆢 が描ける（空白ではない）
       const r = await page.evaluate(async () => {
