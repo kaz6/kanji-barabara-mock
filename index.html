@@ -215,13 +215,13 @@ body.tutorial #clock,body.tutorial #again,body.tutorial #bLog,body.tutorial #bCo
 .esw.t2 .w{font-size:32px}
 .esw.t3 .w{font-size:40px}
 .esw.in{opacity:1;visibility:visible}
-.esw.fresh.t1{animation:kjPop .22s ease-out}
-.esw.fresh.t2{animation:kjHop .5s ease-out}
+.esw.fresh.t1{animation:kjPop .11s ease-out}
+.esw.fresh.t2{animation:kjHop .25s ease-out}
 .esw.t3{border-radius:10px;padding:2px 8px}
-.esw.fresh.t3{animation:kjBig .8s ease-out,kjFlash 1.1s ease-out}
+.esw.fresh.t3{animation:kjBig .4s ease-out,kjFlash .55s ease-out}
 .esw.t2.in .w,.esw.t3.in .w{background:linear-gradient(100deg,var(--ink) 0 40%,var(--shine) 50%,var(--ink) 60% 100%) 120% 0/250% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
-.esw.fresh.t2 .w{animation:kjShine .6s ease-out .1s forwards}
-.esw.fresh.t3 .w{animation:kjShine .9s ease-out .15s forwards}
+.esw.fresh.t2 .w{animation:kjShine .3s ease-out .05s forwards}
+.esw.fresh.t3 .w{animation:kjShine .45s ease-out .075s forwards}
 @keyframes kjPop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
 @keyframes kjHop{0%{opacity:0;transform:translateY(8px) scale(.7)}45%{opacity:1;transform:translateY(-10px) scale(1.12)}100%{opacity:1;transform:none}}
 @keyframes kjBig{0%{opacity:0;transform:scale(.5)}35%{opacity:1;transform:scale(1.35)}55%{transform:scale(.94)}75%{transform:scale(1.12)}100%{transform:scale(1)}}
@@ -592,7 +592,7 @@ function end(winner,solo){
 // 試合が終わったときの表示（KJ-018・D-036／D-039）：最初に「勝ち！」「負け…」「引き分け」（ひとりでは「おわり」）と両方の点を大きく、
 // そのあと自分が放った言葉を放った順に1つずつ（長いほど派手）。タップで全部いっぺんに出す。出し終わって少したつか、もう一度タップで閉じて、いまの終わりの画面を見せる。
 // 時間の長さは表示のためのもの（遊びの数値ではないので rules.json には置かない。仮決め）
-const END_PACE={first:700,gap:350,hold:1800};
+const END_PACE={first:350,gap:175,hold:1800};
 let ES=null; // {items:[li], timers:[], done:bool}
 function esClear(){if(ES){for(const t of ES.timers)clearTimeout(t)}}
 let esWait=null;
