@@ -319,7 +319,7 @@ def main():
     # ---- 地名・名字（KJ-032・D-047）----
     # data/proper_names.json の表記（と、JMnedict に地名としてある「〇〇県」「〇〇市」の形）を語に入れる。
     # 通すのは 2〜4字で、手に持てる字だけで書けるものだけ（D-029。1字の名字・市〔林・森・原・津・堺〕は放てないので入れない）。
-    # JMdict にもう同じ語があれば、その行に印（pn）だけを足す（読み・意味・common はそのまま）。
+    # JMdict にもう同じ語があれば、その行に印（pn）を足す（読み・意味・common はそのまま。読みが違えば名前の読みを pn_kana に）。
     # 新しく足す行は common を付けない（CPU が知っている語〔COMMON_WORDS〕は今まで通り）
     pn_json = load_json("proper_names.json")
     by_text = {w["w"]: w for w in words}
@@ -359,6 +359,9 @@ def main():
             by_text[text] = w
             pn_added.append(text)
         w["pn"] = [*w.get("pn", []), *[k for k in kinds if k not in w.get("pn", [])]]
+        # もとの行の読みが地名・名字の読みと違うとき（大分 だいぶ／おおいた など）は、名前の読みを pn_kana に持たせて台に並べて出す
+        if w["kana"] != kana and "pn_kana" not in w:
+            w["pn_kana"] = kana
 
     # ---- 全レベルで外す語（KJ-032 追記・D-048。data/blocked_words.json）----
     blocked = set(load_json("blocked_words.json")["words"])
@@ -387,7 +390,8 @@ def main():
         "source": f"JMdict（jamdict-data, jmdict {meta.get('jmdict.version')}）。2〜4字の語は「手に持てる字」（レベルの字＋割る・くっつけるで出る字）だけで書けるもの（KJ-011・D-029）。1字の語はレベルの字だけ。地名・名字は data/proper_names.json と JMnedict（KJ-032）。data/blocked_words.json の語は外す（D-048）",
         "fields": {"w": "語", "lv": "レベル（その語の字がすべて手に持てる、いちばん低い N5／N4。小1 だけで放てる語は null）", "g1": "小1 で放てる（字がすべて小1 の手に持てる字。KJ-044）", "kana": "かな読み（最初の1つ）", "en": "英語の意味（最初の2つ）",
                    "common": "よく使う（news1/ichi1/spec1/spec2/gai1）", "yoji": "四字熟語",
-                   "pn": "地名・名字の印（KJ-032。台の行に〔地名〕〔名字〕。data/proper_names.json から。点数は普通の言葉と同じ）"},
+                   "pn": "地名・名字の印（KJ-032。台の行に〔地名〕〔名字〕。data/proper_names.json から。点数は普通の言葉と同じ）",
+                   "pn_kana": "地名・名字の読み（kana と違うときだけ。台の行に kana／pn_kana と並べる）"},
         "stats": stats,
         "words": words,
     })

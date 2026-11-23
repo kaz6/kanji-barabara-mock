@@ -54,6 +54,20 @@ test("地名・名字：手に持てる字だけで書けるときだけ語に�
   }
   assert.equal(seen, D.words.stats.pn, "印の付いた語の数");
   assert.ok(!W.get("林").pn, "1字の名字には印を付けない");
+  // 台に出る読み（kana と、違うときは pn_kana）に、一覧の読みが入っている（大分 だいぶ／おおいた など。レビュー1回目の直し）
+  const kanaOf = new Map();
+  for (const r of PN.names) {
+    kanaOf.set(r.w, r.kana);
+    if (r.suffix) kanaOf.set(r.w + r.suffix, r.kana + r.suffix_kana);
+    if (r.city_suffix) kanaOf.set(r.w + r.city_suffix, r.kana + "し");
+  }
+  for (const w of D.words.words) {
+    if (!w.pn) continue;
+    assert.ok(w.kana === kanaOf.get(w.w) || w.pn_kana === kanaOf.get(w.w), `${w.w}：台に ${kanaOf.get(w.w)} が出る`);
+    if (w.pn_kana) assert.notEqual(w.pn_kana, w.kana);
+  }
+  assert.equal(W.get("大分").kana, "だいぶ", "もとの読みはそのまま");
+  assert.equal(W.get("大分").pn_kana, "おおいた");
   // 印は一覧から来たものだけ
   const allForms = new Set(PN.names.flatMap(forms));
   for (const w of D.words.words) if (w.pn) assert.ok(allForms.has(w.w), `${w.w} は一覧の外`);

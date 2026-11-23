@@ -160,6 +160,11 @@ test("画面", { skip }, async (t) => {
     await tap("石"); await tap("川");
     assert.match(await page.textContent("#info"), /いしかわ〔地名・名字〕/);
     await page.click("#bBack");
+    // もとの読みが違う語は、名前の読みを並べる（大分 だいぶ／おおいた〔地名〕）
+    await page.evaluate(() => { __KJ.game.me.cards.push(...[..."大分"].map((c, i) => ({ id: 9200 + i, c, t: 0, fresh: false }))); __KJ.render(); });
+    await tap("大"); await tap("分");
+    assert.match(await page.textContent("#info"), /だいぶ／おおいた〔地名〕/);
+    await page.click("#bBack");
     await tap("休"); await tap("日");
     assert.equal(await page.locator("#info .pn").count(), 0, "普通の言葉には印なし");
     assert.doesNotMatch(await page.textContent("#info"), /〔/);
