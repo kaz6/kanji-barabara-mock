@@ -1360,13 +1360,35 @@ test("ログの送信（KJ-020）：手元（localhost・127.0.0.1・file）と�
   assert.equal(K.logSendAllowed({ hostname: "127.0.0.1", webdriver: true, force: true }), true, "force は送る処理を確かめるときだけ");
 });
 
-// 画面の文言（KJ-024）：ボタンの文字は英語、角の印は ⇄・↻・♪。js/strings.js に置き、index.html はそこから出す
-test("文言（KJ-024）：js/strings.js のボタンは8つで英語。角の印のアイコンは core.marks に渡すと ⇄↻♪ になる。渡さなければ今まで通り", () => {
+// 画面の文言（KJ-024・KJ-048）：ボタンの文字は英語、角の印は字に組み込んだ SVG（Flip・Cycle・Same reading）。js/strings.js に置き、index.html はそこから出す
+test("文言（KJ-024・KJ-048）：js/strings.js のボタンは8つで英語。同音は Same reading。印は ⇄・↻・♪ の文字でなく SVG（Fl＋印＋p・印＋ycle・印＋ame reading）", () => {
   const fs = require("fs");
   const path = require("path");
   const S = require("../js/strings.js");
-  assert.deepEqual(S.ICONS, { invert: "⇄", cycle: "↻", homophone: "♪" });
-  assert.deepEqual(S.BUTTONS, { bRelease: "Play", bSplit: "Split", bJoin: "Join", bInvert: "⇄ Flip", bCycle: "↻ Cycle", bHomo: "♪ Sound conversion", bBack: "Back", bRedraw: "Redraw" });
+  assert.equal(S.ICONS, undefined, "⇄・↻・♪ の文字の印は持たない（KJ-048）");
+  assert.deepEqual(S.BUTTONS, { bRelease: "Play", bSplit: "Split", bJoin: "Join", bInvert: "Flip", bCycle: "Cycle", bHomo: "Same reading", bBack: "Back", bRedraw: "Redraw" }, "読み上げの名前");
+  assert.deepEqual(S.LOGO, { bInvert: ["Fl", "invert", "p"], bCycle: ["", "cycle", "ycle"], bHomo: ["", "homophone", "ame reading"] }, "印を字の1つに組み込む");
+  // 印の SVG：相談チャットの見本（C1・S1・F2）の形と色（currentColor）
+  const svg = (k) => S.iconSvg(k);
+  assert.match(svg("cycle"), /viewBox="0 0 20 24"/);
+  assert.match(svg("cycle"), /M16 6\.5A8 8 0 1 0 16 17\.5/);
+  assert.match(svg("cycle"), /M12\.5 3\.5L16 6\.5L12 8\.5/);
+  assert.match(svg("homophone"), /viewBox="0 0 18 24"/);
+  assert.match(svg("homophone"), /M14\.5 6\.5C13\.5 4 4 3 4 8C4 12\.5 14 11\.5 14 16C14 21 4\.5 20\.5 3\.5 17\.5/);
+  assert.match(svg("homophone"), /M14\.5 3\.5V6\.5H11\.5/);
+  assert.match(svg("homophone"), /M3\.5 20\.5V17\.5H6\.5/);
+  assert.match(svg("invert"), /viewBox="0 0 12 24"/);
+  assert.match(svg("invert"), /<circle cx="6" cy="3" r="1\.7"/);
+  assert.match(svg("invert"), /M6 8\.5V21\.5M3\.5 11L6 8\.5L8\.5 11M3\.5 19L6 21\.5L8\.5 19/);
+  for (const k of ["invert", "cycle", "homophone"]) {
+    assert.match(svg(k), /stroke="currentColor"/, `${k} の色は文字と同じ`);
+    assert.match(svg(k), /aria-hidden="true"/, `${k} は読み上げに出さない`);
+  }
+  assert.equal(S.buttonHtml("bRelease"), "Play");
+  assert.equal(S.buttonHtml("bInvert"), `Fl${svg("invert")}p`);
+  assert.equal(S.buttonHtml("bCycle"), `${svg("cycle")}ycle`);
+  assert.equal(S.buttonHtml("bHomo"), `${svg("homophone")}ame reading`);
+  for (const t of [...Object.values(S.BUTTONS), ...Object.values(S.LOGO).flat()]) assert.doesNotMatch(t, /[⇄↻♪]|Sound conversion/, "古い印・古い名前が残っていない");
   assert.equal(S.redrawNote.cost(5), "-5pt", "点が減ることが分かる添え字（KJ-034 追記）");
   assert.equal(S.redrawNote.free(30), "30s");
   assert.equal(S.redrawNote.wait, undefined, "待っているあいだの秒数の文字は出さない（KJ-034）");
@@ -1374,10 +1396,9 @@ test("文言（KJ-024）：js/strings.js のボタンは8つで英語。角の�
   for (const id of Object.keys(S.BUTTONS)) assert.match(html, new RegExp(`<button class="op[^"]*" id="${id}"><span class="lb"></span>`), `${id} の文字は strings.js から入れる（直書きしない）`);
   const ops = html.slice(html.indexOf('<div class="ops">'), html.indexOf('<div class="choices"'));
   assert.doesNotMatch(ops.replace(/<!--[\s\S]*?-->/g, ""), /[぀-ヿ㐀-鿿]/, "ボタンの並びに日本語を直書きしていない");
-  assert.equal(K.marks(T, "上", S.ICONS), "⇄♪");
-  assert.equal(K.marks(T, "十", S.ICONS), "↻♪");
+  assert.equal(K.marks(T, "上", { invert: "F", cycle: "C", homophone: "S" }), "FS", "core.marks は渡された印の字で並べる（画面は SVG を使う）");
   assert.equal(K.marks(T, "上"), "反音", "icons を渡さなければ 反・巡・音");
-  assert.equal(K.marks(T, "国", S.ICONS), "", "印の無い字");
+  assert.equal(K.marks(T, "国", { invert: "F", cycle: "C", homophone: "S" }), "", "印の無い字");
   assert.deepEqual(K.markKinds(T, "上"), ["invert", "homophone"], "印の種類（KJ-040）：反転・巡り・同音の順");
   assert.deepEqual(K.markKinds(T, "十"), ["cycle", "homophone"]);
   assert.deepEqual(K.markKinds(T, "国"), []);
@@ -1651,7 +1672,7 @@ test("KJ-041：割れない字を Split→「ためした」（札・メモ「�
   assert.equal(chars(g.me.cards), "一口");
 });
 
-test("KJ-041：待ち時間中の Flip・巡りの無い字の Cycle・読みの無い字の Sound conversion→「ためした」", () => {
+test("KJ-041：待ち時間中の Flip・巡りの無い字の Cycle・読みの無い字の Same reading→「ためした」", () => {
   const g = newGame(1, "weak", "N5");
   const [a] = setHand(g, g.me, "上");
   assert.equal(g.invert(g.me, [a]).ok, true);

@@ -784,3 +784,20 @@ R-025〜R-027 はカードに書いてあった仮置き、R-028〜R-031 は係�
 - 変えていないもの：遊びの決まり・点数・数値・見た目（点線の置き場所は データから）・rules.json
 - 画像：docs/img/kj-047-split-375.png（375px。玉・足・主 の点線）
 - 戻し方：この PR の merge コミットを revert。端末に残るものは無い（data/parts.json・split_shapes.json の version を 2026-11-23.2 に戻す）
+
+
+### R-074 「Sound conversion」を「Same reading」にし、Flip・Cycle・Same reading の印を字に組み込んだ SVG にする（KJ-048。受け箱 P-048。作者 2026-11-23 12:45〜13:06。D-063）
+
+- 作者の言葉：「SOUND conversion は 読み方変換 のような意味にできるかな。♪マークだと少し分かりづらいかも。」→ 相談チャットの候補 A（Same reading）に「aで！」→「あ だとわからないかもだ…」「Sで」→ 印を文字に組み込んだロゴ（Cycle は C1、Same reading は S1）→ Flip は「やっぱりF2でいきます！」
+- 決まったこと（カード P-048 と追記・追記2・追記3 のとおり）
+  1. ボタンの文字：Sound conversion → Same reading。読み上げ（aria-label）は Flip・Cycle・Same reading
+  2. 印は文字（⇄・↻・♪・あ・S）をやめ、SVG にする。Flip＝Fl＋印＋p（i の位置に点付きの両向き縦矢印）／Cycle＝印＋ycle（C の位置に矢じり付きの C）／Same reading＝印＋ame reading（S の位置に両端が矢じりの S）。札の角の印も同じ形。色は文字と同じ（currentColor）
+  3. 待ち時間で薄くなる印（P-040）・ゲージ（P-034）・ヒント（P-037）・チュートリアルの文（段7）・しくみの説明の印もそろえた
+- 係の仮決め（技術・形）
+  - 形・viewBox・線の太さは見本の値のまま。大きさは高さ 1.2em（ボタンでは字と同じ高さ、札の角では 10px 角の字の 1.2em＝12px）。縦の位置は vertical-align:-.22em（仮）
+  - js/strings.js：ICONS（文字の印）をやめ、ICON_SHAPES・iconSvg・LOGO・buttonHtml を足した。BUTTONS は読み上げの名前（Flip・Cycle・Same reading ほか）。core.marks は渡された字で並べるまま（画面は markKinds＋SVG を使う）
+  - ボタンの `.lb` に SVG が入るので、textContent は「Flp」「ycle」「ame reading」になる（テストはこれと aria-label を見る）
+  - Same reading ボタンの横の広さ・折り返しは今まで通り（フレックス 2・収まらなければ2行）
+- 変えていないもの：同音の決まり・待ち時間・数値（rules.json）・ほかのボタン・ログの手の名前（反転・巡り・同音は日本語のまま）
+- 画像：docs/img/kj-048-logos-375.png（375px。ボタンの並びと、印の付いた札）
+- 戻し方：この PR の merge コミットを revert。端末に残るものは無い

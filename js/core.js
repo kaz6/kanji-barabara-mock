@@ -177,7 +177,7 @@
     if (!sp || (sp.s !== "lr" && sp.s !== "tb")) return { kind: "x", at: 0.5, enclose: !!(sp && sp.kind === "囲み") };
     return { kind: sp.s === "lr" ? "v" : "h", at: sp.at };
   }
-  // 角の印。icons を渡すとその字で出す（画面は js/strings.js の ⇄・↻・♪。KJ-024）。渡さなければ 反・巡・音
+  // 角の印。icons を渡すとその字で出す（画面は印の種類 markKinds から js/strings.js の SVG を出す。KJ-048）。渡さなければ 反・巡・音
   function marks(T, c, icons) {
     const ic = icons || { invert: "反", cycle: "巡", homophone: "音" };
     return markKinds(T, c).map((k) => ic[k]).join("");

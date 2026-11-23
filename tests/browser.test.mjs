@@ -873,7 +873,7 @@ test("画面", { skip }, async (t) => {
     s = await st();
     assert.ok(Math.abs(s.g - 0.5) < 0.05, `待ち時間の半分でおよそ半分（${s.g}）`);
     assert.equal(s.disabled, true, "半分では押せない");
-    assert.equal(s.text, "⇄ Flip", "秒数の文字が出ない");
+    assert.equal(s.text, "Flp", "秒数の文字が出ない（Fl＋印の SVG＋p）");
     await page.waitForTimeout(350); // 幅の動き（.25s）が落ち着くのを待つ
     s = await st();
     assert.ok(Math.abs(s.before / s.w - 0.5) < 0.08, `ゲージの幅もおよそ半分（${Math.round(s.before)} / ${Math.round(s.w)}）`);
@@ -1464,12 +1464,20 @@ test("画面", { skip }, async (t) => {
     await c2.close();
   });
 
-  await t.test("ボタンの文字は英語（KJ-024）。角の印は ⇄・↻・♪ でボタンと同じ。選んだ札でも印が見える。ほかの文言とログは日本語のまま", async () => {
+  await t.test("ボタンの文字は英語（KJ-024・KJ-048）。印は字に組み込んだ SVG（Flip・Cycle・Same reading）で角の印と同じ形。選んだ札でも印が見える。ほかの文言とログは日本語のまま", async () => {
     for (const vp of [{ width: 760, height: 1100 }, { width: 375, height: 700 }]) {
       const { ctx, page, errors } = await open(browser, url, vp);
       const label = (id) => page.evaluate((i) => document.querySelector(`#${i} .lb`).textContent, id);
-      const want = { bRelease: "Play", bSplit: "Split", bJoin: "Join", bInvert: "⇄ Flip", bCycle: "↻ Cycle", bHomo: "♪ Sound conversion", bBack: "Back", bRedraw: "Redraw" };
+      // 印の SVG は文字に数えない：Flip＝Fl＋印＋p、Cycle＝印＋ycle、Same reading＝印＋ame reading。読み上げ（aria-label）は Flip・Cycle・Same reading
+      const want = { bRelease: "Play", bSplit: "Split", bJoin: "Join", bInvert: "Flp", bCycle: "ycle", bHomo: "ame reading", bBack: "Back", bRedraw: "Redraw" };
       for (const [id, text] of Object.entries(want)) assert.equal(await label(id), text, `${id} の文字`);
+      const aria = { bRelease: "Play", bSplit: "Split", bJoin: "Join", bInvert: "Flip", bCycle: "Cycle", bHomo: "Same reading", bBack: "Back", bRedraw: "Redraw" };
+      for (const [id, text] of Object.entries(aria)) assert.equal(await page.getAttribute(`#${id}`, "aria-label"), text, `${id} の読み上げ`);
+      assert.equal(await page.locator("#bInvert .lb svg.ic-invert").count(), 1, "Flip の印は SVG");
+      assert.equal(await page.locator("#bCycle .lb svg.ic-cycle").count(), 1, "Cycle の印は SVG");
+      assert.equal(await page.locator("#bHomo .lb svg.ic-homophone").count(), 1, "Same reading の印は SVG");
+      assert.equal(await page.locator(".ops svg").count(), 3, "ボタンの印はこの3つだけ");
+      for (const g of ["⇄", "↻", "♪", "Sound conversion"]) assert.ok(!(await page.evaluate(() => document.body.innerText)).includes(g), `${g} が画面に残っていない`);
       // ボタンの中に日本語（かな・漢字）が無い。待ち時間・引き直しの添え字が入っても
       await page.evaluate(() => { __KJ.game.me.score = 9; __KJ.render(); });
       assert.match(await page.textContent("#cdRedraw"), /^-\d+pt$/, "点があるときは Redraw -5pt の形（KJ-034 追記）");
@@ -1477,25 +1485,30 @@ test("画面", { skip }, async (t) => {
       assert.match(await page.textContent("#cdRedraw"), /^\d+s$/, "点がないときは Redraw 30s の形");
       const jp = /[\u3040-\u30ff\u3400-\u9fff]/;
       for (const t of await page.locator(".ops button").allTextContents()) assert.doesNotMatch(t, jp, `ボタンに日本語が無い（${t}）`);
-      // 角の印：上＝反転と同音 → ⇄♪、十＝巡りと同音 → ↻♪、口＝同音だけ → ♪。日本語の 反・巡・音 は出ない
-      const mk = (ch) => page.evaluate((c) => { const e = [...document.querySelectorAll("#meHand .tile")].find((x) => x.title === c).querySelector(".mk"); return e ? e.textContent : ""; }, ch);
-      assert.equal(await mk("上"), "⇄♪");
-      assert.equal(await mk("十"), "↻♪");
-      assert.equal(await mk("口"), "♪");
-      assert.equal(await mk("休"), "♪");
+      // 角の印：上＝反転と同音 → Flip・Same reading の SVG、十＝巡りと同音 → Cycle・Same reading、口＝同音だけ。文字（⇄・↻・♪・反・巡・音）は出ない
+      const mk = (ch) => page.evaluate((c) => { const e = [...document.querySelectorAll("#meHand .tile")].find((x) => x.title === c).querySelector(".mk"); return e ? { kinds: [...e.querySelectorAll(".mi svg")].map((v) => v.getAttribute("class").replace("ic ic-", "")), text: e.textContent } : { kinds: [], text: "" }; }, ch);
+      assert.deepEqual(await mk("上"), { kinds: ["invert", "homophone"], text: "" });
+      assert.deepEqual(await mk("十"), { kinds: ["cycle", "homophone"], text: "" });
+      assert.deepEqual(await mk("口"), { kinds: ["homophone"], text: "" });
+      assert.deepEqual(await mk("休"), { kinds: ["homophone"], text: "" });
       assert.equal(await page.evaluate(() => [...document.querySelectorAll(".tile .mk")].filter((e) => /[反巡音]/.test(e.textContent)).length), 0, "角の印に 反・巡・音 の字が無い");
-      // 印とボタンの前のアイコンが同じ形
-      for (const [id, ic] of [["bInvert", "⇄"], ["bCycle", "↻"], ["bHomo", "♪"]]) assert.ok((await label(id)).startsWith(ic + " "), `${id} の前に ${ic}`);
+      // 札の角の印とボタンの印が同じ形（path が同じ）
+      const pathsOf = (sel) => page.evaluate((q) => [...document.querySelector(q).querySelectorAll("path")].map((p) => p.getAttribute("d")).join("|"), sel);
+      for (const [id, k] of [["bInvert", "invert"], ["bCycle", "cycle"], ["bHomo", "homophone"]]) {
+        const btn = await pathsOf(`#${id} svg`);
+        const corner = await page.evaluate(([kk]) => { const e = document.querySelector(`#meHand .tile .mi[data-k="${kk}"] svg`); return e ? [...e.querySelectorAll("path")].map((p) => p.getAttribute("d")).join("|") : ""; }, [k]);
+        assert.ok(btn.length > 0 && btn === corner, `${id} の印と札の角の印が同じ形`);
+      }
       // 選んだ札（赤地）でも、角の印の色が地の色と違う（PR #22 の気づき）
       await page.locator("#meHand .tile", { hasText: "上" }).first().click();
       const c = await page.evaluate(() => { const t = [...document.querySelectorAll("#meHand .tile.sel")].find((x) => x.title === "上"); return { bg: getComputedStyle(t).backgroundColor, mk: getComputedStyle(t.querySelector(".mk")).color }; });
       assert.notEqual(c.mk, c.bg, `選んだ札の印（${c.mk}）が地（${c.bg}）と違う色`);
       // 台の写しにも同じ印
-      assert.equal(await page.evaluate(() => document.querySelector("#row .tile .mk").textContent), "⇄♪");
+      assert.equal(await page.evaluate(() => [...document.querySelectorAll("#row .tile .mk .mi")].map((e) => e.dataset.k).join(",")), "invert,homophone");
       // ほかの画面の文言は日本語のまま
       assert.equal(await page.textContent("#meSide .side-head b"), "あなた");
       assert.match(await page.textContent("#trayHead"), /^ストック/);
-      assert.match(await page.textContent("#howto"), /（印：⇄）.*（印：↻）.*（印：♪）/, "しくみの印の説明もアイコン");
+      assert.equal(await page.locator("#howto svg.ic-invert").count() + await page.locator("#howto svg.ic-cycle").count() + await page.locator("#howto svg.ic-homophone").count(), 3, "しくみの印の説明も同じ SVG");
       // ログの手の名前は日本語のまま
       await page.click("#bBack");
       await page.locator("#meHand .tile", { hasText: "休" }).click();
@@ -1678,7 +1691,7 @@ test("画面", { skip }, async (t) => {
     await A.ctx.close(); await B.ctx.close();
   });
   // KJ-041：押した操作がはじかれたら「ためした」に残る。ボタンは押せない見た目のまま（disabled でなく aria-disabled）で、押しても手札は動かない
-  await t.test("はじかれた操作もログに残す（KJ-041）：割れない Split・待ち時間の Flip・巡りの無い Cycle・読みの無い Sound conversion・待っている Redraw・取れない取る・光っていない面。続けて押すと1行。手札は動かない・ヒントは数えない", async () => {
+  await t.test("はじかれた操作もログに残す（KJ-041）：割れない Split・待ち時間の Flip・巡りの無い Cycle・読みの無い Same reading・待っている Redraw・取れない取る・光っていない面。続けて押すと1行。手札は動かない・ヒントは数えない", async () => {
     const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 }, "solo");
     const setHand = (chars) => page.evaluate((cs) => { const G = __KJ.game; G.me.cards = [...cs].map((c, i) => ({ id: 8000 + i + Math.floor(Math.random() * 1e5) * 10, c, t: 0, fresh: false })); __KJ.row.length = 0; __KJ.render(); }, chars);
     const tried = () => page.evaluate(() => __KJ.game.log.filter((e) => e.op === "ためした").map((e) => ({ from: e.from.join(""), note: e.note })));
@@ -1700,7 +1713,7 @@ test("画面", { skip }, async (t) => {
     // 巡りの無い字の Cycle
     await page.click("#bBack"); await pick("休");
     await page.evaluate(() => document.getElementById("bCycle").click());
-    // 読みの無い字の Sound conversion
+    // 読みの無い字の Same reading
     await page.click("#bBack"); await pick("月");
     await page.evaluate(() => document.getElementById("bHomo").click());
     await page.click("#bBack");

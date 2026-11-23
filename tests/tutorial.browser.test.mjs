@@ -128,7 +128,7 @@ async function playThrough(page, onStep) {
   });
   await step(7, "同音", "bHomo", async () => {
     await tile(page, "木").click();
-    await want(["bHomo"], "段7：Sound conversion だけ");
+    await want(["bHomo"], "段7：Same reading だけ");
     await page.click("#bHomo");
     assert.equal(await page.locator(".choices button.hint").textContent(), "気", "選びの中で 気 が光る");
     await page.locator(".choices button", { hasText: "気" }).click();
@@ -169,7 +169,7 @@ test("チュートリアルの画面", { skip }, async (t) => {
     await playThrough(page, async (n) => {
       if (n === 1) assert.equal(await glowed(), "bRelease,大,雨", "段1：使う札とボタンが光る");
       if (n === 4) assert.equal(await glowed(), "十,口", "段4：引きずる札が光る（ボタンは光らない）");
-      if (n === 7) assert.equal(await glowed(), "bHomo,木", "段7：木 と Sound conversion が光る");
+      if (n === 7) assert.equal(await glowed(), "bHomo,木", "段7：木 と Same reading が光る");
       if (process.env.KJ_SHOT && [1, 4, 7].includes(n)) { shots.push(n); await page.screenshot({ path: process.env.KJ_SHOT.replace(/\.png$/, `-step${n}.png`) }); }
     });
     // 8段：おわり
