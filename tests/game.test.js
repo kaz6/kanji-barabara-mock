@@ -1726,3 +1726,38 @@ test("KJ-041：whyNot は、実際の操作がはじかれる理由と同じ（�
   assert.equal(g.whyNot(g.me, "redraw"), "待っている");
   assert.equal(g.redraw(g.me).why, "待っている");
 });
+
+// ---------- KJ-018：試合が終わったときの表示の中身（K.endShow）----------
+function pushReleased(g, who, text, pts) { g.log.push({ t: 1, who: who.name, op: "放つ", from: [...text], to: [], pts, note: "" }); }
+
+test("KJ-018 endShow：勝ち・負け・引き分け・ひとりでの4つで、見出しと点が正しい", () => {
+  const g = newGame(1, "weak");
+  g.me.score = 27; g.cpu.score = 6;
+  const w = K.endShow(g, T, g.me), l = K.endShow(g, T, g.cpu), d = K.endShow(g, T, null);
+  assert.deepEqual([w.kind, w.label, w.me, w.cpu], ["win", "勝ち！", 27, 6]);
+  assert.deepEqual([l.kind, l.label, l.me, l.cpu], ["lose", "負け…", 27, 6]);
+  assert.deepEqual([d.kind, d.label], ["draw", "引き分け"]);
+  const s = newGame(1, "solo");
+  s.me.score = 9;
+  const e = K.endShow(s, T, null);
+  assert.deepEqual([e.kind, e.label, e.me, e.cpu], ["solo", "おわり", 9, null]);
+});
+
+test("KJ-018 endShow：自分が放った言葉だけを、放った順に。2字=段1・3字=段2・4字=段3。読みと点つき。相手の言葉・割る・くっつけるは出ない", () => {
+  const g = newGame(1, "weak");
+  pushReleased(g, g.me, "休日", 4);
+  pushReleased(g, g.cpu, "大雨", 4);
+  g.log.push({ t: 2, who: g.me.name, op: "くっつける", from: [..."木木"], to: ["林"], pts: 0, note: "" });
+  pushReleased(g, g.me, "日本人", 9);
+  pushReleased(g, g.me, "天上天下", 90);
+  const r = K.endShow(g, T, g.me);
+  assert.deepEqual(r.items.map((x) => x.text), ["休日", "日本人", "天上天下"]);
+  assert.deepEqual(r.items.map((x) => x.tier), [1, 2, 3]);
+  assert.deepEqual(r.items.map((x) => x.pts), [4, 9, 90]);
+  assert.equal(r.items[0].kana, T.WORDS.get("休日").kana, "読み（台の行と同じ）");
+});
+
+test("KJ-018 endShow：放った言葉が0でも作れる（items は空）", () => {
+  const g = newGame(1, "weak");
+  assert.deepEqual(K.endShow(g, T, g.cpu).items, []);
+});
