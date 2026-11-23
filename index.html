@@ -9,7 +9,7 @@
 :root{
   /* 色の役割（KJ-042。値は仮。ここだけ変えれば全体が変わる）
      赤（--accent）＝選んだ札と Play だけ ／ 青（--join）＝くっつけられる・合体の面 ／ 緑（--gauge）＝待ち時間のゲージ ／ 金（--hint）＝ヒント
-     墨色（--table）＝場と台が乗る卓 ／ 生成り（--tile）＝札 ／ 札の下の縁（--edge）＝厚み ／ 角の印（⇄↻♪）＝墨色（--ink。選んだ札の上は白） */
+     墨色（--table）＝場と台が乗る卓 ／ 生成り（--tile）＝札 ／ 札の下の縁（--edge）＝厚み ／ 角の印（Flip・Cycle・Same reading の SVG）＝墨色（--ink。選んだ札の上は白） */
   --bg:#f6f4ef; --ink:#1d1b18; --sub:#6b665d; --line:#d9d4c9; --tile:#fffdf8; --cut:#aaa59a;
   --edge:#c2baa6; --slot:#e6e1d5; --accent:#c8402a; --accent-edge:#8f2a1a; --ok:#2f6b4f; --dim:#a9a397; --join:#2f6fd6;
   --table:#2b2926; --table-2:#383530; --on-table:#f2ede2; --on-table-sub:#b9b2a2;
@@ -66,9 +66,11 @@ h1{font-size:17px;margin:0 0 2px;font-weight:700}
 .tile.part.sel{background:var(--accent);border-color:var(--accent);border-bottom-color:var(--accent-edge);color:#fff} /* 部品の札も選ぶと赤地に白（部品の色に負けない） */
 .tile.new{border-color:var(--ink);border-width:2px;border-bottom-width:3px} /* 取ったばかりの札：赤は選んだ札だけなので墨色の枠 */
 .tile .mk{position:absolute;top:1px;right:3px;font:10px/1.2 system-ui,sans-serif;color:var(--ink);letter-spacing:-1px} /* 角の印は墨色（KJ-042） */
-.tile.sel .mk{color:#fff} /* 選んだ札（赤地）の上でも角の印（⇄↻♪）が見える（KJ-024。PR #22 のレビューの気づき） */
+.tile.sel .mk{color:#fff} /* 選んだ札（赤地）の上でも角の印が見える（KJ-024。PR #22 のレビューの気づき） */
 /* 待ち時間のあいだ（KJ-040）：待っている操作の印だけ薄くする。ゲージが満ちたら外れて元の濃さ。選んだ札（赤地・白い印）でも薄くなる。薄さは仮 */
 .wait-invert .mi[data-k="invert"],.wait-cycle .mi[data-k="cycle"],.wait-homophone .mi[data-k="homophone"]{opacity:.3}
+.ic{display:inline-block;vertical-align:-.22em;overflow:visible} /* 印の SVG（KJ-048）：字の高さに合わせる。色は文字と同じ（currentColor） */
+.tile .mk .mi{display:inline-block;line-height:1}
 .tile .orig{position:absolute;bottom:1px;left:3px;font:10px/1 system-ui,sans-serif;color:var(--sub)}
 /* 割れる札の点線（KJ-014）：字に重ねる。角の印（反・巡・音＝右上、選んだ順＝左上、元の字＝左下）とぶつからないよう、その分だけ線を短くする */
 .tile .cut{position:absolute;pointer-events:none;z-index:1}
@@ -270,7 +272,7 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
   .row .tile{width:46px;height:46px;font-size:30px}
   .info{height:38px;margin:4px 0 6px;font-size:13px;line-height:19px}
   .info .w{font-size:16px}
-  /* ボタンは2段：上の段は Play（大きく）・Back・Redraw（文字だけ）、下の段は群（Split・Join・Flip・Cycle・Sound conversion）。Sound conversion は収まらなければ2行に折り返す（字は小さくしない） */
+  /* ボタンは2段：上の段は Play（大きく）・Back・Redraw（文字だけ）、下の段は群（Split・Join・Flip・Cycle・Same reading）。Same reading は収まらなければ2行に折り返す（字は小さくしない） */
   .ops{gap:4px}
   .ops-main,.ops-set{gap:4px}
   .table .ops-set button.op{font-size:13px;padding:6px 2px;min-width:0;text-align:center}
@@ -352,7 +354,7 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
     <div class="row" id="row"></div>
     <div class="info" id="info"></div>
     <div class="ops">
-      <!-- ボタンの文字は js/strings.js から入れる（英語。KJ-024）。重さは3段（KJ-042）：Play＝大きく主色／Split・Join・Flip・Cycle・Sound conversion＝同じ大きさの群／Back・Redraw＝文字だけ -->
+      <!-- ボタンの文字は js/strings.js から入れる（英語。KJ-024）。重さは3段（KJ-042）：Play＝大きく主色／Split・Join・Flip・Cycle・Same reading＝同じ大きさの群／Back・Redraw＝文字だけ -->
       <div class="ops-main">
         <button class="op main" id="bRelease"><span class="lb"></span></button>
         <button class="op quiet" id="bBack"><span class="lb"></span></button>
@@ -399,7 +401,7 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
 const K=window.KJ;
 const $title=document.getElementById("title");
 const STR=window.KJ_STR; // 画面の文言（ボタンの文字・角の印。KJ-024）
-for(const [id,text] of Object.entries(STR.BUTTONS))document.querySelector(`#${id} .lb`).textContent=text;
+for(const id of Object.keys(STR.BUTTONS)){const b=document.getElementById(id);if(STR.LOGO[id])b.setAttribute("aria-label",STR.BUTTONS[id]);b.querySelector(".lb").innerHTML=STR.buttonHtml(id)} // 印を字に組み込んだボタン（Fl＋印＋p など）は SVG 入り。読み上げは aria-label（KJ-048）
 $title.textContent=STR.TEXT.title; // 題（KJ-042。文は仮。js/strings.js の1か所で直せる）
 const D={};
 let T=null, G=null; // 表・ゲームの状態
@@ -930,7 +932,7 @@ function tileEl(x,{onClick,shown,ord}={}){
   const ks=K.markKinds(T,x.c);
   if(ks.length){ // 印ごとに別の span（待ち時間のあいだ、待っている印だけ薄くする。KJ-040）
     const s=document.createElement("span");s.className="mk";
-    for(const k of ks){const i=document.createElement("span");i.className="mi";i.dataset.k=k;i.textContent=STR.ICONS[k];s.appendChild(i)}
+    for(const k of ks){const i=document.createElement("span");i.className="mi";i.dataset.k=k;i.innerHTML=STR.iconSvg(k);s.appendChild(i)}
     b.appendChild(s);b.classList.add("hasmk");
   }
   // 割れる札の点線（KJ-014）。左右に割れる字は縦、上下は横、1本で表せない字は角に「割」
@@ -1101,7 +1103,7 @@ function buildHowto(){
     `<b>レベル</b>：はじめる前に選ぶ（小1／N5／N4。小1 は小学1年の漢字80字、N4 は N5＋N4 の字）。山に入る字・語・割り方・対義・巡り・同音がレベルで変わる。いまは ${K.levelLabel(T.level)}（字 ${T.CHARS.size}・語 ${T.WORDS.size}）。`,
     `<b>遊び方・強さ</b>：はじめる前に選ぶ。ひとりで（CPU なし。50 点では終わらず、${(TL||R.win.time_limit_sec)/60} 分たったら点を出す。この端末の自己ベストを覚える）／CPU と：とても弱い（CPU は ${R.cpu.weak_interval_sec[0]}〜${R.cpu.weak_interval_sec[1]} 秒に1回）／ふつう（${R.cpu.fair_interval_sec[0]}〜${R.cpu.fair_interval_sec[1]} 秒に1回）／つよい（${R.cpu.interval_sec[0]}〜${R.cpu.interval_sec[1]} 秒に1回）。`,
     `<b>割る</b>：台の1枚を部品表で一段だけ割る。<b>くっつける</b>：台の2枚を、左→右の順でくっつける。逆に並べたときは「並べる順が逆」と出る。十・口（古・田）や 大・丶（太・犬）のように2通りの字になるときは選ぶ。`,
-    `<b>反転</b>（印：${STR.ICONS.invert}）対義の字に。${R.cooldown_sec.invert} 秒待ち。<b>巡り</b>（印：${STR.ICONS.cycle}）${T.CYCLES.map(c=>c.name).join("・")}を1つ先へ。${R.cooldown_sec.cycle} 秒待ち。<b>同音</b>（印：${STR.ICONS.homophone}）同じ読みの字から選ぶ。${R.cooldown_sec.homophone} 秒待ち。待ち時間は操作ごとで、二人は別々。`,
+    `<b>反転</b>（印：${STR.iconSvg("invert")}）対義の字に。${R.cooldown_sec.invert} 秒待ち。<b>巡り</b>（印：${STR.iconSvg("cycle")}）${T.CYCLES.map(c=>c.name).join("・")}を1つ先へ。${R.cooldown_sec.cycle} 秒待ち。<b>同音</b>（印：${STR.iconSvg("homophone")}）同じ読みの字から選ぶ。${R.cooldown_sec.homophone} 秒待ち。待ち時間は操作ごとで、二人は別々。`,
     `<b>引き直し</b>：${R.redraw.cost} 点払って手札を全部入れ替える（${R.start_hand} 枚）。${R.redraw.cost} 点ないときは ${R.redraw.free_wait_sec} 秒待てば 0 点で入れ替わる（待つあいだも動ける）。`,
     `<b>勝ち</b>：先に ${R.win.score} 点。または ${(TL||R.win.time_limit_sec)/60} 分たって点の多い方。CPU の速さは強さで変わる。`,
     `${Object.keys(D.radical_forms.left).join("・")} を左に置いてくっつけられるときは、${Object.values(D.radical_forms.left).join("・")} の形で見せる（札はもとの字のまま）。色の薄い札は部品（字ではない）。`,
