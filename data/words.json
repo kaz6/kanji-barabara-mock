@@ -16,7 +16,7 @@
   "hold_by_level": {
    "N5": 140,
    "N4": 353,
-   "G1": 121
+   "G1": 137
   },
   "by_level": {
    "N5": {
@@ -44,23 +44,23 @@
     "pn": 56
    },
    "G1": {
-    "total": 2318,
+    "total": 2612,
     "by_length": {
      "1": 78,
-     "2": 1635,
-     "3": 454,
-     "4": 151
+     "2": 1846,
+     "3": 517,
+     "4": 171
     },
-    "common": 660,
-    "yoji": 37,
-    "pn": 27
+    "common": 725,
+    "yoji": 47,
+    "pn": 28
    }
   },
-  "total": 10501,
+  "total": 10504,
   "by_length": {
    "1": 261,
-   "2": 6563,
-   "3": 2572,
+   "2": 6564,
+   "3": 2574,
    "4": 1105
   },
   "common": 2430,
@@ -3276,6 +3276,7 @@
     "family; clan",
     "sect; school"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -4138,6 +4139,7 @@
    "en": [
     "front of center field; front of centre field"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -4148,6 +4150,7 @@
     "used; second-hand",
     "Middle Ages (in Japan esp. Heian period)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -4229,6 +4232,7 @@
    "en": [
     "Middle East"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -4799,6 +4803,7 @@
    "en": [
     "portion of food"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -6309,6 +6314,7 @@
     "entering an institution; beginning training",
     "primer; manual"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -6514,6 +6520,7 @@
    "en": [
     "home delivery (of food); outside catering"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -6634,6 +6641,7 @@
    "en": [
     "attendance or absence"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -6912,6 +6920,7 @@
    "en": [
     "first half"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -6940,6 +6949,7 @@
    "en": [
     "the preceding year; the previous year"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -6950,6 +6960,7 @@
     "front and rear; front and back",
     "before and after"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -6960,6 +6971,7 @@
     "the above sentence; the foregoing remark",
     "preamble (to a statute, constitution, etc.)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -6979,6 +6991,7 @@
    "en": [
     "previous day; day before"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -7159,6 +7172,7 @@
    "en": [
     "going north"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -7177,6 +7191,7 @@
    "en": [
     "north entrance"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -7187,6 +7202,7 @@
     "northern country",
     "northern provinces; northern regions"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -7206,6 +7222,7 @@
    "en": [
     "northeast"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -7225,6 +7242,7 @@
    "en": [
     "northwest"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -7545,6 +7563,7 @@
    "en": [
     "morning; a.m."
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -7626,6 +7645,7 @@
     "north and south; north to south",
     "South Korea and North Korea"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -7655,6 +7675,7 @@
    "en": [
     "southeast"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -7848,6 +7869,7 @@
    "en": [
     "ancient and modern times; all ages"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -7867,6 +7889,7 @@
     "ancient writing (i.e. Edo-period or older); classical literature",
     "ancient Chinese character (pre-Qin period)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -7877,6 +7900,7 @@
     "old book; rare book",
     "secondhand book; used book"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -7887,6 +7911,7 @@
     "secondhand book",
     "ancient book; antiquarian books"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -7896,6 +7921,7 @@
    "en": [
     "from time immemorial; ancient"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -7923,6 +7949,7 @@
    "en": [
     "obsolete word; old proverb"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -8432,6 +8459,7 @@
     "name",
     "given name; first name"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -8523,6 +8551,7 @@
     "noted family; noble family",
     "prestigious school, organization, business, etc."
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -9353,6 +9382,7 @@
    "en": [
     "stand; stall"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -9362,6 +9392,7 @@
    "en": [
     "trade; buying and selling"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -9764,6 +9795,7 @@
     "long sword (esp. the tachi, worn on the hip edge down by samurai); large sword",
     "straight single-edged Japanese sword (from the mid-Heian period or earlier)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -10890,6 +10922,7 @@
     "just before; on the verge of",
     "just in front of; just ahead of"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -10931,6 +10964,7 @@
     "(small) knife",
     "short sword; small sword"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -10980,6 +11014,7 @@
    "en": [
     "retail"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -11217,6 +11252,7 @@
    "en": [
     "mountain temple"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -11402,6 +11438,7 @@
     "wearing a kimono with the right side over the left (normally used only for the dead)",
     "going badly (one's business, one's fortune, the economy); being in a bad financial situation"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -12525,6 +12562,7 @@
     "before oneself; in front of one",
     "a bit before reaching (a location); this side (of a location)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -14304,6 +14342,7 @@
     "north-east",
     "Tōhoku (northernmost six prefectures of Honshu); Tohoku"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -14313,6 +14352,7 @@
    "en": [
     "south-east"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -14322,6 +14362,7 @@
    "en": [
     "east entrance"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -14362,6 +14403,7 @@
     "east and west",
     "Orient and Occident; East and West"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -14458,6 +14500,7 @@
    "en": [
     "school gate"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -14638,6 +14681,7 @@
    "en": [
     "main gate; main entrance"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -14979,6 +15023,7 @@
    "en": [
     "generosity"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -15568,6 +15613,7 @@
    "en": [
     "father and child; father and son"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -15931,6 +15977,7 @@
    "en": [
     "while alive; during one's lifetime"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -16171,6 +16218,7 @@
     "handsome man; man's looks",
     "manliness"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -16677,6 +16725,7 @@
    "en": [
     "before one's very eyes; under one's nose"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -17294,6 +17343,7 @@
    "en": [
     "unprecedented; record-breaking"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -17443,6 +17493,7 @@
    "en": [
     "bamboo sword (for kendo); bamboo fencing stick"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -19799,6 +19850,7 @@
    "en": [
     "one's pupil; one's student"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -19808,6 +19860,7 @@
    "en": [
     "before the gate; in front of the gate"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -20875,7 +20928,8 @@
    "en": [
     "sword; blade",
     "single stroke"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "一別",
@@ -21065,7 +21119,8 @@
    "en": [
     "1 kin (approx. 0.6kg)",
     "1 loaf of bread"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "一更",
@@ -22285,7 +22340,8 @@
    "kana": "さんもん",
    "en": [
     "large triple gate to temple"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "三食",
@@ -22406,7 +22462,8 @@
    "en": [
     "part of the fabric that is wrapped farthest from the skin when wearing a garment that is wrapped in front of one (such as a kimono)",
     "percentage; commission"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "上半",
@@ -22423,7 +22480,8 @@
    "kana": "じょうこ",
    "en": [
     "ancient times"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "上右",
@@ -22778,7 +22836,8 @@
    "kana": "じょうもん",
    "en": [
     "superphylum"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "上音",
@@ -22878,7 +22937,8 @@
    "kana": "したまえ",
    "en": [
     "part of the fabric that is tucked closest to the skin when wearing a garment that is wrapped in front of one (such as a kimono)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "下医",
@@ -24059,7 +24119,8 @@
    "en": [
     "gate in the middle of the corridor connecting an annex to a pond-side building (in traditional palatial-style architecture)",
     "central gate (between the main gate and main hall of a temple)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "中音",
@@ -24584,7 +24645,8 @@
    "en": [
     "seeing two people (i.e. romantically) at the same time; two-timing",
     "bifurcation; fork"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "二士",
@@ -25645,7 +25707,8 @@
    "kana": "きんこ",
    "en": [
     "now and anciently"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "今夕",
@@ -27129,7 +27192,8 @@
    "kana": "せんこ",
    "en": [
     "ancient times"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "先回",
@@ -27215,7 +27279,8 @@
    "kana": "せんぷ",
    "en": [
     "deceased father"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "先王",
@@ -27373,7 +27438,8 @@
    "kana": "にゅうとう",
    "en": [
     "cutting the cake (at a wedding)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "入合",
@@ -27406,7 +27472,8 @@
    "en": [
     "entering a temple; visiting a temple",
     "joining a temple as a priest or head priest"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "入山",
@@ -28337,7 +28404,8 @@
    "kana": "しゅつもん",
    "en": [
     "going out"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "刀下",
@@ -28345,7 +28413,8 @@
    "kana": "とうか",
    "en": [
     "under the sword"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "刀子",
@@ -28353,7 +28422,8 @@
    "kana": "とうす",
    "en": [
     "small knife that is largely ornamental or used to cut open letters and the like"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "刀室",
@@ -28369,7 +28439,8 @@
    "kana": "とうこう",
    "en": [
     "swordsmith; swordmaker"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "刀自",
@@ -28467,7 +28538,8 @@
    "kana": "ぶんばい",
    "en": [
     "selling separately"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "分外",
@@ -29021,7 +29093,8 @@
    "kana": "ぜんじん",
    "en": [
     "predecessor; people of former times"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "前代",
@@ -29062,7 +29135,8 @@
    "kana": "ぜんしゅつ",
    "en": [
     "aforementioned; above-mentioned"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "前前",
@@ -29070,7 +29144,8 @@
    "kana": "まえまえ",
    "en": [
     "a long time ago; long before now"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "前医",
@@ -29086,7 +29161,8 @@
    "kana": "ぜんこ",
    "en": [
     "old times; ancient days"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "前名",
@@ -29094,7 +29170,8 @@
    "kana": "ぜんめい",
    "en": [
     "one's previous name"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "前場",
@@ -29110,7 +29187,8 @@
    "kana": "まえうり",
    "en": [
     "advance sale; booking"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "前官",
@@ -29135,7 +29213,8 @@
    "kana": "さきやま",
    "en": [
     "skilled miner; coal-cutter"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "前広",
@@ -29151,7 +29230,8 @@
    "kana": "ぜんしょ",
    "en": [
     "previous writing; first of two books"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "前月",
@@ -29159,7 +29239,8 @@
    "kana": "ぜんげつ",
    "en": [
     "last month; previous month"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "前水",
@@ -29168,7 +29249,8 @@
    "en": [
     "garden pond; miniature lake",
     "fountain"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "前漢",
@@ -29184,7 +29266,8 @@
    "kana": "まえだま",
    "en": [
     "front lens element (of a camera lens assembly)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "前王",
@@ -29192,7 +29275,8 @@
    "kana": "ぜんのう",
    "en": [
     "former king; late king"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "前生",
@@ -29200,7 +29284,8 @@
    "kana": "ぜんしょう",
    "en": [
     "previous existence"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "前田",
@@ -29209,6 +29294,7 @@
    "en": [
     "Maeda"
    ],
+   "g1": true,
    "pn": [
     "名字"
    ]
@@ -29227,7 +29313,8 @@
    "kana": "ぜんぎょう",
    "en": [
     "previous line"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "前言",
@@ -29235,7 +29322,8 @@
    "kana": "ぜんげん",
    "en": [
     "previous remarks"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "前説",
@@ -29251,7 +29339,8 @@
    "kana": "まえあし",
    "en": [
     "forefoot; forefeet"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "前車",
@@ -29259,7 +29348,8 @@
    "kana": "ぜんしゃ",
    "en": [
     "car in front; the car ahead"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "前軍",
@@ -29283,7 +29373,8 @@
    "kana": "まえきん",
    "en": [
     "advance payment; money paid in advance"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "前門",
@@ -29291,7 +29382,8 @@
    "kana": "ぜんもん",
    "en": [
     "front gate"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "前電",
@@ -29299,7 +29391,8 @@
    "kana": "ぜんでん",
    "en": [
     "the last telegram"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "力代",
@@ -29485,7 +29578,8 @@
    "kana": "ほくはん",
    "en": [
     "northern half"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "北周",
@@ -29518,7 +29612,8 @@
    "kana": "ほくてん",
    "en": [
     "northern sky"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "北家",
@@ -29534,7 +29629,8 @@
    "kana": "きたやま",
    "en": [
     "northern hill"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "北斗",
@@ -29567,7 +29663,8 @@
    "kana": "きたたま",
    "en": [
     "era at the turn of 1960s into 70s dominated by grand champions Kitanofuji and Tamanoumi"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "北米",
@@ -29583,7 +29680,8 @@
    "kana": "ほっこう",
    "en": [
     "going north; heading northward"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "北辰",
@@ -29616,7 +29714,8 @@
    "kana": "きたもん",
    "en": [
     "north gate"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "区会",
@@ -29935,7 +30034,8 @@
    "kana": "せんこ",
    "en": [
     "all ages; great antiquity"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "千夜",
@@ -30118,7 +30218,8 @@
    "kana": "はんか",
    "en": [
     "insufficiency; half ripe"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "半国",
@@ -30500,7 +30601,8 @@
    "kana": "なんもん",
    "en": [
     "south gate"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "南風",
@@ -30535,7 +30637,8 @@
    "en": [
     "rabbit",
     "rabbit cage"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "占書",
@@ -30543,7 +30646,8 @@
    "kana": "うらぶみ",
    "en": [
     "diviner's book"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "占用",
@@ -30623,7 +30727,8 @@
    "kana": "またまた",
    "en": [
     "again (and again); once again"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "友交",
@@ -30823,7 +30928,8 @@
    "kana": "くちまえ",
    "en": [
     "way of speaking; profession"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "口占",
@@ -30832,7 +30938,8 @@
    "en": [
     "determining a speaker's true or hidden meaning; determining a speaker's intentions from his manner of speech",
     "divining good or bad luck from listening to someone"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "口口",
@@ -30922,7 +31029,8 @@
    "en": [
     "lovers' tiff; quarrel between lovers",
     "chattering; idle talk"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "口茶",
@@ -31009,7 +31117,8 @@
    "kana": "こじん",
    "en": [
     "ancient people"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "古体",
@@ -31025,7 +31134,8 @@
    "kana": "ことう",
    "en": [
     "old sword"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "古名",
@@ -31033,7 +31143,8 @@
    "kana": "こめい",
    "en": [
     "old name; former name"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "古女",
@@ -31041,7 +31152,8 @@
    "kana": "ごまめ",
    "en": [
     "dried young anchovies (or sardines)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "古字",
@@ -31049,7 +31161,8 @@
    "kana": "こじ",
    "en": [
     "ancient character (esp. Chinese); ancient writing"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "古学",
@@ -31057,7 +31170,8 @@
    "kana": "こがく",
    "en": [
     "classical studies"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "古家",
@@ -31073,7 +31187,8 @@
    "kana": "こじ",
    "en": [
     "old temple"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "古屋",
@@ -31089,7 +31204,8 @@
    "kana": "ふるかわ",
    "en": [
     "old river"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "古式",
@@ -31114,7 +31230,8 @@
    "en": [
     "used article; worn-out article",
     "veteran; old-timer"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "古方",
@@ -31146,7 +31263,8 @@
    "kana": "こぼく",
    "en": [
     "old tree"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "古楽",
@@ -31221,12 +31339,22 @@
    ]
   },
   {
+   "w": "古草",
+   "lv": null,
+   "kana": "ふるくさ",
+   "en": [
+    "last year's grass; dead grass"
+   ],
+   "g1": true
+  },
+  {
    "w": "古言",
    "lv": "N5",
    "kana": "こげん",
    "en": [
     "obsolete word; old proverb"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "古説",
@@ -31251,7 +31379,8 @@
    "kana": "ふるがね",
    "en": [
     "scrap iron; scrap metal"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "古音",
@@ -31259,7 +31388,8 @@
    "kana": "こおん",
    "en": [
     "ko-on; ancient reading"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "古顔",
@@ -31283,7 +31413,8 @@
    "kana": "かぶん",
    "en": [
     "divisible; separable"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "可動",
@@ -31307,7 +31438,8 @@
    "kana": "かどく",
    "en": [
     "readable"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "台下",
@@ -31396,7 +31528,8 @@
    "kana": "みぎまえ",
    "en": [
     "front right; front and right"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "右図",
@@ -31880,7 +32013,8 @@
    "kana": "めいとう",
    "en": [
     "famous sword; excellent sword"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "名分",
@@ -32910,7 +33044,8 @@
    "kana": "こくふ",
    "en": [
     "father of one's country; father of the nation"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "国界",
@@ -33543,7 +33678,8 @@
    "kana": "うりあげ",
    "en": [
     "amount sold; sales"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "売主",
@@ -33559,7 +33695,8 @@
    "kana": "ばいにん",
    "en": [
     "trader; smuggler"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "売出",
@@ -33567,7 +33704,8 @@
    "kana": "うりだし",
    "en": [
     "(bargain) sale"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "売切",
@@ -33583,7 +33721,8 @@
    "kana": "ばいめい",
    "en": [
     "self-advertisement"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "売品",
@@ -33599,7 +33738,8 @@
    "kana": "ばいこく",
    "en": [
     "selling out one's country; betraying one's country"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "売地",
@@ -33625,7 +33765,8 @@
    "en": [
     "salesperson; shop assistant",
     "male prostitute"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "売家",
@@ -33641,7 +33782,8 @@
    "kana": "うりて",
    "en": [
     "seller; vendor"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "売文",
@@ -33649,7 +33791,8 @@
    "kana": "ばいぶん",
    "en": [
     "hack writer"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "売方",
@@ -33666,7 +33809,8 @@
    "kana": "うりび",
    "en": [
     "day on which prostitutes had to receive clients"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "売物",
@@ -33691,7 +33835,8 @@
    "kana": "うれゆき",
    "en": [
     "sales; demand"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "売電",
@@ -33699,7 +33844,8 @@
    "kana": "ばいでん",
    "en": [
     "selling electricity (e.g. domestic solar power to a power company)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "売高",
@@ -33707,7 +33853,8 @@
    "kana": "うりだか",
    "en": [
     "sales; amount sold"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "夏中",
@@ -34195,7 +34342,8 @@
    "kana": "たばい",
    "en": [
     "selling in quantity"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "多多",
@@ -34646,7 +34794,8 @@
    "kana": "おおまえ",
    "en": [
     "presence (of a god, emperor, etc.)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "大力",
@@ -35080,7 +35229,8 @@
    "kana": "だいもん",
    "en": [
     "large front gate"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "大頭",
@@ -35401,7 +35551,8 @@
    "kana": "てんぷ",
    "en": [
     "Heavenly Father; God"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "天牛",
@@ -37003,7 +37154,8 @@
    "en": [
     "in a temple; inside temple grounds",
     "sub-temple"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "寺子",
@@ -37011,7 +37163,8 @@
    "kana": "てらこ",
    "en": [
     "child who attended a temple school"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "寺男",
@@ -37019,7 +37172,8 @@
    "kana": "てらおとこ",
    "en": [
     "male temple employee (esp. one who does odd jobs)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "寺社",
@@ -37027,7 +37181,8 @@
    "kana": "じしゃ",
    "en": [
     "temples and shrines"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "小一",
@@ -37384,7 +37539,8 @@
    "kana": "おじ",
    "en": [
     "old man; mister"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "小犬",
@@ -37615,7 +37771,8 @@
    "kana": "こもん",
    "en": [
     "small gate; side gate"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "小間",
@@ -37912,7 +38069,8 @@
    "kana": "やまがたな",
    "en": [
     "woodman's hatchet"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "山口",
@@ -38139,7 +38297,8 @@
    "en": [
     "main temple gate",
     "temple"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "山風",
@@ -38675,7 +38834,8 @@
    "kana": "としうら",
    "en": [
     "divination that predicts the events of the whole year (esp. concerning crops)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "年回",
@@ -38851,7 +39011,8 @@
    "kana": "たなさき",
    "en": [
     "storefront; front of a store"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "店名",
@@ -39656,7 +39817,8 @@
    "kana": "こうぜつ",
    "en": [
     "rear part of the tongue"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "後足",
@@ -39716,7 +39878,8 @@
    "kana": "こうもん",
    "en": [
     "back gate"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "後頭",
@@ -40467,7 +40630,8 @@
    "kana": "てがたな",
    "en": [
     "hand used like a sword in striking"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "手力",
@@ -41093,7 +41257,8 @@
    "kana": "きんめ",
    "en": [
     "weight"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "新京",
@@ -41127,7 +41292,8 @@
    "kana": "しんとう",
    "en": [
     "newly forged sword; sword made after the year 1615"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "新古",
@@ -41135,7 +41301,8 @@
    "kana": "しんこ",
    "en": [
     "old and new (thing); old, but unused"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "新同",
@@ -41604,7 +41771,8 @@
    "kana": "にっとう",
    "en": [
     "Japan"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "日歩",
@@ -43219,7 +43387,8 @@
    "kana": "ぼくとう",
    "en": [
     "wooden sword"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "木化",
@@ -43626,7 +43795,8 @@
    "en": [
     "head temple",
     "this temple"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "本式",
@@ -43775,7 +43945,8 @@
    "en": [
     "main gate; front gate",
     "latter half of the Lotus Sutra, which describes the nature of the Buddha"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "本間",
@@ -44144,7 +44315,8 @@
    "kana": "とうじょう",
    "en": [
     "going to Tokyo; going east"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "東半",
@@ -44152,7 +44324,8 @@
    "kana": "とうはん",
    "en": [
     "the eastern half"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "東名",
@@ -44160,7 +44333,8 @@
    "kana": "とうめい",
    "en": [
     "Tokyo and Nagoya"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "東周",
@@ -44176,7 +44350,8 @@
    "kana": "とうごく",
    "en": [
     "eastern country; eastern provinces"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "東場",
@@ -44192,7 +44367,8 @@
    "kana": "とうてん",
    "en": [
     "the eastern sky"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "東学",
@@ -44200,7 +44376,8 @@
    "kana": "とうがく",
    "en": [
     "Tonghak (19th century Korean religious movement)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "東家",
@@ -44248,7 +44425,8 @@
    "kana": "あずまおとこ",
    "en": [
     "man from eastern Japan (esp. Edo or elsewhere in the Kanto region)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "東行",
@@ -44256,7 +44434,8 @@
    "kana": "とうこう",
    "en": [
     "going east; heading eastward"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "東軍",
@@ -44281,7 +44460,8 @@
    "kana": "とうもん",
    "en": [
     "eastern gate"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "東風",
@@ -44649,7 +44829,8 @@
    "en": [
     "omission of a character; omitted character",
     "insertion of blank spaces before and after the names of dignitaries (as a sign of respect)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "欠官",
@@ -44674,7 +44855,8 @@
    "kana": "けつぶん",
    "en": [
     "missing part (of manuscript)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "欠本",
@@ -44682,7 +44864,8 @@
    "kana": "けっぽん",
    "en": [
     "missing volume"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "欠目",
@@ -44691,7 +44874,8 @@
    "en": [
     "missing part; broken part",
     "short weight"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "欠食",
@@ -44699,7 +44883,8 @@
    "kana": "けっしょく",
    "en": [
     "missing a meal"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "歌会",
@@ -44914,7 +45099,8 @@
    "kana": "せいほく",
    "en": [
     "due north"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "正南",
@@ -45079,7 +45265,8 @@
    "kana": "せいとう",
    "en": [
     "due east"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "正業",
@@ -45833,7 +46020,8 @@
    "kana": "きもん",
    "en": [
     "spiracle (respiratory pores in the body of insects)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "気風",
@@ -46171,7 +46359,8 @@
    "kana": "すいもん",
    "en": [
     "sluice gate; water gate"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "水音",
@@ -47032,7 +47221,8 @@
    "kana": "ちちうえ",
    "en": [
     "father (esp. used in samurai families prior to the Meiji period)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "父王",
@@ -47040,7 +47230,8 @@
    "kana": "ちちおう",
    "en": [
     "king who is a father"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "父音",
@@ -47048,7 +47239,8 @@
    "kana": "ふいん",
    "en": [
     "consonant"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "父馬",
@@ -47508,7 +47700,8 @@
    "en": [
     "beautifully decorated gate",
     "female genitalia"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "玉音",
@@ -47601,7 +47794,8 @@
    "kana": "おうふ",
    "en": [
     "deceased grandfather"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "王物",
@@ -49433,7 +49627,8 @@
    "en": [
     "shrike (any bird of family Laniidae)",
     "bull-headed shrike (Lanius bucephalus); butcher bird"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "百花",
@@ -50665,7 +50860,8 @@
    "kana": "しゃじ",
    "en": [
     "shrines and temples"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "社日",
@@ -51059,7 +51255,8 @@
    "kana": "あなもん",
    "en": [
     "small gate in a mud or stone wall"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "穴馬",
@@ -51386,7 +51583,8 @@
    "kana": "りっとう",
    "en": [
     "kanji \"sword\" radical at right (radical 18)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "立前",
@@ -51395,7 +51593,8 @@
    "en": [
     "face; official stance",
     "ceremony for the erection of the framework of a house"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "立夏",
@@ -52523,7 +52722,8 @@
    "kana": "ぜっか",
    "en": [
     "sublingual; under the tongue"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "舌代",
@@ -52539,7 +52739,8 @@
    "kana": "したさき",
    "en": [
     "tip of tongue"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "舌虫",
@@ -52547,7 +52748,8 @@
    "kana": "したむし",
    "en": [
     "tongue worm (any worm of phylum Pentastomida)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "舌音",
@@ -52555,7 +52757,8 @@
    "kana": "ぜつおん",
    "en": [
     "lingual sound"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "舌頭",
@@ -53625,7 +53828,8 @@
    "kana": "せいほく",
    "en": [
     "north-west"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "西周",
@@ -54846,7 +55050,8 @@
    "kana": "あかもん",
    "en": [
     "red gate (esp. at Tokyo University)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "赤魚",
@@ -54961,7 +55166,8 @@
    "kana": "そくとう",
    "en": [
     "outer edge of the foot (from little toe to heel) (karate)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "足半",
@@ -55036,7 +55242,8 @@
    "kana": "おおばこ",
    "en": [
     "plantain (esp. Asian plantain, Plantago asiatica)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "車力",
@@ -57087,7 +57294,8 @@
    "kana": "きんけつ",
    "en": [
     "having no money; lack of money"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "金気",
@@ -57301,7 +57509,8 @@
    "en": [
     "naginata; polearm with a curved single-edged blade (similar to a glaive)",
     "naginata; martial art of wielding the naginata"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "長吏",
@@ -57548,7 +57757,8 @@
    "kana": "ながと",
    "en": [
     "Nagato (former province located in the west of present-day Yamaguchi Prefecture)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "長音",
@@ -57573,7 +57783,8 @@
    "kana": "もんちゅう",
    "en": [
     "family clan based on the paternal line, sharing the same tomb and performing rituals together (Okinawa)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "門主",
@@ -57589,7 +57800,8 @@
    "kana": "もんじん",
    "en": [
     "pupil; student"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "門出",
@@ -57598,7 +57810,8 @@
    "en": [
     "leaving one's own house (e.g. when going to war); departure",
     "starting a new life; starting life anew"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "門口",
@@ -57606,7 +57819,8 @@
    "kana": "かどぐち",
    "en": [
     "door; entrance"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "門地",
@@ -57622,7 +57836,8 @@
    "kana": "もんがい",
    "en": [
     "outside a gate; beyond one's area of expertise"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "門弟",
@@ -57638,7 +57853,8 @@
    "kana": "かどび",
    "en": [
     "fire lit at a gate for funerals, weddings and O-Bon"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "門生",
@@ -57646,7 +57862,8 @@
    "kana": "もんせい",
    "en": [
     "pupil; student"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "門院",
@@ -57867,7 +58084,8 @@
    "kana": "かんけつ",
    "en": [
     "intermittence; intermittent"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "間物",
@@ -59105,7 +59323,8 @@
    "kana": "しょくぜん",
    "en": [
     "before meals"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "食味",
@@ -60288,6 +60507,7 @@
     "one portion; one serving",
     "adult; grown-up"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -60619,6 +60839,7 @@
    "en": [
     "used car; secondhand car"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -60696,6 +60917,7 @@
    "en": [
     "for two people; (work) of two"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -61002,6 +61224,7 @@
    "en": [
     "north-northeast; north-north-east"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -61173,6 +61396,7 @@
    "en": [
     "in the morning; during the morning"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -61192,6 +61416,7 @@
     "historical document; archives",
     "pre-Meiji era document addressed to someone in particular"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -61268,6 +61493,7 @@
    "en": [
     "state-supported provincial temple (Nara period)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -61342,6 +61568,7 @@
    "en": [
     "proceeds"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -61351,6 +61578,7 @@
    "en": [
     "sales; amount sold"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -61625,6 +61853,7 @@
    "en": [
     "retail store; retail shop"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -61929,6 +62158,7 @@
    "en": [
     "Japanese sword (usu. single-edged and curved); Japanese bladed weapon"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -62690,6 +62920,7 @@
    "en": [
     "pupil; disciple"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -62868,7 +63099,8 @@
    "en": [
     "adult; grown-up",
     "fully fledged; established"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "一丁字",
@@ -63158,7 +63390,8 @@
    "kana": "いちねんまえ",
    "en": [
     "one year ago"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "一年半",
@@ -63353,7 +63586,8 @@
    "en": [
     "meeting or association of stable masters belonging to the same grouping",
     "meeting or association of followers of a famous performer (in rakugo, etc.)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "丁年者",
@@ -63401,7 +63635,8 @@
    "kana": "しちだいじ",
    "en": [
     "the seven great temples of Nara (Daian-ji, Gango-ji, Horyu-ji, Kofuku-ji, Saidai-ji, Todai-ji, Yakushi-ji)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "七方出",
@@ -64278,7 +64513,8 @@
    "kana": "ちゅうこぶん",
    "en": [
     "Heian-period kana writing"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "中古語",
@@ -64286,7 +64522,8 @@
    "kana": "ちゅうこご",
    "en": [
     "Early Middle Japanese"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "中古音",
@@ -64294,7 +64531,8 @@
    "kana": "ちゅうこおん",
    "en": [
     "Middle Chinese"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "中四国",
@@ -64941,7 +65179,8 @@
    "kana": "におうもん",
    "en": [
     "Deva gate; temple gate guarded by fierce Deva Kings"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "二言目",
@@ -65739,7 +65978,8 @@
    "kana": "きゅうぜんじつ",
    "en": [
     "day before a holiday"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "休業日",
@@ -66621,7 +66861,8 @@
    "kana": "にゅうもんしょ",
    "en": [
     "primer; manual"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "入門者",
@@ -66766,7 +67007,8 @@
    "kana": "やつあしもん",
    "en": [
     "single-tiered gate with eight secondary pillars supporting the four main central pillars"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "六月病",
@@ -67362,7 +67604,8 @@
    "kana": "ぜんぜんねん",
    "en": [
     "two years before"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "前前日",
@@ -67370,7 +67613,8 @@
    "kana": "ぜんぜんじつ",
    "en": [
     "two days before; day before yesterday"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "前半生",
@@ -67378,7 +67622,8 @@
    "kana": "ぜんはんせい",
    "en": [
     "first half of one's life"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "前口上",
@@ -67386,7 +67631,8 @@
    "kana": "まえこうじょう",
    "en": [
     "introductory remarks"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "前夜式",
@@ -67402,7 +67648,8 @@
    "kana": "まえこぐち",
    "en": [
     "fore edge (of a book)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "前進力",
@@ -67630,7 +67877,8 @@
    "kana": "ほくほくせい",
    "en": [
     "north-northwest"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "北国人",
@@ -67638,7 +67886,8 @@
    "kana": "ほっこくじん",
    "en": [
     "northerner"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "北日本",
@@ -67646,7 +67895,8 @@
    "kana": "きたにほん",
    "en": [
     "northern Japan (usu. referring to Tōhoku and Hokkaido)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "北東北",
@@ -67654,7 +67904,8 @@
    "kana": "きたとうほく",
    "en": [
     "northern Tohoku (usually Aomori, Iwate and Akita prefectures)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "北東風",
@@ -67802,7 +68053,8 @@
    "kana": "じゅうにもん",
    "en": [
     "the twelve gates of Heian's greater palace"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "十五夜",
@@ -68040,7 +68292,8 @@
    "en": [
     "half share",
     "half a man"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "半人工",
@@ -68214,7 +68467,8 @@
    "kana": "なんなんとう",
    "en": [
     "south-southeast; south-south-east"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "南南西",
@@ -68231,7 +68485,8 @@
    "kana": "なんだいもん",
    "en": [
     "main southern gate (of a temple, castle town, etc.)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "南大頭",
@@ -68264,7 +68519,8 @@
    "kana": "みなみとうほく",
    "en": [
     "southern Tohoku (usually Miyagi, Yamagata and Fukushima prefectures)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "南東風",
@@ -68585,7 +68841,8 @@
    "kana": "こもじ",
    "en": [
     "kanji"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "古文学",
@@ -68593,7 +68850,8 @@
    "kana": "こぶんがく",
    "en": [
     "paleography; the study of ancient writings"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "古新聞",
@@ -68601,7 +68859,8 @@
    "kana": "ふるしんぶん",
    "en": [
     "old newspapers"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "古時計",
@@ -68625,7 +68884,8 @@
    "kana": "こしょてん",
    "en": [
     "secondhand bookshop; antiquarian bookshop"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "古本市",
@@ -68690,7 +68950,8 @@
    "kana": "こしゃじ",
    "en": [
     "old shrines and temples"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "古英語",
@@ -69038,7 +69299,8 @@
    "kana": "めいもんこう",
    "en": [
     "prestigious school"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "周転円",
@@ -69541,7 +69803,8 @@
    "en": [
     "Turkey",
     "turquoise"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "地上駅",
@@ -69798,7 +70061,8 @@
    "kana": "ばいばいだか",
    "en": [
     "sales amount; sales volume"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "夏木立",
@@ -70377,7 +70641,8 @@
    "kana": "だいしょうまえ",
    "en": [
     "upstage center (in a noh play)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "大山木",
@@ -70604,7 +70869,8 @@
    "kana": "おおもず",
    "en": [
     "northern shrike; great grey shrike (Lanius excubitor)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "大目玉",
@@ -71089,7 +71355,8 @@
    "kana": "おんななまえ",
    "en": [
     "female name"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "女地主",
@@ -73279,7 +73546,8 @@
    "kana": "しんこしゃ",
    "en": [
     "as-new car (for sale); pre-registered car"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "新天地",
@@ -74796,7 +75064,8 @@
    "kana": "とうほくじん",
    "en": [
     "person from Tōhoku; Tōhokuite"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "東北東",
@@ -74804,7 +75073,8 @@
    "kana": "とうほくとう",
    "en": [
     "east-northeast; ENE"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "東南亜",
@@ -74820,7 +75090,8 @@
    "kana": "とうなんとう",
    "en": [
     "east-southeast; ESE"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "東日本",
@@ -74828,7 +75099,8 @@
    "kana": "ひがしにほん",
    "en": [
     "eastern Japan; Japan east of the Itoigawa-Shizuoka Tectonic Line, i.e. east of the Chūbu region"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "東洋人",
@@ -75811,6 +76083,15 @@
    ]
   },
   {
+   "w": "父子草",
+   "lv": null,
+   "kana": "ちちこぐさ",
+   "en": [
+    "cudweed (Gnaphalium japonicum)"
+   ],
+   "g1": true
+  },
+  {
    "w": "父母会",
    "lv": "N5",
    "kana": "ふぼかい",
@@ -76100,7 +76381,8 @@
    "kana": "なまはんか",
    "en": [
     "superficial; half-hearted"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "生地屋",
@@ -76116,7 +76398,8 @@
    "kana": "いくたち",
    "en": [
     "sword brimming over with life force"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "生字引",
@@ -76342,7 +76625,8 @@
    "kana": "おとこなまえ",
    "en": [
     "male name"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "男女別",
@@ -76922,7 +77206,8 @@
    "kana": "ひゃくねんまえ",
    "en": [
     "one hundred years ago; a hundred year previously"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "百年目",
@@ -78166,7 +78451,8 @@
    "kana": "したさんずん",
    "en": [
     "eloquence or flattery designed to deceive"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "色上質",
@@ -78517,7 +78803,8 @@
    "kana": "せいほくせい",
    "en": [
     "west-northwest"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "西南西",
@@ -79315,7 +79602,17 @@
    "kana": "しゃぜんし",
    "en": [
     "plantain seed"
-   ]
+   ],
+   "g1": true
+  },
+  {
+   "w": "車前草",
+   "lv": null,
+   "kana": "おおばこ",
+   "en": [
+    "plantain (esp. Asian plantain, Plantago asiatica)"
+   ],
+   "g1": true
   },
   {
    "w": "車大工",
@@ -80653,7 +80950,8 @@
    "kana": "もんぜんまち",
    "en": [
     "town originally built around a temple or shrine"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "開会式",
@@ -82704,7 +83002,8 @@
    "kana": "いっそくいっとう",
    "en": [
     "distance in sword combat where approaching one more step allows hitting one's opponent"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "一長一短",
@@ -84299,6 +84598,7 @@
    "en": [
     "the large number of temples in Kyoto"
    ],
+   "g1": true,
    "yoji": true
   },
   {
@@ -84424,7 +84724,8 @@
    "kana": "ぜんはんこっかい",
    "en": [
     "Diet session up to the creation of the budget"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "前口動物",
@@ -84449,6 +84750,7 @@
    "en": [
     "in all directions"
    ],
+   "g1": true,
    "yoji": true
   },
   {
@@ -84946,6 +85248,7 @@
    "en": [
     "all times and places; all ages and countries"
    ],
+   "g1": true,
    "yoji": true
   },
   {
@@ -84986,7 +85289,8 @@
    "kana": "こてんもんがく",
    "en": [
     "archaeoastronomy; archeoastronomy"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "古文書学",
@@ -84994,7 +85298,8 @@
    "kana": "こもんじょがく",
    "en": [
     "study of historical documents; diplomatics"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "古書体学",
@@ -85165,7 +85470,8 @@
    "kana": "なまえもじ",
    "en": [
     "name character"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "名前空間",
@@ -85173,7 +85479,8 @@
    "kana": "なまえくうかん",
    "en": [
     "namespace"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "名前集合",
@@ -85208,7 +85515,8 @@
    "kana": "めいもんだいがく",
    "en": [
     "prestigious university"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "品行方正",
@@ -87264,7 +87572,8 @@
    "kana": "しんぶんばいてん",
    "en": [
     "newsstand; newspaper kiosk"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "新聞学問",
@@ -87828,7 +88137,8 @@
    "kana": "とうほくにほん",
    "en": [
     "northeast Japan (northeast of the Itoigawa-Shizuoka Tectonic Line)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "東山時代",
@@ -87869,6 +88179,7 @@
    "en": [
     "east, west, south and north"
    ],
+   "g1": true,
    "yoji": true
   },
   {
@@ -87878,6 +88189,7 @@
    "en": [
     "all times and places; everywhen and everywhere"
    ],
+   "g1": true,
    "yoji": true
   },
   {
@@ -87886,7 +88198,8 @@
    "kana": "とうざいとうざい",
    "en": [
     "ladies and gentlemen!; your attention, please!"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "林間学校",
@@ -88836,6 +89149,7 @@
    "en": [
     "dealing in rice speculating on the year's harvest while the paddies are still covered with snow"
    ],
+   "g1": true,
    "yoji": true
   },
   {
@@ -89554,6 +89868,7 @@
    "en": [
     "a glib tongue (with fair words); fluent talk designed to deceive"
    ],
+   "g1": true,
    "yoji": true
   },
   {
@@ -89563,6 +89878,7 @@
    "en": [
     "eloquence or flattery designed to deceive"
    ],
+   "g1": true,
    "yoji": true
   },
   {
@@ -90423,6 +90739,7 @@
    "en": [
     "(public) opinion leader"
    ],
+   "g1": true,
    "yoji": true
   },
   {
@@ -90791,6 +91108,7 @@
    "en": [
     "dealing in unharvested rice crop"
    ],
+   "g1": true,
    "yoji": true
   },
   {

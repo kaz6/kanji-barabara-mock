@@ -94,35 +94,14 @@ def load_json(name):
 def holdable(level_chars, parts_json, cycles_json, antonyms_json, homo_groups=None, homo_extra=None):
     """手に持てる字（KJ-011）。js/core.js の makeTables の T.HOLD と同じ決め方。
     homo_groups・homo_extra（KJ-070・D-089）：小1 のときだけ渡す。同じ読みの組のうち、レベルの字（か使う巡りの外の字）を1つ以上含む組に入る
-    homo_extra の字（N5 の字）は、同音でだけ出会える字として手に持てる"""
+    homo_extra の字（N5 の字）は、同音でだけ出会える字として手に持てる。
+    KJ-071：その字と、その字の割り方で出る N5 の字・対義の相手の N5 の字（homo_extra の中のもの）には、N5 のときと同じ割り方・対義の行を使う（巡りは小1 のまま）"""
     CH = set(level_chars)
     allp = parts_json["parts"]
     relay = set(parts_json.get("relay", []))
     jouyou = set(parts_json.get("jouyou", []))
-    keep = {k for k in allp if k in CH}
-    grew = True
-    while grew:
-        grew = False
-        for r in relay:
-            if r in keep or r not in allp:
-                continue
-            if any(r in allp[k] for k in keep):
-                keep.add(r)
-                grew = True
-    hold = set(CH)
-    for k in keep:
-        for c in [k, *allp[k]]:
-            if c in CH or c in jouyou:
-                hold.add(c)
-    # 巡りは、字がすべて「レベルの字か outside（レベルの外で巡りでだけ手に入る字。十二支。KJ-009）」のものだけ使う（makeTables と同じ）。
-    # 対義はレベルの字だけ。同音は、レベルの字と、使う巡りの outside の字
-    for cy in cycles_json["cycles"]:
-        out = set(cy.get("outside", []))
-        if all(c in CH or c in out for c in cy["chars"]):
-            hold |= set(cy["chars"])
-    for a, b in antonyms_json["pairs"]:
-        if a in CH and b in CH:
-            hold |= {a, b}
+    # 同音で手に入る字（HOMO_ONLY）
+    held = set()
     if homo_groups and homo_extra:
         anchor = CH | {c for cy in cycles_json["cycles"] if all(c2 in CH or c2 in set(cy.get("outside", [])) for c2 in cy["chars"]) for c in cy.get("outside", [])}
         for g in homo_groups:
@@ -130,7 +109,56 @@ def holdable(level_chars, parts_json, cycles_json, antonyms_json, homo_groups=No
             if not any(c in anchor for c in ch):
                 continue
             if sum(1 for c in ch if c in anchor or c in homo_extra) >= 2:
-                hold |= {c for c in ch if c in homo_extra}
+                held |= {c for c in ch if c in homo_extra}
+
+    def rows_kept(base):
+        keep = {k for k in allp if k in base}
+        grew = True
+        while grew:
+            grew = False
+            for r in relay:
+                if r in keep or r not in allp:
+                    continue
+                if any(r in allp[k] for k in keep):
+                    keep.add(r)
+                    grew = True
+        return keep
+
+    # 手に持てる N5 の字をふくらます（割り方で出る N5 の字・対義の相手の N5 の字）
+    if held:
+        grew = True
+        while grew:
+            grew = False
+            base = CH | held
+            for k in rows_kept(base):
+                for c in allp[k]:
+                    if c in homo_extra and c not in held:
+                        held.add(c)
+                        grew = True
+            for a, b in antonyms_json["pairs"]:
+                if a in base and b in homo_extra and b not in held:
+                    held.add(b)
+                    grew = True
+                if b in base and a in homo_extra and a not in held:
+                    held.add(a)
+                    grew = True
+    base = CH | held
+    keep = rows_kept(base)
+    hold = set(CH)
+    for k in keep:
+        for c in [k, *allp[k]]:
+            if c in base or c in jouyou:
+                hold.add(c)
+    # 巡りは、字がすべて「レベルの字か outside（レベルの外で巡りでだけ手に入る字。十二支。KJ-009）」のものだけ使う（makeTables と同じ）。
+    # 対義は、レベルの字（小1 は手に持てる N5 の字も）。同音は、レベルの字と、使う巡りの outside の字
+    for cy in cycles_json["cycles"]:
+        out = set(cy.get("outside", []))
+        if all(c in CH or c in out for c in cy["chars"]):
+            hold |= set(cy["chars"])
+    for a, b in antonyms_json["pairs"]:
+        if a in base and b in base:
+            hold |= {a, b}
+    hold |= held
     return hold
 
 
