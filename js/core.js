@@ -1347,6 +1347,19 @@
     if (g.solo) return `ひとりで ${g.me.score}点（${timeLabel(g.timeLimit)}）`;
     return `${g.winner ? g.winner.name + "の勝ち" : "引き分け"}（${body.trim()}）`.slice(0, PLAY_LOG_LIMITS.result);
   }
+  // 試合が終わったときの表示の中身（KJ-018・D-036／D-039）。DOM に触らない。画面は index.html
+  // kind：win／lose／draw／solo。label：大きく出す文字（ひとりでは「おわり」）。scores：大きく出す点。
+  // items：自分が放った言葉を、放った順に（くっつけて作った字は出さない）。tier：2字=1（ポコッ）・3字=2（キラッと少し跳ねる）・4字=3（さらに大きく跳ねて光る）
+  const END_LABELS = { win: "勝ち！", lose: "負け…", draw: "引き分け", solo: "おわり" };
+  function endShow(g, T, winner) {
+    const kind = g.solo ? "solo" : winner === g.me ? "win" : winner === g.cpu ? "lose" : "draw";
+    const items = g.log.filter((e) => e.op === "放つ" && e.who === g.me.name).map((e) => {
+      const text = e.from.join(""), w = T && T.WORDS ? T.WORDS.get(text) : null;
+      return { text, kana: w ? w.kana : "", pts: e.pts, tier: Math.max(1, Math.min(3, [...text].length - 1)) };
+    });
+    return { kind, label: END_LABELS[kind], me: g.me.score, cpu: g.solo ? null : g.cpu.score, items };
+  }
+
   // play_logs に1行送る中身。1手も動いていなければ null（送らない）
   function playLogRow(g, deviceId) {
     if (!g || !(playedAny(g) || (g.tutorialInfo && g.tutorialInfo.finished === "skip"))) return null; // チュートリアルは、1手も動かずにとばしたことも送る
@@ -1370,7 +1383,7 @@
 
   return {
     FILES, OPPONENTS, LEVELS, timeChoices, normTime, timeLabel, levelLabel, makeTables, isN5, isLevelChar, isChar, splitOnce, canSplit, delivered, joinResults, joinReversed,
-    releasable, scoreOf, homoChars, marks, markKinds, cutSpec, FACES, FACE_LABEL, faceJoins, faceResults, rulesLabel, opponentLabel, createGame, createTutorial, TUTORIAL_OPPONENT, playLogRow, logSendAllowed, playLogResult, PLAY_LOG_LIMITS,
+    releasable, scoreOf, homoChars, marks, markKinds, cutSpec, FACES, FACE_LABEL, faceJoins, faceResults, rulesLabel, opponentLabel, createGame, createTutorial, TUTORIAL_OPPONENT, playLogRow, endShow, END_LABELS, logSendAllowed, playLogResult, PLAY_LOG_LIMITS,
     strSeed, seededRand, matchRand, ROLES, ROOM_OPPONENT, MATCH_END_GRACE_SEC, MATCH_INSERT_TIMEOUT_SEC, MATCH_PING_SEC, MATCH_GONE_SEC, ROOM_LOBBY_TTL_SEC,
     createMatchClient, memoryClaims, newMatchId, newRoomCode, roomLobbyId, findRoom, hostRoom, joinRoom, startRoom, roomStartAt, roomWaiter,
   };

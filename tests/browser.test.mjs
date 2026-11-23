@@ -1088,6 +1088,111 @@ test("画面", { skip }, async (t) => {
     }
   });
 
+  // ---------- KJ-018：試合が終わったら、勝ち負け→点→放った言葉を1つずつ（長いほど派手）----------
+  await t.test("KJ-018 終わり：最初に「勝ち！」と両方の点が大きく出て、放った言葉が放った順に1つずつ出る（2字・3字・4字で段が違う）。タップで全部いっぺんに。出し終わると今の終わりの画面", async () => {
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 });
+    await page.evaluate(() => { // 先に放った言葉を3つ（2字・3字・4字）。最後に休日を放って50点に届く
+      const G = __KJ.game, me = G.me.name;
+      for (const [w, p] of [["大雨", 4], ["日本人", 9], ["天上天下", 20]]) G.log.push({ t: 1, who: me, op: "放つ", from: [...w], to: [], pts: p, note: "" });
+      G.log.push({ t: 1, who: G.cpu.name, op: "放つ", from: [..."火山"], to: [], pts: 4, note: "" });
+      G.me.score = 48;
+    });
+    await page.locator("#meHand .tile", { hasText: "休" }).click();
+    await page.locator("#meHand .tile", { hasText: "日" }).click();
+    await page.click("#bRelease");
+    await page.waitForSelector("#endShow.on");
+    assert.equal(await page.textContent("#esLabel"), "勝ち！");
+    assert.equal(await page.getAttribute("#esLabel", "class"), "win");
+    assert.equal(await page.textContent("#esScore .you"), "51");
+    assert.equal(await page.textContent("#esScore .opp"), "0");
+    // まだ1つも出ていない → 放った順に1つずつ出る
+    const shown = () => page.$$eval("#esWords .esw.in .w", (a) => a.map((x) => x.textContent));
+    assert.deepEqual(await shown(), [], "最初に見出しと点だけ");
+    const order = [];
+    await page.waitForFunction(() => document.querySelectorAll("#esWords .esw.in").length >= 1);
+    order.push((await shown()).length);
+    await page.waitForFunction(() => document.querySelectorAll("#esWords .esw.in").length >= 2);
+    order.push((await shown()).length);
+    assert.ok(order[0] === 1 && order[1] === 2, "1つずつ増える " + order);
+    // 長さで段が変わる。相手の言葉は出ない。読みと点がつく
+    assert.deepEqual(await page.$$eval("#esWords .esw", (a) => a.map((x) => [x.querySelector(".w").textContent, x.className.match(/t\d/)[0]])),
+      [["大雨", "t1"], ["日本人", "t2"], ["天上天下", "t3"], ["休日", "t1"]]);
+    assert.match(await page.textContent("#esWords .esw:nth-child(2) .p"), /\+9点/);
+    assert.ok((await page.textContent("#esWords .esw:nth-child(2) .k")).length > 0, "読み");
+    // 上の帯（もう一度・設定を変える・ログをコピー）は出たまま押せる
+    assert.equal(await page.isVisible("#again"), true);
+    assert.equal(await page.isVisible("#bCopyEnd"), true);
+    // タップで全部いっぺんに出る
+    await page.click("#endShow", { position: { x: 180, y: 300 } });
+    assert.deepEqual(await shown(), ["大雨", "日本人", "天上天下", "休日"]);
+    await page.screenshot({ path: "docs/img/kj-018-end-375.png" });
+    // 出し終わって少したつと、いまの終わりの画面（#msg・ボタン）が見える
+    await page.waitForFunction(() => !document.getElementById("endShow").classList.contains("on"), null, { timeout: 5000 });
+    assert.match(await page.textContent("#msg"), /勝ち（51 対 0）/);
+    assert.equal(await page.isVisible("#bCopyEnd"), true);
+    // もう一度（同じ設定）：表示は閉じて、新しい試合になる
+    await page.click("#again");
+    assert.equal(await page.evaluate(() => document.getElementById("endShow").classList.contains("on")), false);
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+
+  await t.test("KJ-018 終わり：出し終わる前にタップしなくても、言葉が全部出てから閉じる。出し終わったあとのタップで閉じる。放った言葉が0でも終われる", async () => {
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 });
+    await page.evaluate(() => { const G = __KJ.game; G.me.score = 49; G.cpu.score = 0; G.log.push({ t: 1, who: G.me.name, op: "放つ", from: [..."大雨"], to: [], pts: 4, note: "" }); });
+    await page.locator("#meHand .tile", { hasText: "休" }).click();
+    await page.locator("#meHand .tile", { hasText: "日" }).click();
+    await page.click("#bRelease");
+    await page.waitForSelector("#endShow[data-done='1']", { timeout: 5000 });
+    assert.equal(await page.locator("#esWords .esw.in").count(), 2, "出し終わった");
+    await page.click("#endShow", { position: { x: 180, y: 300 } }); // 出し終わったあとのタップで閉じる
+    assert.equal(await page.evaluate(() => document.getElementById("endShow").classList.contains("on")), false);
+    // 放った言葉が0：もう一度 → 時間切れで終わる
+    await page.click("#again");
+    await page.evaluate(() => { const G = __KJ.game; G.cpuTurn = () => null; G.endsAt = G.now() - 1; });
+    await page.waitForSelector("#endShow.on");
+    assert.equal(await page.textContent("#esLabel"), "引き分け");
+    assert.equal(await page.locator("#esWords .esw").count(), 0);
+    await page.waitForFunction(() => !document.getElementById("endShow").classList.contains("on"), null, { timeout: 5000 });
+    assert.match(await page.textContent("#msg"), /引き分け/);
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+
+  await t.test("KJ-018 終わり：負け…（相手が先に50点）と、ひとりでは「おわり」と点。色が勝ちと変わる", async () => {
+    const lose = await open(browser, url, { width: 375, height: 700 });
+    await lose.page.evaluate(() => { __KJ.game.cpu.score = 50; });
+    await lose.page.locator("#meHand .tile", { hasText: "休" }).click();
+    await lose.page.locator("#meHand .tile", { hasText: "日" }).click();
+    await lose.page.click("#bRelease");
+    await lose.page.waitForSelector("#endShow.on");
+    assert.equal(await lose.page.textContent("#esLabel"), "負け…");
+    assert.equal(await lose.page.getAttribute("#esLabel", "class"), "lose");
+    assert.equal(await lose.page.textContent("#esScore .opp"), "50");
+    const loseColor = await lose.page.$eval("#esLabel", (e) => getComputedStyle(e).color);
+    assert.deepEqual(lose.errors, []);
+    await lose.ctx.close();
+
+    const win = await open(browser, url, { width: 375, height: 700 });
+    await win.page.evaluate(() => { __KJ.game.me.score = 48; });
+    await win.page.locator("#meHand .tile", { hasText: "休" }).click();
+    await win.page.locator("#meHand .tile", { hasText: "日" }).click();
+    await win.page.click("#bRelease");
+    await win.page.waitForSelector("#endShow.on");
+    const winColor = await win.page.$eval("#esLabel", (e) => getComputedStyle(e).color);
+    assert.notEqual(winColor, loseColor, "勝ちと負けで色が違う");
+    await win.ctx.close();
+
+    const solo = await open(browser, url, { width: 375, height: 700 }, "solo");
+    await solo.page.evaluate(() => { const G = __KJ.game; G.me.score = 51; G.endsAt = G.now() - 1; });
+    await solo.page.waitForSelector("#endShow.on");
+    assert.equal(await solo.page.textContent("#esLabel"), "おわり");
+    assert.equal(await solo.page.textContent("#esScore .you"), "51");
+    assert.equal(await solo.page.locator("#esScore .opp").count(), 0, "ひとりでは相手の点が無い");
+    assert.deepEqual(solo.errors, []);
+    await solo.ctx.close();
+  });
+
   await t.test("終わると「ログをコピー」が出て、クリップボードに入る", async () => {
     const { ctx, page } = await open(browser, url, { width: 760, height: 1100 });
     await page.evaluate(() => { __KJ.game.me.score = 48; });
