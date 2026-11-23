@@ -900,7 +900,7 @@ $("bInvert").onclick=()=>press("bInvert","invert","反転",()=>{const r=G.invert
 $("bCycle").onclick=()=>press("bCycle","cycle","巡り",()=>{const r=G.cycle(G.me,row);afterOp(r);return r});
 $("bBack").onclick=()=>{noteTried();row=[];hideChoices();afterChange()};
 $("bRedraw").onclick=()=>{
-  if(isOff("bRedraw")){if(!G.over){G.triedOp(G.me,"引き直し",[],(TUT&&TUT.blocked("redraw"))||G.whyNot(G.me,"redraw"));afterChange()}return} // 引き直しを待っているあいだに押した（KJ-041）
+  if(isOff("bRedraw")){if(!G.over){G.triedOp(G.me,"引き直し",[],(TUT&&TUT.blocked("redraw"))||G.whyNot(G.me,"redraw"));afterChange()}return} // 引き直しを使いきったあとに押した（KJ-041）
   row=[];hideChoices();if(MC){const mc=MC;mc.redraw().then(()=>{if(!stale(mc))afterChange()});afterChange();return}G.redraw(G.me);afterChange()}; // 部屋：手札はすぐ入れ替わる。点の送りの返事は待たずに描く
 $("bHomo").onclick=()=>{
   if(TUT){const why=TUT.blocked("homophone",{chars:rowCards().map(x=>x.c)});if(why){G.triedOp(G.me,"同音",rowCards().map(x=>x.c),why);showWhy(why);afterChange();return}}

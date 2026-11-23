@@ -576,7 +576,7 @@
       if (g.tutorial || g.hintStreak < HR.fail_streak) return; // チュートリアルは自分の光りを出す（createTutorial）。自動のヒントは出さない
       g.hintStreak = 0; // ヒントを出したら数え直し
       const h = makeHint(p);
-      g.hint = h.ids.length || h.button ? { ...h, until: now() + HR.glow_sec } : null; // 光らせる物が無いとき（引き直しを待っている）は、札も出さない
+      g.hint = h.ids.length || h.button ? { ...h, until: now() + HR.glow_sec } : null; // 光らせる物が無いとき（引き直しを使いきった）は、札も出さない
       g.hintCount++;
       const lit = h.ids.map((id) => g.byId(p, id)).filter(Boolean).map((x) => x.c);
       addLog(p.name, "ヒント", lit, [], 0, `段${h.tier}：${h.op}${h.word ? `。狙った言葉：${h.word}` : ""}`);
@@ -1205,6 +1205,9 @@
     // 届いた行の中身の確かめ（相手の端末から来るので、形の合わない行は捨てる）
     const nat = (v, max) => Number.isInteger(v) && v >= 0 && v <= max;
     const SCORE_MAX = 100000;
+    // 点は引き直しでマイナスになってよい（KJ-049）。下限は引き直しを5回使いきった分
+    const SCORE_MIN = -R.redraw.costs.reduce((a, b) => a + b, 0);
+    const scoreOk = (v) => Number.isInteger(v) && v >= SCORE_MIN && v <= SCORE_MAX;
     function rowOk(row) {
       if (!row || typeof row !== "object" || row.match_id !== mid) return false;
       if (!ROLES.includes(row.player) || typeof row.kind !== "string" || typeof row.key !== "string" || !row.key || row.key.length > 64) return false;
@@ -1215,12 +1218,12 @@
     function payloadOk(row) {
       const p = row.payload || {};
       if (row.kind === "card") return /^[0-9]{1,6}$/.test(row.key);
-      if (row.kind === "word") { const n = [...row.key].length; return n >= 2 && n <= 8 && (p.score === undefined || nat(p.score, SCORE_MAX)); }
+      if (row.kind === "word") { const n = [...row.key].length; return n >= 2 && n <= 8 && (p.score === undefined || scoreOk(p.score)); }
       if (row.kind === "end") {
-        if (row.key === "score") return ROLES.includes(p.winner) && (p.score === undefined || nat(p.score, SCORE_MAX));
-        return p.score === undefined || nat(p.score, SCORE_MAX);
+        if (row.key === "score") return ROLES.includes(p.winner) && (p.score === undefined || scoreOk(p.score));
+        return p.score === undefined || scoreOk(p.score);
       }
-      if (row.kind === "event" && p.type === "state") return nat(p.seq, 1e9) && nat(p.score, SCORE_MAX) && nat(p.count, totalMax) && (p.hand === undefined || nat(p.hand, R.hand_max));
+      if (row.kind === "event" && p.type === "state") return nat(p.seq, 1e9) && scoreOk(p.score) && nat(p.count, totalMax) && (p.hand === undefined || nat(p.hand, R.hand_max));
       return true;
     }
     // 届いた行（相手の行も、自分の行も届く）
