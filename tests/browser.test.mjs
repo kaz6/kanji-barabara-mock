@@ -1961,14 +1961,15 @@ test("画面", { skip }, async (t) => {
     assert.equal(await page.locator("#fxPts .pf.ring").count(), 0);
     await page.locator("#field .tile").nth(1).click();
     // 4字（四字熟語）：段3＝さらに大きく＋卓の上の光の輪
-    await page.evaluate(() => { const G = __KJ.game; G.me.cards = [..."天上天下十口休日"].map((c, i) => ({ id: 9100 + i, c, t: 0, fresh: false })); __KJ.render(); });
+    await page.evaluate(() => { const G = __KJ.game; G.me.score = 0; G.me.cards = [..."天上天下十口休日"].map((c, i) => ({ id: 9100 + i, c, t: 0, fresh: false })); __KJ.render(); }); // 50点に届かない（届くと終わりの画面になる）ように 0 点から
+    await page.waitForFunction(() => document.getElementById("fxPts").childElementCount === 0, null, { timeout: 4500 });
     for (const ch of "天上天下") await tapC(page, ch);
     await page.click("#bRelease");
     await page.waitForSelector("#fxPts .pf.gain.t3", { state: "attached" });
     const fs3 = await page.locator("#fxPts .pf.gain.t3").evaluate((e) => parseFloat(getComputedStyle(e).fontSize));
     assert.ok(fs3 > fs1, `4字の方が大きい（${fs1}→${fs3}）`);
     await page.waitForSelector("#fxPts .pf.ring", { state: "attached", timeout: 3000 });
-    await page.waitForFunction(() => /^51 点/.test(document.getElementById("meScore").textContent), null, { timeout: 4000 });
+    await page.waitForFunction(() => /^48 点/.test(document.getElementById("meScore").textContent), null, { timeout: 4000 });
     await page.waitForFunction(() => document.getElementById("fxPts").childElementCount === 0, null, { timeout: 4500 });
     assert.deepEqual(errors, []);
     await ctx.close();
@@ -1985,7 +1986,7 @@ test("画面", { skip }, async (t) => {
     await page.evaluate(() => { __KJ.game.cpu.score += 3; __KJ.render(); });
     await page.waitForSelector("#fxPts .pf.gain", { state: "attached" });
     const me = 24, cpu = await page.locator("#fxPts .pf.gain").first().evaluate((e) => parseFloat(getComputedStyle(e).fontSize));
-    assert.ok(cpu < me + 6, `相手の欄は小さい（${cpu}）`);
+    assert.ok(cpu <= 19 && cpu < me, `相手の欄は小さい（${cpu}）`);
     await page.waitForFunction(() => /^3 点/.test(document.getElementById("cpuScore").textContent), null, { timeout: 4000 });
     assert.deepEqual(errors, []);
     await ctx.close();
@@ -2007,9 +2008,42 @@ test("画面", { skip }, async (t) => {
     await page.click("#bRedraw"); await page.click("#bRedraw"); // -10・-15
     await page.waitForSelector("#fxPts .pf.loss", { state: "attached" });
     const fsB = await page.locator("#fxPts .pf.loss").last().evaluate((e) => parseFloat(getComputedStyle(e).fontSize));
-    assert.ok(fsB >= fsA, `値段が大きいほど大きい（${fsA}→${fsB}）`);
+    assert.ok(fsB > fsA, `値段が大きいほど大きい（${fsA}→${fsB}）`);
     assert.deepEqual(errors, []);
     await ctx.close();
+  });
+  await t.test("点の演出：スマホ幅でも相手が放った字は相手の欄から飛ぶ（画面の隅からではない）", async () => {
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 }, null, null, true);
+    assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById("cpuHand")).display), "none", "375px では相手の手札を隠している");
+    await page.evaluate(() => { const G = __KJ.game; G.events.push({ type: "release", who: G.cpu.name, text: "本日", pts: 3 }); G.cpu.score += 3; __KJ.drain(); __KJ.render(); });
+    await page.waitForSelector("#fxPts .pf.chip", { state: "attached" });
+    const b = await page.locator("#fxPts .pf.chip").boundingBox();
+    const cs = await page.evaluate(() => { const r = document.getElementById("cpuSide").getBoundingClientRect(); return { top: r.top, bottom: r.bottom }; });
+    assert.ok(b.y > 20 && b.y >= cs.top - 40 && b.y <= cs.bottom + 20, `相手の欄の所から飛ぶ（y=${b.y}・欄 ${cs.top}〜${cs.bottom}）`);
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+  await t.test("点の演出：勝ちが決まったら終わりの画面の上には出ない／数えている途中で点が変わっても、いまの点で止まる", async () => {
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 }, null, null, true);
+    await page.evaluate(() => { __KJ.game.me.score = 47; __KJ.render(); });
+    await page.waitForTimeout(100);
+    await tapC(page, "休"); await tapC(page, "日");
+    await page.click("#bRelease"); // 50点で勝ち
+    await page.waitForSelector("#endShow.on", { timeout: 4000 });
+    await page.waitForTimeout(300);
+    assert.equal(await page.locator("#fxPts .pf").count(), 0, "終わりの画面の上に演出は出ない");
+    await ctx.close();
+    const r2 = await open(browser, url, { width: 375, height: 900 }, null, null, true);
+    const p2 = r2.page;
+    await tapC(p2, "休"); await tapC(p2, "日");
+    await p2.click("#bRelease");
+    await p2.waitForTimeout(600); // 数えている途中
+    await p2.evaluate(() => { __KJ.game.me.score = -2; __KJ.render(); });
+    await p2.waitForFunction(() => /^-2 点/.test(document.getElementById("meScore").textContent), null, { timeout: 4000 });
+    await p2.waitForTimeout(1200);
+    assert.match(await p2.textContent("#meScore"), /^-2 点/, "古い点に戻らない");
+    assert.deepEqual([...errors, ...r2.errors], []);
+    await r2.ctx.close();
   });
   await t.test("点の演出：動きを減らす設定では数字（+〇・-〇）を出すだけで、動かさない（飛ばない・カウントアップしない・ポンも揺れもしない）", async () => {
     const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 }, null, null, false); // 既定は reduce

@@ -1006,6 +1006,7 @@ function ptsTier(who,pts){ // 放った言葉で段を決める。分からな�
   const l=PTS_FX.last;
   if(l&&l.who===who&&l.pts===pts){
     const n=[...l.text].length,w=T.WORDS.get(l.text);
+    PTS_FX.last=null;
     return {text:l.text,tier:(n>=4||(w&&w.yoji)||T.SPECIAL.has(l.text))?3:n===3?2:1};
   }
   return {text:"",tier:pts>=12?3:pts>=6?2:1};
@@ -1020,7 +1021,8 @@ function ptsCountUp(key,n,from,to,ms){
   const step=now=>{
     const f=Math.min(1,(now-t0)/ms);
     if(PTS_FX.g!==G){PTS_FX.disp[key]=null;return}
-    const v=f>=1?to:Math.round(from+(to-from)*f);
+    const goal=PTS_FX.prev[key]; // 数えている途中で点が変わったら、いまの点まで数える
+    const v=f>=1?goal:Math.round(from+(goal-from)*f);
     n.textContent=v;
     if(f<1){PTS_FX.disp[key]=v;requestAnimationFrame(step)}else PTS_FX.disp[key]=null;
   };
@@ -1029,6 +1031,7 @@ function ptsCountUp(key,n,from,to,ms){
 function ptsFx(key,p,sc,n){ // render のたび：点が変わっていたら演出を出す
   if(PTS_FX.g!==G){PTS_FX.g=G;PTS_FX.prev={me:null,cpu:null};PTS_FX.disp={me:null,cpu:null};PTS_FX.last=null;$("fxPts").innerHTML=""}
   const prev=PTS_FX.prev[key];PTS_FX.prev[key]=p.score;
+  if(G.over){PTS_FX.disp[key]=null;$("fxPts").innerHTML="";return} // 終わりの画面（R-069）の上には出さない
   if(prev===null||prev===p.score)return;
   const d=p.score-prev,small=key==="cpu",calm=reduceMotion(),box=n.getBoundingClientRect();
   if(box.width===0&&box.height===0)return; // 画面に出ていない
@@ -1038,11 +1041,12 @@ function ptsFx(key,p,sc,n){ // render のたび：点が変わっていたら演
     const fs=(small?[16,19,23]:[24,30,38])[tier-1];
     const num=ptsEl(`gain t${tier}`,`+${d}`);num.style.fontSize=fs+"px";
     if(calm){ // 動かさない：数字を出して消すだけ
-      ptsPlace(num,cx+box.width/2+fs,cy);ptsDrop(num,900);return;
+      ptsPlace(num,cx,cy-fs*1.3);ptsDrop(num,900);return;
     }
     const fly=text?420:0,tab=document.querySelector(".table"),origin=(key==="me"?$("row"):$("cpuHand")).getBoundingClientRect();
+    const from0=origin.width?origin:(key==="me"?$("meSide"):$("cpuSide")).getBoundingClientRect(); // スマホ幅は相手の手札を隠している。矩形が0なら相手の欄の頭から
     if(text){
-      const chip=ptsEl("chip",text),ox=origin.left+origin.width/2,oy=origin.top+origin.height/2;
+      const chip=ptsEl("chip",text),ox=from0.left+from0.width/2,oy=from0.top+(origin.width?from0.height/2:Math.min(from0.height,40)/2);
       if(small)chip.style.fontSize="18px";
       ptsPlace(chip,ox,oy);num.style.opacity="0";
       const a=chip.animate([{transform:chip.style.transform,opacity:1},{transform:chip.style.transform.replace(/translate\([^)]*\)/,`translate(${Math.round(cx-chip.offsetWidth/2)}px,${Math.round(cy-chip.offsetHeight/2)}px)`)+" scale(.5)",opacity:.9}],{duration:fly,easing:"cubic-bezier(.5,0,.9,.6)",fill:"forwards"});
@@ -1069,7 +1073,7 @@ function ptsFx(key,p,sc,n){ // render のたび：点が変わっていたら演
   }else{
     const mag=-d,big=mag>=15?2:mag>=10?1:0,fs=(small?[15,18,21]:[22,27,32])[big];
     const num=ptsEl("loss",`-${mag}`);num.style.fontSize=fs+"px";
-    if(calm){ptsPlace(num,cx+box.width/2+fs,cy);ptsDrop(num,900);return}
+    if(calm){ptsPlace(num,cx,cy-fs*1.3);ptsDrop(num,900);return}
     ptsPlace(num,cx,cy-fs*1.6);
     const to=`translate(${Math.round(cx-num.offsetWidth/2)}px,${Math.round(cy+fs*.2-num.offsetHeight/2)}px)`,from=num.style.transform;
     num.animate([{transform:from,opacity:0},{transform:from,opacity:1,offset:.2},{transform:to,opacity:0}],{duration:650+big*120,easing:"ease-in",fill:"forwards"});
@@ -1224,7 +1228,7 @@ document.addEventListener("visibilitychange",()=>{
   if(!G.over&&!G.solo&&!G.match){clearTimeout(cpuTimer);scheduleCpu()} // 人と対戦は CPU を出さない
 });
 
-window.__KJ={get game(){return G},get tut(){return TUT},get row(){return row},get tables(){return T},get mc(){return MC},get room(){return ROOM},data:D,render}; // ブラウザのテスト用
+window.__KJ={get game(){return G},get tut(){return TUT},get row(){return row},get tables(){return T},get mc(){return MC},get room(){return ROOM},data:D,render,drain}; // ブラウザのテスト用
 
 Promise.all(K.FILES.map(f=>fetch(`data/${f}.json`).then(r=>r.json()).then(j=>D[f]=j)))
   .then(()=>{loadSettings();T=tablesFor(level);buildPickers();buildHowto();showCounts();roomUi();$("bTutorial").textContent=D.tutorial.ui.button;$("bTutorial").hidden=false})
