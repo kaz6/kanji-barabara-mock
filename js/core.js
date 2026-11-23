@@ -1348,7 +1348,7 @@
     return `${g.winner ? g.winner.name + "の勝ち" : "引き分け"}（${body.trim()}）`.slice(0, PLAY_LOG_LIMITS.result);
   }
   // 試合が終わったときの表示の中身（KJ-018・D-036／D-039）。DOM に触らない。画面は index.html
-  // kind：win／lose／draw／solo。label：大きく出す文字（ひとりでは「おわり」）。scores：大きく出す点。
+  // kind：win／lose／draw／solo。label：大きく出す文字（ひとりでは「おわり」）。me・cpu：大きく出す点（ひとりでは cpu が null）。
   // items：自分が放った言葉を、放った順に（くっつけて作った字は出さない）。tier：2字=1（ポコッ）・3字=2（キラッと少し跳ねる）・4字=3（さらに大きく跳ねて光る）
   const END_LABELS = { win: "勝ち！", lose: "負け…", draw: "引き分け", solo: "おわり" };
   function endShow(g, T, winner) {

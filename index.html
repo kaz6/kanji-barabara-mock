@@ -190,20 +190,21 @@ body.tutorial #clock,body.tutorial #again,body.tutorial #bLog,body.tutorial #bCo
 .panel.on{display:block}
 .panel textarea{width:100%;height:220px;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;border:0;background:var(--tile);border-radius:4px;padding:6px;white-space:pre;resize:vertical}
 /* 試合が終わったときの表示（KJ-018）：勝ち負け→点→放った言葉を1つずつ。上の帯（もう一度・設定を変える・ログ）は上に出したまま */
-.bar{position:relative;z-index:20}
-#endShow{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:64px 16px 24px;background:var(--bg);z-index:10;overflow:auto;cursor:pointer}
+#game>.bar{position:relative;z-index:20}
+#endShow{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:flex-start;gap:10px;padding:64px 16px 24px;background:var(--bg);z-index:10;overflow:auto;cursor:pointer} /* 中身が画面より高くても上が切れないよう、真ん中寄せは auto の余白で */
 #endShow.on{display:flex}
-#esLabel{font-size:48px;font-weight:700;line-height:1.2;letter-spacing:.04em}
+#esLabel{margin-top:auto;font-size:48px;font-weight:700;line-height:1.2;letter-spacing:.04em}
 #esLabel.win{color:var(--win)}
 #esLabel.lose{color:var(--lose)}
 #esLabel.draw,#esLabel.solo{color:var(--ink)}
 #esScore{font-size:44px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums;display:flex;align-items:baseline;gap:.35em}
 #esScore .t{font-size:18px;font-weight:400;color:var(--sub)}
 #esScore .you{color:var(--ink)}
-#esScore .opp{color:var(--sub)}
-#esWords{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:10px 14px;justify-content:center;max-width:620px}
+#esScore .them{color:var(--sub);font-size:44px}
+#esWords{list-style:none;margin:10px 0 auto;padding:0;display:flex;flex-wrap:wrap;gap:10px 14px;justify-content:center;max-width:620px}
 .esw{display:flex;flex-direction:column;align-items:center;min-width:64px;opacity:0;visibility:hidden}
 .esw .w{font-family:var(--kanji);line-height:1.15}
+.esw .row{display:flex;align-items:baseline;gap:5px}
 .esw .k{font-size:11px;color:var(--sub)}
 .esw .p{font-size:12px;font-variant-numeric:tabular-nums;color:var(--sub)}
 .esw.t1 .w{font-size:26px}
@@ -222,7 +223,7 @@ body.tutorial #clock,body.tutorial #again,body.tutorial #bLog,body.tutorial #bCo
 @keyframes kjBig{0%{opacity:0;transform:scale(.5)}35%{opacity:1;transform:scale(1.35)}55%{transform:scale(.94)}75%{transform:scale(1.12)}100%{transform:scale(1)}}
 @keyframes kjFlash{from{background-color:var(--shine)}to{background-color:transparent}}
 @keyframes kjShine{from{background-position:120% 0}to{background-position:-20% 0}}
-@media (prefers-reduced-motion:reduce){.esw.fresh,.esw.fresh .w{animation:none}}
+@media (prefers-reduced-motion:reduce){.esw.fresh.t1,.esw.fresh.t2,.esw.fresh.t3,.esw.fresh.t2 .w,.esw.fresh.t3 .w{animation:none}}
 /* 放った言葉 */
 .log{font-size:13px;margin:0;padding:0;list-style:none;max-height:180px;overflow:auto}
 .log li{padding:3px 0;color:var(--sub)}
@@ -568,14 +569,14 @@ function end(winner,solo){
     m.textContent=`ひとりで ${G.me.score} 点`+(b?(b.isNew?`（自己ベスト更新）`:`（自己ベスト ${b.best} 点）`):"");
     m.className="msg";
     $("bCopyEnd").hidden=false;
-    showEnd(winner);
+    showEndAfterFx(winner);
     return;
   }
   if(winner===G.me){m.textContent=`勝ち（${sc}）`;m.className="msg win"}
   else if(winner===G.cpu){m.textContent=`負け（${sc}）`;m.className="msg lose"}
   else{m.textContent=`引き分け（${sc}）`;m.className="msg"}
   $("bCopyEnd").hidden=false;
-  showEnd(winner);
+  showEndAfterFx(winner);
 }
 // 試合が終わったときの表示（KJ-018・D-036／D-039）：最初に「勝ち！」「負け…」「引き分け」（ひとりでは「おわり」）と両方の点を大きく、
 // そのあと自分が放った言葉を放った順に1つずつ（長いほど派手）。タップで全部いっぺんに出す。出し終わって少したつか、もう一度タップで閉じて、いまの終わりの画面を見せる。
@@ -583,7 +584,15 @@ function end(winner,solo){
 const END_PACE={first:700,gap:350,hold:1800};
 let ES=null; // {items:[li], timers:[], done:bool}
 function esClear(){if(ES){for(const t of ES.timers)clearTimeout(t)}}
-function closeEnd(){esClear();ES=null;const el=$("endShow");if(el)el.classList.remove("on")}
+let esWait=null;
+// 特別な語などで勝ったときは、放った言葉の演出（#fx）が終わってから出す（重なって見えなくならないように）
+function showEndAfterFx(winner){
+  clearTimeout(esWait);
+  const g=G,wait=Math.max(0,(showFx.until||0)-Date.now());
+  if(!wait){showEnd(winner);return}
+  esWait=setTimeout(()=>{if(G===g)showEnd(winner)},wait+100);
+}
+function closeEnd(){clearTimeout(esWait);esClear();ES=null;const el=$("endShow");if(el)el.classList.remove("on")}
 function esAll(){ // 全部いっぺんに出す
   if(!ES)return;
   esClear();ES.timers=[];
@@ -600,11 +609,11 @@ function showEnd(winner){
   closeEnd();
   const lab=$("esLabel");lab.textContent=d.label;lab.className=d.kind;
   $("esScore").innerHTML=d.kind==="solo"?`<span class="you">${d.me}</span><span class="t">点</span>`
-    :`<span class="you">${d.me}</span><span class="t">対</span><span class="opp">${d.cpu}</span>`;
+    :`<span class="you">${d.me}</span><span class="t">対</span><span class="them">${d.cpu}</span>`;
   const ul=$("esWords");ul.innerHTML="";
   const items=d.items.map(it=>{
     const li=document.createElement("li");li.className=`esw t${it.tier}`;
-    li.innerHTML=`<span class="w"></span><span class="p"></span><span class="k"></span>`;
+    li.innerHTML=`<span class="row"><span class="w"></span><span class="p"></span></span><span class="k"></span>`;
     li.querySelector(".w").textContent=it.text;li.querySelector(".p").textContent=`+${it.pts}点`;li.querySelector(".k").textContent=it.kana;
     ul.appendChild(li);return li});
   ES={items,timers:[],done:false};
@@ -1061,7 +1070,8 @@ function showFx(who,text){
   fx.classList.add("on");
   [...text].forEach((c,i)=>{const s=document.createElement("div");s.className="c";s.textContent=c;box.appendChild(s);
     setTimeout(()=>s.classList.add("in"),180+i*380)});
-  clearTimeout(showFx.t);showFx.t=setTimeout(()=>fx.classList.remove("on"),400+text.length*380+900);
+  const ms=400+text.length*380+900;showFx.until=Date.now()+ms;
+  clearTimeout(showFx.t);showFx.t=setTimeout(()=>fx.classList.remove("on"),ms);
 }
 function buildHowto(){
   const R=D.rules,S=R.score,TL=(G&&G.timeLimit)||timeLimit; // 合言葉の部屋の入った側は、作った人の時間

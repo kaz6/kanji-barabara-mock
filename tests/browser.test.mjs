@@ -781,6 +781,7 @@ test("画面", { skip }, async (t) => {
     assert.notEqual(await page.evaluate(() => getComputedStyle(document.getElementById("bInvert")).animationName), "none");
     // 動きを減らす設定：光るのはやめる。ゲージの満ち方は出す
     await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.evaluate(() => { __KJ.game.me.score = 20; }); // 天上天下（48点）で50点に届く
     await page.click("#bInvert");
     assert.equal(await page.evaluate(() => __KJ.row.length), 1);
     await setLeft(total / 2);
@@ -1104,7 +1105,9 @@ test("画面", { skip }, async (t) => {
     assert.equal(await page.textContent("#esLabel"), "勝ち！");
     assert.equal(await page.getAttribute("#esLabel", "class"), "win");
     assert.equal(await page.textContent("#esScore .you"), "51");
-    assert.equal(await page.textContent("#esScore .opp"), "0");
+    assert.equal(await page.textContent("#esScore .them"), "0");
+    const fs2 = await page.$$eval("#esScore .you,#esScore .them", (a) => a.map((x) => parseFloat(getComputedStyle(x).fontSize)));
+    assert.ok(fs2[0] >= 40 && fs2[1] >= 40, "両方の点が大きい " + fs2);
     // まだ1つも出ていない → 放った順に1つずつ出る
     const shown = () => page.$$eval("#esWords .esw.in .w", (a) => a.map((x) => x.textContent));
     assert.deepEqual(await shown(), [], "最初に見出しと点だけ");
@@ -1125,7 +1128,7 @@ test("画面", { skip }, async (t) => {
     // タップで全部いっぺんに出る
     await page.click("#endShow", { position: { x: 180, y: 300 } });
     assert.deepEqual(await shown(), ["大雨", "日本人", "天上天下", "休日"]);
-    await page.screenshot({ path: "docs/img/kj-018-end-375.png" });
+    if (process.env.KJ_SHOT) await page.screenshot({ path: "docs/img/kj-018-end-375.png" });
     // 出し終わって少したつと、いまの終わりの画面（#msg・ボタン）が見える
     await page.waitForFunction(() => !document.getElementById("endShow").classList.contains("on"), null, { timeout: 5000 });
     assert.match(await page.textContent("#msg"), /勝ち（51 対 0）/);
@@ -1159,6 +1162,24 @@ test("画面", { skip }, async (t) => {
     await ctx.close();
   });
 
+  await t.test("KJ-018 終わり：特別な語で勝つと、放った言葉の演出（#fx）が終わってから出る。動きを減らす設定では動かさない", async () => {
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 });
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.evaluate(() => { __KJ.game.me.score = 20; }); // 天上天下で50点に届く
+    for (let i = 0; i < 4; i++) await page.locator("#meHand .tile").nth(i).click(); // 天・上・天・下
+    await page.click("#bRelease");
+    await page.waitForSelector("#fx.on");
+    assert.equal(await page.evaluate(() => document.getElementById("endShow").classList.contains("on")), false, "演出のあいだは出さない");
+    await page.waitForSelector("#endShow.on", { timeout: 6000 });
+    assert.equal(await page.evaluate(() => document.getElementById("fx").classList.contains("on")), false, "演出が終わってから");
+    assert.equal(await page.textContent("#esLabel"), "勝ち！");
+    await page.waitForSelector("#esWords .esw.in.fresh");
+    assert.equal(await page.$eval("#esWords .esw.in.fresh", (e) => getComputedStyle(e).animationName), "none", "動きを減らす設定");
+    assert.equal(await page.$eval("#esWords .esw.in.fresh .w", (e) => getComputedStyle(e).animationName), "none");
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+
   await t.test("KJ-018 終わり：負け…（相手が先に50点）と、ひとりでは「おわり」と点。色が勝ちと変わる", async () => {
     const lose = await open(browser, url, { width: 375, height: 700 });
     await lose.page.evaluate(() => { __KJ.game.cpu.score = 50; });
@@ -1168,7 +1189,7 @@ test("画面", { skip }, async (t) => {
     await lose.page.waitForSelector("#endShow.on");
     assert.equal(await lose.page.textContent("#esLabel"), "負け…");
     assert.equal(await lose.page.getAttribute("#esLabel", "class"), "lose");
-    assert.equal(await lose.page.textContent("#esScore .opp"), "50");
+    assert.equal(await lose.page.textContent("#esScore .them"), "50");
     const loseColor = await lose.page.$eval("#esLabel", (e) => getComputedStyle(e).color);
     assert.deepEqual(lose.errors, []);
     await lose.ctx.close();
@@ -1188,7 +1209,7 @@ test("画面", { skip }, async (t) => {
     await solo.page.waitForSelector("#endShow.on");
     assert.equal(await solo.page.textContent("#esLabel"), "おわり");
     assert.equal(await solo.page.textContent("#esScore .you"), "51");
-    assert.equal(await solo.page.locator("#esScore .opp").count(), 0, "ひとりでは相手の点が無い");
+    assert.equal(await solo.page.locator("#esScore .them").count(), 0, "ひとりでは相手の点が無い");
     assert.deepEqual(solo.errors, []);
     await solo.ctx.close();
   });
