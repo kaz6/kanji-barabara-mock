@@ -38,7 +38,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 DATA = os.path.join(ROOT, "data")
 
-VERSION = "2026-11-23.2"
+VERSION = "2026-11-23.3"
 # レベルと KANJIDIC2 の jlpt（旧級）の対応。tanos の表への差し替えはまだ（D-009）
 LEVELS = {"N5": "4", "N4": "3"}
 LEVEL_ORDER = ["N5", "N4"]

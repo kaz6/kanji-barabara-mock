@@ -1804,6 +1804,67 @@ test("大＋丶：N5 では 太・犬 は出ない（N4 の字）", () => {
   assert.equal(T.parts["犬"], undefined);
 });
 
+// KJ-047（P-047・D-061・D-062）：玉＝王＋丶・足＝口＋止 を足した。国→玉→王 と割れる。主＝丶＋王 との並びの違い
+test("玉＝王＋丶：国→玉→王 と割れる（N5・N4・小1）。王 は割れない。王＋丶 で 玉", () => {
+  for (const L of [T, T4]) {
+    assert.deepEqual(K.splitOnce(L, "国"), ["囗", "玉"], `${L.level}`);
+    assert.deepEqual(K.splitOnce(L, "玉"), ["王", "丶"], `${L.level}`);
+    assert.ok(!K.canSplit(L, "王"), `${L.level}: 王 は割れない`);
+    assert.deepEqual(K.joinResults(L, "王", "丶"), ["玉"], `${L.level}`);
+    assert.deepEqual(K.joinResults(L, "丶", "王").includes("玉"), false, "順が逆では 玉 にならない");
+    assert.ok(L.HOLD.has("王") && L.HOLD.has("玉"), `${L.level}: 王・玉 は手に持てる字`);
+  }
+  assert.deepEqual(K.joinResults(T4, "丶", "王"), ["主"], "丶＋王 は今まで通り 主");
+  const g = newGame(1, "normal", "N5");
+  let [id] = setHand(g, g.me, "国");
+  assert.equal(chars(g.split(g.me, [id]).cards), "囗玉");
+  const [yu] = g.me.cards.filter((c) => c.c === "玉").map((c) => c.id);
+  assert.equal(chars(g.split(g.me, [yu]).cards), "王丶", "玉 をもう一度割ると 王 と 丶");
+  assert.equal(g.join(g.me, g.me.cards.filter((c) => "王丶".includes(c.c)).map((c) => c.id)).ok, true);
+});
+
+test("玉＝王＋丶：N5 でも 王 を含む語（国王・王女 など）が放てる。N4 の語の数は変わらない", () => {
+  for (const w of ["国王", "王女", "王子", "王国", "女王", "王手", "王立"]) {
+    assert.ok(T.WORDS.has(w), `N5：${w}`);
+    assert.equal(T.WORDS.get(w).lv, "N5", w);
+    assert.ok(T4.WORDS.has(w), `N4：${w}`);
+  }
+  assert.equal(T.WORDS.size, 2449);
+  assert.equal(T4.WORDS.size, 10438);
+});
+
+test("玉＝王＋丶・主＝丶＋王：面で落とす。丶 を 王 の上に落とすと 主、下に落とすと 玉（N4）", () => {
+  assert.deepEqual(K.faceJoins(T4, "丶", "王"), { top: ["主"], bottom: ["玉"] });
+  assert.deepEqual(K.faceJoins(T4, "王", "丶"), { top: ["玉"], bottom: ["主"] }, "王 を 丶 の上に落とすと 玉、下に落とすと 主");
+  let g = newGame(1, "normal", "N4");
+  let [a, b] = setHand(g, g.me, "丶王");
+  assert.equal(chars(g.joinFace(g.me, a, b, "top").cards), "主");
+  g = newGame(1, "normal", "N4");
+  [a, b] = setHand(g, g.me, "丶王");
+  assert.equal(chars(g.joinFace(g.me, a, b, "bottom").cards), "玉");
+  g = newGame(1, "normal", "N4");
+  [a, b] = setHand(g, g.me, "丶王");
+  assert.equal(g.joinFace(g.me, a, b, "left").ok, false, "左の面では字にならない");
+  // 並べた順（Join）は 王丶＝玉・丶王＝主 で、どちらも今まで通りの決まり
+  g = newGame(1, "normal", "N4");
+  assert.equal(chars(g.join(g.me, setHand(g, g.me, "王丶")).cards), "玉");
+  g = newGame(1, "normal", "N4");
+  assert.equal(chars(g.join(g.me, setHand(g, g.me, "丶王")).cards), "主");
+});
+
+test("足＝口＋止：割ると 口 と 止。口＋止 で 足（N5・N4・小1）。止＋口 は足にならない", () => {
+  for (const L of [T, T4]) {
+    assert.deepEqual(K.splitOnce(L, "足"), ["口", "止"], `${L.level}`);
+    assert.deepEqual(K.joinResults(L, "口", "止"), ["足"], `${L.level}`);
+    assert.deepEqual(K.joinResults(L, "止", "口"), [], `${L.level}：順が逆はくっつかない`);
+    assert.deepEqual(K.faceJoins(L, "口", "止"), { top: ["足"] }, `${L.level}：口 を 止 の上に落とすと 足`);
+    assert.deepEqual(K.faceJoins(L, "止", "口"), { bottom: ["足"] }, `${L.level}：止 を 口 の下に落とすと 足`);
+  }
+  const g = newGame(1, "normal", "N5");
+  const [id] = setHand(g, g.me, "足");
+  assert.equal(chars(g.split(g.me, [id]).cards), "口止");
+});
+
 test("相手の選び（KJ-045）：遊び方は3つ・強さは3つ。前の形のキーを新しい形に読み替える。中のキーとログの書き方は変えない", () => {
   assert.deepEqual(K.PLAY_MODES.map((o) => o.label), ["ひとりで", "CPU と", "友だちと（合言葉）"]);
   assert.deepEqual(K.CPU_POWERS.map((o) => [o.key, o.label]), [["weak", "とても弱い"], ["fair", "ふつう"], ["normal", "つよい"]]);

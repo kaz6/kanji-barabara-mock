@@ -1,5 +1,5 @@
 {
- "version": "2026-11-23.2",
+ "version": "2026-11-23.3",
  "source": "JMdict（jamdict-data, jmdict 1.08）。2〜4字の語は「手に持てる字」（レベルの字＋割る・くっつけるで出る字）だけで書けるもの（KJ-011・D-029）。1字の語はレベルの字だけ",
  "fields": {
   "w": "語",
@@ -12,20 +12,20 @@
  },
  "stats": {
   "hold_by_level": {
-   "N5": 138,
+   "N5": 139,
    "N4": 353,
    "G1": 86
   },
   "by_level": {
    "N5": {
-    "total": 2420,
+    "total": 2449,
     "by_length": {
      "1": 97,
-     "2": 1716,
-     "3": 458,
+     "2": 1737,
+     "3": 466,
      "4": 149
     },
-    "common": 720,
+    "common": 727,
     "yoji": 43
    },
    "N4": {
@@ -8875,7 +8875,7 @@
   },
   {
    "w": "国王",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "こくおう",
    "en": [
     "king; queen",
@@ -10188,7 +10188,7 @@
   },
   {
    "w": "女王",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "じょおう",
    "en": [
     "queen",
@@ -15627,7 +15627,7 @@
   },
   {
    "w": "王国",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "おうこく",
    "en": [
     "kingdom; monarchy"
@@ -15636,7 +15636,7 @@
   },
   {
    "w": "王女",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "おうじょ",
    "en": [
     "princess"
@@ -15646,7 +15646,7 @@
   },
   {
    "w": "王子",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "おうじ",
    "en": [
     "prince",
@@ -15666,7 +15666,7 @@
   },
   {
    "w": "王手",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "おうて",
    "en": [
     "check"
@@ -15694,7 +15694,7 @@
   },
   {
    "w": "王立",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "おうりつ",
    "en": [
     "royal"
@@ -24389,7 +24389,7 @@
   },
   {
    "w": "二王",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "におう",
    "en": [
     "two Deva kings; guardian gods of Buddhism who stand at the entrance of a Buddhist temple"
@@ -26854,7 +26854,7 @@
   },
   {
    "w": "先王",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "せんおう",
    "en": [
     "the late king; the preceding king"
@@ -28804,7 +28804,7 @@
   },
   {
    "w": "前王",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "ぜんのう",
    "en": [
     "former king; late king"
@@ -29421,7 +29421,7 @@
   },
   {
    "w": "十王",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "じゅうおう",
    "en": [
     "ten rulers of the afterlife (who judge the dead and determine their placement in their next life)"
@@ -34453,7 +34453,7 @@
   },
   {
    "w": "大王",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "だいおう",
    "en": [
     "great king"
@@ -34935,7 +34935,7 @@
   },
   {
    "w": "天王",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "てんのう",
    "en": [
     "heavenly king",
@@ -46301,7 +46301,7 @@
   },
   {
    "w": "父王",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "ちちおう",
    "en": [
     "king who is a father"
@@ -46803,7 +46803,7 @@
   },
   {
    "w": "王化",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "おうか",
    "en": [
     "imperial influence; assimilation of new territory"
@@ -46820,7 +46820,7 @@
   },
   {
    "w": "王土",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "おうど",
    "en": [
     "royal or imperial domain"
@@ -46845,7 +46845,7 @@
   },
   {
    "w": "王母",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "おうぼ",
    "en": [
     "deceased grandmother"
@@ -46853,7 +46853,7 @@
   },
   {
    "w": "王水",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "おうすい",
    "en": [
     "aqua regia"
@@ -46862,7 +46862,7 @@
   },
   {
    "w": "王父",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "おうふ",
    "en": [
     "deceased grandfather"
@@ -46878,7 +46878,7 @@
   },
   {
    "w": "王道",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "おうどう",
    "en": [
     "righteous government; just rule",
@@ -52068,7 +52068,7 @@
   },
   {
    "w": "花王",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "かおう",
    "en": [
     "tree peony (Paeonia suffruticosa)"
@@ -63878,7 +63878,7 @@
   },
   {
    "w": "二王門",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "におうもん",
    "en": [
     "Deva gate; temple gate guarded by fierce Deva Kings"
@@ -65647,7 +65647,7 @@
   },
   {
    "w": "八王子",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "はちおうじ",
    "en": [
     "Hachiōji (city)"
@@ -68061,7 +68061,7 @@
   },
   {
    "w": "四天王",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "してんのう",
    "en": [
     "the Four Heavenly Kings (Dhrtarastra, Virudhaka, Virupaksa, and Vaisravana)",
@@ -68105,7 +68105,7 @@
   },
   {
    "w": "四王天",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "しおうてん",
    "en": [
     "heaven of the Four Great Kings; one of the six heavens of the desire realm"
@@ -69774,7 +69774,7 @@
   },
   {
    "w": "天王山",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "てんのうざん",
    "en": [
     "strategic point; crucial time"
@@ -70065,7 +70065,7 @@
   },
   {
    "w": "女王国",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "じょおうこく",
    "en": [
     "queendom; country ruled by a queen"
@@ -72057,7 +72057,7 @@
   },
   {
    "w": "新人王",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "しんじんおう",
    "en": [
     "rookie-of-the-year"
@@ -77378,7 +77378,7 @@
   },
   {
    "w": "西王母",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "せいおうぼ",
    "en": [
     "Queen Mother of the West (an ancient Chinese goddess)"

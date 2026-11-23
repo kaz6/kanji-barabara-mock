@@ -34,8 +34,8 @@ test("小1：山に入る字はちょうど80字で、80字の外は入らない
   for (const c of neither) assert.ok(!T4.CHARS.has(c) && !T.CHARS.has(c), `${c} は N5・N4 の山に入らない`);
 });
 
-test("小1：N5・N4 は動かない（字・語・手に持てる字の数は小1 を足す前のまま）", () => {
-  assert.deepEqual([T.CHARS.size, T.WORDS.size, T.HOLD.size], [103, 2420, 138]);
+test("小1：N5・N4 は小1 を足したことでは動かない（N4 の数は小1 を足す前のまま。N5 は P-047 で 玉＝王＋丶 を足して 王 が手に持てる字になり、語が29語 N4→N5）", () => {
+  assert.deepEqual([T.CHARS.size, T.WORDS.size, T.HOLD.size], [103, 2449, 139]);
   assert.deepEqual([T4.CHARS.size, T4.WORDS.size, T4.HOLD.size], [284, 10438, 353]);
   for (const w of T4.WORDS.values()) assert.ok(w.lv === "N5" || w.lv === "N4", w.w);
   for (const w of D.words.words.filter((x) => x.lv === null)) assert.ok(w.g1 && !T4.WORDS.has(w.w) && !T.WORDS.has(w.w), `${w.w} は小1 だけの語`);
@@ -72,21 +72,22 @@ test("小1：割り方・対義・巡りは今のまま。曜日・数は80字�
   assert.deepEqual(K.splitOnce(TG1, "林"), ["木", "木"]);
 });
 
-test("小1：80字のうち N5・N4 のどちらにも無い字に足した割り方（石・草・糸）。N5・N4 では割れない・くっつかない", () => {
-  assert.deepEqual(K.splitOnce(TG1, "石"), ["厂", "口"]);
+test("小1：80字のうち N5・N4 のどちらにも無い字の割り方。草＝艹＋早 だけ（石・糸 は作者が割らないと決めた）。草 は N5・N4 では割れない・くっつかない", () => {
   assert.deepEqual(K.splitOnce(TG1, "草"), ["艹", "早"]);
-  assert.deepEqual(K.splitOnce(TG1, "糸"), ["幺", "小"]);
-  assert.deepEqual(K.joinResults(TG1, "厂", "口"), ["石"]);
   assert.deepEqual(K.joinResults(TG1, "艹", "早"), ["草"]);
-  assert.deepEqual(K.joinResults(TG1, "幺", "小"), ["糸"]);
-  assert.deepEqual(K.joinResults(TG1, "口", "厂"), [], "逆の順ではくっつかない");
+  for (const c of "石糸") assert.ok(!K.canSplit(TG1, c), `${c} は割らない（作者 2026-11-23 14:14）`);
+  assert.deepEqual(K.joinResults(TG1, "厂", "口"), [], "厂＋口 で 石 にはならない");
+  assert.deepEqual(K.joinResults(TG1, "幺", "小"), [], "幺＋小 で 糸 にはならない");
   for (const L of [T, T4]) {
     for (const c of "石草糸") assert.ok(!K.canSplit(L, c), `${c} は ${L.level} では割れない`);
     assert.deepEqual(K.joinResults(L, "艹", "早"), []);
     assert.deepEqual(K.joinResults(L, "厂", "口"), []);
   }
-  // 国→玉→王 は今まで通り（玉＝王＋丶 は P-047 で足す。ここでは足さない）
-  assert.ok(!K.canSplit(TG1, "玉") && !K.canSplit(TG1, "王"));
+  // 国→玉→王 は P-047 で足した（王＝割れない。玉＝王＋丶 は N5・N4・小1 の全部で割れる）
+  assert.ok(K.canSplit(TG1, "玉") && !K.canSplit(TG1, "王"));
+  assert.deepEqual(K.splitOnce(TG1, "玉"), ["王", "丶"]);
+  assert.deepEqual(K.splitOnce(TG1, "足"), ["口", "止"], "足＝口＋止 も小1 で割れる");
+  assert.deepEqual(K.joinResults(TG1, "口", "止"), ["足"]);
 });
 
 test("小1：部品表の輪がない。割った字・部品は全部札の字形にある（80字が全部表示できる）", () => {
@@ -126,15 +127,17 @@ test("小1：引き直し・取るで補充しても山の字は80字の外が�
   }
 });
 
-test("小1：80字だけの手札で、割る・くっつけるが通る（石＝厂＋口 を割って、くっつけ直す）", () => {
+test("小1：80字だけの手札で、割る・くっつけるが通る（草＝艹＋早 を割って、くっつけ直す。石 は割れない）", () => {
   const g = newGame(3, "solo", "G1");
-  const [id] = setHand(g, g.me, "石");
+  const [id] = setHand(g, g.me, "草");
   const r = g.split(g.me, [id]);
   assert.ok(r.ok, r.why);
-  assert.equal(g.me.cards.map((c) => c.c).join(""), "厂口");
+  assert.equal(g.me.cards.map((c) => c.c).join(""), "艹早");
   const j = g.join(g.me, g.me.cards.map((c) => c.id));
   assert.ok(j.ok, j.why);
-  assert.equal(g.me.cards.map((c) => c.c).join(""), "石");
+  assert.equal(g.me.cards.map((c) => c.c).join(""), "草");
+  const [ishi] = setHand(g, g.me, "石");
+  assert.equal(g.split(g.me, [ishi]).ok, false, "石 は割れない");
 });
 
 // ---- 小1 だけ放てない語（KJ-044 追記）----
