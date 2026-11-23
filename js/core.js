@@ -655,7 +655,8 @@
       if (live() && locked(p)) return fail(LOCK_WHY);
       if (!live() || !cs || cs.length !== 1) return fail("1枚だけ");
       const c = cs[0].c;
-      if (!homoChars(T, c).includes(to)) return fail("同じ読みではない");
+      const homo = homoChars(T, c);
+      if (!homo.includes(to)) return fail(homo.length ? "同じ読みではない" : "同じ読みの字がない"); // 同じ読みの字が1つも無いときは「ない」（KJ-069）。行き先が違うときは「ではない」
       if (!g.ready(p, "homophone")) return fail("待ち時間");
       if (!fits(p, cs, 1)) return fail("手札もストックもいっぱい");
       useCd(p, "homophone");
@@ -868,7 +869,7 @@
         return fits(p, cs, splitOnce(T, c).length) ? null : "手札もストックもいっぱい";
       }
       if (op === "homophone") {
-        if (!homoChars(T, c).length) return "同じ読みではない";
+        if (!homoChars(T, c).length) return "同じ読みの字がない"; // KJ-069
         if (!g.ready(p, "homophone")) return "待ち時間";
         return fits(p, cs, 1) ? null : "手札もストックもいっぱい";
       }

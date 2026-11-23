@@ -1769,6 +1769,46 @@ test("画面", { skip }, async (t) => {
     assert.equal(await A.page.evaluate(() => __KJ.game.over), false, "試合は時間どおり続く");
     await A.ctx.close(); await B.ctx.close();
   });
+  // KJ-069：押せない見た目のボタンを押すと理由が画面に出る・Same reading の一覧は、もう一度 Same reading で閉じる
+  await t.test("KJ-069：押せない見た目のボタンを押すと、はじかれた理由が画面に出る。Same reading の一覧はもう一度押すと閉じる（待ち時間なし・ログなし）", async () => {
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 }, "solo");
+    const msg = () => page.textContent("#msg");
+    const hand = () => page.locator("#meHand .tile").evaluateAll((els) => els.map((e) => e.title).join(""));
+    const pick = async (c) => { await page.locator("#meHand .tile:not(.sel)", { hasText: c }).first().click(); };
+    const click = (id) => page.evaluate((i) => document.getElementById(i).click(), id);
+    const homoC = await page.evaluate(() => { const T = __KJ.tables; return [...T.HOMO.keys()].find((c) => !T.INV.has(c) && T.HOMO.get(c).flatMap((g) => g.chars).some((x) => x !== c)); });
+    const noHomo = await page.evaluate(() => { const T = __KJ.tables; return [...T.HOLD].find((c) => !T.HOMO.has(c) && !T.INV.has(c) && !T.NEXT.has(c) && !KJ.canSplit(T, c)); }); // 割れない・反転も巡りも同音も無い字
+    assert.ok(homoC && noHomo, `同じ読みの字がある札（${homoC}）と無い札（${noHomo}）`);
+    await page.evaluate(([a, b]) => { const G = __KJ.game; G.me.cards = [a, b, "山", "川"].map((c, i) => ({ id: 8100 + i, c, t: 0, fresh: false })); __KJ.row.length = 0; __KJ.render(); }, [homoC, noHomo]);
+    // 同じ読みの字が無い札：押せない見た目・押すと画面に理由（今まで「同じ読みではない」。選んだ字が違うと読めた）
+    await pick(noHomo);
+    assert.equal(await page.getAttribute("#bHomo", "aria-disabled"), "true");
+    await click("bHomo");
+    assert.equal(await msg(), "同じ読みの字がない");
+    assert.equal(await page.evaluate(() => __KJ.game.log.filter((e) => e.op === "ためした").map((e) => e.note).join("|")), "同音：同じ読みの字がない", "ログの「ためした」は今まで通り");
+    // ほかの押せないボタン（Split・Flip・Cycle・Join）も理由が出る
+    await click("bSplit"); assert.match(await msg(), /割れない/);
+    await click("bInvert"); assert.match(await msg(), /できない字/);
+    await click("bCycle"); assert.match(await msg(), /できない字/);
+    await page.click("#bBack"); assert.equal(await hand(), [homoC, noHomo, "山", "川"].join(""), "手札は動かない");
+    // 同じ読みの字がある札：一覧が出る→もう一度 Same reading で閉じる。札は変わらず・待ち時間なし・ログに残さない
+    await pick(homoC);
+    assert.equal(await page.getAttribute("#bHomo", "aria-disabled"), "false");
+    const logN = await page.evaluate(() => __KJ.game.log.length);
+    await click("bHomo");
+    assert.equal(await page.locator("#choices.on").count(), 1, "一覧が出る");
+    await click("bHomo");
+    assert.equal(await page.locator("#choices.on").count(), 0, "もう一度押すと閉じる");
+    assert.equal(await page.evaluate(() => __KJ.row.length), 1, "選んだ札はそのまま");
+    assert.equal(await hand(), [homoC, noHomo, "山", "川"].join(""), "手札は変わらない");
+    assert.equal(await page.evaluate(() => __KJ.game.ready(__KJ.game.me, "homophone")), true, "待ち時間はかからない");
+    assert.equal(await page.evaluate(() => __KJ.game.log.length), logN, "ログに残さない");
+    await click("bHomo");
+    assert.equal(await page.locator("#choices.on").count(), 1, "また押すと一覧がまた出る");
+    await page.click("#bBack");
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
   // KJ-041：押した操作がはじかれたら「ためした」に残る。ボタンは押せない見た目のまま（disabled でなく aria-disabled）で、押しても手札は動かない
   await t.test("はじかれた操作もログに残す（KJ-041）：割れない Split・待ち時間の Flip・巡りの無い Cycle・読みの無い Same reading・待っている Redraw・取れない取る・光っていない面。続けて押すと1行。手札は動かない・ヒントは数えない", async () => {
     const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 }, "solo");
@@ -1804,7 +1844,7 @@ test("画面", { skip }, async (t) => {
     await page.evaluate(() => { __KJ.game.me.redraws = 0; __KJ.render(); });
     await page.locator("#field .tile").first().click();
     const t1 = await tried();
-    assert.deepEqual(t1.map((x) => x.note), ["割る：割れない ×3", "反転：待ち時間", "巡り：できない字", "同音：同じ読みではない", "引き直し：引き直しは5回まで", "取る：取れる枚数がない"]);
+    assert.deepEqual(t1.map((x) => x.note), ["割る：割れない ×3", "反転：待ち時間", "巡り：できない字", "同音：同じ読みの字がない", "引き直し：引き直しは5回まで", "取る：取れる枚数がない"]);
     assert.deepEqual(t1.map((x) => x.from).slice(0, 4), ["一", "上", "休", "月"], "使った札の欄に札");
     assert.equal(t1[5].from.length, 1, "取るは場の札");
     assert.equal(await hand(), "一休田上月", "どれも手札は動かない");

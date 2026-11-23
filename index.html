@@ -919,20 +919,21 @@ $("bInvert").onclick=()=>press("bInvert","invert","反転",()=>{const r=G.invert
 $("bCycle").onclick=()=>press("bCycle","cycle","巡り",()=>{const r=G.cycle(G.me,row);afterOp(r);return r});
 $("bBack").onclick=()=>{noteTried();row=[];hideChoices();afterChange()};
 $("bRedraw").onclick=()=>{
-  if(isOff("bRedraw")){if(!G.over){G.triedOp(G.me,"引き直し",[],(TUT&&TUT.blocked("redraw"))||G.whyNot(G.me,"redraw"));afterChange()}return} // 引き直しを使いきったあとに押した（KJ-041）
+  if(isOff("bRedraw")){if(!G.over){const why=(TUT&&TUT.blocked("redraw"))||G.whyNot(G.me,"redraw");G.triedOp(G.me,"引き直し",[],why);afterChange();showWhy(why)}return} // 引き直しを使いきったあとに押した（KJ-041）
   row=[];hideChoices();if(MC){const mc=MC;mc.redraw().then(()=>{if(!stale(mc))afterChange()});afterChange();return}G.redraw(G.me);afterChange()}; // 部屋：手札はすぐ入れ替わる。点の送りの返事は待たずに描く
 $("bHomo").onclick=()=>{
+  if($("choices").dataset.kind==="homo"){hideChoices();return} // 選びの一覧が出ているときにもう一度押すと、閉じて元に戻る。何も変えない・待ち時間もかからない・ログにも残さない（KJ-069）
   if(TUT){const why=TUT.blocked("homophone",{chars:rowCards().map(x=>x.c)});if(why){G.triedOp(G.me,"同音",rowCards().map(x=>x.c),why);showWhy(why);afterChange();return}}
-  if(isOff("bHomo")){if(!G.over){G.triedOp(G.me,"同音",rowCards().map(x=>x.c),G.whyNot(G.me,"homophone",[...row]));afterChange()}return} // 押せない見た目：選びの一覧は出さず、理由を残す（KJ-041）
+  if(isOff("bHomo")){if(!G.over){const why=G.whyNot(G.me,"homophone",[...row]);G.triedOp(G.me,"同音",rowCards().map(x=>x.c),why);afterChange();showWhy(why)}return} // 押せない見た目：選びの一覧は出さず、理由を残す（KJ-041）
   const c=rowText();
   showChoices((T.HOMO.get(c)||[]).map(g=>({label:`${g.type==="on"?"音":"訓"}：${g.reading}`,chars:g.chars.filter(x=>x!==c),
     pick:x=>{
       if(rowText()!==c)return;
       if(TUT){const why=TUT.blocked("homophone",{chars:[c],pick:x});if(why){G.triedOp(G.me,"同音",[c],why);showWhy(why);afterChange();return}}
-      const r=G.homophone(G.me,row,x);if(TUT&&r.ok)TUT.advance("homophone");afterOp(r);if(!r.ok){G.triedOp(G.me,"同音",[c],r.why);afterChange()}}})));
+      const r=G.homophone(G.me,row,x);if(TUT&&r.ok)TUT.advance("homophone");afterOp(r);if(!r.ok){G.triedOp(G.me,"同音",[c],r.why);afterChange()}}})),"homo");
 };
-function showChoices(groups){
-  const box=$("choices");box.innerHTML="";
+function showChoices(groups,kind=""){
+  const box=$("choices");box.innerHTML="";box.dataset.kind=kind; // kind="homo"：Same reading の一覧（もう一度 Same reading で閉じる。KJ-069）
   for(const g of groups){
     const d=document.createElement("div");d.className="g";
     d.innerHTML=`<span>${g.label}</span>`;
@@ -941,7 +942,7 @@ function showChoices(groups){
   }
   box.classList.add("on");
 }
-function hideChoices(){$("choices").classList.remove("on")}
+function hideChoices(){const b=$("choices");b.classList.remove("on");b.dataset.kind=""}
 
 // ---------- 描画 ----------
 function tileEl(x,{onClick,shown,ord}={}){
@@ -1135,7 +1136,7 @@ function press(id,op,name,run){
   const chars=rowCards().map(x=>x.c);
   if(G.over)return;
   if(TUT){const why=TUT.blocked(op,{chars});if(why){G.triedOp(G.me,name,chars,why);showWhy(why);afterChange();return}} // チュートリアル：いまの段の手だけ
-  if(isOff(id)){G.triedOp(G.me,name,chars,G.whyNot(G.me,op,[...row]));afterChange();return}
+  if(isOff(id)){const why=G.whyNot(G.me,op,[...row]);G.triedOp(G.me,name,chars,why);afterChange();showWhy(why);return} // 押せない見た目でも、はじかれた理由を画面に出す（KJ-069）
   const r=run();
   if(r&&r.ok===false){G.triedOp(G.me,name,chars,r.why);afterChange()}
   else if(TUT&&r&&r.ok){TUT.advance(op);afterChange()}
