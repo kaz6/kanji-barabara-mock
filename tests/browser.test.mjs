@@ -149,6 +149,29 @@ test("画面", { skip }, async (t) => {
     });
   }
 
+  await t.test("地名・名字（KJ-032）：台の行に〔名字〕〔地名・名字〕の印。普通の言葉には付かない", async () => {
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 });
+    await page.evaluate(() => { __KJ.game.me.cards = [..."田中石川休日"].map((c, i) => ({ id: 9100 + i, c, t: 0, fresh: false })); __KJ.render(); });
+    const tap = async (ch) => page.locator("#meHand .tile:not(.sel)", { hasText: ch }).first().click();
+    await tap("田"); await tap("中");
+    assert.match(await page.textContent("#info"), /^田中 \d+点 たなか〔名字〕/);
+    if (process.env.KJ_SHOT_PN) await page.screenshot({ path: process.env.KJ_SHOT_PN }); // 報告の画像（KJ-032）
+    await page.click("#bBack");
+    await tap("石"); await tap("川");
+    assert.match(await page.textContent("#info"), /いしかわ〔地名・名字〕/);
+    await page.click("#bBack");
+    // もとの読みが違う語は、名前の読みを並べる（大分 だいぶ／おおいた〔地名〕）
+    await page.evaluate(() => { __KJ.game.me.cards.push(...[..."大分"].map((c, i) => ({ id: 9200 + i, c, t: 0, fresh: false }))); __KJ.render(); });
+    await tap("大"); await tap("分");
+    assert.match(await page.textContent("#info"), /だいぶ／おおいた〔地名〕/);
+    await page.click("#bBack");
+    await tap("休"); await tap("日");
+    assert.equal(await page.locator("#info .pn").count(), 0, "普通の言葉には印なし");
+    assert.doesNotMatch(await page.textContent("#info"), /〔/);
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+
   await t.test("相手の選び方（KJ-045）：初期値は CPU と＋とても弱い。遊び方は3つ、強さは CPU とのときだけ3つ", async () => {
     const { ctx, page, errors } = await open(browser, url, { width: 760, height: 1100 });
     const labels = await page.locator("#opp label").allTextContents();
@@ -407,7 +430,7 @@ test("画面", { skip }, async (t) => {
     await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
     assert.equal(await page.locator("#lvl input:checked").getAttribute("value"), "G1", "端末に覚える");
     await page.check('#lvl input[value="N4"]');
-    assert.match(await page.textContent("#setupInfo"), /^字 284・語 10438（レベル N4/);
+    assert.match(await page.textContent("#setupInfo"), /^字 284・語 10460（レベル N4/);
     assert.deepEqual(errors, []);
     await ctx.close();
   });

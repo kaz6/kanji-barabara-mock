@@ -1,6 +1,6 @@
 {
- "version": "2026-11-23.3",
- "source": "JMdict（jamdict-data, jmdict 1.08）。2〜4字の語は「手に持てる字」（レベルの字＋割る・くっつけるで出る字）だけで書けるもの（KJ-011・D-029）。1字の語はレベルの字だけ",
+ "version": "2026-11-23.4",
+ "source": "JMdict（jamdict-data, jmdict 1.08）。2〜4字の語は「手に持てる字」（レベルの字＋割る・くっつけるで出る字）だけで書けるもの（KJ-011・D-029）。1字の語はレベルの字だけ。地名・名字は data/proper_names.json と JMnedict（KJ-032）。data/blocked_words.json の語は外す（D-048）",
  "fields": {
   "w": "語",
   "lv": "レベル（その語の字がすべて手に持てる、いちばん低い N5／N4。小1 だけで放てる語は null）",
@@ -8,7 +8,9 @@
   "kana": "かな読み（最初の1つ）",
   "en": "英語の意味（最初の2つ）",
   "common": "よく使う（news1/ichi1/spec1/spec2/gai1）",
-  "yoji": "四字熟語"
+  "yoji": "四字熟語",
+  "pn": "地名・名字の印（KJ-032。台の行に〔地名〕〔名字〕。data/proper_names.json から。点数は普通の言葉と同じ）",
+  "pn_kana": "地名・名字の読み（kana と違うときだけ。台の行に kana／pn_kana と並べる）"
  },
  "stats": {
   "hold_by_level": {
@@ -18,48 +20,53 @@
   },
   "by_level": {
    "N5": {
-    "total": 2458,
+    "total": 2466,
     "by_length": {
      "1": 97,
-     "2": 1743,
+     "2": 1751,
      "3": 467,
      "4": 151
     },
     "common": 729,
-    "yoji": 43
+    "yoji": 43,
+    "pn": 16
    },
    "N4": {
-    "total": 10438,
+    "total": 10460,
     "by_length": {
      "1": 253,
-     "2": 6525,
-     "3": 2561,
-     "4": 1099
+     "2": 6545,
+     "3": 2562,
+     "4": 1100
     },
-    "common": 2419,
-    "yoji": 202
+    "common": 2418,
+    "yoji": 202,
+    "pn": 56
    },
    "G1": {
-    "total": 1365,
+    "total": 1378,
     "by_length": {
      "1": 78,
-     "2": 975,
+     "2": 988,
      "3": 239,
      "4": 73
     },
     "common": 429,
-    "yoji": 24
+    "yoji": 24,
+    "pn": 22
    }
   },
-  "total": 10474,
+  "total": 10496,
   "by_length": {
    "1": 261,
-   "2": 6540,
-   "3": 2570,
-   "4": 1103
+   "2": 6560,
+   "3": 2571,
+   "4": 1104
   },
-  "common": 2429,
-  "yoji": 204
+  "common": 2428,
+  "yoji": 204,
+  "pn": 56,
+  "pn_added": 24
  },
  "words": [
   {
@@ -3689,7 +3696,11 @@
     "high rice field; very fertile rice field"
    ],
    "g1": true,
-   "common": true
+   "common": true,
+   "pn": [
+    "名字"
+   ],
+   "pn_kana": "うえだ"
   },
   {
    "w": "上申",
@@ -4724,7 +4735,10 @@
    "en": [
     "Kyoto (city, prefecture)"
    ],
-   "common": true
+   "common": true,
+   "pn": [
+    "地名"
+   ]
   },
   {
    "w": "人中",
@@ -9266,15 +9280,6 @@
    "common": true
   },
   {
-   "w": "売春",
-   "lv": "N4",
-   "kana": "ばいしゅん",
-   "en": [
-    "prostitution"
-   ],
-   "common": true
-  },
-  {
    "w": "売買",
    "lv": "N5",
    "kana": "ばいばい",
@@ -9677,7 +9682,11 @@
    "en": [
     "considerably; greatly"
    ],
-   "common": true
+   "common": true,
+   "pn": [
+    "地名"
+   ],
+   "pn_kana": "おおいた"
   },
   {
    "w": "大切",
@@ -10020,7 +10029,10 @@
    "en": [
     "large field"
    ],
-   "common": true
+   "common": true,
+   "pn": [
+    "名字"
+   ]
   },
   {
    "w": "大金",
@@ -10908,7 +10920,10 @@
     "stream; brook"
    ],
    "g1": true,
-   "common": true
+   "common": true,
+   "pn": [
+    "名字"
+   ]
   },
   {
    "w": "小火",
@@ -14126,7 +14141,10 @@
    "en": [
     "Tokyo"
    ],
-   "common": true
+   "common": true,
+   "pn": [
+    "地名"
+   ]
   },
   {
    "w": "東北",
@@ -19397,7 +19415,11 @@
     "money; funds"
    ],
    "g1": true,
-   "common": true
+   "common": true,
+   "pn": [
+    "名字"
+   ],
+   "pn_kana": "かねこ"
   },
   {
    "w": "金曜",
@@ -19964,7 +19986,10 @@
     "live tree"
    ],
    "g1": true,
-   "common": true
+   "common": true,
+   "pn": [
+    "名字"
+   ]
   },
   {
    "w": "青空",
@@ -22014,7 +22039,11 @@
    "kana": "さんじゅう",
    "en": [
     "triple; treble"
-   ]
+   ],
+   "pn": [
+    "地名"
+   ],
+   "pn_kana": "みえ"
   },
   {
    "w": "三門",
@@ -22488,7 +22517,11 @@
    "kana": "こうずけ",
    "en": [
     "Kōzuke (former province located in present-day Gunma Prefecture)"
-   ]
+   ],
+   "pn": [
+    "名字"
+   ],
+   "pn_kana": "うえの"
   },
   {
    "w": "上長",
@@ -23515,6 +23548,30 @@
    "g1": true
   },
   {
+   "w": "中山",
+   "lv": "N5",
+   "kana": "なかやま",
+   "en": [
+    "Nakayama"
+   ],
+   "g1": true,
+   "pn": [
+    "名字"
+   ]
+  },
+  {
+   "w": "中川",
+   "lv": "N5",
+   "kana": "なかがわ",
+   "en": [
+    "Nakagawa"
+   ],
+   "g1": true,
+   "pn": [
+    "名字"
+   ]
+  },
+  {
    "w": "中店",
    "lv": "N5",
    "kana": "ちゅうみせ",
@@ -23583,6 +23640,18 @@
    "en": [
     "China and North Korea; Chinese-North Korean",
     "imperial court"
+   ]
+  },
+  {
+   "w": "中村",
+   "lv": "N4",
+   "kana": "なかむら",
+   "en": [
+    "Nakamura"
+   ],
+   "g1": true,
+   "pn": [
+    "名字"
    ]
   },
   {
@@ -23710,6 +23779,17 @@
    "kana": "ちゅうぐん",
    "en": [
     "centrally placed troops (usu. under general's direct command)"
+   ]
+  },
+  {
+   "w": "中野",
+   "lv": "N4",
+   "kana": "なかの",
+   "en": [
+    "Nakano"
+   ],
+   "pn": [
+    "名字"
    ]
   },
   {
@@ -28818,6 +28898,17 @@
    "kana": "ぜんしょう",
    "en": [
     "previous existence"
+   ]
+  },
+  {
+   "w": "前田",
+   "lv": "N5",
+   "kana": "まえだ",
+   "en": [
+    "Maeda"
+   ],
+   "pn": [
+    "名字"
    ]
   },
   {
@@ -34562,6 +34653,17 @@
    ]
   },
   {
+   "w": "大西",
+   "lv": "N5",
+   "kana": "おおにし",
+   "en": [
+    "Oonishi"
+   ],
+   "pn": [
+    "名字"
+   ]
+  },
+  {
    "w": "大言",
    "lv": "N5",
    "kana": "たいげん",
@@ -35144,6 +35246,17 @@
    "kana": "ふともの",
    "en": [
     "drapery (e.g. cotton, hemp, etc., as opposed to silk); cloth"
+   ]
+  },
+  {
+   "w": "太田",
+   "lv": "N4",
+   "kana": "おおた",
+   "en": [
+    "Oota"
+   ],
+   "pn": [
+    "名字"
    ]
   },
   {
@@ -36832,6 +36945,18 @@
    "g1": true
   },
   {
+   "w": "小林",
+   "lv": "N4",
+   "kana": "こばやし",
+   "en": [
+    "Kobayashi"
+   ],
+   "g1": true,
+   "pn": [
+    "名字"
+   ]
+  },
+  {
    "w": "小歌",
    "lv": "N4",
    "kana": "こうた",
@@ -37072,6 +37197,9 @@
    "kana": "おの",
    "en": [
     "plain; field"
+   ],
+   "pn": [
+    "名字"
    ]
   },
   {
@@ -37321,7 +37449,11 @@
     "foot of a mountain; base of a mountain",
     "mine; colliery"
    ],
-   "g1": true
+   "g1": true,
+   "pn": [
+    "名字"
+   ],
+   "pn_kana": "やました"
   },
   {
    "w": "山中",
@@ -37383,7 +37515,11 @@
    "en": [
     "Yamaguchi (city, prefecture)"
    ],
-   "g1": true
+   "g1": true,
+   "pn": [
+    "地名",
+    "名字"
+   ]
   },
   {
    "w": "山名",
@@ -37462,7 +37598,10 @@
     "foot of a mountain; base of a mountain",
     "mine; colliery"
    ],
-   "g1": true
+   "g1": true,
+   "pn": [
+    "名字"
+   ]
   },
   {
    "w": "山気",
@@ -37500,6 +37639,18 @@
     "wild dog"
    ],
    "g1": true
+  },
+  {
+   "w": "山田",
+   "lv": "N5",
+   "kana": "やまだ",
+   "en": [
+    "Yamada"
+   ],
+   "g1": true,
+   "pn": [
+    "名字"
+   ]
   },
   {
    "w": "山男",
@@ -42578,6 +42729,18 @@
    ]
   },
   {
+   "w": "木下",
+   "lv": "N5",
+   "kana": "きのした",
+   "en": [
+    "Kinoshita"
+   ],
+   "g1": true,
+   "pn": [
+    "名字"
+   ]
+  },
+  {
    "w": "木刀",
    "lv": "N5",
    "kana": "ぼくとう",
@@ -42637,6 +42800,18 @@
     "tree; woody plant"
    ],
    "g1": true
+  },
+  {
+   "w": "木村",
+   "lv": "N4",
+   "kana": "きむら",
+   "en": [
+    "Kimura"
+   ],
+   "g1": true,
+   "pn": [
+    "名字"
+   ]
   },
   {
    "w": "木理",
@@ -43144,6 +43319,18 @@
    ]
   },
   {
+   "w": "村上",
+   "lv": "N4",
+   "kana": "むらかみ",
+   "en": [
+    "Murakami"
+   ],
+   "g1": true,
+   "pn": [
+    "名字"
+   ]
+  },
+  {
    "w": "村会",
    "lv": "N4",
    "kana": "そんかい",
@@ -43183,6 +43370,18 @@
     "villages"
    ],
    "g1": true
+  },
+  {
+   "w": "村田",
+   "lv": "N4",
+   "kana": "むらた",
+   "en": [
+    "Murata"
+   ],
+   "g1": true,
+   "pn": [
+    "名字"
+   ]
   },
   {
    "w": "村社",
@@ -43759,6 +43958,18 @@
     "deeply forested"
    ],
    "g1": true
+  },
+  {
+   "w": "森田",
+   "lv": "N4",
+   "kana": "もりた",
+   "en": [
+    "Morita"
+   ],
+   "g1": true,
+   "pn": [
+    "名字"
+   ]
   },
   {
    "w": "森立",
@@ -45236,6 +45447,9 @@
    "kana": "みと",
    "en": [
     "Mito (city in Ibaraki)"
+   ],
+   "pn": [
+    "地名"
    ]
   },
   {
@@ -45505,6 +45719,17 @@
    "kana": "ちすい",
    "en": [
     "pond water; pond"
+   ]
+  },
+  {
+   "w": "池田",
+   "lv": "N4",
+   "kana": "いけだ",
+   "en": [
+    "Ikeda"
+   ],
+   "pn": [
+    "名字"
    ]
   },
   {
@@ -47459,6 +47684,18 @@
    ]
   },
   {
+   "w": "田中",
+   "lv": "N5",
+   "kana": "たなか",
+   "en": [
+    "Tanaka"
+   ],
+   "g1": true,
+   "pn": [
+    "名字"
+   ]
+  },
+  {
    "w": "田作",
    "lv": "N4",
    "kana": "でんさく",
@@ -47489,6 +47726,18 @@
    "en": [
     "farmland",
     "private farm estates from before the Taika reform"
+   ]
+  },
+  {
+   "w": "田村",
+   "lv": "N4",
+   "kana": "たむら",
+   "en": [
+    "Tamura"
+   ],
+   "g1": true,
+   "pn": [
+    "名字"
    ]
   },
   {
@@ -49682,7 +49931,11 @@
    "en": [
     "Ishikawa (prefecture)"
    ],
-   "g1": true
+   "g1": true,
+   "pn": [
+    "地名",
+    "名字"
+   ]
   },
   {
    "w": "石工",
@@ -49744,6 +49997,18 @@
    "kana": "せきり",
    "en": [
     "texture (of a rock); structure"
+   ]
+  },
+  {
+   "w": "石田",
+   "lv": "N4",
+   "kana": "いしだ",
+   "en": [
+    "Ishida"
+   ],
+   "g1": true,
+   "pn": [
+    "名字"
    ]
   },
   {
@@ -50209,6 +50474,9 @@
    "kana": "あきた",
    "en": [
     "Akita (city, prefecture)"
+   ],
+   "pn": [
+    "地名"
    ]
   },
   {
@@ -52855,6 +53123,17 @@
    ]
   },
   {
+   "w": "西村",
+   "lv": "N4",
+   "kana": "にしむら",
+   "en": [
+    "Nishimura"
+   ],
+   "pn": [
+    "名字"
+   ]
+  },
+  {
    "w": "西漢",
    "lv": "N4",
    "kana": "せいかん",
@@ -53594,14 +53873,6 @@
    "en": [
     "buyer; purchaser",
     "method of buying"
-   ]
-  },
-  {
-   "w": "買春",
-   "lv": "N4",
-   "kana": "ばいしゅん",
-   "en": [
-    "buying sex; hiring a prostitute"
    ]
   },
   {
@@ -55966,6 +56237,17 @@
    ]
   },
   {
+   "w": "野口",
+   "lv": "N4",
+   "kana": "のぐち",
+   "en": [
+    "Noguchi"
+   ],
+   "pn": [
+    "名字"
+   ]
+  },
+  {
    "w": "野味",
    "lv": "N4",
    "kana": "やみ",
@@ -55979,6 +56261,17 @@
    "kana": "のてん",
    "en": [
     "in the open; the open air"
+   ]
+  },
+  {
+   "w": "野村",
+   "lv": "N4",
+   "kana": "のむら",
+   "en": [
+    "Nomura"
+   ],
+   "pn": [
+    "名字"
    ]
   },
   {
@@ -56610,6 +56903,9 @@
    "kana": "ながの",
    "en": [
     "Nagano (city, prefecture)"
+   ],
+   "pn": [
+    "地名"
    ]
   },
   {
@@ -57460,7 +57756,10 @@
    "en": [
     "Aomori (city, prefecture)"
    ],
-   "g1": true
+   "g1": true,
+   "pn": [
+    "地名"
+   ]
   },
   {
    "w": "青漢",
@@ -58806,7 +59105,11 @@
    "kana": "こうぼく",
    "en": [
     "tall tree"
-   ]
+   ],
+   "pn": [
+    "名字"
+   ],
+   "pn_kana": "たかぎ"
   },
   {
    "w": "高来",
@@ -58825,6 +59128,17 @@
    ]
   },
   {
+   "w": "高田",
+   "lv": "N5",
+   "kana": "たかだ",
+   "en": [
+    "Takada"
+   ],
+   "pn": [
+    "名字"
+   ]
+  },
+  {
    "w": "高目",
    "lv": "N5",
    "kana": "たかめ",
@@ -58839,6 +59153,9 @@
    "kana": "こうち",
    "en": [
     "Kōchi (city, prefecture)"
+   ],
+   "pn": [
+    "地名"
    ]
   },
   {
@@ -60014,7 +60331,10 @@
    "en": [
     "Hokkaido (island, prefectural-level administrative unit)"
    ],
-   "common": true
+   "common": true,
+   "pn": [
+    "地名"
+   ]
   },
   {
    "w": "医薬品",
@@ -60236,7 +60556,10 @@
    "en": [
     "Nagoya (city)"
    ],
-   "common": true
+   "common": true,
+   "pn": [
+    "地名"
+   ]
   },
   {
    "w": "図書室",
@@ -62594,6 +62917,9 @@
    "kana": "みえけん",
    "en": [
     "Mie prefecture (Kinki area)"
+   ],
+   "pn": [
+    "地名"
    ]
   },
   {
@@ -69142,6 +69468,9 @@
    "kana": "おおいたけん",
    "en": [
     "Ōita prefecture (Kyūshū)"
+   ],
+   "pn": [
+    "地名"
    ]
   },
   {
@@ -70949,6 +71278,9 @@
    "kana": "やまぐちけん",
    "en": [
     "Yamaguchi prefecture (Chūgoku area)"
+   ],
+   "pn": [
+    "地名"
    ]
   },
   {
@@ -73603,6 +73935,9 @@
    "kana": "とうきょうと",
    "en": [
     "Tokyo Metropolis (prefecture); Tokyo metropolitan area"
+   ],
+   "pn": [
+    "地名"
    ]
   },
   {
@@ -74172,6 +74507,17 @@
     "spider conch (Lambis chiragra)"
    ],
    "g1": true
+  },
+  {
+   "w": "水戸市",
+   "lv": "N4",
+   "kana": "みとし",
+   "en": [
+    "Mito (city)"
+   ],
+   "pn": [
+    "地名"
+   ]
   },
   {
    "w": "水文学",
@@ -76095,6 +76441,9 @@
    "kana": "いしかわけん",
    "en": [
     "Ishikawa prefecture (Hokuriku area)"
+   ],
+   "pn": [
+    "地名"
    ]
   },
   {
@@ -76394,6 +76743,9 @@
    "kana": "あきたけん",
    "en": [
     "Akita prefecture (Tōhoku area)"
+   ],
+   "pn": [
+    "地名"
    ]
   },
   {
@@ -79398,6 +79750,9 @@
    "kana": "ながのけん",
    "en": [
     "Nagano prefecture (Chūbu area)"
+   ],
+   "pn": [
+    "地名"
    ]
   },
   {
@@ -79821,6 +80176,9 @@
    "kana": "あおもりけん",
    "en": [
     "Aomori prefecture (Tōhoku area)"
+   ],
+   "pn": [
+    "地名"
    ]
   },
   {
@@ -80353,6 +80711,9 @@
    "kana": "こうちけん",
    "en": [
     "Kōchi prefecture (Shikoku)"
+   ],
+   "pn": [
+    "地名"
    ]
   },
   {
@@ -83895,6 +84256,17 @@
    "kana": "なまえしゅうごう",
    "en": [
     "name set"
+   ]
+  },
+  {
+   "w": "名古屋市",
+   "lv": "N4",
+   "kana": "なごやし",
+   "en": [
+    "Nagoya (city)"
+   ],
+   "pn": [
+    "地名"
    ]
   },
   {
