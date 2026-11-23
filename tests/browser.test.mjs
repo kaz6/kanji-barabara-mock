@@ -1091,6 +1091,8 @@ test("画面", { skip }, async (t) => {
     assert.equal(r.tf, "none", "動かさない");
     assert.equal(r.bg, "rgb(255, 241, 196)");
     assert.notEqual(await page.evaluate(() => getComputedStyle(document.querySelector("#meHand .hint")).boxShadow), "none");
+    // くっつけ先（.jt）の光る札も、動きを減らす設定では影を明滅させない
+    assert.equal(await page.evaluate(() => { const t = document.querySelector("#meHand .hint"); t.classList.add("jt"); const a = getComputedStyle(t).animationName; t.classList.remove("jt"); return a; }), "none", "reduce では .jt の光る札も動かさない");
     // 10秒たつと消える
     await page.evaluate(() => { const G = __KJ.game; G.hint.until = G.now() - 0.01; __KJ.render(); });
     assert.deepEqual(await lit(), []);

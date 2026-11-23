@@ -161,7 +161,7 @@ button.op.full{animation:kjGaugeFull .6s ease-out}
 .tile.sel.hint,.tile.sel.hint.lift{border-color:var(--hint);background:var(--accent)} /* 選んだ札は赤地に白のまま（薄い金の地にしない） */
 @keyframes kjHint{from{box-shadow:0 0 0 2px var(--hint),0 0 4px 0 rgba(217,154,0,.3)}to{box-shadow:0 0 0 2px var(--hint),0 0 12px 3px rgba(217,154,0,.7)}}
 @keyframes kjLift{from{transform:translateY(-2px)}to{transform:translateY(-6px)}}
-@media (prefers-reduced-motion:reduce){.tile.hint,button.op.hint,.tile.hint.lift,button.op.hint.lift{animation:none}}
+@media (prefers-reduced-motion:reduce){.tile.hint,button.op.hint,.tile.hint.lift,.tile.hint.lift.jt,button.op.hint.lift{animation:none}}
 .hint-tag{display:inline-block;margin-right:8px;padding:0 8px;border:1px solid var(--hint);border-radius:10px;color:#7a5600;background:#fff6dc;font-size:12px;font-weight:700;line-height:18px;vertical-align:1px}
 /* 選ぶ札（同音・くっつけて2通り）は台の下に重ねて出す。手札を押し下げない */
 .choices{display:none;position:absolute;left:-10px;right:-10px;top:calc(100% + 12px);z-index:5;background:var(--table);color:var(--on-table);border-radius:0 0 6px 6px;padding:8px 12px 12px}
