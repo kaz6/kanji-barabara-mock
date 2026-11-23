@@ -35,8 +35,9 @@ async function launch() {
   const b = await chromium.launch();
   const nc = b.newContext.bind(b);
   b.newContext = async (o) => {
-    const { noTutorialMark, ...opts } = o || {};
-    const ctx = await nc(opts);
+    const { noTutorialMark, motion, ...opts } = o || {};
+    // 点の演出（KJ-050）のカウントアップで「放った直後の点」を見るテストが揺れないよう、既定は「動きを減らす」。演出を見るテストだけ motion: true
+    const ctx = await nc({ reducedMotion: motion ? "no-preference" : "reduce", ...opts });
     if (!noTutorialMark) await ctx.addInitScript(() => { try { localStorage.setItem("kj-tutorial", "1"); } catch (e) { /* 読めない端末 */ } });
     return ctx;
   };
@@ -54,8 +55,8 @@ async function pickOpp(page, key) {
   await page.check('#opp input[value="cpu"]');
   await page.check(`#pow input[value="${key}"]`);
 }
-async function open(browser, url, vp, opponent, pre = null) {
-  const ctx = await browser.newContext({ viewport: vp });
+async function open(browser, url, vp, opponent, pre = null, motion = false) {
+  const ctx = await browser.newContext({ viewport: vp, motion });
   await ctx.grantPermissions(["clipboard-read", "clipboard-write"]).catch(() => {});
   const page = await ctx.newPage();
   if (pre) await pre(page);
@@ -854,7 +855,7 @@ test("画面", { skip }, async (t) => {
   });
 
   await t.test("待ち時間のゲージ（KJ-034）：使った直後は空に近い・半分でおよそ半分・満ちる前は押せない・満ちたら押せて小さく光る・秒数の文字が出ない・375×700 に収まる", async () => {
-    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 }, null);
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 }, null, null, true);
     const st = () => page.evaluate(() => {
       const b = document.getElementById("bInvert"), r = b.getBoundingClientRect();
       const w = parseFloat(getComputedStyle(b, "::before").width) || 0;
@@ -1938,6 +1939,93 @@ test("画面", { skip }, async (t) => {
     };
     assert.match(await drop(0.5, 0.88), /太/, "下の面に落とすと 太");
     assert.match(await drop(0.9, 0.5), /犬/, "右の面に落とすと 犬");
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+  // 点の演出（KJ-050。作者 2026-11-23。D-065。中身は仮）
+  const tapC = async (page, ch) => page.locator("#meHand .tile:not(.sel)", { hasText: ch }).first().click();
+  await t.test("点の演出：2字は小さく・4字（四字熟語）は大きく＋光の輪。点の数字はカウントアップして、着いた点になる。演出のあいだも操作できる", async () => {
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 }, null, null, true);
+    await tapC(page, "休"); await tapC(page, "日");
+    await page.click("#bRelease");
+    // 2字：+3（段1）。字が飛ぶ札と +3 が出る
+    await page.waitForSelector("#fxPts .pf.gain.t1", { state: "attached" });
+    assert.equal(await page.locator("#fxPts .pf.chip").count() + await page.locator("#fxPts .pf.gain.t1").count() >= 2, true, "放った字（札）と +3 が出る");
+    assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById("fxPts")).pointerEvents), "none", "演出の層は操作を止めない");
+    const fs1 = await page.locator("#fxPts .pf.gain.t1").evaluate((e) => parseFloat(getComputedStyle(e).fontSize));
+    // 演出のあいだも操作できる（取る番：場の札を押せる）
+    await page.locator("#field .tile").nth(0).click();
+    assert.equal(await page.locator("#meHand .tile", { hasText: "山" }).count(), 1, "演出のあいだも場から取れる");
+    await page.waitForFunction(() => /^3 点/.test(document.getElementById("meScore").textContent), null, { timeout: 4000 });
+    await page.waitForFunction(() => document.getElementById("fxPts").childElementCount === 0, null, { timeout: 4000 });
+    assert.equal(await page.locator("#fxPts .pf.ring").count(), 0);
+    await page.locator("#field .tile").nth(1).click();
+    // 4字（四字熟語）：段3＝さらに大きく＋卓の上の光の輪
+    await page.evaluate(() => { const G = __KJ.game; G.me.cards = [..."天上天下十口休日"].map((c, i) => ({ id: 9100 + i, c, t: 0, fresh: false })); __KJ.render(); });
+    for (const ch of "天上天下") await tapC(page, ch);
+    await page.click("#bRelease");
+    await page.waitForSelector("#fxPts .pf.gain.t3", { state: "attached" });
+    const fs3 = await page.locator("#fxPts .pf.gain.t3").evaluate((e) => parseFloat(getComputedStyle(e).fontSize));
+    assert.ok(fs3 > fs1, `4字の方が大きい（${fs1}→${fs3}）`);
+    await page.waitForSelector("#fxPts .pf.ring", { state: "attached", timeout: 3000 });
+    await page.waitForFunction(() => /^51 点/.test(document.getElementById("meScore").textContent), null, { timeout: 4000 });
+    await page.waitForFunction(() => document.getElementById("fxPts").childElementCount === 0, null, { timeout: 4500 });
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+  await t.test("点の演出：3字は 少し大きく光る（段2）。相手（CPU）の欄の点も小さく同じ動き", async () => {
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 }, null, null, true);
+    await page.evaluate(() => { const G = __KJ.game; G.me.cards = [..."日本語十口休上"].map((c, i) => ({ id: 9200 + i, c, t: 0, fresh: false })); G.me.score = 0; __KJ.render(); });
+    for (const ch of "日本語") await tapC(page, ch);
+    await page.click("#bRelease");
+    await page.waitForSelector("#fxPts .pf.gain.t2", { state: "attached" });
+    assert.match(await page.textContent("#fxPts .pf.gain.t2"), /^\+6$/);
+    await page.waitForFunction(() => document.getElementById("fxPts").childElementCount === 0, null, { timeout: 4500 });
+    // 相手：点が入る（放った言葉は届いていない形）。自分の欄より小さい
+    await page.evaluate(() => { __KJ.game.cpu.score += 3; __KJ.render(); });
+    await page.waitForSelector("#fxPts .pf.gain", { state: "attached" });
+    const me = 24, cpu = await page.locator("#fxPts .pf.gain").first().evaluate((e) => parseFloat(getComputedStyle(e).fontSize));
+    assert.ok(cpu < me + 6, `相手の欄は小さい（${cpu}）`);
+    await page.waitForFunction(() => /^3 点/.test(document.getElementById("cpuScore").textContent), null, { timeout: 4000 });
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+  await t.test("点の演出：引き直しで減る（-〇 が出て点が揺れる）。値段が大きいほど大きい。マイナスになったら点は灰色", async () => {
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 }, null, null, true);
+    await page.click("#bRedraw"); // 1回目は0点：演出なし
+    assert.equal(await page.locator("#fxPts .pf").count(), 0, "0点の引き直しでは出ない");
+    await page.click("#bRedraw"); // 2回目 -5
+    await page.waitForSelector("#fxPts .pf.loss", { state: "attached" });
+    assert.equal(await page.textContent("#fxPts .pf.loss"), "-5");
+    const fsA = await page.locator("#fxPts .pf.loss").evaluate((e) => parseFloat(getComputedStyle(e).fontSize));
+    assert.ok(await page.locator("#meScore .n").evaluate((e) => e.getAnimations().length > 0), "点の数字が揺れる");
+    assert.equal(await page.locator("#meScore").evaluate((e) => e.classList.contains("neg")), true, "マイナスの点は灰色の印（neg）");
+    const col = await page.locator("#meScore .n").evaluate((e) => getComputedStyle(e).color);
+    assert.equal(col, "rgb(107, 102, 93)", "点は灰色（--lose）");
+    assert.match(await page.textContent("#meScore"), /^-5 点/);
+    await page.waitForFunction(() => document.getElementById("fxPts").childElementCount === 0, null, { timeout: 4500 });
+    await page.click("#bRedraw"); await page.click("#bRedraw"); // -10・-15
+    await page.waitForSelector("#fxPts .pf.loss", { state: "attached" });
+    const fsB = await page.locator("#fxPts .pf.loss").last().evaluate((e) => parseFloat(getComputedStyle(e).fontSize));
+    assert.ok(fsB >= fsA, `値段が大きいほど大きい（${fsA}→${fsB}）`);
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+  await t.test("点の演出：動きを減らす設定では数字（+〇・-〇）を出すだけで、動かさない（飛ばない・カウントアップしない・ポンも揺れもしない）", async () => {
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 }, null, null, false); // 既定は reduce
+    assert.equal(await page.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches), true);
+    await tapC(page, "休"); await tapC(page, "日");
+    await page.click("#bRelease");
+    assert.match(await page.textContent("#meScore"), /^3 点/, "カウントアップせず、すぐ3点");
+    assert.equal(await page.textContent("#fxPts .pf.gain"), "+3", "+3 は出る");
+    assert.equal(await page.locator("#fxPts .pf.chip").count(), 0, "字は飛ばない");
+    assert.equal(await page.locator("#fxPts .pf.ring").count(), 0, "光の輪は出ない");
+    assert.equal(await page.evaluate(() => document.getAnimations().filter((a) => a.effect && a.effect.target && (a.effect.target.closest("#fxPts") || a.effect.target.closest("#meScore"))).length), 0, "演出の動きは無い");
+    await page.locator("#field .tile").nth(0).click(); await page.locator("#field .tile").nth(1).click();
+    await page.click("#bRedraw"); await page.click("#bRedraw"); // 0点・-5
+    assert.equal(await page.textContent("#fxPts .pf.loss"), "-5", "-5 は出る");
+    assert.equal(await page.evaluate(() => document.getAnimations().filter((a) => a.effect && a.effect.target && (a.effect.target.closest("#fxPts") || a.effect.target.closest("#meScore"))).length), 0, "揺れない");
+    await page.waitForFunction(() => document.getElementById("fxPts").childElementCount === 0, null, { timeout: 4500 });
     assert.deepEqual(errors, []);
     await ctx.close();
   });
