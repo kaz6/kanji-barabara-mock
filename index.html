@@ -204,7 +204,7 @@ body.tutorial #clock,body.tutorial #again,body.tutorial #bLog,body.tutorial #bCo
 #esWords{list-style:none;margin:10px 0 auto;padding:0;display:flex;flex-wrap:wrap;gap:10px 14px;justify-content:center;max-width:620px}
 .esw{display:flex;flex-direction:column;align-items:center;min-width:64px;opacity:0;visibility:hidden}
 .esw .w{font-family:var(--kanji);line-height:1.15}
-.esw .row{display:flex;align-items:baseline;gap:5px}
+.esw .wr{display:flex;align-items:baseline;gap:5px}
 .esw .k{font-size:11px;color:var(--sub)}
 .esw .p{font-size:12px;font-variant-numeric:tabular-nums;color:var(--sub)}
 .esw.t1 .w{font-size:26px}
@@ -613,7 +613,7 @@ function showEnd(winner){
   const ul=$("esWords");ul.innerHTML="";
   const items=d.items.map(it=>{
     const li=document.createElement("li");li.className=`esw t${it.tier}`;
-    li.innerHTML=`<span class="row"><span class="w"></span><span class="p"></span></span><span class="k"></span>`;
+    li.innerHTML=`<span class="wr"><span class="w"></span><span class="p"></span></span><span class="k"></span>`;
     li.querySelector(".w").textContent=it.text;li.querySelector(".p").textContent=`+${it.pts}点`;li.querySelector(".k").textContent=it.kana;
     ul.appendChild(li);return li});
   ES={items,timers:[],done:false};

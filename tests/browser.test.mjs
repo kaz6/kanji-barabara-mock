@@ -781,7 +781,6 @@ test("画面", { skip }, async (t) => {
     assert.notEqual(await page.evaluate(() => getComputedStyle(document.getElementById("bInvert")).animationName), "none");
     // 動きを減らす設定：光るのはやめる。ゲージの満ち方は出す
     await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.evaluate(() => { __KJ.game.me.score = 20; }); // 天上天下（48点）で50点に届く
     await page.click("#bInvert");
     assert.equal(await page.evaluate(() => __KJ.row.length), 1);
     await setLeft(total / 2);
@@ -1191,6 +1190,8 @@ test("画面", { skip }, async (t) => {
     assert.equal(await lose.page.getAttribute("#esLabel", "class"), "lose");
     assert.equal(await lose.page.textContent("#esScore .them"), "50");
     const loseColor = await lose.page.$eval("#esLabel", (e) => getComputedStyle(e).color);
+    await lose.page.click("#again"); // 面が出ているあいだも、上の帯は押せる（面に隠れない）
+    assert.equal(await lose.page.evaluate(() => document.getElementById("endShow").classList.contains("on")), false);
     assert.deepEqual(lose.errors, []);
     await lose.ctx.close();
 
