@@ -16,6 +16,8 @@
 - `fonts/kj-glyphs.otf`・`fonts/kj-glyphs.css`・`data/glyphs.json`・`docs/GLYPHS.md`：端末の字体に無い字（JIS X 0208 の外。部首補助・簡体字の形・拡張B など）の字形を同梱したもの。部品表・偏・巡りに新しい字を足したら `python3 tools/build_glyphs.py`（要 fontTools と Noto Serif CJK JP）で作り直す。テスト（tests/data.test.js）が、札の字が全部この一覧にあるかを見る
 - `js/strings.js`：操作のボタンの文字（英語）と、印の SVG（Flip の i・Cycle の C・Same reading の S に組み込む。札の角の印も同じ形。KJ-048）。操作のボタンの文字は英語。js/strings.js に置き、index.html に直書きしない。ボタン以外の画面の文言とログは日本語のまま（KJ-024。一覧は docs/STRINGS.md）
 - `data/tutorial.json`：チュートリアル（KJ-043）の手札・ストック・場・段・文・ボタンの文字。文は全部仮で、ここ1か所で直す。段の進め方と押せる手の制限は `js/core.js` の `createTutorial`（DOM に触らない）
+- `data/proper_names.json`：言葉として通す地名・名字（KJ-032。都道府県・県庁所在地と政令指定都市・名字上位100）。`tools/build_data.py` が words に入れ、印 `pn`（台の行に〔地名〕〔名字〕）を付ける。一覧は docs/PROPER_NAMES.md
+- `data/blocked_words.json`：全レベルで放てない語（D-048。買春・売春）。`tools/build_data.py` が words から外す
 - `data/blocked_words_g1.json`：小1 のときだけ放てない語の一覧（KJ-044 追記。語の表から外す。N5・N4 には効かない。中身は作者が決める）
 - `data/rules.json`：数値（場・手札・点数・引き直し・勝ち・待ち時間・CPU）。数値を変えるときはここだけ。変えたら `version` を上げる
 - `tests/`：テスト

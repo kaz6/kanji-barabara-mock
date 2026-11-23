@@ -25,7 +25,8 @@
 レベルの外の字（KJ-009・D-027。十二支の 丑寅卯辰巳未申酉戌亥）は data/cycles.json の outside に手で書く。このスクリプトが kanji.json の outside と
 readings.json に読みを足す（山には入れない。巡りでだけ手に入り、同音で別の字に変えられる。手に持てる字に入るので、その字を含む語も words に入る）。
 
-手作りの表（parts / antonyms / cycles / radical_forms / special）はこのスクリプトでは作らない。
+手作りの表（parts / antonyms / cycles / radical_forms / special / proper_names / blocked_words）はこのスクリプトでは作らない。
+地名・名字（KJ-032）は data/proper_names.json を読んで words に入れる。data/blocked_words.json（全レベル。D-048）の語は words から外す。
 """
 import argparse
 import json
@@ -38,7 +39,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 DATA = os.path.join(ROOT, "data")
 
-VERSION = "2026-11-23.3"
+VERSION = "2026-11-23.4"
 # レベルと KANJIDIC2 の jlpt（旧級）の対応。tanos の表への差し替えはまだ（D-009）
 LEVELS = {"N5": "4", "N4": "3"}
 LEVEL_ORDER = ["N5", "N4"]
@@ -315,13 +316,61 @@ def main():
         if "yojijukugo" in misc or any("yojijukugo" in entry_misc(i) for _, i in kids):
             w["yoji"] = True
         words.append(w)
+    # ---- 地名・名字（KJ-032・D-047）----
+    # data/proper_names.json の表記（と、JMnedict に地名としてある「〇〇県」「〇〇市」の形）を語に入れる。
+    # 通すのは 2〜4字で、手に持てる字だけで書けるものだけ（D-029。1字の名字・市〔林・森・原・津・堺〕は放てないので入れない）。
+    # JMdict にもう同じ語があれば、その行に印（pn）だけを足す（読み・意味・common はそのまま）。
+    # 新しく足す行は common を付けない（CPU が知っている語〔COMMON_WORDS〕は今まで通り）
+    pn_json = load_json("proper_names.json")
+    by_text = {w["w"]: w for w in words}
+
+    def ne_place(text, kana):
+        return db.execute(
+            "select 1 from NEKanji k join NEKana a on a.idseq = k.idseq join NETranslation tr on tr.idseq = k.idseq "
+            "join NETransType ty on ty.tid = tr.ID where k.text = ? and a.text = ? and ty.text = 'place' limit 1",
+            (text, kana)).fetchone() is not None
+
+    def ne_gloss(text, kana):
+        row = db.execute(
+            "select group_concat(g.text, '; ') from NEKanji k join NEKana a on a.idseq = k.idseq "
+            "join NETranslation tr on tr.idseq = k.idseq join NETransGloss g on g.tid = tr.ID "
+            "where k.text = ? and a.text = ? group by k.idseq limit 1", (text, kana)).fetchone()
+        return [row[0]] if row and row[0] else []
+
+    pn_forms = []  # (表記, 読み, 印)
+    for r in pn_json["names"]:
+        pn_forms.append((r["w"], r["kana"], r["kinds"]))
+        for suf, suf_kana in ((r.get("suffix"), r.get("suffix_kana")), (r.get("city_suffix"), "し")):
+            if suf and ne_place(r["w"] + suf, r["kana"] + suf_kana):
+                pn_forms.append((r["w"] + suf, r["kana"] + suf_kana, ["地名"]))
+    pn_added = []
+    for text, kana, kinds in pn_forms:
+        if not 2 <= len(text) <= 4:
+            continue
+        lv, g1 = word_level(text), word_g1(text)
+        if lv is None and not g1:
+            continue
+        w = by_text.get(text)
+        if w is None:
+            w = {"w": text, "lv": lv, "kana": kana, "en": ne_gloss(text, kana)}
+            if g1:
+                w["g1"] = True
+            words.append(w)
+            by_text[text] = w
+            pn_added.append(text)
+        w["pn"] = [*w.get("pn", []), *[k for k in kinds if k not in w.get("pn", [])]]
+
+    # ---- 全レベルで外す語（KJ-032 追記・D-048。data/blocked_words.json）----
+    blocked = set(load_json("blocked_words.json")["words"])
+    words = [w for w in words if w["w"] not in blocked]
     words.sort(key=lambda w: (len(w["w"]), not w.get("common", False), w["w"]))
 
     def stat_of(ws):
         return {"total": len(ws),
                 "by_length": {str(n): sum(1 for w in ws if len(w["w"]) == n) for n in range(1, 5)},
                 "common": sum(1 for w in ws if w.get("common")),
-                "yoji": sum(1 for w in ws if w.get("yoji"))}
+                "yoji": sum(1 for w in ws if w.get("yoji")),
+                "pn": sum(1 for w in ws if w.get("pn"))}
     stats = {
         "hold_by_level": {**{lv: len(hold_of[lv]) for lv in levels}, G1_KEY: len(hold_g1)},
         "by_level": {**{lv: stat_of([w for w in words if w["lv"] and LEVEL_ORDER.index(w["lv"]) <= LEVEL_ORDER.index(lv)]) for lv in levels},
@@ -330,12 +379,15 @@ def main():
         "by_length": {str(n): sum(1 for w in words if len(w["w"]) == n) for n in range(1, 5)},
         "common": sum(1 for w in words if w.get("common")),
         "yoji": sum(1 for w in words if w.get("yoji")),
+        "pn": sum(1 for w in words if w.get("pn")),
+        "pn_added": len(pn_added),
     }
     write("words.json", {
         "version": VERSION,
-        "source": f"JMdict（jamdict-data, jmdict {meta.get('jmdict.version')}）。2〜4字の語は「手に持てる字」（レベルの字＋割る・くっつけるで出る字）だけで書けるもの（KJ-011・D-029）。1字の語はレベルの字だけ",
+        "source": f"JMdict（jamdict-data, jmdict {meta.get('jmdict.version')}）。2〜4字の語は「手に持てる字」（レベルの字＋割る・くっつけるで出る字）だけで書けるもの（KJ-011・D-029）。1字の語はレベルの字だけ。地名・名字は data/proper_names.json と JMnedict（KJ-032）。data/blocked_words.json の語は外す（D-048）",
         "fields": {"w": "語", "lv": "レベル（その語の字がすべて手に持てる、いちばん低い N5／N4。小1 だけで放てる語は null）", "g1": "小1 で放てる（字がすべて小1 の手に持てる字。KJ-044）", "kana": "かな読み（最初の1つ）", "en": "英語の意味（最初の2つ）",
-                   "common": "よく使う（news1/ichi1/spec1/spec2/gai1）", "yoji": "四字熟語"},
+                   "common": "よく使う（news1/ichi1/spec1/spec2/gai1）", "yoji": "四字熟語",
+                   "pn": "地名・名字の印（KJ-032。台の行に〔地名〕〔名字〕。data/proper_names.json から。点数は普通の言葉と同じ）"},
         "stats": stats,
         "words": words,
     })

@@ -1114,7 +1114,7 @@ function render(){
   const rev=s.reversed?' <span class="rev">並べる順が逆</span>':"";
   const pts=s.rl.ok?` <span class="pts">${K.scoreOf(D,T,s.text).pts}点</span>`:"";
   if(!s.text)info.innerHTML="";
-  else if(w)info.innerHTML=`<span class="w">${s.text}</span>${pts} ${w.kana}${w.yoji?"（四字熟語）":""} — ${w.en.join(" / ")}${s.rl.ok?"":` <span class="no">（${s.rl.why}）</span>`}${rev}`;
+  else if(w)info.innerHTML=`<span class="w">${s.text}</span>${pts} ${w.kana}${w.pn?`<span class="pn">〔${w.pn.join("・")}〕</span>`:""}${w.yoji?"（四字熟語）":""} — ${w.en.join(" / ")}${s.rl.ok?"":` <span class="no">（${s.rl.why}）</span>`}${rev}`;
   else if(s.reversed)info.innerHTML=rev.trim();
   else if(s.rl.ok&&D.readings.readings[s.text]){const r=D.readings.readings[s.text];info.innerHTML=`<span class="w">${s.text}</span>${pts} ${[...r.on,...r.kun].slice(0,6).join("・")}`}
   else if(s.joins.length)info.innerHTML=`くっつけると ${s.joins.join(" か ")}`;

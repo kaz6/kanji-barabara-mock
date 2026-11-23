@@ -35,8 +35,9 @@ test("小1：山に入る字はちょうど80字で、80字の外は入らない
 });
 
 test("小1：N5・N4 は小1 を足したことでは動かない（N4 の数は小1 を足す前のまま。N5 は P-047 で 玉＝王＋丶 を足して 王・止 が手に持てる字になり、語が38語 N4→N5）", () => {
-  assert.deepEqual([T.CHARS.size, T.WORDS.size, T.HOLD.size], [103, 2458, 140]);
-  assert.deepEqual([T4.CHARS.size, T4.WORDS.size, T4.HOLD.size], [284, 10438, 353]);
+  // 語の数は KJ-032（地名・名字を足す・買春 売春 を外す）で N5 2458→2466・N4 10438→10460。字と手に持てる字は動かない
+  assert.deepEqual([T.CHARS.size, T.WORDS.size, T.HOLD.size], [103, 2466, 140]);
+  assert.deepEqual([T4.CHARS.size, T4.WORDS.size, T4.HOLD.size], [284, 10460, 353]);
   for (const w of T4.WORDS.values()) assert.ok(w.lv === "N5" || w.lv === "N4", w.w);
   for (const w of D.words.words.filter((x) => x.lv === null)) assert.ok(w.g1 && !T4.WORDS.has(w.w) && !T.WORDS.has(w.w), `${w.w} は小1 だけの語`);
 });
@@ -145,7 +146,8 @@ test("小1 だけ外す語：一覧の語は小1 で放てない・N5 N4 では�
   assert.ok(D.blocked_words_g1.version);
   assert.ok(D.blocked_words_g1.words.includes("買春"));
   // 本物の一覧の語は、小1 の手に持てる字では作れない（買 が80字にない）ので、いまは何も外れない。N4 には効かない
-  assert.ok(!TG1.WORDS.has("買春") && T4.WORDS.has("買春"), "買春：小1 では語の表に無い・N4 には有る");
+  // 買春 は KJ-032（D-048）で全レベルの一覧（data/blocked_words.json）にも入り、words から外れた。N4 にも無い
+  assert.ok(!TG1.WORDS.has("買春") && !T4.WORDS.has("買春"), "買春：小1 にも N4 にも無い（全レベルで外した）");
   assert.equal(TG1.WORDS.size, D.words.stats.by_level.G1.total, "本物の一覧では小1 の語の数は変わらない");
   assert.equal(T4.BLOCKED.size, 0);
   assert.equal(T.BLOCKED.size, 0);
