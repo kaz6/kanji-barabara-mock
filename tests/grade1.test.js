@@ -37,7 +37,6 @@ test("小1：山に入る字はちょうど80字で、80字の外は入らない
 test("小1：N5・N4 は動かない（字・語・手に持てる字の数は小1 を足す前のまま）", () => {
   assert.deepEqual([T.CHARS.size, T.WORDS.size, T.HOLD.size], [103, 2420, 138]);
   assert.deepEqual([T4.CHARS.size, T4.WORDS.size, T4.HOLD.size], [284, 10438, 353]);
-  assert.equal(Object.keys(T.parts).length + 0, Object.keys(T.parts).length);
   for (const w of T4.WORDS.values()) assert.ok(w.lv === "N5" || w.lv === "N4", w.w);
   for (const w of D.words.words.filter((x) => x.lv === null)) assert.ok(w.g1 && !T4.WORDS.has(w.w) && !T.WORDS.has(w.w), `${w.w} は小1 だけの語`);
 });
