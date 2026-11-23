@@ -91,8 +91,10 @@ def load_json(name):
         return json.load(f)
 
 
-def holdable(level_chars, parts_json, cycles_json, antonyms_json):
-    """手に持てる字（KJ-011）。js/core.js の makeTables の T.HOLD と同じ決め方"""
+def holdable(level_chars, parts_json, cycles_json, antonyms_json, homo_groups=None, homo_extra=None):
+    """手に持てる字（KJ-011）。js/core.js の makeTables の T.HOLD と同じ決め方。
+    homo_groups・homo_extra（KJ-070・D-089）：小1 のときだけ渡す。同じ読みの組のうち、レベルの字（か使う巡りの外の字）を1つ以上含む組に入る
+    homo_extra の字（N5 の字）は、同音でだけ出会える字として手に持てる"""
     CH = set(level_chars)
     allp = parts_json["parts"]
     relay = set(parts_json.get("relay", []))
@@ -121,6 +123,14 @@ def holdable(level_chars, parts_json, cycles_json, antonyms_json):
     for a, b in antonyms_json["pairs"]:
         if a in CH and b in CH:
             hold |= {a, b}
+    if homo_groups and homo_extra:
+        anchor = CH | {c for cy in cycles_json["cycles"] if all(c2 in CH or c2 in set(cy.get("outside", [])) for c2 in cy["chars"]) for c in cy.get("outside", [])}
+        for g in homo_groups:
+            ch = g["chars"]
+            if not any(c in anchor for c in ch):
+                continue
+            if sum(1 for c in ch if c in anchor or c in homo_extra) >= 2:
+                hold |= {c for c in ch if c in homo_extra}
     return hold
 
 
@@ -239,7 +249,9 @@ def main():
         lvchars = [c for c in chars if lv_of[c] in LEVEL_ORDER and LEVEL_ORDER.index(lv_of[c]) <= i]
         hold_of[lv] = holdable(lvchars, parts_json, cycles_json, antonyms_json)
     hold_all = hold_of[levels[-1]]
-    hold_g1 = holdable(g1_chars, parts_json, cycles_json, antonyms_json)
+    # 小1 のときは、同音でだけ N5 の字（kanji.json の lv が N5 で小1 でない字）にも出会える（KJ-070・D-089）
+    n5_extra = {c for c in chars if lv_of[c] == "N5" and c not in g1set}
+    hold_g1 = holdable(g1_chars, parts_json, cycles_json, antonyms_json, same, n5_extra)
 
     def word_level(text):
         """N5／N4 のうち、その語がいちばん低く放てるレベル。どちらでも放てない（小1 だけの）語は None"""
