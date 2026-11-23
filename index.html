@@ -30,6 +30,16 @@ h1{font-size:17px;margin:0 0 2px;font-weight:700}
 .side-head b{font-size:15px}
 .count{font-variant-numeric:tabular-nums;color:var(--sub);font-size:12px}
 .score{font-variant-numeric:tabular-nums;font-size:13px;font-weight:700;color:var(--sub)}
+/* 点の演出（KJ-050。作者 2026-11-23。D-065。中身は仮）：放って点が入る＝字が卓から点へ飛び「+〇」が点に吸い込まれる／引き直しで減る＝「-〇」が落ちて点が揺れる。色は勝ちの緑と墨・灰（赤は使わない）。操作は止めない（pointer-events:none）。動きを減らす設定では数字を出すだけで動かさない */
+#fxPts{position:fixed;inset:0;pointer-events:none;z-index:11;overflow:hidden}
+#fxPts .pf{position:fixed;left:0;top:0;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums;line-height:1;transform-origin:50% 50%;will-change:transform,opacity}
+#fxPts .pf.gain{color:var(--win)}
+#fxPts .pf.loss{color:var(--lose)}
+#fxPts .pf.t2,#fxPts .pf.t3{text-shadow:0 0 8px var(--shine),0 0 2px var(--shine)}
+#fxPts .pf.chip{font-family:var(--kanji);font-size:26px;color:var(--ink);background:var(--tile);border-bottom:3px solid var(--edge);border-radius:4px;padding:3px 8px;line-height:1.1}
+#fxPts .pf.ring{width:80px;height:80px;border:4px solid var(--shine);border-radius:50%;box-shadow:0 0 18px 4px var(--shine);background:none}
+.score.neg .n{color:var(--lose)}
+.score .n{display:inline-block}
 .score .n,.clock .n{font-size:30px;line-height:1;color:var(--ink);letter-spacing:-.5px}
 .clock .n{font-size:24px}
 .takesline{min-height:20px;margin:0 0 4px;line-height:20px;overflow:hidden} /* 取る番の文：卓の頭に1行（KJ-046）。取る番でないときも高さは空けておく（卓が上下に動かない） */
@@ -338,6 +348,8 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
     <div class="bar"><button class="op" id="bCopy">コピー</button><span class="note" id="copyMsg"></span></div>
   </section>
 
+  <div id="fxPts" aria-hidden="true"></div>
+
   <section class="side cpu" id="cpuSide">
     <div class="side-head"><b id="cpuName">CPU</b><span class="score" id="cpuScore"></span><span class="count" id="cpuCount"></span><span class="cds" id="cpuCds"></span></div>
     <div class="hand" id="cpuHand"></div>
@@ -523,6 +535,7 @@ function drain(){
   while(G.events.length){
     const e=G.events.shift();
     if(e.type==="fx")showFx(e.who,e.text);
+    if(e.type==="release")PTS_FX.last={who:e.who,text:e.text,pts:e.pts}; // 点の演出が、どの言葉の点かを知るため（KJ-050）
     if(e.type==="over")end(e.winner,e.solo);
   }
 }
@@ -984,6 +997,90 @@ function gauge(b,waiting,f){
   b.style.removeProperty("--g");
   if(was){b.classList.remove("full");void b.offsetWidth;b.classList.add("full");clearTimeout(b._fullT);b._fullT=setTimeout(()=>b.classList.remove("full"),700)}
 }
+// ---- 点の演出（KJ-050。作者 2026-11-23。D-065。中身は仮）----
+// 点が入る（放つ）：放った字が卓から点へ飛び、「+〇」が大きく出て点に吸い込まれる。点の数字はカウントアップして一度ポンと大きくなる。2字 ふつう／3字 少し大きく光る／4字・四字熟語・特別な語 さらに大きく＋卓の上に光の輪
+// 点が減る（引き直し）：「-〇」が点の上から落ちて消え、点の数字が揺れる（値段が大きいほど大きく・長く）。マイナスになったら点は灰色。相手の欄でも同じ動きを小さく。音なし。長さは1秒前後まで。特別な語の演出（#fx）の上にも出す（z-index 11）
+const PTS_FX={g:null,prev:{me:null,cpu:null},disp:{me:null,cpu:null},last:null,max:1000};
+function reduceMotion(){try{return matchMedia("(prefers-reduced-motion: reduce)").matches}catch(e){return false}}
+function ptsTier(who,pts){ // 放った言葉で段を決める。分からないとき（放った言葉が届いていない）は点の大きさで
+  const l=PTS_FX.last;
+  if(l&&l.who===who&&l.pts===pts){
+    const n=[...l.text].length,w=T.WORDS.get(l.text);
+    PTS_FX.last=null;
+    return {text:l.text,tier:(n>=4||(w&&w.yoji)||T.SPECIAL.has(l.text))?3:n===3?2:1};
+  }
+  return {text:"",tier:pts>=12?3:pts>=6?2:1};
+}
+function ptsPop(el,k,ms){if(el&&el.animate)el.animate([{transform:"scale(1)"},{transform:`scale(${k})`,offset:.35},{transform:"scale(1)"}],{duration:ms,easing:"ease-out"})}
+function ptsShake(el,amp,ms){if(el&&el.animate)el.animate([{transform:"translateX(0)"},{transform:`translateX(${-amp}px)`,offset:.15},{transform:`translateX(${amp}px)`,offset:.35},{transform:`translateX(${-amp*.7}px)`,offset:.55},{transform:`translateX(${amp*.4}px)`,offset:.75},{transform:"translateX(0)"}],{duration:ms,easing:"ease-out"})}
+function ptsEl(cls,text){const e=document.createElement("div");e.className="pf "+cls;e.textContent=text;$("fxPts").appendChild(e);return e}
+function ptsPlace(e,x,y,k){e.style.transform=`translate(${Math.round(x-e.offsetWidth/2)}px,${Math.round(y-e.offsetHeight/2)}px)`+(k?` scale(${k})`:"")} // 中心を (x,y) に
+function ptsDrop(e,ms){setTimeout(()=>e.remove(),ms)}
+function ptsCountUp(key,n,from,to,ms){
+  PTS_FX.disp[key]=from;const t0=performance.now();
+  const step=now=>{
+    const f=Math.min(1,(now-t0)/ms);
+    if(PTS_FX.g!==G){PTS_FX.disp[key]=null;return}
+    const goal=PTS_FX.prev[key]; // 数えている途中で点が変わったら、いまの点まで数える
+    const v=f>=1?goal:Math.round(from+(goal-from)*f);
+    n.textContent=v;
+    if(f<1){PTS_FX.disp[key]=v;requestAnimationFrame(step)}else PTS_FX.disp[key]=null;
+  };
+  requestAnimationFrame(step);
+}
+function ptsFx(key,p,sc,n){ // render のたび：点が変わっていたら演出を出す
+  if(PTS_FX.g!==G){PTS_FX.g=G;PTS_FX.prev={me:null,cpu:null};PTS_FX.disp={me:null,cpu:null};PTS_FX.last=null;$("fxPts").innerHTML=""}
+  const prev=PTS_FX.prev[key];PTS_FX.prev[key]=p.score;
+  if(G.over){PTS_FX.disp[key]=null;n.textContent=p.score;$("fxPts").innerHTML="";return} // 終わりの画面（R-069）の上には出さない
+  if(prev===null||prev===p.score)return;
+  const d=p.score-prev,small=key==="cpu",calm=reduceMotion(),box=n.getBoundingClientRect();
+  if(box.width===0&&box.height===0)return; // 画面に出ていない
+  const cx=box.left+box.width/2,cy=box.top+box.height/2;
+  if(d>0){
+    const {text,tier}=ptsTier(p.name,d);
+    const fs=(small?[16,19,23]:[24,30,38])[tier-1];
+    const num=ptsEl(`gain t${tier}`,`+${d}`);num.style.fontSize=fs+"px";
+    if(calm){ // 動かさない：数字を出して消すだけ
+      ptsPlace(num,cx,cy-fs*1.3);ptsDrop(num,900);return;
+    }
+    const fly=text?420:0,tab=document.querySelector(".table"),origin=(key==="me"?$("row"):$("cpuHand")).getBoundingClientRect();
+    const from0=origin.width?origin:(key==="me"?$("meSide"):$("cpuSide")).getBoundingClientRect(); // スマホ幅は相手の手札を隠している。矩形が0なら相手の欄の頭から
+    if(text){
+      const chip=ptsEl("chip",text),ox=from0.left+from0.width/2,oy=from0.top+(origin.width?from0.height/2:Math.min(from0.height,40)/2);
+      if(small)chip.style.fontSize="18px";
+      ptsPlace(chip,ox,oy);num.style.opacity="0";
+      const a=chip.animate([{transform:chip.style.transform,opacity:1},{transform:chip.style.transform.replace(/translate\([^)]*\)/,`translate(${Math.round(cx-chip.offsetWidth/2)}px,${Math.round(cy-chip.offsetHeight/2)}px)`)+" scale(.5)",opacity:.9}],{duration:fly,easing:"cubic-bezier(.5,0,.9,.6)",fill:"forwards"});
+      a.onfinish=()=>chip.remove();
+    }
+    const n0=prev,cnt=Math.min(700,320+tier*120);
+    PTS_FX.disp[key]=prev;n.textContent=prev; // 飛んでいるあいだは前の点のまま。着いたらカウントアップ
+    setTimeout(()=>{
+      if(PTS_FX.g!==G||G.over)return; // 飛んでいるあいだに試合が終わったら、続きは出さない
+      ptsCountUp(key,n,n0,p.score,cnt);
+      ptsPop(n,[1.25,1.4,1.7][tier-1],420+tier*80);
+      // 「+〇」：点の上に大きく出て、点に吸い込まれる
+      num.style.opacity="1";
+      const y0=cy-fs*1.4;ptsPlace(num,cx,y0,tier===1?1.3:1.5);
+      num.animate([{transform:num.style.transform,opacity:0},{transform:num.style.transform,opacity:1,offset:.25},{transform:`translate(${Math.round(cx-num.offsetWidth/2)}px,${Math.round(cy-num.offsetHeight/2)}px) scale(.4)`,opacity:0}],{duration:520,easing:"ease-in",fill:"forwards"});
+      ptsDrop(num,560);
+      if(tier===3&&tab){ // 卓の上に光の輪
+        const r=tab.getBoundingClientRect(),ring=ptsEl("ring","");ring.style.top="0";ring.style.left="0";
+        const x=Math.round(r.left+r.width/2-40),y=Math.round(r.top+r.height/2-40);
+        ring.animate([{transform:`translate(${x}px,${y}px) scale(.5)`,opacity:.9},{transform:`translate(${x}px,${y}px) scale(${Math.max(2.5,Math.min(r.width,r.height*1.4)/80)})`,opacity:0}],{duration:800,easing:"ease-out",fill:"forwards"});
+        ptsDrop(ring,850);
+      }
+    },fly);
+  }else{
+    const mag=-d,big=mag>=15?2:mag>=10?1:0,fs=(small?[15,18,21]:[22,27,32])[big];
+    const num=ptsEl("loss",`-${mag}`);num.style.fontSize=fs+"px";
+    if(calm){ptsPlace(num,cx,cy-fs*1.3);ptsDrop(num,900);return}
+    ptsPlace(num,cx,cy-fs*1.6);
+    const to=`translate(${Math.round(cx-num.offsetWidth/2)}px,${Math.round(cy+fs*.2-num.offsetHeight/2)}px)`,from=num.style.transform;
+    num.animate([{transform:from,opacity:0},{transform:from,opacity:1,offset:.2},{transform:to,opacity:0}],{duration:650+big*120,easing:"ease-in",fill:"forwards"});
+    ptsDrop(num,700+big*120);
+    ptsShake(n,[3,5,7][big],400+big*220);
+  }
+}
 function cdText(p,k){const t=G.cdLeft(p,k);return t>0?Math.ceil(t)+"s":""}
 function render(){
   if(!G)return;
@@ -995,7 +1092,12 @@ function render(){
   renderHand($("meTray"),G.me,true,true);
   renderField();
   for(const [sc,ct,p] of [[$("meScore"),$("meCount"),G.me],[$("cpuScore"),$("cpuCount"),G.cpu]]){
-    sc.innerHTML=`<span class="n">${p.score}</span> 点`; // 点は大きな数字（KJ-042）。textContent は「51 点」のまま
+    let nEl=sc.querySelector(".n"); // 点は大きな数字（KJ-042）。textContent は「51 点」のまま。数字の要素は作り直さない（演出が途中で切れる。KJ-050）
+    if(!nEl){sc.innerHTML=`<span class="n"></span> 点`;nEl=sc.querySelector(".n")}
+    const k=p===G.me?"me":"cpu";
+    nEl.textContent=PTS_FX.g===G&&PTS_FX.disp[k]!==null?PTS_FX.disp[k]:p.score;
+    sc.classList.toggle("neg",p.score<0); // マイナスは灰色（KJ-050）
+    ptsFx(k,p,sc,nEl);
     ct.textContent=`手札 ${p.remote?(typeof p.hand==="number"?p.hand:p.count):G.handCount(p)} / ${D.rules.hand_max}`;
   }
   $("trayHead").textContent=STR.TEXT.tray(G.trayCount(G.me),D.rules.split_extra);
@@ -1126,7 +1228,7 @@ document.addEventListener("visibilitychange",()=>{
   if(!G.over&&!G.solo&&!G.match){clearTimeout(cpuTimer);scheduleCpu()} // 人と対戦は CPU を出さない
 });
 
-window.__KJ={get game(){return G},get tut(){return TUT},get row(){return row},get tables(){return T},get mc(){return MC},get room(){return ROOM},data:D,render}; // ブラウザのテスト用
+window.__KJ={get game(){return G},get tut(){return TUT},get row(){return row},get tables(){return T},get mc(){return MC},get room(){return ROOM},data:D,render,drain}; // ブラウザのテスト用
 
 Promise.all(K.FILES.map(f=>fetch(`data/${f}.json`).then(r=>r.json()).then(j=>D[f]=j)))
   .then(()=>{loadSettings();T=tablesFor(level);buildPickers();buildHowto();showCounts();roomUi();$("bTutorial").textContent=D.tutorial.ui.button;$("bTutorial").hidden=false})
