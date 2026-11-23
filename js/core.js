@@ -15,32 +15,39 @@
     { key: "fair", label: "ふつう" },
     { key: "normal", label: "いまの強さ" },
   ];
-  // レベル（KJ-006）。N4＝N5＋N4 の字。レベルが変えるのは字・語・割り方・対義・巡り・同音の範囲だけ
+  // レベル（KJ-006・KJ-044）。選ぶ順は 小1／N5／N4。N4＝N5＋N4 の字。小1＝小学1年の漢字80字（N5・N4 と重なるが、入れ物ではない別の組。
+  // 字に g1:true が付いている）。レベルが変えるのは字・語・割り方・対義・巡り・同音の範囲だけ。short＝選びのボタンの文字
   const LEVELS = [
-    { key: "N5", label: "N5" },
-    { key: "N4", label: "N4（N5＋N4 の字）" },
+    { key: "G1", label: "小1（小学1年の漢字80字）", short: "小1" },
+    { key: "N5", label: "N5", short: "N5" },
+    { key: "N4", label: "N4（N5＋N4 の字）", short: "N4" },
   ];
-  const levelLabel = (key) => (LEVELS.find((l) => l.key === key) || LEVELS[0]).label;
+  const levelLabel = (key) => (LEVELS.find((l) => l.key === key) || LEVELS.find((l) => l.key === "N5")).label;
+  const levelShort = (key) => (LEVELS.find((l) => l.key === key) || LEVELS.find((l) => l.key === "N5")).short;
   // 制限時間（KJ-007）。選べる値は rules.win.time_choices_sec、既定は win.time_limit_sec（D-024）。知らない値は既定
   const timeChoices = (D) => (D.rules.win.time_choices_sec && D.rules.win.time_choices_sec.length ? D.rules.win.time_choices_sec : [D.rules.win.time_limit_sec]);
   const normTime = (D, v) => (timeChoices(D).includes(Number(v)) && v !== null && v !== "" ? Number(v) : D.rules.win.time_limit_sec);
   const timeLabel = (sec) => `${sec / 60}分`;
   const cpuInterval = (D, key) => (key === "weak" ? D.rules.cpu.weak_interval_sec : key === "fair" ? D.rules.cpu.fair_interval_sec : D.rules.cpu.interval_sec);
 
-  const FILES = ["kanji", "words", "readings", "parts", "antonyms", "cycles", "radical_forms", "special", "rules", "split_shapes", "tutorial"];
+  const FILES = ["kanji", "words", "readings", "parts", "antonyms", "cycles", "radical_forms", "special", "rules", "split_shapes", "tutorial", "blocked_words_g1"];
 
   // ---------- 表を引く ----------
   // level を省くと rules.json の level_default（なければ N4）
   function makeTables(D, level) {
     const T = {};
-    const order = LEVELS.map((l) => l.key);
-    if (!order.includes(level)) level = order.includes(D.rules.level_default) ? D.rules.level_default : "N4";
-    const upto = order.indexOf(level);
-    const inLevel = (lv) => order.indexOf(lv || "N5") <= upto; // lv の無い古いデータは N5
+    const keys = LEVELS.map((l) => l.key);
+    if (!keys.includes(level)) level = keys.includes(D.rules.level_default) ? D.rules.level_default : "N4";
+    // N5＜N4 は入れ物（N4 は N5 を含む）。小1 は別の組（字の g1、語の g1 で決める。N5・N4 の外の字は lv="G1" で、小1 のときだけ入る）
+    const rank = { N5: 0, N4: 1 };
+    const inLevel = (lv) => (lv === null ? false : rank[lv || "N5"] !== undefined && rank[lv || "N5"] <= rank[level]); // lv の無い古いデータは N5。null（小1 だけの語）と G1 は N5・N4 に入らない
+    const isG1 = level === "G1";
     T.level = level;
-    T.CHARS = new Set(D.kanji.kanji.filter((k) => inLevel(k.lv)).map((k) => k.c)); // 遊ぶレベルの字（山に入る字）
+    T.CHARS = new Set(D.kanji.kanji.filter((k) => (isG1 ? k.g1 : inLevel(k.lv))).map((k) => k.c)); // 遊ぶレベルの字（山に入る字）
     T.JOUYOU = new Set(D.parts.jouyou || []); // レベルの外でも「字」として見せる（KJ-003）
-    T.WORDS = new Map(D.words.words.filter((w) => inLevel(w.lv)).map((w) => [w.w, w]));
+    // 小1 のときだけ放てない語（data/blocked_words_g1.json。KJ-044 追記）。語の表から外すので、放てない・CPU も使わない・ヒントにも出ない
+    T.BLOCKED = new Set(isG1 && D.blocked_words_g1 ? D.blocked_words_g1.words : []);
+    T.WORDS = new Map(D.words.words.filter((w) => (isG1 ? w.g1 : inLevel(w.lv)) && !T.BLOCKED.has(w.w)).map((w) => [w.w, w]));
     // 割り方：できる字がレベルの字の行と、そこへ届く中継ぎだけ（N5 では N4 の字の行を外す）
     const all = D.parts.parts, relayAll = new Set(D.parts.relay || []);
     const keep = new Set(Object.keys(all).filter((k) => T.CHARS.has(k)));
@@ -201,7 +208,7 @@
     const [a, b] = cpuInterval(D, key);
     if (key === TUTORIAL_OPPONENT.key) return ["チュートリアル（KJ-043）：手札・ストック・場は data/tutorial.json の決まったもの。段ごとに、その手だけ押せる（ほかのボタンは押せない見た目）。時間なし・CPU なし・ヒントなし"];
     return [
-      `場=${R.field_size}枚 最初の手札=${R.start_hand}枚 手札の上限=${R.hand_max}枚＋ストック${R.split_extra}枚（全部で${R.hand_max + R.split_extra}マス。場から取るのは上の段・ストックを合わせて${R.hand_max + R.split_extra}マスが埋まるまで（上の段が埋まっていればストックへ）。割る・くっつけるでできた札は、字も部品も、手札が埋まっていればストックへ。手札とストックの間は自分で動かせる）山=${level} の字を${R.same_char_in_deck}枚ずつ（尽きたら足す）`,
+      `場=${R.field_size}枚 最初の手札=${R.start_hand}枚 手札の上限=${R.hand_max}枚＋ストック${R.split_extra}枚（全部で${R.hand_max + R.split_extra}マス。場から取るのは上の段・ストックを合わせて${R.hand_max + R.split_extra}マスが埋まるまで（上の段が埋まっていればストックへ）。割る・くっつけるでできた札は、字も部品も、手札が埋まっていればストックへ。手札とストックの間は自分で動かせる）山=${levelShort(level)} の字を${R.same_char_in_deck}枚ずつ（尽きたら足す）`,
       `点数 ${Object.entries(S.by_length).map(([n, p]) => `${n}字${p}`).join("・")} 四字熟語×${S.yoji_mult} 特別な語×${S.special_mult}（1字は放てない）`,
       `はじまり：最初の手札${R.start_hand}枚で、すぐ時間が動く。ストックに使いやすい部品を${R.start_stock_parts}枚入れて始める（部品表で行き先が多い字でない部品の上位${R.start_stock_top}個から無作為）`,
       `台（机）は並べて見る場所。台に出した札は出す前の段にいるままで、上の段・下の段の枚数に数える`,
@@ -1384,7 +1391,7 @@
   }
 
   return {
-    FILES, OPPONENTS, LEVELS, timeChoices, normTime, timeLabel, levelLabel, makeTables, isN5, isLevelChar, isChar, splitOnce, canSplit, delivered, joinResults, joinReversed,
+    FILES, OPPONENTS, LEVELS, timeChoices, normTime, timeLabel, levelLabel, levelShort, makeTables, isN5, isLevelChar, isChar, splitOnce, canSplit, delivered, joinResults, joinReversed,
     releasable, scoreOf, homoChars, marks, markKinds, cutSpec, FACES, FACE_LABEL, faceJoins, faceResults, rulesLabel, opponentLabel, createGame, createTutorial, TUTORIAL_OPPONENT, playLogRow, endShow, END_LABELS, logSendAllowed, playLogResult, PLAY_LOG_LIMITS,
     strSeed, seededRand, matchRand, ROLES, ROOM_OPPONENT, MATCH_END_GRACE_SEC, MATCH_INSERT_TIMEOUT_SEC, MATCH_PING_SEC, MATCH_GONE_SEC, ROOM_LOBBY_TTL_SEC,
     createMatchClient, memoryClaims, newMatchId, newRoomCode, roomLobbyId, findRoom, hostRoom, joinRoom, startRoom, roomStartAt, roomWaiter,

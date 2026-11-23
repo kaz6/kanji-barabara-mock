@@ -12,6 +12,7 @@ function loadData() {
 const D = loadData();
 const T = K.makeTables(D, "N5"); // 既存のテストは N5（KJ-006 より前の前提）
 const T4 = K.makeTables(D, "N4");
+const TG1 = K.makeTables(D, "G1"); // 小1（KJ-044）
 
 // 決まった乱数（mulberry32）
 function seeded(seed) {
@@ -25,11 +26,11 @@ function seeded(seed) {
   };
 }
 // opponent は "solo"（ひとりで）／"weak"（とても弱い）／"normal"（いまの強さ。既存のテストの前提）
-// level は "N5"（既存のテストの前提）／"N4"（KJ-006）
+// level は "N5"（既存のテストの前提）／"N4"（KJ-006）／"G1"（小1。KJ-044）
 // opts.startStock を true にすると、ストックに部品1枚つき（KJ-013。画面と同じはじまり。既存のテストは外した形が前提）。はじめの1枚は KJ-016 でやめた
 function newGame(seed = 1, opponent = "normal", level = "N5", opts = {}) {
   const clock = { t: 1000 };
-  const g = K.createGame(D, level === "N4" ? T4 : T, { now: () => clock.t, rand: seeded(seed), date: () => new Date(2026, 10, 20, 18, 0, 0), opponent,
+  const g = K.createGame(D, level === "N4" ? T4 : level === "G1" ? TG1 : T, { now: () => clock.t, rand: seeded(seed), date: () => new Date(2026, 10, 20, 18, 0, 0), opponent,
     startStock: !!opts.startStock });
   g.clock = clock;
   return g;
@@ -50,4 +51,4 @@ function takeAll(g, p) {
   }
   return n;
 }
-module.exports = { K, D, T, T4, newGame, setHand, takeAll, ROOT };
+module.exports = { K, D, T, T4, TG1, newGame, setHand, takeAll, ROOT };

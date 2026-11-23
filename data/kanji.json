@@ -1,21 +1,24 @@
 {
- "version": "2026-11-21.2",
+ "version": "2026-11-23.2",
  "level": "N4",
  "levels": [
   "N5",
   "N4"
  ],
- "source": "N5=KANJIDIC2 jlpt=4（旧4級で代用）・N4=KANJIDIC2 jlpt=3（旧3級で代用）",
- "note": "lv＝その字のレベル。N4 で遊ぶときは N5＋N4 の字を使う。本来は tanos.co.uk の表（D-009）。tools/build_data.py --kanji-list で N5 を差し替える",
- "count": 284,
+ "source": "N5=KANJIDIC2 jlpt=4（旧4級で代用）・N4=KANJIDIC2 jlpt=3（旧3級で代用）・小1=KANJIDIC2 grade=1（80字）",
+ "note": "lv＝その字のレベル（N5／N4。どちらにも無い小1の字は G1）。N4 で遊ぶときは N5＋N4 の字を使う。g1:true＝小1（小学1年の80字。KJ-044）の字で、小1 で遊ぶときはこの80字を使う。本来は tanos.co.uk の表（D-009）。tools/build_data.py --kanji-list で N5 を差し替える",
+ "count": 292,
  "count_by_level": {
   "N5": 103,
-  "N4": 181
+  "N4": 181,
+  "G1": 8
  },
+ "count_g1": 80,
  "kanji": [
   {
    "c": "日",
    "lv": "N5",
+   "g1": true,
    "strokes": 4,
    "freq": 1,
    "en": [
@@ -26,6 +29,7 @@
   {
    "c": "一",
    "lv": "N5",
+   "g1": true,
    "strokes": 1,
    "freq": 2,
    "en": [
@@ -55,6 +59,7 @@
   {
    "c": "人",
    "lv": "N5",
+   "g1": true,
    "strokes": 2,
    "freq": 5,
    "en": [
@@ -64,6 +69,7 @@
   {
    "c": "年",
    "lv": "N5",
+   "g1": true,
    "strokes": 6,
    "freq": 6,
    "en": [
@@ -74,6 +80,7 @@
   {
    "c": "大",
    "lv": "N5",
+   "g1": true,
    "strokes": 3,
    "freq": 7,
    "en": [
@@ -84,6 +91,7 @@
   {
    "c": "十",
    "lv": "N5",
+   "g1": true,
    "strokes": 2,
    "freq": 8,
    "en": [
@@ -93,6 +101,7 @@
   {
    "c": "二",
    "lv": "N5",
+   "g1": true,
    "strokes": 2,
    "freq": 9,
    "en": [
@@ -103,6 +112,7 @@
   {
    "c": "本",
    "lv": "N5",
+   "g1": true,
    "strokes": 5,
    "freq": 10,
    "en": [
@@ -113,6 +123,7 @@
   {
    "c": "中",
    "lv": "N5",
+   "g1": true,
    "strokes": 4,
    "freq": 11,
    "en": [
@@ -133,6 +144,7 @@
   {
    "c": "出",
    "lv": "N5",
+   "g1": true,
    "strokes": 5,
    "freq": 13,
    "en": [
@@ -143,6 +155,7 @@
   {
    "c": "三",
    "lv": "N5",
+   "g1": true,
    "strokes": 3,
    "freq": 14,
    "en": [
@@ -182,6 +195,7 @@
   {
    "c": "見",
    "lv": "N5",
+   "g1": true,
    "strokes": 7,
    "freq": 22,
    "en": [
@@ -192,6 +206,7 @@
   {
    "c": "月",
    "lv": "N5",
+   "g1": true,
    "strokes": 4,
    "freq": 23,
    "en": [
@@ -232,6 +247,7 @@
   {
    "c": "生",
    "lv": "N5",
+   "g1": true,
    "strokes": 5,
    "freq": 29,
    "en": [
@@ -242,6 +258,7 @@
   {
    "c": "五",
    "lv": "N5",
+   "g1": true,
    "strokes": 4,
    "freq": 31,
    "en": [
@@ -261,6 +278,7 @@
   {
    "c": "上",
    "lv": "N5",
+   "g1": true,
    "strokes": 3,
    "freq": 35,
    "en": [
@@ -280,6 +298,7 @@
   {
    "c": "四",
    "lv": "N5",
+   "g1": true,
    "strokes": 5,
    "freq": 47,
    "en": [
@@ -307,6 +326,7 @@
   {
    "c": "金",
    "lv": "N5",
+   "g1": true,
    "strokes": 8,
    "freq": 53,
    "en": [
@@ -316,6 +336,7 @@
   {
    "c": "九",
    "lv": "N5",
+   "g1": true,
    "strokes": 2,
    "freq": 55,
    "en": [
@@ -325,6 +346,7 @@
   {
    "c": "入",
    "lv": "N5",
+   "g1": true,
    "strokes": 2,
    "freq": 56,
    "en": [
@@ -335,6 +357,7 @@
   {
    "c": "立",
    "lv": "N5",
+   "g1": true,
    "strokes": 5,
    "freq": 58,
    "en": [
@@ -345,6 +368,7 @@
   {
    "c": "手",
    "lv": "N5",
+   "g1": true,
    "strokes": 4,
    "freq": 60,
    "en": [
@@ -354,6 +378,7 @@
   {
    "c": "学",
    "lv": "N5",
+   "g1": true,
    "strokes": 8,
    "freq": 63,
    "en": [
@@ -374,6 +399,7 @@
   {
    "c": "円",
    "lv": "N5",
+   "g1": true,
    "strokes": 4,
    "freq": 69,
    "en": [
@@ -384,6 +410,7 @@
   {
    "c": "子",
    "lv": "N5",
+   "g1": true,
    "strokes": 3,
    "freq": 72,
    "en": [
@@ -394,6 +421,7 @@
   {
    "c": "目",
    "lv": "N5",
+   "g1": true,
    "strokes": 5,
    "freq": 76,
    "en": [
@@ -423,6 +451,7 @@
   {
    "c": "八",
    "lv": "N5",
+   "g1": true,
    "strokes": 2,
    "freq": 92,
    "en": [
@@ -433,6 +462,7 @@
   {
    "c": "六",
    "lv": "N5",
+   "g1": true,
    "strokes": 4,
    "freq": 93,
    "en": [
@@ -442,6 +472,7 @@
   {
    "c": "下",
    "lv": "N5",
+   "g1": true,
    "strokes": 3,
    "freq": 97,
    "en": [
@@ -462,6 +493,7 @@
   {
    "c": "気",
    "lv": "N5",
+   "g1": true,
    "strokes": 6,
    "freq": 113,
    "en": [
@@ -472,6 +504,7 @@
   {
    "c": "小",
    "lv": "N5",
+   "g1": true,
    "strokes": 3,
    "freq": 114,
    "en": [
@@ -482,6 +515,7 @@
   {
    "c": "七",
    "lv": "N5",
+   "g1": true,
    "strokes": 2,
    "freq": 115,
    "en": [
@@ -491,6 +525,7 @@
   {
    "c": "山",
    "lv": "N5",
+   "g1": true,
    "strokes": 3,
    "freq": 131,
    "en": [
@@ -530,6 +565,7 @@
   {
    "c": "女",
    "lv": "N5",
+   "g1": true,
    "strokes": 3,
    "freq": 151,
    "en": [
@@ -559,6 +595,7 @@
   {
    "c": "百",
    "lv": "N5",
+   "g1": true,
    "strokes": 6,
    "freq": 163,
    "en": [
@@ -577,6 +614,7 @@
   {
    "c": "先",
    "lv": "N5",
+   "g1": true,
    "strokes": 6,
    "freq": 173,
    "en": [
@@ -587,6 +625,7 @@
   {
    "c": "名",
    "lv": "N5",
+   "g1": true,
    "strokes": 6,
    "freq": 177,
    "en": [
@@ -597,6 +636,7 @@
   {
    "c": "川",
    "lv": "N5",
+   "g1": true,
    "strokes": 3,
    "freq": 181,
    "en": [
@@ -607,6 +647,7 @@
   {
    "c": "千",
    "lv": "N5",
+   "g1": true,
    "strokes": 3,
    "freq": 195,
    "en": [
@@ -626,6 +667,7 @@
   {
    "c": "水",
    "lv": "N5",
+   "g1": true,
    "strokes": 4,
    "freq": 223,
    "en": [
@@ -645,6 +687,7 @@
   {
    "c": "男",
    "lv": "N5",
+   "g1": true,
    "strokes": 7,
    "freq": 240,
    "en": [
@@ -673,6 +716,7 @@
   {
    "c": "口",
    "lv": "N5",
+   "g1": true,
    "strokes": 3,
    "freq": 284,
    "en": [
@@ -692,6 +736,7 @@
   {
    "c": "校",
    "lv": "N5",
+   "g1": true,
    "strokes": 10,
    "freq": 294,
    "en": [
@@ -712,6 +757,7 @@
   {
    "c": "空",
    "lv": "N5",
+   "g1": true,
    "strokes": 8,
    "freq": 304,
    "en": [
@@ -722,6 +768,7 @@
   {
    "c": "土",
    "lv": "N5",
+   "g1": true,
    "strokes": 3,
    "freq": 307,
    "en": [
@@ -732,6 +779,7 @@
   {
    "c": "木",
    "lv": "N5",
+   "g1": true,
    "strokes": 4,
    "freq": 317,
    "en": [
@@ -762,6 +810,7 @@
   {
    "c": "車",
    "lv": "N5",
+   "g1": true,
    "strokes": 7,
    "freq": 333,
    "en": [
@@ -789,6 +838,7 @@
   {
    "c": "足",
    "lv": "N5",
+   "g1": true,
    "strokes": 7,
    "freq": 343,
    "en": [
@@ -828,6 +878,7 @@
   {
    "c": "白",
    "lv": "N5",
+   "g1": true,
    "strokes": 5,
    "freq": 483,
    "en": [
@@ -846,6 +897,7 @@
   {
    "c": "天",
    "lv": "N5",
+   "g1": true,
    "strokes": 4,
    "freq": 512,
    "en": [
@@ -883,6 +935,7 @@
   {
    "c": "火",
    "lv": "N5",
+   "g1": true,
    "strokes": 4,
    "freq": 574,
    "en": [
@@ -892,6 +945,7 @@
   {
    "c": "花",
    "lv": "N5",
+   "g1": true,
    "strokes": 7,
    "freq": 578,
    "en": [
@@ -901,6 +955,7 @@
   {
    "c": "右",
    "lv": "N5",
+   "g1": true,
    "strokes": 5,
    "freq": 602,
    "en": [
@@ -928,6 +983,7 @@
   {
    "c": "左",
    "lv": "N5",
+   "g1": true,
    "strokes": 5,
    "freq": 630,
    "en": [
@@ -937,6 +993,7 @@
   {
    "c": "休",
    "lv": "N5",
+   "g1": true,
    "strokes": 6,
    "freq": 642,
    "en": [
@@ -965,6 +1022,7 @@
   {
    "c": "雨",
    "lv": "N5",
+   "g1": true,
    "strokes": 8,
    "freq": 950,
    "en": [
@@ -993,6 +1051,7 @@
   {
    "c": "耳",
    "lv": "N5",
+   "g1": true,
    "strokes": 6,
    "freq": 1328,
    "en": [
@@ -1151,6 +1210,7 @@
   {
    "c": "力",
    "lv": "N4",
+   "g1": true,
    "strokes": 2,
    "freq": 62,
    "en": [
@@ -1241,6 +1301,7 @@
   {
    "c": "田",
    "lv": "N4",
+   "g1": true,
    "strokes": 5,
    "freq": 90,
    "en": [
@@ -1438,6 +1499,7 @@
   {
    "c": "正",
    "lv": "N4",
+   "g1": true,
    "strokes": 5,
    "freq": 143,
    "en": [
@@ -1498,6 +1560,7 @@
   {
    "c": "文",
    "lv": "N4",
+   "g1": true,
    "strokes": 4,
    "freq": 190,
    "en": [
@@ -1716,6 +1779,7 @@
   {
    "c": "村",
    "lv": "N4",
+   "g1": true,
    "strokes": 7,
    "freq": 253,
    "en": [
@@ -1796,6 +1860,7 @@
   {
    "c": "町",
    "lv": "N4",
+   "g1": true,
    "strokes": 7,
    "freq": 292,
    "en": [
@@ -2023,6 +2088,7 @@
   {
    "c": "早",
    "lv": "N4",
+   "g1": true,
    "strokes": 6,
    "freq": 402,
    "en": [
@@ -2173,6 +2239,7 @@
   {
    "c": "字",
    "lv": "N4",
+   "g1": true,
    "strokes": 6,
    "freq": 485,
    "en": [
@@ -2203,6 +2270,7 @@
   {
    "c": "音",
    "lv": "N4",
+   "g1": true,
    "strokes": 9,
    "freq": 491,
    "en": [
@@ -2341,6 +2409,7 @@
   {
    "c": "赤",
    "lv": "N4",
+   "g1": true,
    "strokes": 7,
    "freq": 584,
    "en": [
@@ -2350,6 +2419,7 @@
   {
    "c": "青",
    "lv": "N4",
+   "g1": true,
    "strokes": 8,
    "freq": 589,
    "en": [
@@ -2360,6 +2430,7 @@
   {
    "c": "森",
    "lv": "N4",
+   "g1": true,
    "strokes": 12,
    "freq": 609,
    "en": [
@@ -2417,6 +2488,7 @@
   {
    "c": "林",
    "lv": "N4",
+   "g1": true,
    "strokes": 8,
    "freq": 656,
    "en": [
@@ -2545,6 +2617,7 @@
   {
    "c": "夕",
    "lv": "N4",
+   "g1": true,
    "strokes": 3,
    "freq": 924,
    "en": [
@@ -2718,6 +2791,7 @@
   {
    "c": "犬",
    "lv": "N4",
+   "g1": true,
    "strokes": 4,
    "freq": 1326,
    "en": [
@@ -2779,6 +2853,90 @@
    "en": [
     "Sino-",
     "China"
+   ]
+  },
+  {
+   "c": "石",
+   "lv": "G1",
+   "g1": true,
+   "strokes": 5,
+   "freq": 342,
+   "en": [
+    "stone"
+   ]
+  },
+  {
+   "c": "竹",
+   "lv": "G1",
+   "g1": true,
+   "strokes": 6,
+   "freq": 593,
+   "en": [
+    "bamboo"
+   ]
+  },
+  {
+   "c": "王",
+   "lv": "G1",
+   "g1": true,
+   "strokes": 4,
+   "freq": 684,
+   "en": [
+    "king",
+    "rule"
+   ]
+  },
+  {
+   "c": "玉",
+   "lv": "G1",
+   "g1": true,
+   "strokes": 5,
+   "freq": 737,
+   "en": [
+    "jewel",
+    "ball"
+   ]
+  },
+  {
+   "c": "草",
+   "lv": "G1",
+   "g1": true,
+   "strokes": 9,
+   "freq": 967,
+   "en": [
+    "grass",
+    "weeds"
+   ]
+  },
+  {
+   "c": "虫",
+   "lv": "G1",
+   "g1": true,
+   "strokes": 6,
+   "freq": 1351,
+   "en": [
+    "insect",
+    "bug"
+   ]
+  },
+  {
+   "c": "糸",
+   "lv": "G1",
+   "g1": true,
+   "strokes": 6,
+   "freq": 1488,
+   "en": [
+    "thread"
+   ]
+  },
+  {
+   "c": "貝",
+   "lv": "G1",
+   "g1": true,
+   "strokes": 7,
+   "freq": 1787,
+   "en": [
+    "shellfish"
    ]
   }
  ],

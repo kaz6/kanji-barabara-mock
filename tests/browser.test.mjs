@@ -165,7 +165,7 @@ test("画面", { skip }, async (t) => {
     assert.deepEqual([...ys].sort((a, b) => a - b), ys, "相手・レベル・時間・はじめる の順に上から並ぶ");
     const labels = (id) => page.locator(`#${id} label`).allTextContents().then((a) => a.map((x) => x.trim()));
     assert.deepEqual(await labels("opp"), ["ひとりで", "とても弱い", "ふつう", "いまの強さ", "人と（合言葉）"]);
-    assert.deepEqual(await labels("lvl"), ["N5", "N4"]);
+    assert.deepEqual(await labels("lvl"), ["小1", "N5", "N4"]);
     assert.deepEqual(await labels("tim"), ["5分", "10分", "15分"]);
     assert.equal(await page.locator("#lay").count(), 0, "並べ方の選びはない（KJ-030）");
     for (const [id, v] of [["opp", "weak"], ["lvl", "N4"], ["tim", "600"]]) assert.equal(await page.locator(`#${id} input:checked`).getAttribute("value"), v, id);
@@ -270,7 +270,7 @@ test("画面", { skip }, async (t) => {
   await t.test("レベル（KJ-006）：初期値は N4。N5 を選ぶと字と語が減り、ログの頭に出る。端末に覚える", async () => {
     const { ctx, page, errors } = await open(browser, url, { width: 760, height: 1100 });
     const labels = await page.locator("#lvl label").allTextContents();
-    assert.deepEqual(labels.map((x) => x.trim()), ["N5", "N4"]);
+    assert.deepEqual(labels.map((x) => x.trim()), ["小1", "N5", "N4"]);
     assert.equal(await page.locator("#lvl input:checked").getAttribute("value"), "N4");
     assert.equal(await page.evaluate(() => __KJ.game.level), "N4");
     const n4 = await page.evaluate(() => [__KJ.tables.CHARS.size, __KJ.tables.WORDS.size]);
@@ -297,6 +297,41 @@ test("画面", { skip }, async (t) => {
     assert.equal(await page.locator("#lvl input:checked").getAttribute("value"), "N4");
     await clickStart(page);
     assert.equal(await page.evaluate(() => __KJ.game.level), "N4");
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+
+  await t.test("小1（KJ-044）：選ぶと山は80字だけ。字・語の数が出て、ログの頭に「小1」。端末に覚える。N4 に戻せる", async () => {
+    const ctx = await browser.newContext({ viewport: { width: 375, height: 900 } });
+    const page = await ctx.newPage();
+    const errors = [];
+    page.on("pageerror", (e) => errors.push(String(e)));
+    await page.goto(url);
+    await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
+    assert.deepEqual((await page.locator("#lvl label").allTextContents()).map((x) => x.trim()), ["小1", "N5", "N4"], "選びの順");
+    assert.equal(await page.locator("#lvl input:checked").getAttribute("value"), "N4", "初期値は N4 のまま");
+    await page.check('#lvl input[value="G1"]');
+    assert.match(await page.textContent("#setupInfo"), /^字 80・語 \d+（レベル 小1/);
+    assert.equal(await page.evaluate(() => localStorage.getItem("kj-level")), "G1");
+    if (process.env.KJ_SHOT) await page.screenshot({ path: "docs/img/kj-044-setup-375.png" });
+    await page.check('#opp input[value="solo"]');
+    await clickStart(page);
+    assert.equal(await page.evaluate(() => __KJ.game.level), "G1");
+    const G1 = [..."日一人年大十二本中出三見月生五上四金九入立手力学円子目田八六下気小七山正女百先名川文千水男村口町校空土木車石足早白字音天火花赤青竹右森左休林王玉夕雨草犬耳虫糸貝"];
+    const seen = await page.evaluate(() => [...__KJ.game.me.cards, ...__KJ.game.field].map((c) => c.c));
+    assert.ok(seen.length >= 8);
+    const outside = seen.filter((c) => !G1.includes(c));
+    assert.ok(outside.length <= 1, `80字の外は、ストックに入れる部品1枚だけ：${outside}`);
+    for (const c of await page.evaluate(() => __KJ.game.field.map((x) => x.c))) assert.ok(G1.includes(c), `場の ${c} は80字の外`);
+    await page.click("#bLog");
+    assert.match(await page.inputValue("#logText"), /# レベル 小1（小学1年の漢字80字）/);
+    await page.click("#bLog");
+    await page.click("#bSetup");
+    await page.reload();
+    await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
+    assert.equal(await page.locator("#lvl input:checked").getAttribute("value"), "G1", "端末に覚える");
+    await page.check('#lvl input[value="N4"]');
+    assert.match(await page.textContent("#setupInfo"), /^字 284・語 10438（レベル N4/);
     assert.deepEqual(errors, []);
     await ctx.close();
   });

@@ -401,7 +401,7 @@ let T=null, G=null; // 表・ゲームの状態
 let TUT=null;       // チュートリアルの進み（KJ.createTutorial。チュートリアルのあいだだけ。G は TUT.g）
 const TABLES={};    // レベルごとの表（KJ-006）
 const LVL_KEY="kj-level";
-let level=null;     // レベル（"N5"／"N4"）。はじめるときに効く。端末に覚える
+let level=null;     // レベル（"G1"〔小1〕／"N5"／"N4"）。はじめるときに効く。端末に覚える
 let row=[];         // 選んだ札の id（選んだ順。台にはその写しを左から並べる）
 let lastTried="";
 const OPP_KEY="kj-opponent",TIME_KEY="kj-time";
@@ -447,7 +447,7 @@ function radios(box,name,items,cur,onPick){
 }
 function buildPickers(){
   radios($("opp"),"opp",OPP_CHOICES().map(o=>({value:o.key,label:o.label})),opponent,v=>{cancelRoom();opponent=v;lsSet(OPP_KEY,v);roomUi()});
-  radios($("lvl"),"lvl",K.LEVELS.map(o=>({value:o.key,label:o.key,title:o.label})),level,v=>{level=v;lsSet(LVL_KEY,v);T=tablesFor(level);showCounts()});
+  radios($("lvl"),"lvl",K.LEVELS.map(o=>({value:o.key,label:o.short,title:o.label})),level,v=>{level=v;lsSet(LVL_KEY,v);T=tablesFor(level);showCounts()});
   radios($("tim"),"tim",K.timeChoices(D).map(sec=>({value:sec,label:K.timeLabel(sec)})),timeLimit,v=>{timeLimit=+v;lsSet(TIME_KEY,v);buildHowto()});
 }
 const OPP_CHOICES=()=>[...K.OPPONENTS,K.ROOM_OPPONENT]; // 「人と（合言葉）」はいまの強さの後ろ（KJ-033）
@@ -727,7 +727,7 @@ $("bHost").onclick=async()=>{
   if(ROOM!==me)return;
   if(!h.ok){cancelRoom();setRoomMsg(h.why);return}
   me.code=h.code;roomUi();
-  setRoomMsg(`合言葉を相手に伝えてください（レベル ${level}・${K.timeLabel(timeLimit)}）。相手を待っています`);
+  setRoomMsg(`合言葉を相手に伝えてください（レベル ${K.levelShort(level)}・${K.timeLabel(timeLimit)}）。相手を待っています`);
 };
 $("bEnter").onclick=async()=>{
   if(ROOM)return;
@@ -738,7 +738,7 @@ $("bEnter").onclick=async()=>{
   if(!f.ok){ROOM=null;roomUi();setRoomMsg(f.why);return}
   if(f.version!==D.rules.version||!K.LEVELS.some(x=>x.key===f.level)){ROOM=null;roomUi();setRoomMsg("相手と版がちがう（二人とも読み込み直してから、もう一度）");return}
   Object.assign(me,{matchId:f.matchId,level:f.level,timeLimit:K.normTime(D,f.timeLimit)});
-  const set=`相手の設定：レベル ${me.level}・${K.timeLabel(me.timeLimit)}`;
+  const set=`相手の設定：レベル ${K.levelShort(me.level)}・${K.timeLabel(me.timeLimit)}`;
   setRoomMsg(set+"。入っている…");
   LINK.subscribe(me.matchId,K.roomWaiter(CLAIMS,"guest",me.matchId,beginRoom));
   const j=await K.joinRoom(CLAIMS,me.matchId);
@@ -755,7 +755,7 @@ function beginRoom(startRow){
   G=K.createGame(D,T,{now:clock,timeLimit:rm.timeLimit,match:{id:rm.matchId,role:rm.role,startAt}});
   MC=K.createMatchClient(G,CLAIMS,{rand:cryptoRand});
   row=[];lastTried="";
-  showWhy(rm.role==="guest"?`作った人の設定：レベル ${rm.level}・${K.timeLabel(rm.timeLimit)}`:"");
+  showWhy(rm.role==="guest"?`作った人の設定：レベル ${K.levelShort(rm.level)}・${K.timeLabel(rm.timeLimit)}`:"");
   $("bCopyEnd").hidden=true;hideChoices();setRoomMsg("");
   buildHowto();showScreen(true);render();
 }
@@ -1088,7 +1088,7 @@ function buildHowto(){
     `<b>ストック</b>：手札（${R.hand_max} マス）の下の ${R.split_extra} マス。字も部品も置ける。割る・くっつけるでできた札は、手札に空きがなければストックに入る（全部で ${R.hand_max+R.split_extra} 枚まで）。場から取った札も、上の段が埋まっていればストックに入る。ストックの札も選んで使える。`,
     `<b>はじまり</b>：はじめの手札は ${R.start_hand} 枚。はじめたらすぐ時間が動く。ストックには、使いやすい部品が ${R.start_stock_parts} 枚、最初から入っている。`,
     `<b>台</b>は並べて見る場所：選んだ札は手札・ストックのマスにいるまま、台にはその写しが出る（枚数は変わらない）。`,
-    `<b>レベル</b>：はじめる前に選ぶ（N5／N4。N4 は N5＋N4 の字）。山に入る字・語・割り方・対義・巡り・同音がレベルで変わる。いまは ${K.levelLabel(T.level)}（字 ${T.CHARS.size}・語 ${T.WORDS.size}）。`,
+    `<b>レベル</b>：はじめる前に選ぶ（小1／N5／N4。小1 は小学1年の漢字80字、N4 は N5＋N4 の字）。山に入る字・語・割り方・対義・巡り・同音がレベルで変わる。いまは ${K.levelLabel(T.level)}（字 ${T.CHARS.size}・語 ${T.WORDS.size}）。`,
     `<b>相手</b>：はじめる前に選ぶ。ひとりで（CPU なし。50 点では終わらず、${(TL||R.win.time_limit_sec)/60} 分たったら点を出す。この端末の自己ベストを覚える）／とても弱い（CPU は ${R.cpu.weak_interval_sec[0]}〜${R.cpu.weak_interval_sec[1]} 秒に1回）／ふつう（${R.cpu.fair_interval_sec[0]}〜${R.cpu.fair_interval_sec[1]} 秒に1回）／いまの強さ（${R.cpu.interval_sec[0]}〜${R.cpu.interval_sec[1]} 秒に1回）。`,
     `<b>割る</b>：台の1枚を部品表で一段だけ割る。<b>くっつける</b>：台の2枚を、左→右の順でくっつける。逆に並べたときは「並べる順が逆」と出る。十・口（古・田）や 大・丶（太・犬）のように2通りの字になるときは選ぶ。`,
     `<b>反転</b>（印：${STR.ICONS.invert}）対義の字に。${R.cooldown_sec.invert} 秒待ち。<b>巡り</b>（印：${STR.ICONS.cycle}）${T.CYCLES.map(c=>c.name).join("・")}を1つ先へ。${R.cooldown_sec.cycle} 秒待ち。<b>同音</b>（印：${STR.ICONS.homophone}）同じ読みの字から選ぶ。${R.cooldown_sec.homophone} 秒待ち。待ち時間は操作ごとで、二人は別々。`,

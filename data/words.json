@@ -1,9 +1,10 @@
 {
- "version": "2026-11-21.2",
+ "version": "2026-11-23.2",
  "source": "JMdict（jamdict-data, jmdict 1.08）。2〜4字の語は「手に持てる字」（レベルの字＋割る・くっつけるで出る字）だけで書けるもの（KJ-011・D-029）。1字の語はレベルの字だけ",
  "fields": {
   "w": "語",
-  "lv": "レベル（その語の字がすべて手に持てる、いちばん低いレベル）",
+  "lv": "レベル（その語の字がすべて手に持てる、いちばん低い N5／N4。小1 だけで放てる語は null）",
+  "g1": "小1 で放てる（字がすべて小1 の手に持てる字。KJ-044）",
   "kana": "かな読み（最初の1つ）",
   "en": "英語の意味（最初の2つ）",
   "common": "よく使う（news1/ichi1/spec1/spec2/gai1）",
@@ -12,7 +13,8 @@
  "stats": {
   "hold_by_level": {
    "N5": 138,
-   "N4": 353
+   "N4": 353,
+   "G1": 86
   },
   "by_level": {
    "N5": {
@@ -36,17 +38,28 @@
     },
     "common": 2419,
     "yoji": 202
+   },
+   "G1": {
+    "total": 1357,
+    "by_length": {
+     "1": 78,
+     "2": 969,
+     "3": 238,
+     "4": 72
+    },
+    "common": 427,
+    "yoji": 24
    }
   },
-  "total": 10438,
+  "total": 10474,
   "by_length": {
-   "1": 253,
-   "2": 6525,
-   "3": 2561,
-   "4": 1099
+   "1": 261,
+   "2": 6540,
+   "3": 2570,
+   "4": 1103
   },
-  "common": 2419,
-  "yoji": 202
+  "common": 2429,
+  "yoji": 204
  },
  "words": [
   {
@@ -57,6 +70,7 @@
     "one",
     "best"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -67,6 +81,7 @@
     "seven",
     "hepta-"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -87,6 +102,7 @@
     "three",
     "tri-"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -97,6 +113,7 @@
     "above; up",
     "top; summit"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -107,6 +124,7 @@
     "below; down",
     "bottom"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -127,6 +145,7 @@
     "inside; interior",
     "among; within"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -146,6 +165,7 @@
    "en": [
     "nine"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -165,6 +185,7 @@
    "en": [
     "two"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -174,6 +195,7 @@
    "en": [
     "five"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -194,6 +216,7 @@
     "-ian (e.g. Italian); -ite (e.g. Tokyoite)",
     "-er (e.g. performer, etc.); person working with ..."
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -302,6 +325,7 @@
     "point; tip",
     "head (of a line); front"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -321,6 +345,7 @@
    "en": [
     "eight"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -330,6 +355,7 @@
    "en": [
     "six"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -340,6 +366,7 @@
     "yen (Japanese monetary unit)",
     "circle"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -359,6 +386,7 @@
     "coming out; going out",
     "attending (work); appearing (on stage)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -399,6 +427,7 @@
     "force; strength",
     "capability; ability"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -448,6 +477,7 @@
     "ten",
     "ten years of age"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -457,6 +487,7 @@
    "en": [
     "1,000; thousand"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -506,6 +537,7 @@
     "mouth",
     "opening; hole"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -535,6 +567,7 @@
     "right; right-hand side",
     "afore-mentioned (esp. in vertical Japanese writing); foregoing"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -565,6 +598,7 @@
     "name; given name",
     "title"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -612,6 +646,7 @@
    "en": [
     "four"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -652,6 +687,7 @@
     "earth; soil",
     "the earth (historically, esp. as opposed to the heavens); the ground"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -710,6 +746,7 @@
    "en": [
     "evening"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -749,6 +786,7 @@
     "large; big",
     "older; senior"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -759,6 +797,7 @@
     "sky",
     "heaven"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -769,6 +808,7 @@
     "female; woman",
     "female lover; girlfriend"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -797,6 +837,7 @@
     "child",
     "young (animal)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -806,6 +847,7 @@
    "en": [
     "section of village"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -816,6 +858,7 @@
     "learning; scholarship",
     "study of ...; -ology"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -846,6 +889,7 @@
     "smallness; small item",
     "short month (i.e. having fewer than 31 days)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -865,6 +909,7 @@
     "mountain; hill",
     "mine (e.g. coal mine)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -875,6 +920,7 @@
     "river; stream",
     "River; the ... river"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -884,6 +930,7 @@
    "en": [
     "left; left hand side"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -903,6 +950,7 @@
     "year",
     "age; years"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -1001,6 +1049,7 @@
     "hand; arm",
     "forepaw; foreleg"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -1010,6 +1059,7 @@
    "en": [
     "letter; writings"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -1069,6 +1119,7 @@
     "day; days",
     "sun; sunshine"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -1079,6 +1130,7 @@
     "already; now",
     "quick; early"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -1119,6 +1171,7 @@
     "moon",
     "month"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -1159,6 +1212,7 @@
     "tree; shrub",
     "wood; timber"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -1169,6 +1223,7 @@
     "origin; source",
     "base; basis"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -1178,6 +1233,7 @@
    "en": [
     "village"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -1207,6 +1263,7 @@
     "wood; woods",
     "bunch (of something); cluster"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -1217,6 +1274,7 @@
     "forest",
     "shrine grove"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -1257,6 +1315,7 @@
     "(logical) true; regular",
     "10^40; ten thousand undecillion"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -1314,6 +1373,7 @@
     "spirit; mind",
     "nature; disposition"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -1324,6 +1384,7 @@
     "water (esp. cool, fresh water, e.g. drinking water)",
     "fluid (esp. in an animal tissue); liquid"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -1360,6 +1421,7 @@
    "en": [
     "fire; flame"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -1399,6 +1461,29 @@
     "dog (Canis (lupus) familiaris)",
     "squealer; rat"
    ],
+   "g1": true,
+   "common": true
+  },
+  {
+   "w": "玉",
+   "lv": null,
+   "kana": "たま",
+   "en": [
+    "ball; sphere",
+    "bead (of sweat, dew, etc.); drop"
+   ],
+   "g1": true,
+   "common": true
+  },
+  {
+   "w": "王",
+   "lv": null,
+   "kana": "おう",
+   "en": [
+    "king; ruler",
+    "tycoon; magnate"
+   ],
+   "g1": true,
    "common": true
   },
   {
@@ -1419,6 +1504,7 @@
     "raw; uncooked",
     "natural; as it is"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -1438,6 +1524,7 @@
    "en": [
     "rice field"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -1448,6 +1535,7 @@
     "man; male",
     "fellow; guy"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -1458,6 +1546,7 @@
     "town; block",
     "downtown; main street"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -1497,6 +1586,7 @@
     "white",
     "innocence; innocent person"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -1506,6 +1596,7 @@
    "en": [
     "100; hundred"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -1516,6 +1607,7 @@
     "eye; eyeball",
     "eyesight; sight"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -1548,6 +1640,17 @@
    "common": true
   },
   {
+   "w": "石",
+   "lv": null,
+   "kana": "いし",
+   "en": [
+    "stone",
+    "jewel; precious stone"
+   ],
+   "g1": true,
+   "common": true
+  },
+  {
    "w": "私",
    "lv": "N4",
    "kana": "わたし",
@@ -1572,6 +1675,18 @@
    "en": [
     "emptiness; vacuum"
    ],
+   "g1": true,
+   "common": true
+  },
+  {
+   "w": "竹",
+   "lv": null,
+   "kana": "たけ",
+   "en": [
+    "bamboo (any grass of subfamily Bambusoideae)",
+    "middle (of a three-tier ranking system)"
+   ],
+   "g1": true,
    "common": true
   },
   {
@@ -1581,6 +1696,16 @@
    "en": [
     "answer; reply"
    ],
+   "common": true
+  },
+  {
+   "w": "糸",
+   "lv": null,
+   "kana": "いと",
+   "en": [
+    "thread; yarn"
+   ],
+   "g1": true,
    "common": true
   },
   {
@@ -1609,6 +1734,7 @@
     "ear",
     "hearing"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -1639,6 +1765,7 @@
     "flower; blossom",
     "cherry blossom"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -1649,6 +1776,17 @@
     "tea",
     "tea plant (Camellia sinensis)"
    ],
+   "common": true
+  },
+  {
+   "w": "草",
+   "lv": null,
+   "kana": "くさ",
+   "en": [
+    "grass; weed",
+    "ninja"
+   ],
+   "g1": true,
    "common": true
   },
   {
@@ -1669,6 +1807,17 @@
     "medicine; pharmaceuticals",
     "efficacious chemical (gunpowder, pesticide, etc.)"
    ],
+   "common": true
+  },
+  {
+   "w": "虫",
+   "lv": null,
+   "kana": "むし",
+   "en": [
+    "insect; bug",
+    "worm; roundworm"
+   ],
+   "g1": true,
    "common": true
   },
   {
@@ -1750,6 +1899,17 @@
    "common": true
   },
   {
+   "w": "貝",
+   "lv": null,
+   "kana": "かい",
+   "en": [
+    "shellfish",
+    "seashell; shell"
+   ],
+   "g1": true,
+   "common": true
+  },
+  {
    "w": "質",
    "lv": "N4",
    "kana": "しつ",
@@ -1767,6 +1927,7 @@
     "red; crimson",
     "red-containing colour (e.g. brown, pink, orange)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -1777,6 +1938,7 @@
     "foot; paw",
     "leg"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -1787,6 +1949,7 @@
     "car; automobile",
     "wheel"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -1865,6 +2028,7 @@
     "money",
     "metal"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -1924,6 +2088,7 @@
     "rain",
     "rainy day; rainy weather"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -1934,6 +2099,7 @@
     "blue; azure",
     "green"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -1944,6 +2110,7 @@
     "sound; noise",
     "note"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -2112,7 +2279,8 @@
    "en": [
     "entering",
     "setting (of the Sun)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "切",
@@ -2250,7 +2418,8 @@
    "en": [
     "school",
     "proof (of a book, document, etc.); counter for proofs"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "洋",
@@ -2362,7 +2531,8 @@
    "en": [
     "looking; viewing",
     "(please) try (to)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "試",
@@ -2465,6 +2635,7 @@
     "one-by-one; separately",
     "every single; each and every"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -2475,6 +2646,7 @@
     "one sheet; one page",
     "one block of tofu; one serving (in a restaurant)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -2503,6 +2675,7 @@
    "en": [
     "the first and second; a few"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -2513,6 +2686,7 @@
     "one person",
     "being alone; being by oneself"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -2560,6 +2734,7 @@
     "one yen",
     "throughout (an area); whole district"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -2588,6 +2763,7 @@
    "en": [
     "1,000; one thousand"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -2598,6 +2774,7 @@
     "mouthful; morsel",
     "gulp; sip"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -2700,6 +2877,7 @@
    "en": [
     "one large ...; a great ..."
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -2710,6 +2888,7 @@
     "one daughter",
     "eldest daughter; first-born daughter"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -2719,6 +2898,7 @@
    "en": [
     "(one) letter; (one) character"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -2748,6 +2928,7 @@
     "a little; a bit",
     "just a minute; for a moment"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -2757,6 +2938,7 @@
    "en": [
     "one year; some time ago"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -2796,6 +2978,7 @@
     "one move (in go, shogi, etc.)",
     "only way; only means"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -2805,6 +2988,7 @@
    "en": [
     "something insignificant; one mon (10th sen)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -2844,6 +3028,7 @@
     "one day",
     "all day (long); throughout the day"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -2884,6 +3069,7 @@
     "January",
     "first month of the lunar calendar"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -2894,6 +3080,7 @@
     "one long cylindrical thing; one film, TV show, etc.",
     "one version"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -2903,6 +3090,7 @@
    "en": [
     "whole school; the first proof"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -2923,6 +3111,7 @@
     "one breath",
     "chug!; drink!"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -2933,6 +3122,7 @@
     "whole life; a lifetime",
     "(the only, the greatest, etc.) of one's life"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -2942,6 +3132,7 @@
    "en": [
     "boy; eldest son"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -2962,6 +3153,7 @@
     "glance; look",
     "complete view; bird's-eye view"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -2981,6 +3173,7 @@
    "en": [
     "one game (of go)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -3010,6 +3203,7 @@
     "look; glimpse",
     "apparently; seemingly"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -3028,6 +3222,7 @@
    "en": [
     "a pair (of shoes or socks)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -3105,6 +3300,7 @@
    "en": [
     "district of a town; city block (of irregular size)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -3123,6 +3319,7 @@
    "en": [
     "seventy; 70"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -3132,6 +3329,7 @@
    "en": [
     "Star Festival (held in July or August); Tanabata"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -3142,6 +3340,7 @@
     "seventh day of the month",
     "seven days"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -3161,6 +3360,7 @@
     "July",
     "seventh month of the lunar calendar"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -3236,6 +3436,7 @@
    "en": [
     "three people"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -3255,6 +3456,7 @@
    "en": [
     "thirty; 30"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -3265,6 +3467,7 @@
     "3000; three thousand",
     "many"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -3283,6 +3486,7 @@
    "en": [
     "third daughter"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -3292,6 +3496,7 @@
    "en": [
     "three years"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -3322,6 +3527,7 @@
     "third day of the month",
     "three days"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -3342,6 +3548,7 @@
     "March",
     "third month of the lunar calendar"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -3352,6 +3559,7 @@
     "three (long cylindrical things)",
     "three-of-a-kind (in a dealt hand)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -3362,6 +3570,7 @@
     "three sons",
     "third son"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -3372,6 +3581,7 @@
     "300; three hundred",
     "300 mon; trifling amount"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -3391,6 +3601,7 @@
     "top and bottom; up and down",
     "upside-down"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -3439,6 +3650,7 @@
     "skillful; skilled",
     "flattery"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -3476,6 +3688,7 @@
    "en": [
     "high rice field; very fertile rice field"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -3503,6 +3716,7 @@
    "en": [
     "sky; the skies"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -3540,6 +3754,7 @@
    "en": [
     "descending (mountain)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -3559,6 +3774,7 @@
     "humble position; inferior",
     "underarm grip on opponent's belt"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -3578,6 +3794,7 @@
     "drainage; ditch",
     "sewage; black water"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -3587,6 +3804,7 @@
    "en": [
     "burning low; waning"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -3597,6 +3815,7 @@
     "low-lying part of a city (usu. containing shops, factories, etc.)",
     "Shitamachi (low-lying area of eastern Tokyo near Tokyo Bay, incl. Asakusa, Shitaya, Kanda, Fukugawa, Honjo, Nihonbashi, Kyobashi and surrounds)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -3626,6 +3845,7 @@
     "preliminary inspection; having a look in advance",
     "preparatory read-through (e.g. of lesson notes)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -3635,6 +3855,7 @@
    "en": [
     "alighting (from a train, bus, etc.); getting off"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -3869,6 +4090,7 @@
     "very; considerably",
     "by no means; not readily"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -3936,6 +4158,7 @@
    "en": [
     "junior high school; middle school"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -3945,6 +4168,7 @@
    "en": [
     "small and medium"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -3954,6 +4178,7 @@
    "en": [
     "middle-age; middle age"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -3974,6 +4199,7 @@
     "China and Japan",
     "the middle day"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -4001,6 +4227,7 @@
    "en": [
     "neutrality"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -4010,6 +4237,7 @@
    "en": [
     "middle ear; tympanum"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -4170,6 +4398,7 @@
    "en": [
     "multiplication table; times table"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -4179,6 +4408,7 @@
    "en": [
     "ninety; 90"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -4189,6 +4419,7 @@
     "ninth day of the month",
     "nine days"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -4199,6 +4430,7 @@
     "September",
     "ninth month of the lunar calendar"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -4283,6 +4515,7 @@
    "en": [
     "two persons; two people"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -4302,6 +4535,7 @@
    "en": [
     "twenty; 20"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -4331,6 +4565,7 @@
     "second day of the month",
     "two days"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -4341,6 +4576,7 @@
     "February",
     "second month of the lunar calendar"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -4359,6 +4595,7 @@
    "en": [
     "200; two hundred"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -4368,6 +4605,7 @@
    "en": [
     "forked (road, river)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -4425,6 +4663,7 @@
    "en": [
     "fifty; 50"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -4435,6 +4674,7 @@
     "fifth day of the month",
     "five days"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -4445,6 +4685,7 @@
     "May",
     "fifth month of the lunar calendar"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -4491,6 +4732,7 @@
    "en": [
     "society; company"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -4518,6 +4760,7 @@
    "en": [
     "crowd; turnout"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -4537,6 +4780,7 @@
     "population",
     "common talk"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -4546,6 +4790,7 @@
    "en": [
     "person's name"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -4564,6 +4809,7 @@
    "en": [
     "artificial; man-made"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -4583,6 +4829,7 @@
    "en": [
     "humanity; civilization"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -4602,6 +4849,7 @@
     "popularity; public favor",
     "condition (e.g. market); tone"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -4621,6 +4869,7 @@
    "en": [
     "(human) life (i.e. conception to death)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -4630,6 +4879,7 @@
    "en": [
     "(public) notice; attention"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -5002,6 +5252,7 @@
    "en": [
     "temporary absence from school"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -5011,6 +5262,7 @@
    "en": [
     "holiday; day off"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -5020,6 +5272,7 @@
    "en": [
     "(temporary) closure of school"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -5690,6 +5943,7 @@
    "en": [
     "predecessor; pioneer"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -5729,6 +5983,7 @@
     "first move (in go, shogi, etc.); moving first",
     "forestalling; (seizing the) initiative"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -5748,6 +6003,7 @@
    "en": [
     "the other day; a few days ago"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -5757,6 +6013,7 @@
    "en": [
     "last month"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -5776,6 +6033,7 @@
     "teacher; instructor",
     "sensei; title or form of address for a teacher, master, doctor, lawyer, etc."
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -5814,6 +6072,7 @@
    "en": [
     "foresight; anticipation"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -5888,6 +6147,7 @@
    "en": [
     "input; (data) entry"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -5897,6 +6157,7 @@
    "en": [
     "entrance; entry"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -5924,6 +6185,7 @@
    "en": [
     "entry to school or university; matriculation"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -5953,6 +6215,7 @@
    "en": [
     "acquisition; obtaining"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -5980,6 +6243,7 @@
    "en": [
     "deposit; payment"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -6008,6 +6272,7 @@
    "en": [
     "skillfulness"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -6017,6 +6282,7 @@
    "en": [
     "eighty; 80"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -6037,6 +6303,7 @@
     "eighth day of the month",
     "eight days"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -6047,6 +6314,7 @@
     "August",
     "eighth month of the lunar calendar"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -6065,6 +6333,7 @@
    "en": [
     "sixty; 60"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -6075,6 +6344,7 @@
     "sixth day of the month",
     "six days"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -6085,6 +6355,7 @@
     "June",
     "sixth month of the lunar calendar"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -6176,6 +6447,7 @@
    "en": [
     "in and out; income and expenses"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -6194,6 +6466,7 @@
    "en": [
     "output (electrical, signal, etc.)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -6213,6 +6486,7 @@
     "exit; gateway",
     "outlet; vent"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -6240,6 +6514,7 @@
    "en": [
     "archeological excavation (archaeological)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -6308,6 +6583,7 @@
    "en": [
     "outbreak of fire"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -6317,6 +6593,7 @@
    "en": [
     "birth"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -6364,6 +6641,7 @@
     "turnout (of people)",
     "start (e.g. race, campaign, term of office)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -6373,6 +6651,7 @@
    "en": [
     "withdrawal (of money); payment"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -6699,6 +6978,7 @@
    "en": [
     "mechanics; dynamics"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -6792,6 +7072,7 @@
    "en": [
     "chemistry"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -6802,6 +7083,7 @@
     "fossil",
     "petrifaction; petrification"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -7015,6 +7297,7 @@
     "eleven; 11",
     "jack (playing card)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -7024,6 +7307,7 @@
    "en": [
     "17; seventeen"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -7043,6 +7327,7 @@
     "thirteen; 13",
     "king (playing card)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -7052,6 +7337,7 @@
    "en": [
     "19; nineteen"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -7062,6 +7348,7 @@
     "twelve; 12",
     "queen (playing card)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -7071,6 +7358,7 @@
    "en": [
     "15; fifteen"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -7090,6 +7378,7 @@
    "en": [
     "18; eighteen"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -7099,6 +7388,7 @@
    "en": [
     "16; sixteen"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -7118,6 +7408,7 @@
    "en": [
     "14; fourteen"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -7127,6 +7418,7 @@
    "en": [
     "cross; crossed"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -7137,6 +7429,7 @@
     "tenth day of the month",
     "ten days"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -7147,6 +7440,7 @@
     "October",
     "tenth month of the lunar calendar"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -7426,6 +7720,7 @@
     "vocal message; speech",
     "prologue at the start of a kabuki performance"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -7436,6 +7731,7 @@
     "lip service; mere words",
     "lips; mouth"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -7446,6 +7742,7 @@
     "fuse; pilot light",
     "cause (of a war, argument, revolt, etc.); origin"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -7642,6 +7939,7 @@
    "en": [
     "upper right"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -7651,6 +7949,7 @@
    "en": [
     "lower right"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -7661,6 +7960,7 @@
     "right hand",
     "right-hand side; right-hand direction"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -7681,6 +7981,7 @@
     "right foot",
     "right leg"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -8034,6 +8335,7 @@
    "en": [
     "master; expert"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -8071,6 +8373,7 @@
    "en": [
     "surname; family name"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -8091,6 +8394,7 @@
     "master; expert",
     "expert board game player (chess, go, shogi, etc.)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -8101,6 +8405,7 @@
     "harvest moon (trad. 15th day of the 8th lunar month)",
     "bright moon; full moon"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -8130,6 +8435,7 @@
     "name; title",
     "(under the) pretext (of); pretense"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -8242,6 +8548,7 @@
    "en": [
     "four people"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -8251,6 +8558,7 @@
    "en": [
     "forty; 40"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -8260,6 +8568,7 @@
    "en": [
     "four thousand; 4,000"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -8289,6 +8598,7 @@
     "fourth day of the month",
     "four days"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -8308,6 +8618,7 @@
     "April",
     "fourth month in the lunar calendar"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -8317,6 +8628,7 @@
    "en": [
     "four (long cylindrical things)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -8326,6 +8638,7 @@
    "en": [
     "400; four hundred"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -8623,6 +8936,7 @@
    "en": [
     "native; aboriginal"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -8653,6 +8967,7 @@
     "embankment; bank",
     "beef sinew stewed in miso and mirin"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -8662,6 +8977,7 @@
    "en": [
     "weekend; Saturday and Sunday"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -8680,6 +8996,7 @@
    "en": [
     "engineering works; civil engineering"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -8699,6 +9016,7 @@
    "en": [
     "earth and stones"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -8709,6 +9027,7 @@
     "shod feet; wearing shoes",
     "muddy feet; dirty feet"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -9005,6 +9324,7 @@
    "en": [
     "evening sun; setting sun"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -9014,6 +9334,7 @@
    "en": [
     "(sudden) evening shower (rain)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -9286,6 +9607,7 @@
    "en": [
     "adult; grown-up"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -9392,6 +9714,7 @@
     "big mouth; mouth opened wide",
     "boastful speech; tall talk"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -9421,6 +9744,7 @@
    "en": [
     "daimyo (Japanese feudal lord)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -9459,6 +9783,7 @@
     "university; college",
     "former central university of Kyoto (established under the ritsuryo system for the training of government administrators)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -9478,6 +9803,7 @@
     "size",
     "large and small (sizes); various sizes"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -9496,6 +9822,7 @@
    "en": [
     "great mountain"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -9505,6 +9832,7 @@
    "en": [
     "carpenter"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -9524,6 +9852,7 @@
     "major company; big company",
     "front castle gate"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -9552,6 +9881,7 @@
    "en": [
     "large tree"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -9561,6 +9891,7 @@
    "en": [
     "Taishō era (1912.7.30-1926.12.25); Taisho era"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -9571,6 +9902,7 @@
     "atmosphere; air",
     "magnanimity; generosity"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -9580,6 +9912,7 @@
    "en": [
     "flood"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -9608,6 +9941,7 @@
    "en": [
     "large fire"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -9627,6 +9961,7 @@
    "en": [
     "big man; large man"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -9655,6 +9990,7 @@
    "en": [
     "wide open sky; the blue"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -9691,6 +10027,7 @@
    "en": [
     "large amount of money; great cost"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -9700,6 +10037,7 @@
    "en": [
     "heavy rain"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -9710,6 +10048,7 @@
     "the whole world",
     "the whole country"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -9756,6 +10095,7 @@
    "en": [
     "astronomy"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -9766,6 +10106,7 @@
     "weather; the elements",
     "fair weather; fine weather"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -9823,6 +10164,7 @@
     "maid; female servant",
     "hostess (in a ryokan); waitress (in a traditional restaurant)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -9841,6 +10183,7 @@
    "en": [
     "woman; girl"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -9851,6 +10194,7 @@
     "queen",
     "female champion"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -9953,6 +10297,7 @@
     "sons and daughters; children",
     "girl"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -9982,6 +10327,7 @@
     "puppy",
     "small dog"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -10047,6 +10393,7 @@
    "en": [
     "scholarly ability; scholarship"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -10095,6 +10442,7 @@
     "academic year; school year",
     "year in school; grade in school"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -10104,6 +10452,7 @@
    "en": [
     "school"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -10122,6 +10471,7 @@
    "en": [
     "student (esp. a university student)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -10446,6 +10796,7 @@
     "child; small person",
     "dwarf; midget"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -10476,6 +10827,7 @@
     "cut end; edge (of a page, etc.)",
     "small amount; small quantity"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -10523,6 +10875,7 @@
     "elementary school; primary school",
     "school for children over eight years old in ancient China"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -10542,6 +10895,7 @@
    "en": [
     "hill; knoll"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -10551,6 +10905,7 @@
    "en": [
     "stream; brook"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -10560,6 +10915,7 @@
    "en": [
     "small fire"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -10588,6 +10944,7 @@
    "en": [
     "pebble"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -10634,6 +10991,7 @@
    "en": [
     "light rain; drizzle"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -10747,6 +11105,7 @@
    "en": [
     "mountains and rivers"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -10757,6 +11116,7 @@
     "place near the mountains",
     "hilly section of a city (e.g. Tokyo, Kobe, Yokohama)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -10766,6 +11126,7 @@
    "en": [
     "mountain village"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -10776,6 +11137,7 @@
     "mountain forest; forest on a mountain",
     "mountains and forest"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -10821,6 +11183,7 @@
    "en": [
     "upper reaches of a river; upstream"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -10830,6 +11193,7 @@
    "en": [
     "downstream"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -10839,6 +11203,7 @@
    "en": [
     "mouth of river; estuary"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -10885,6 +11250,7 @@
    "en": [
     "engineering"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -10903,6 +11269,7 @@
    "en": [
     "upper left"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -10923,6 +11290,7 @@
     "left and right; right and left",
     "(asserting) control; influence"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -10933,6 +11301,7 @@
     "left hand",
     "left-hand side; left-hand direction"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -10943,6 +11312,7 @@
     "left foot",
     "left leg"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -11063,6 +11433,7 @@
    "en": [
     "older; senior"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -11072,6 +11443,7 @@
    "en": [
     "younger; junior"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -11082,6 +11454,7 @@
     "whole year; all year round",
     "always; all the time"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -11138,6 +11511,7 @@
    "en": [
     "months and years"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -11156,6 +11530,7 @@
    "en": [
     "pupil in ... year; student in ... year"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -11174,6 +11549,7 @@
    "en": [
     "Man of the Year, referring to a man born in a year with the same Chinese zodiac sign as the current year"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -11183,6 +11559,7 @@
    "en": [
     "annuity; pension"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -11993,6 +12370,7 @@
    "en": [
     "in one's hands; in one's control"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -12031,6 +12409,7 @@
    "en": [
     "modus operandi; criminal technique"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -12060,6 +12439,7 @@
     "copybook",
     "model; pattern"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -12088,6 +12468,7 @@
     "hands and feet; limbs",
     "person at one's beck and call; person at hand"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -12207,6 +12588,7 @@
     "in the sentence; in the text",
     "Bunchū era (of the Southern Court) (1372.4.?-1375.5.27)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -12227,6 +12609,7 @@
     "culture; civilization",
     "Bunka era (1804.2.11-1818.4.22)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -12237,6 +12620,7 @@
     "letter (of alphabet); character",
     "writing"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -12246,6 +12630,7 @@
    "en": [
     "literature"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -12589,6 +12974,7 @@
     "daytime; during the day",
     "Japan and China"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -12607,6 +12993,7 @@
    "en": [
     "sunrise"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -12625,6 +13012,7 @@
    "en": [
     "the number of days; date"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -12652,6 +13040,7 @@
    "en": [
     "Japan"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -12689,6 +13078,7 @@
    "en": [
     "fast-talking; rapid talking"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -13105,6 +13495,7 @@
     "time; years",
     "the Moon and the Sun"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -13132,6 +13523,7 @@
    "en": [
     "moon viewing (esp. during the eight month of the lunar calendar)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -13290,6 +13682,7 @@
    "en": [
     "woodworking; woodworker"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -13356,6 +13749,7 @@
    "en": [
     "the person in question; the person themselves"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -13375,6 +13769,7 @@
    "en": [
     "real name"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -13395,6 +13790,7 @@
     "mainland; the country proper",
     "native country; country where one was born"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -13443,6 +13839,7 @@
     "head temple",
     "this temple"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -13452,6 +13849,7 @@
    "en": [
     "this (current) year"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -13482,6 +13880,7 @@
     "text (of a book, document, etc.); body (of a letter)",
     "this passage; this sentence"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -13491,6 +13890,7 @@
    "en": [
     "today; this day"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -13518,6 +13918,7 @@
    "en": [
     "original stock"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -13538,6 +13939,7 @@
     "main school; principal school",
     "this school; our school"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -13556,6 +13958,7 @@
    "en": [
     "seriousness; earnestness"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -13602,6 +14005,7 @@
    "en": [
     "real intention; motive"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -13629,6 +14033,7 @@
    "en": [
     "villager"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -13805,6 +14210,7 @@
    "en": [
     "forestry"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -13823,6 +14229,7 @@
    "en": [
     "standing close together; bristling (with)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -13861,6 +14268,7 @@
     "proofreading; correction of press",
     "calibration"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -13888,6 +14296,7 @@
    "en": [
     "forest; woods"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -14038,6 +14447,7 @@
     "New Year (esp. first three days)",
     "first month of the year; January"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -14405,6 +14815,7 @@
    "en": [
     "willpower; energy"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -14472,6 +14883,7 @@
    "en": [
     "aquatic; on the water"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -14481,6 +14893,7 @@
    "en": [
     "underwater"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -14499,6 +14912,7 @@
    "en": [
     "hydraulic power; water power"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -14508,6 +14922,7 @@
    "en": [
     "spout"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -14536,6 +14951,7 @@
     "water content; moisture",
     "water vapor (vapour); steam"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -14565,6 +14981,7 @@
     "drop of water",
     "polka dots"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -14583,6 +15000,7 @@
    "en": [
     "(water-filled) paddy field"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -14620,6 +15038,7 @@
     "water wheel",
     "water turbine; hydraulic turbine"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -14907,6 +15326,7 @@
     "heating power; thermal power",
     "firepower"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -14916,6 +15336,7 @@
    "en": [
     "burner; nozzle"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -14925,6 +15346,7 @@
    "en": [
     "volcano"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -14943,6 +15365,7 @@
    "en": [
     "spark"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -15218,6 +15641,7 @@
    "en": [
     "princess"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -15228,6 +15652,7 @@
     "prince",
     "subordinate Kumano shrine"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -15246,6 +15671,7 @@
    "en": [
     "check"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -15273,6 +15699,7 @@
    "en": [
     "royal"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -15406,6 +15833,7 @@
    "en": [
     "raw silk thread"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -15416,6 +15844,7 @@
     "ikebana; Japanese art of flower arrangement",
     "fresh flower; natural flower"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -15574,6 +16003,7 @@
    "en": [
     "men and women; man and woman"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -15583,6 +16013,7 @@
    "en": [
     "youth; young man"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -15592,6 +16023,7 @@
    "en": [
     "downtown"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -15601,6 +16033,7 @@
    "en": [
     "chōnin (Edo-period social class of town-dwelling commoners, esp. landowning merchants); townspeople"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -15610,6 +16043,7 @@
    "en": [
     "towns and villages"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -15908,6 +16342,7 @@
     "white person; Caucasian",
     "beginner; amateur"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -16032,6 +16467,7 @@
    "en": [
     "superior; superiors"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -16041,6 +16477,7 @@
    "en": [
     "subordinate; subordinates"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -16051,6 +16488,7 @@
     "before one's eyes; under one's nose",
     "immediate (e.g. interests); present"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -16089,6 +16527,7 @@
     "eyeball",
     "special feature; centerpiece"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -16099,6 +16538,7 @@
     "white-eye family of birds (Zosteropidae)",
     "Japanese white-eye (Zosterops japonicus)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -16659,6 +17099,7 @@
    "en": [
     "sky; air"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -16687,6 +17128,7 @@
     "karate",
     "empty handed"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -16706,6 +17148,7 @@
     "air; atmosphere",
     "mood; situation"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -16716,6 +17159,7 @@
     "blank space (in documents)",
     "vacuum; blank"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -16726,6 +17170,7 @@
     "empty conveyance; empty taxi",
     "having spaces available (of a parking lot)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -16820,6 +17265,7 @@
    "en": [
     "bamboo thicket; bamboo grove"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -16866,6 +17312,7 @@
     "beginning; start",
     "clue; lead"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -16950,6 +17397,7 @@
     "eyes and ears; seeing and hearing",
     "one's attention; one's interest"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -17242,6 +17690,7 @@
    "en": [
     "fireworks"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -17251,6 +17700,7 @@
    "en": [
     "cherry blossom viewing; flower viewing"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -17372,6 +17822,26 @@
    "en": [
     "tea ceremony; Way of Tea"
    ],
+   "common": true
+  },
+  {
+   "w": "草木",
+   "lv": null,
+   "kana": "くさき",
+   "en": [
+    "plants; vegetation"
+   ],
+   "g1": true,
+   "common": true
+  },
+  {
+   "w": "草花",
+   "lv": null,
+   "kana": "くさばな",
+   "en": [
+    "flower; flowering plant"
+   ],
+   "g1": true,
    "common": true
   },
   {
@@ -17573,6 +18043,7 @@
    "en": [
     "inspection; study by observation"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -17603,6 +18074,7 @@
     "sample; specimen",
     "model; example"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -18026,6 +18498,7 @@
     "(being in) the red; deficit",
     "red letter; red writing"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -18129,6 +18602,7 @@
     "at one's feet; underfoot",
     "gait; pace"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -18159,6 +18633,7 @@
     "fast (walking); quick",
     "quick (passing of time); rapid"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -18169,6 +18644,7 @@
     "sound of footsteps",
     "sense or sign that something is approaching"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -18187,6 +18663,7 @@
    "en": [
     "in a train (car, bus, etc.); on a train"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -18917,6 +19394,7 @@
    "en": [
     "money; funds"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -18936,6 +19414,7 @@
     "minerals and rocks; metal and stone utensils",
     "epigraph"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -19336,6 +19815,7 @@
    "en": [
     "rainy weather"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -19355,6 +19835,7 @@
     "rain water",
     "\"rain water\" solar term (approx. February 19)"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -19450,6 +19931,7 @@
     "lush mountain; green mountain",
     "grave; burial place"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -19459,6 +19941,7 @@
    "en": [
     "youth; young man"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -19478,6 +19961,7 @@
     "Japanese laurel; spotted laurel",
     "live tree"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -19487,6 +19971,7 @@
    "en": [
     "blue sky"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -20088,7 +20573,8 @@
    "kana": "いっか",
    "en": [
     "something handed down (usu. an order)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "一乗",
@@ -20113,7 +20599,8 @@
    "en": [
     "for now; for the time being",
     "though not quite satisfactorily; after a fashion"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "一入",
@@ -20121,7 +20608,8 @@
    "kana": "ひとしお",
    "en": [
     "still more; especially"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "一八",
@@ -20129,7 +20617,8 @@
    "kana": "いちはつ",
    "en": [
     "wall iris; roof iris"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "一刀",
@@ -20188,7 +20677,8 @@
    "en": [
     "one person",
     "another name; nickname"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "一味",
@@ -20237,7 +20727,8 @@
    "kana": "いっせき",
    "en": [
     "one evening; some evenings"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "一天",
@@ -20245,7 +20736,8 @@
    "kana": "いってん",
    "en": [
     "the whole sky; firmament"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "一子",
@@ -20254,7 +20746,8 @@
    "en": [
     "one child",
     "only child"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "一尺",
@@ -20271,7 +20764,8 @@
    "en": [
     "one mountain",
     "pile (of something); heap"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "一己",
@@ -20362,7 +20856,8 @@
    "kana": "いちぼく",
    "en": [
     "one tree"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "一村",
@@ -20370,7 +20865,8 @@
    "kana": "いっそん",
    "en": [
     "village; whole village"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "一楽",
@@ -20395,7 +20891,8 @@
    "kana": "いっすい",
    "en": [
     "current (of water); drop"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "一洗",
@@ -20420,7 +20917,8 @@
    "kana": "いっけん",
    "en": [
     "one dog"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "一理",
@@ -20446,7 +20944,8 @@
    "en": [
     "first of nine traditional astrological signs (corresponding to Mercury and north)",
     "white patch on one foot of a horse; horse with such a patch"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "一矢",
@@ -20464,7 +20963,8 @@
    "en": [
     "one hole",
     "toilet bowl (for both urination and defecation)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "一糸",
@@ -20472,7 +20972,8 @@
    "kana": "いっし",
    "en": [
     "thread; strand"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "一羽",
@@ -20497,7 +20998,8 @@
    "en": [
     "one flower; single flower",
     "success; prosperity"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "一計",
@@ -20578,7 +21080,8 @@
    "kana": "ひとあめ",
    "en": [
     "shower; rainfall"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "一頭",
@@ -20611,7 +21114,8 @@
    "kana": "ちょうちょう",
    "en": [
     "clashing of swords; felling of trees"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "丁丑",
@@ -20668,7 +21172,8 @@
    "kana": "ちょうじ",
    "en": [
     "clove (Syzygium aromaticum)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "丁字",
@@ -20676,7 +21181,8 @@
    "kana": "ちょうじ",
    "en": [
     "clove (Syzygium aromaticum)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "丁巳",
@@ -20692,7 +21198,8 @@
    "kana": "ていねん",
    "en": [
     "adulthood (i.e. age 20 in Japan); one's majority"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "丁未",
@@ -20708,7 +21215,8 @@
    "kana": "ちょういし",
    "en": [
     "roadside stone distance indicators placed at intervals of one chō (approx. 109 meters)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "丁酉",
@@ -20732,7 +21240,8 @@
    "kana": "しちさん",
    "en": [
     "7 or 3 ratio; hair parted on one side"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "七事",
@@ -20764,7 +21273,8 @@
    "kana": "ななせん",
    "en": [
     "7000; seven thousand"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "七半",
@@ -20798,7 +21308,8 @@
    "en": [
     "decorating a metal surface with small dots resembling fish eggs",
     "twill weave; basket weave"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "七屋",
@@ -20832,7 +21343,8 @@
    "kana": "ななほん",
    "en": [
     "seven (long cylindrical things)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "七生",
@@ -20841,7 +21353,8 @@
    "en": [
     "seven lives",
     "seven generations"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "七百",
@@ -20849,7 +21362,8 @@
    "kana": "ななひゃく",
    "en": [
     "700; seven hundred"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "七穴",
@@ -20857,7 +21371,8 @@
    "kana": "しちけつ",
    "en": [
     "the seven orifices of the head (eyes, nostrils, ear canals, mouth)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "七色",
@@ -20866,6 +21381,16 @@
    "en": [
     "the seven prismatic colors (colours)"
    ]
+  },
+  {
+   "w": "七草",
+   "lv": null,
+   "kana": "ななくさ",
+   "en": [
+    "the seven spring flowers",
+    "the seven fall flowers; the seven autumn flowers"
+   ],
+   "g1": true
   },
   {
    "w": "七言",
@@ -20881,7 +21406,8 @@
    "kana": "しちせき",
    "en": [
     "seventh of nine traditional astrological signs (corresponding to Venus and west)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "七道",
@@ -21134,7 +21660,8 @@
    "en": [
     "low-ranking samurai",
     "rolling three and one (in a dice game)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "三下",
@@ -21142,7 +21669,8 @@
    "kana": "さんした",
    "en": [
     "petty underling; small fry"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "三世",
@@ -21193,7 +21721,8 @@
    "en": [
     "three and eight",
     "Arisaka Type 38 rifle"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "三冬",
@@ -21250,7 +21779,8 @@
    "kana": "さんだい",
    "en": [
     "the big three ..."
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "三天",
@@ -21259,7 +21789,8 @@
    "en": [
     "the three deities (Marici, Mahakala, Sarasvati)",
     "the three celestials (Shiva, Vishnu and Brahma)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "三学",
@@ -21267,7 +21798,8 @@
    "kana": "さんがく",
    "en": [
     "threefold training; three divisions of the noble eightfold path"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "三家",
@@ -21285,7 +21817,8 @@
    "en": [
     "three sun (ca. 9.1 cm)",
     "something small, short or thin (roughly the size of three sun)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "三尺",
@@ -21302,7 +21835,8 @@
    "en": [
     "three mountains",
     "three shrines (of Kumano)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "三強",
@@ -21345,7 +21879,8 @@
    "en": [
     "paltry amount of money; cheapness",
     "three one-mon coins"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "三族",
@@ -21385,7 +21920,8 @@
    "kana": "さんこう",
    "en": [
     "third proof"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "三業",
@@ -21409,7 +21945,8 @@
    "kana": "さんずい",
    "en": [
     "kanji \"water\" radical (radical 85)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "三界",
@@ -21517,7 +22054,8 @@
    "kana": "かみいち",
    "en": [
     "conjugation (inflection, declension) of ichidan verbs ending in \"iru\""
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "上上",
@@ -21525,7 +22063,8 @@
    "kana": "じょうじょう",
    "en": [
     "the very best; excellent"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "上世",
@@ -21549,7 +22088,8 @@
    "kana": "しょうにん",
    "en": [
     "holy priest; saint"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "上代",
@@ -21623,7 +22163,8 @@
    "kana": "うえみぎ",
    "en": [
     "upper right (corner)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "上合",
@@ -21674,7 +22215,8 @@
    "en": [
     "sky; the heavens",
     "God; the Lord"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "上官",
@@ -21706,7 +22248,8 @@
    "kana": "うえひだり",
    "en": [
     "upper left (corner)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "上巳",
@@ -21747,7 +22290,8 @@
    "kana": "じょうぶん",
    "en": [
     "the foregoing; the forgoing"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "上書",
@@ -21772,7 +22316,8 @@
    "en": [
     "publication; wood-block printing",
     "canopy (trees)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "上気",
@@ -21780,7 +22325,8 @@
    "kana": "じょうき",
    "en": [
     "flushing (of one's cheeks); dizziness"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "上水",
@@ -21788,7 +22334,8 @@
    "kana": "じょうすい",
    "en": [
     "water supply; tap water"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "上物",
@@ -21805,7 +22352,8 @@
    "en": [
     "fine jewel",
     "article of excellent quality"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "上界",
@@ -21822,7 +22370,8 @@
    "kana": "じょうはく",
    "en": [
     "first-class rice"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "上目",
@@ -21830,7 +22379,8 @@
    "kana": "うわめ",
    "en": [
     "upward glance; upturned eyes"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "上知",
@@ -21846,7 +22396,8 @@
    "kana": "うわいし",
    "en": [
     "upper millstone"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "上米",
@@ -21910,7 +22461,8 @@
    "kana": "じょうそく",
    "en": [
     "high retainer"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "上通",
@@ -21958,7 +22510,8 @@
    "kana": "じょうおん",
    "en": [
     "overtone"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "上首",
@@ -21982,7 +22535,8 @@
    "kana": "しもいち",
    "en": [
     "conjugation (inflection, declension) of ichidan verbs ending in \"eru\""
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "下下",
@@ -21990,7 +22544,8 @@
    "kana": "しもじも",
    "en": [
     "the lower classes; the common people"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "下乗",
@@ -22006,7 +22561,8 @@
    "kana": "げにん",
    "en": [
     "low-rank person; menial"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "下代",
@@ -22070,7 +22626,8 @@
    "kana": "したみぎ",
    "en": [
     "lower right (corner)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "下合",
@@ -22086,7 +22643,8 @@
    "kana": "かめい",
    "en": [
     "undermentioned; undersigned"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "下吏",
@@ -22135,7 +22693,8 @@
    "kana": "かど",
    "en": [
     "lower world; this world"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "下士",
@@ -22151,7 +22710,8 @@
    "kana": "げじょ",
    "en": [
     "maid servant"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "下家",
@@ -22175,7 +22735,8 @@
    "kana": "したひだり",
    "en": [
     "lower left (corner)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "下心",
@@ -22200,7 +22761,8 @@
    "kana": "くだしぶみ",
    "en": [
     "edict from a senior official in government or military which had the status of a binding official document"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "下書",
@@ -22216,7 +22778,8 @@
    "kana": "したき",
    "en": [
     "understory trees; underbrush"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "下校",
@@ -22224,7 +22787,8 @@
    "kana": "げこう",
    "en": [
     "coming home from school"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "下民",
@@ -22248,7 +22812,8 @@
    "kana": "げでん",
    "en": [
     "worn-out rice land"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "下男",
@@ -22256,7 +22821,8 @@
    "kana": "げなん",
    "en": [
     "manservant"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "下目",
@@ -22264,7 +22830,8 @@
    "kana": "しため",
    "en": [
     "downward glance; contemptuous look"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "下知",
@@ -22280,7 +22847,8 @@
    "kana": "したいし",
    "en": [
     "nether millstone"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "下穴",
@@ -22288,7 +22856,8 @@
    "kana": "したあな",
    "en": [
     "pilot hole; rough hole"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "下聞",
@@ -22297,6 +22866,15 @@
    "en": [
     "enquiring beforehand; inquiring beforehand"
    ]
+  },
+  {
+   "w": "下草",
+   "lv": null,
+   "kana": "したくさ",
+   "en": [
+    "undergrowth; weeds beneath a tree"
+   ],
+   "g1": true
   },
   {
    "w": "下薬",
@@ -22328,7 +22906,8 @@
    "kana": "げそく",
    "en": [
     "footwear (esp. outdoor shoes, as opposed to slippers, etc.); footgear"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "下道",
@@ -22345,7 +22924,8 @@
    "kana": "したがね",
    "en": [
     "basic metal (in an art object); old metal"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "下風",
@@ -22746,7 +23326,8 @@
    "kana": "ちゅういち",
    "en": [
     "first year of junior high school; first-year junior high school student"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "中三",
@@ -22754,7 +23335,8 @@
    "kana": "ちゅうさん",
    "en": [
     "highest ranking prostitute in Yoshiwara (from the Houreki era onward)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "中二",
@@ -22762,7 +23344,8 @@
    "kana": "ちゅうに",
    "en": [
     "second year of junior high school; second-year junior high school student"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "中人",
@@ -22771,7 +23354,8 @@
    "en": [
     "child in elementary or middle school",
     "go-between; intermediary"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "中今",
@@ -22804,7 +23388,8 @@
    "en": [
     "intermission during a performance (e.g. variety show, play, sumo, etc.)",
     "temporary departure of an actor (between the first and second halves of a noh or kyogen performance, during which time they change costumes, etc.)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "中冬",
@@ -22845,7 +23430,8 @@
    "en": [
     "central entrance",
     "slander"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "中台",
@@ -22905,7 +23491,8 @@
    "kana": "ちゅうてん",
    "en": [
     "mid-air; mid-heaven"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "中太",
@@ -22922,7 +23509,8 @@
    "en": [
     "core",
     "tang (of a sword, etc.)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "中店",
@@ -22948,7 +23536,8 @@
    "en": [
     "mid-season crops; mid-season rice",
     "metacarpus"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "中文",
@@ -22957,7 +23546,8 @@
    "en": [
     "Chinese language (written)",
     "Chinese literature"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "中春",
@@ -22999,7 +23589,8 @@
    "kana": "ちゅうせい",
    "en": [
     "impartiality; fairness"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "中気",
@@ -23008,7 +23599,8 @@
    "en": [
     "palsy; paralysis",
     "every second solar term (occurring in the latter half of each month)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "中火",
@@ -23016,7 +23608,8 @@
    "kana": "ちゅうび",
    "en": [
     "medium flame (cooking); medium heat"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "中物",
@@ -23034,7 +23627,8 @@
    "en": [
     "mid-season crops; mid-season rice",
     "metacarpus"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "中男",
@@ -23043,7 +23637,8 @@
    "en": [
     "one's second son",
     "man between 17 and 20 years old (ritsuryo system)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "中石",
@@ -23051,7 +23646,8 @@
    "kana": "なかいし",
    "en": [
     "horse; block of rock completely separated from the surrounding rock either by mineral veins or fault planes"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "中秋",
@@ -23069,7 +23665,8 @@
    "en": [
     "hollow",
     "mid-air; air"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "中米",
@@ -23085,7 +23682,8 @@
    "kana": "ちゅういと",
    "en": [
     "medium-sized thread"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "中肉",
@@ -23136,7 +23734,8 @@
    "en": [
     "mediant",
     "baritone; contralto"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "中頭",
@@ -23380,7 +23979,8 @@
    "kana": "くっぴん",
    "en": [
     "scoring combination of a 9 and a 1 in oicho-kabu"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "九六",
@@ -23388,7 +23988,8 @@
    "kana": "くんろく",
    "en": [
     "ozeki ranked wrestler unable to live up to the expectations of his rank"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "九分",
@@ -23438,7 +24039,8 @@
    "kana": "きゅうてん",
    "en": [
     "sky; heavens"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "九族",
@@ -23470,7 +24072,8 @@
    "kana": "きゅうしょう",
    "en": [
     "nine lives (of a cat)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "九百",
@@ -23479,7 +24082,8 @@
    "en": [
     "900; nine hundred",
     "fool; idiot"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "予予",
@@ -23599,7 +24203,8 @@
    "kana": "にさん",
    "en": [
     "two or three"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "二乗",
@@ -23615,7 +24220,8 @@
    "kana": "にく",
    "en": [
     "eighteen"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "二元",
@@ -23631,7 +24237,8 @@
    "kana": "にはち",
    "en": [
     "sixteen"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "二又",
@@ -23656,7 +24263,8 @@
    "kana": "にだい",
    "en": [
     "the big two...; two major..."
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "二女",
@@ -23664,7 +24272,8 @@
    "kana": "にじょ",
    "en": [
     "second daughter"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "二子",
@@ -23672,7 +24281,8 @@
    "kana": "ふたご",
    "en": [
     "twins; twin"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "二字",
@@ -23680,7 +24290,8 @@
    "kana": "にじ",
    "en": [
     "two characters; name"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "二官",
@@ -23712,7 +24323,8 @@
    "kana": "ふたて",
    "en": [
     "two groups; two bands"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "二方",
@@ -23746,7 +24358,8 @@
    "kana": "にほん",
    "en": [
     "two (long cylindrical things)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "二業",
@@ -23762,7 +24375,8 @@
    "kana": "にき",
    "en": [
     "two forces (of yin and yang)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "二水",
@@ -23770,7 +24384,8 @@
    "kana": "にすい",
    "en": [
     "kanji \"ice\" radical"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "二王",
@@ -23778,7 +24393,8 @@
    "kana": "におう",
    "en": [
     "two Deva kings; guardian gods of Buddhism who stand at the entrance of a Buddhist temple"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "二男",
@@ -23786,7 +24402,8 @@
    "kana": "じなん",
    "en": [
     "second son"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "二目",
@@ -23794,7 +24411,8 @@
    "kana": "ふため",
    "en": [
     "for a second time"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "二着",
@@ -23811,7 +24429,8 @@
    "en": [
     "two holes",
     "toilet with separate chambers for urine and faeces"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "二者",
@@ -23861,7 +24480,8 @@
    "en": [
     "two legs; two feet",
     "two pairs"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "二通",
@@ -23926,7 +24546,8 @@
    "en": [
     "five and seven",
     "35th day after a person's death"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "五代",
@@ -23969,7 +24590,8 @@
    "en": [
     "the five elements (in Japanese philosophy: earth, water, fire, wind and void)",
     "five great wisdom kings"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "五女",
@@ -23977,7 +24599,8 @@
    "kana": "ごじょ",
    "en": [
     "fifth daughter"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "五官",
@@ -23993,7 +24616,8 @@
    "kana": "ごさん",
    "en": [
     "five most important temples of a region"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "五度",
@@ -24049,7 +24673,8 @@
    "kana": "ごほん",
    "en": [
     "five (long cylindrical things)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "五男",
@@ -24057,7 +24682,8 @@
    "kana": "ごなん",
    "en": [
     "fifth son"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "五百",
@@ -24066,7 +24692,8 @@
    "en": [
     "500; five hundred",
     "many"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "五目",
@@ -24075,7 +24702,8 @@
    "en": [
     "mixture of ingredients (originally five)",
     "mixture of minced vegetables, fish, and meat, mixed in a starch (rice, noodles)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "五色",
@@ -24126,7 +24754,8 @@
    "kana": "ごいん",
    "en": [
     "pentatonic scale"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "亜人",
@@ -24193,7 +24822,8 @@
    "kana": "こもごも",
    "en": [
     "alternately; in succession"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "交合",
@@ -24331,7 +24961,8 @@
    "en": [
     "people; men and women",
     "each person; everybody"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "人別",
@@ -24347,7 +24978,8 @@
    "kana": "じんりき",
    "en": [
     "human power; human strength"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "人品",
@@ -24389,7 +25021,8 @@
    "kana": "にんでん",
    "en": [
     "earth and heaven; human and heavenly beings"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "人家",
@@ -24413,7 +25046,8 @@
    "kana": "ひとやま",
    "en": [
     "crowd of people"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "人年",
@@ -24421,7 +25055,8 @@
    "kana": "じんねん",
    "en": [
     "person-year; man-year"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "人後",
@@ -24438,7 +25073,8 @@
    "en": [
     "starfish; sea star",
     "northern Pacific seastar (Asterias amurensis)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "人日",
@@ -24446,7 +25082,8 @@
    "kana": "にんにち",
    "en": [
     "man-day; person-day"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "人時",
@@ -24462,7 +25099,8 @@
    "kana": "にんげつ",
    "en": [
     "man month; man-month"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "人毎",
@@ -24510,7 +25148,8 @@
    "kana": "ひとあな",
    "en": [
     "volcanic cave traditionally said to be inhabited"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "人肉",
@@ -24527,7 +25166,8 @@
    "en": [
     "slit in the curtains that allows someone on stage to see the audience (in kabuki theatre)",
     "public eye; feeling of being watched"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "人語",
@@ -24543,7 +25183,8 @@
    "kana": "にんそく",
    "en": [
     "coolie; laborer"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "人車",
@@ -24551,7 +25192,8 @@
    "kana": "じんしゃ",
    "en": [
     "rickshaw; jinrikisha"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "人里",
@@ -25014,7 +25656,8 @@
    "kana": "きゅうしゅつ",
    "en": [
     "working on a day off"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "休室",
@@ -25054,7 +25697,8 @@
    "kana": "きゅうそく",
    "en": [
     "rest; relief"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "休転",
@@ -26085,7 +26729,8 @@
    "en": [
     "distant future; inevitable future",
     "places one goes to"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "先入",
@@ -26093,7 +26738,8 @@
    "kana": "せんにゅう",
    "en": [
     "preconception; prejudice"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "先出",
@@ -26101,7 +26747,8 @@
    "kana": "せんしゅつ",
    "en": [
     "aforementioned; above-mentioned"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "先口",
@@ -26109,7 +26756,8 @@
    "kana": "せんくち",
    "en": [
     "previous preconception; previous engagement"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "先古",
@@ -26141,7 +26789,8 @@
    "kana": "せんてん",
    "en": [
     "inherent; innate"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "先太",
@@ -26157,7 +26806,8 @@
    "kana": "せんがく",
    "en": [
     "academic predecessor; scholars of the past"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "先山",
@@ -26165,7 +26815,8 @@
    "kana": "さきやま",
    "en": [
     "skilled miner; coal-cutter"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "先年",
@@ -26173,7 +26824,8 @@
    "kana": "せんねん",
    "en": [
     "former years; formerly"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "先度",
@@ -26206,7 +26858,8 @@
    "kana": "せんおう",
    "en": [
     "the late king; the preceding king"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "先知",
@@ -26230,7 +26883,8 @@
    "kana": "さきがね",
    "en": [
     "advance payment"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "先高",
@@ -26336,7 +26990,8 @@
    "kana": "いりまじり",
    "en": [
     "mixing with; being mixed"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "入京",
@@ -26394,7 +27049,8 @@
    "en": [
     "entering a mountain area (for climbing)",
     "entering a monastery; coming to live in a temple"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "入市",
@@ -26427,7 +27083,8 @@
    "kana": "いりひ",
    "en": [
     "setting sun; evening sun"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "入朝",
@@ -26443,7 +27100,8 @@
    "kana": "にゅうぼく",
    "en": [
     "calligraphy"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "入村",
@@ -26451,7 +27109,8 @@
    "kana": "にゅうそん",
    "en": [
     "entering a village; moving to a village"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "入来",
@@ -26467,7 +27126,8 @@
    "kana": "にゅうこう",
    "en": [
     "matriculation"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "入水",
@@ -26476,7 +27136,8 @@
    "en": [
     "suicide by drowning; drowning oneself",
     "entering the water; hitting the water"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "入海",
@@ -26501,7 +27162,8 @@
    "kana": "にゅうぎょく",
    "en": [
     "entering of a king (into opponent's territory)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "入用",
@@ -26518,7 +27180,8 @@
    "kana": "いりめ",
    "en": [
     "expenses"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "入質",
@@ -26570,7 +27233,8 @@
    "en": [
     "two eights",
     "hachi-hachi (type of hanafuda game)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "八分",
@@ -26596,7 +27260,8 @@
    "en": [
     "8000; eight thousand",
     "many"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "八反",
@@ -26612,7 +27277,8 @@
    "kana": "やつくち",
    "en": [
     "small opening in the side of some traditional Japanese clothing (located where the sleeve meets the bodice, below the armpit)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "八家",
@@ -26630,7 +27296,8 @@
    "en": [
     "distance of eight sun (approx. 24 cm)",
     "dish or tray of this size (esp. used in kaiseki cuisine to serve several kinds of delicacies); food served in such a dish"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "八強",
@@ -26646,7 +27313,8 @@
    "kana": "やつで",
    "en": [
     "fatsi (Fatsia japonica); paperplant"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "八時",
@@ -26662,7 +27330,8 @@
    "kana": "はちほん",
    "en": [
     "eight (long cylindrical things)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "八町",
@@ -26670,7 +27339,8 @@
    "kana": "はまち",
    "en": [
     "hamachi; young Japanese amberjack"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "八白",
@@ -26678,7 +27348,8 @@
    "kana": "はっぱく",
    "en": [
     "eighth of nine traditional astrological signs (corresponding to Saturn and north-east)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "八百",
@@ -26687,7 +27358,8 @@
    "en": [
     "800; eight hundred",
     "multitude; large number"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "八目",
@@ -26696,7 +27368,8 @@
    "en": [
     "eighth (place, position, etc.)",
     "having eight eyes; having many eyes"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "八道",
@@ -26745,7 +27418,8 @@
    "kana": "ろくにゅう",
    "en": [
     "six sense organs (eyes, ears, nose, tongue, body, and mind)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "六分",
@@ -26778,7 +27452,8 @@
    "kana": "ろくだい",
    "en": [
     "the six elements (earth, water, fire, wind, void, and consciousness)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "六官",
@@ -26847,7 +27522,8 @@
    "kana": "ろっぽん",
    "en": [
     "six (long cylindrical things)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "六気",
@@ -26856,7 +27532,8 @@
    "en": [
     "yin, yang, wind, rain, darkness, light",
     "cold, heat, dryness, dampness, wind, fire"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "六白",
@@ -26864,7 +27541,8 @@
    "kana": "ろっぱく",
    "en": [
     "sixth of nine traditional astrological signs (corresponding to Venus and north-west)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "六百",
@@ -26872,7 +27550,8 @@
    "kana": "ろっぴゃく",
    "en": [
     "600; six hundred"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "六花",
@@ -26880,7 +27559,8 @@
    "kana": "りっか",
    "en": [
     "snow"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "六親",
@@ -26929,7 +27609,8 @@
    "kana": "えんもん",
    "en": [
     "round design"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "円本",
@@ -26937,7 +27618,8 @@
    "kana": "えんぽん",
    "en": [
     "one-yen book"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "円石",
@@ -26946,7 +27628,8 @@
    "en": [
     "round stone; pebble",
     "coccolith"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "円転",
@@ -27127,7 +27810,8 @@
    "kana": "でさき",
    "en": [
     "one's destination"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "出合",
@@ -27152,7 +27836,8 @@
    "kana": "でおんな",
    "en": [
     "unlicensed prostitute (Edo period)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "出家",
@@ -27177,7 +27862,8 @@
    "kana": "しゅっこう",
    "en": [
     "going to or leaving school"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "出水",
@@ -27185,7 +27871,8 @@
    "kana": "しゅっすい",
    "en": [
     "flood; freshet"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "出物",
@@ -27202,7 +27889,8 @@
    "kana": "でだま",
    "en": [
     "ball won in a game of pachinko"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "出目",
@@ -27211,7 +27899,8 @@
    "en": [
     "protruding eyes",
     "number of pips visible after a throw of the dice"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "出立",
@@ -27219,7 +27908,8 @@
    "kana": "しゅったつ",
    "en": [
     "departure"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "出羽",
@@ -27252,7 +27942,8 @@
    "kana": "でばな",
    "en": [
     "first brew of tea"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "出軍",
@@ -28247,7 +28938,8 @@
    "kana": "ちからみず",
    "en": [
     "water offered to wrestlers just prior to a bout"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "力石",
@@ -28255,7 +28947,8 @@
    "kana": "ちからいし",
    "en": [
     "lifting stone"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "力紙",
@@ -28287,7 +28980,8 @@
    "kana": "ちからあし",
    "en": [
     "strong legs"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "動体",
@@ -28344,7 +29038,8 @@
    "kana": "かこう",
    "en": [
     "chemical engineering"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "化物",
@@ -28360,7 +29055,8 @@
    "kana": "かせい",
    "en": [
     "growth; metamorphosis"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "化転",
@@ -28668,7 +29364,8 @@
    "kana": "じゅうねん",
    "en": [
     "ten years; decade"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "十悪",
@@ -28685,7 +29382,8 @@
    "kana": "じって",
    "en": [
     "jitte; short truncheon with a hook made of metal or wood (used by policemen and private thief-takers in Edo Japan)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "十方",
@@ -28710,7 +29408,8 @@
    "kana": "じっぽん",
    "en": [
     "ten (long cylindrical things)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "十牛",
@@ -28726,7 +29425,8 @@
    "kana": "じゅうおう",
    "en": [
     "ten rulers of the afterlife (who judge the dead and determine their placement in their next life)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "十界",
@@ -28742,7 +29442,8 @@
    "kana": "じゅうもく",
    "en": [
     "all eyes"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "十薬",
@@ -28774,7 +29475,8 @@
    "kana": "じゅうう",
    "en": [
     "refreshing rain once in ten days"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "千万",
@@ -28799,7 +29501,8 @@
    "kana": "ちしお",
    "en": [
     "soaking in dye innumerable times"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "千円",
@@ -28807,7 +29510,8 @@
    "kana": "せんえん",
    "en": [
     "1000 yen"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "千分",
@@ -28823,7 +29527,8 @@
    "kana": "ちぢ",
    "en": [
     "thousands; great number of"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "千古",
@@ -28855,7 +29560,8 @@
    "kana": "せんねん",
    "en": [
     "millennium; one thousand years"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "千度",
@@ -28871,7 +29577,8 @@
    "kana": "せんにち",
    "en": [
     "one thousand days"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "千木",
@@ -28879,7 +29586,8 @@
    "kana": "ちぎ",
    "en": [
     "ornamental crossed rafter ends on shrine gables"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "千生",
@@ -28888,7 +29596,8 @@
    "en": [
     "great collection (of things); cluster",
     "bottle gourd"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "千秋",
@@ -28897,6 +29606,16 @@
    "en": [
     "thousand years; many years"
    ]
+  },
+  {
+   "w": "千草",
+   "lv": null,
+   "kana": "ちぐさ",
+   "en": [
+    "great variety of flowering plants",
+    "light greenish-blue"
+   ],
+   "g1": true
   },
   {
    "w": "千言",
@@ -28920,7 +29639,8 @@
    "kana": "せんきん",
    "en": [
     "1000 pounds; 1000 kan"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "午年",
@@ -29658,7 +30378,8 @@
    "kana": "こうちゅう",
    "en": [
     "interior of the mouth; oral cavity"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "口元",
@@ -29693,7 +30414,8 @@
    "en": [
     "every person; every mouth",
     "every entrance"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "口味",
@@ -29717,7 +30439,8 @@
    "kana": "くちこ",
    "en": [
     "dried sea-cucumber ovaries"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "口早",
@@ -29725,7 +30448,8 @@
    "kana": "くちばや",
    "en": [
     "rapid talking"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "口書",
@@ -29742,7 +30466,8 @@
    "kana": "こうき",
    "en": [
     "bad breath; intimation"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "口答",
@@ -29758,7 +30483,8 @@
    "kana": "こうじ",
    "en": [
     "mouth and ear"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "口舌",
@@ -29800,7 +30526,8 @@
    "kana": "くちぐるま",
    "en": [
     "cajolery; wheedling"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "口軽",
@@ -29825,7 +30552,8 @@
    "en": [
     "(metal) cap",
     "clasp"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "口音",
@@ -29833,7 +30561,8 @@
    "kana": "こうおん",
    "en": [
     "oral consonant"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "古事",
@@ -30253,7 +30982,8 @@
    "kana": "みぎひだり",
    "en": [
     "right and left"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "右文",
@@ -30261,7 +30991,8 @@
    "kana": "ゆうぶん",
    "en": [
     "respect for literary culture"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "右目",
@@ -30269,7 +31000,8 @@
    "kana": "みぎめ",
    "en": [
     "right eye"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "合一",
@@ -30759,7 +31491,8 @@
    "kana": "なご",
    "en": [
     "lower class peasant; peasant working for a land-owning farmer"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "名家",
@@ -30776,7 +31509,8 @@
    "kana": "めいざん",
    "en": [
     "famous mountain"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "名工",
@@ -30784,7 +31518,8 @@
    "kana": "めいこう",
    "en": [
     "craftsman; skilled artisan"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "名店",
@@ -30800,7 +31535,8 @@
    "kana": "めいぶん",
    "en": [
     "famous literary composition"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "名木",
@@ -30809,7 +31545,8 @@
    "en": [
     "old tree of historical interest",
     "excellent wood; precious woods"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "名歌",
@@ -30825,7 +31562,8 @@
    "kana": "めいすい",
    "en": [
     "famous mineral water; famous spring"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "名犬",
@@ -30833,7 +31571,8 @@
    "kana": "めいけん",
    "en": [
     "fine dog"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "名産",
@@ -30849,7 +31588,8 @@
    "kana": "みょうでん",
    "en": [
     "rice field in the charge of a nominal holder (ritsuryo system)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "名石",
@@ -30857,7 +31597,8 @@
    "kana": "めいせき",
    "en": [
     "famous jewel; exquisite stone"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "名答",
@@ -30889,7 +31630,8 @@
    "kana": "めいか",
    "en": [
     "celebrated flower; beautiful woman"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "名茶",
@@ -30937,7 +31679,8 @@
    "kana": "めいしゃ",
    "en": [
     "famous car; excellent car"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "名題",
@@ -31116,7 +31859,8 @@
    "kana": "しちょう",
    "en": [
     "ladder (in go)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "四三",
@@ -31125,7 +31869,8 @@
    "en": [
     "one four-of-a-kind and one three-of-a-kind in a dealt hand",
     "three and a four (in dice games)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "四体",
@@ -31165,7 +31910,8 @@
    "kana": "しど",
    "en": [
     "four realms (in Tendai Buddhism or Yogacara)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "四声",
@@ -31182,7 +31928,8 @@
    "en": [
     "university or college offering four-year programs",
     "the big four ...; the four major ..."
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "四女",
@@ -31190,7 +31937,8 @@
    "kana": "よんじょ",
    "en": [
     "fourth-born daughter"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "四川",
@@ -31198,7 +31946,8 @@
    "kana": "しせん",
    "en": [
     "Sichuan (China); Szechuan"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "四年",
@@ -31206,7 +31955,8 @@
    "kana": "よねん",
    "en": [
     "four years"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "四度",
@@ -31232,7 +31982,8 @@
    "en": [
     "zigzag-shaped paper streamer often used to adorn Shinto-related objects",
     "hornbeam (deciduous tree in the birch family)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "四更",
@@ -31272,7 +32023,8 @@
    "kana": "しき",
    "en": [
     "weather of the four seasons (warmth of spring, heat of summer, cool of autumn, and cold of winter)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "四海",
@@ -31288,7 +32040,8 @@
    "kana": "ししょう",
    "en": [
     "the four ways of birth (from a womb, an egg, moisture or spontaneously); catur-yoni"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "四男",
@@ -31296,7 +32049,8 @@
    "kana": "よんなん",
    "en": [
     "fourth son"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "四矢",
@@ -31328,7 +32082,8 @@
    "kana": "しそく",
    "en": [
     "four legs; four-legged"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "四重",
@@ -31794,7 +32549,8 @@
    "kana": "どちゅう",
    "en": [
     "in the earth; in the ground"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "土代",
@@ -31827,7 +32583,8 @@
    "en": [
     "earthwork; earthworks",
     "laborer; labourer"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "土建",
@@ -32649,7 +33406,8 @@
    "kana": "ゆうづき",
    "en": [
     "the evening moon"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "夕空",
@@ -32657,7 +33415,8 @@
    "kana": "ゆうぞら",
    "en": [
     "evening sky; twilight sky"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "夕顔",
@@ -33396,7 +34155,8 @@
    "kana": "だいに",
    "en": [
     "daini (type of playing cards)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "大代",
@@ -33421,7 +34181,8 @@
    "kana": "だいえん",
    "en": [
     "large circle; great circle"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "大前",
@@ -33437,7 +34198,8 @@
    "kana": "だいりき",
    "en": [
     "immense physical strength"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "大化",
@@ -33445,7 +34207,8 @@
    "kana": "たいか",
    "en": [
     "Taika era (645.6.19-650.2.15)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "大味",
@@ -33480,7 +34243,8 @@
    "en": [
     "very big; very large",
     "taking up a lot of space"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "大女",
@@ -33488,7 +34252,8 @@
    "kana": "おおおんな",
    "en": [
     "huge woman; giantess"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "大姉",
@@ -33504,7 +34269,8 @@
    "kana": "おおあざ",
    "en": [
     "larger section (of village)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "大安",
@@ -33545,7 +34311,8 @@
    "kana": "おおかわ",
    "en": [
     "big river"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "大年",
@@ -33554,7 +34321,8 @@
    "en": [
     "New Year's Eve; December 31",
     "Jupiter (planet)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "大度",
@@ -33611,7 +34379,8 @@
    "kana": "だいにち",
    "en": [
     "Mahavairocana (Tathagata); Great Sun"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "大暑",
@@ -33645,7 +34414,8 @@
    "kana": "たいほん",
    "en": [
     "foundation; basic principles"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "大森",
@@ -33653,7 +34423,8 @@
    "kana": "おおもり",
    "en": [
     "large forest"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "大業",
@@ -33677,7 +34448,8 @@
    "kana": "おおだま",
    "en": [
     "large ball; giant ball (e.g. as pushed by competing teams in a school sports day)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "大王",
@@ -33685,7 +34457,8 @@
    "kana": "だいおう",
    "en": [
     "great king"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "大生",
@@ -33693,7 +34466,8 @@
    "kana": "だいせい",
    "en": [
     "university student; college student"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "大用",
@@ -33710,7 +34484,8 @@
    "kana": "たいはく",
    "en": [
     "large cup"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "大目",
@@ -33719,7 +34494,8 @@
    "en": [
     "magnanimity; tolerance",
     "large eyes"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "大矢",
@@ -33744,7 +34520,8 @@
    "en": [
     "large stone; boulder",
     "large group of stones (in the game of go)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "大穴",
@@ -33753,7 +34530,8 @@
    "en": [
     "large hole",
     "great deficit; heavy losses"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "大羽",
@@ -33770,7 +34548,8 @@
    "en": [
     "big ears",
     "listening without paying attention"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "大行",
@@ -33802,7 +34581,8 @@
    "kana": "おおがい",
    "en": [
     "kanji \"big shell\" radical"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "大足",
@@ -33810,7 +34590,8 @@
    "kana": "おおあし",
    "en": [
     "big feet; long stride"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "大軍",
@@ -33893,7 +34674,8 @@
    "kana": "てんいち",
    "en": [
     "Ten'ichijin; Nakagami"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "天上",
@@ -33901,7 +34683,8 @@
    "kana": "てんじょう",
    "en": [
     "the heavens"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "天与",
@@ -33925,7 +34708,8 @@
    "kana": "てんじん",
    "en": [
     "God and man; heaven and man"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "天元",
@@ -33983,7 +34767,8 @@
    "en": [
     "heavenly nymph; celestial maiden",
     "beautiful and kind woman"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "天子",
@@ -33992,7 +34777,8 @@
    "en": [
     "emperor; ruler (with a heavenly mandate)",
     "heavenly being; celestial being"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "天安",
@@ -34017,7 +34803,8 @@
    "en": [
     "enormous thing",
     "greatly; very"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "天川",
@@ -34025,7 +34812,8 @@
    "kana": "あまかわ",
    "en": [
     "Macao; Macau"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "天工",
@@ -34033,7 +34821,8 @@
    "kana": "てんこう",
    "en": [
     "work of nature"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "天心",
@@ -34057,7 +34846,8 @@
    "kana": "てんぴ",
    "en": [
     "the sun; sunlight"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "天明",
@@ -34098,7 +34888,8 @@
    "kana": "てんしょう",
    "en": [
     "Tenshō era (1573.7.28-1592.12.8)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "天水",
@@ -34106,7 +34897,8 @@
    "kana": "てんすい",
    "en": [
     "rain water"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "天漢",
@@ -34122,7 +34914,8 @@
    "kana": "てんか",
    "en": [
     "fire caused by lightning"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "天父",
@@ -34147,7 +34940,8 @@
    "en": [
     "heavenly king",
     "Gozu Tenno (deity said to be the Indian god Gavagriva)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "天生",
@@ -34155,7 +34949,8 @@
    "kana": "てんせい",
    "en": [
     "naturally occurring; nature"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "天産",
@@ -34181,7 +34976,8 @@
    "en": [
     "tenmoku; ceramics (esp. tea bowls) with a dark glaze that resembles oil spotting",
     "tenmoku tea-bowl; dark-glazed conical tea-bowl of Chinese origin"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "天真",
@@ -34197,7 +34993,8 @@
    "kana": "てんくう",
    "en": [
     "sky; air"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "天聞",
@@ -34221,7 +35018,17 @@
    "kana": "てんか",
    "en": [
     "snow"
-   ]
+   ],
+   "g1": true
+  },
+  {
+   "w": "天草",
+   "lv": null,
+   "kana": "てんぐさ",
+   "en": [
+    "any red algae in the family Gelidiaceae (esp. Gelidium crinale)"
+   ],
+   "g1": true
   },
   {
    "w": "天質",
@@ -34270,7 +35077,8 @@
    "kana": "てんきん",
    "en": [
     "gilt top (book)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "天長",
@@ -34375,7 +35183,8 @@
    "kana": "にょにん",
    "en": [
     "woman"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "女体",
@@ -34407,7 +35216,8 @@
    "kana": "おんなやま",
    "en": [
     "gently sloping mountain (of the less rugged mountain of a pair of mountains)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "女工",
@@ -34415,7 +35225,8 @@
    "kana": "じょこう",
    "en": [
     "female factory worker"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "女心",
@@ -34432,7 +35243,8 @@
    "en": [
     "female help; female labor",
     "woman's handwriting"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "女持",
@@ -34466,7 +35278,8 @@
    "en": [
     "female plant (esp. a woody plant); gynoecious plant",
     "indented part of a wooden joint (in construction)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "女楽",
@@ -34483,7 +35296,8 @@
    "kana": "おんなけ",
    "en": [
     "female presence"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "女物",
@@ -34499,7 +35313,8 @@
    "kana": "じょせい",
    "en": [
     "schoolgirl"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "女男",
@@ -34508,7 +35323,8 @@
    "en": [
     "feminine man; effeminate man",
     "masculine woman; mannish woman"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "女真",
@@ -34524,7 +35340,8 @@
    "kana": "めだけ",
    "en": [
     "Simon bamboo (Pleioblastus simonii)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "女色",
@@ -34752,7 +35569,8 @@
    "kana": "ねずみどし",
    "en": [
     "year of the Rat"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "子持",
@@ -34778,7 +35596,8 @@
    "kana": "ねづき",
    "en": [
     "eleventh month of the lunar calendar"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "子院",
@@ -34794,7 +35613,8 @@
    "kana": "しいん",
    "en": [
     "consonant"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "子馬",
@@ -34820,7 +35640,8 @@
    "kana": "じりん",
    "en": [
     "kanji dictionary"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "字母",
@@ -34845,7 +35666,8 @@
    "kana": "じおん",
    "en": [
     "Japanese pronunciation of a kanji (based on adopted Chinese pronunciations)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "孝女",
@@ -34910,7 +35732,8 @@
    "en": [
     "scientific name (of a species); binomial name",
     "academic reputation"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "学外",
@@ -35611,7 +36434,8 @@
    "kana": "すんど",
    "en": [
     "an inch of land"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "寸地",
@@ -35627,7 +36451,8 @@
    "kana": "ずたずた",
    "en": [
     "to pieces; into shreds"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "寸尺",
@@ -35701,7 +36526,8 @@
    "kana": "しょういち",
    "en": [
     "first year of elementary school; first year elementary school student"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "小三",
@@ -35709,7 +36535,8 @@
    "kana": "しょうさん",
    "en": [
     "third year of elementary school; third year elementary school student"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "小乗",
@@ -35733,7 +36560,8 @@
    "kana": "しょうに",
    "en": [
     "second year of elementary school; second year elementary school student"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "小五",
@@ -35741,7 +36569,8 @@
    "kana": "しょうご",
    "en": [
     "fifth year of elementary school; fifth year elementary school student"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "小作",
@@ -35765,7 +36594,8 @@
    "kana": "しょうろく",
    "en": [
     "sixth year of elementary school; sixth year elementary school student"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "小名",
@@ -35773,7 +36603,8 @@
    "kana": "しょうみょう",
    "en": [
     "minor feudal lord"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "小吏",
@@ -35797,7 +36628,8 @@
    "kana": "しょうよん",
    "en": [
     "fourth year of elementary school; fourth year elementary school student"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "小場",
@@ -35830,7 +36662,8 @@
    "en": [
     "little girl; maiden",
     "female between 17 and 20 years old (ritsuryo period)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "小妹",
@@ -35848,7 +36681,8 @@
    "en": [
     "little child",
     "male between 4 and 16 years old (ritsuryo period)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "小字",
@@ -35856,7 +36690,8 @@
    "kana": "こあざ",
    "en": [
     "small administrative unit (of a village)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "小官",
@@ -35897,7 +36732,8 @@
    "kana": "しょうしょう",
    "en": [
     "just a minute; small quantity"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "小尺",
@@ -35948,7 +36784,8 @@
    "kana": "こて",
    "en": [
     "gauntlet (used in Kendo); bracer"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "小春",
@@ -35989,7 +36826,8 @@
    "kana": "しょうそん",
    "en": [
     "small village; hamlet"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "小歌",
@@ -36014,7 +36852,8 @@
    "kana": "しょうすい",
    "en": [
     "urine; urination"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "小父",
@@ -36031,7 +36870,8 @@
    "en": [
     "puppy",
     "small dog"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "小玉",
@@ -36039,7 +36879,8 @@
    "kana": "こだま",
    "en": [
     "small ball; globule"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "小生",
@@ -36047,7 +36888,8 @@
    "kana": "しょうせい",
    "en": [
     "I; me"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "小用",
@@ -36064,7 +36906,8 @@
    "kana": "おだ",
    "en": [
     "rice field (usu. small)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "小男",
@@ -36072,7 +36915,8 @@
    "kana": "こおとこ",
    "en": [
     "small man"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "小町",
@@ -36080,7 +36924,8 @@
    "kana": "こまち",
    "en": [
     "belle; (town) beauty"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "小目",
@@ -36088,7 +36933,8 @@
    "kana": "こもく",
    "en": [
     "3-4 point (in go); komoku"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "小知",
@@ -36114,7 +36960,8 @@
    "kana": "ささ",
    "en": [
     "bamboo grass; generally smaller species of running bamboo that do not shed their sheaths (e.g. Sasa spp.)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "小米",
@@ -36139,7 +36986,8 @@
    "kana": "こみみ",
    "en": [
     "overhear; happened to hear that"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "小花",
@@ -36148,7 +36996,8 @@
    "en": [
     "small flower; floret",
     "pseudanthium"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "小虫",
@@ -36157,7 +37006,8 @@
    "en": [
     "small insect; midge",
     "vermicule"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "小計",
@@ -36183,7 +37033,8 @@
    "en": [
     "small shell; small shellfish",
     "kanji \"shell\" radical at left"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "小足",
@@ -36191,7 +37042,8 @@
    "kana": "こあし",
    "en": [
     "mincing steps"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "小車",
@@ -36200,7 +37052,8 @@
    "en": [
     "Inula japonica",
     "small cart; small carriage"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "小道",
@@ -36225,7 +37078,8 @@
    "kana": "こがね",
    "en": [
     "small sum of money"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "小門",
@@ -36454,7 +37308,8 @@
    "kana": "さんじょう",
    "en": [
     "mountain top"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "山下",
@@ -36463,7 +37318,8 @@
    "en": [
     "foot of a mountain; base of a mountain",
     "mine; colliery"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "山中",
@@ -36471,7 +37327,8 @@
    "kana": "さんちゅう",
    "en": [
     "in the mountains; among the mountains"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "山主",
@@ -36489,7 +37346,8 @@
    "en": [
     "mountain folk; hermit",
     "mountain wizard"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "山体",
@@ -36522,7 +37380,8 @@
    "kana": "やまぐち",
    "en": [
     "Yamaguchi (city, prefecture)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "山名",
@@ -36530,7 +37389,8 @@
    "kana": "さんめい",
    "en": [
     "name of a mountain"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "山国",
@@ -36562,7 +37422,8 @@
    "kana": "やまめ",
    "en": [
     "landlocked masu salmon (Oncorhynchus masou masou)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "山家",
@@ -36579,7 +37440,8 @@
    "en": [
     "(many) mountains",
     "very much (esp. wanting to do something one cannot); greatly"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "山月",
@@ -36587,7 +37449,8 @@
    "kana": "さんげつ",
    "en": [
     "moon over a mountain"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "山本",
@@ -36596,7 +37459,8 @@
    "en": [
     "foot of a mountain; base of a mountain",
     "mine; colliery"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "山気",
@@ -36604,7 +37468,8 @@
    "kana": "やまき",
    "en": [
     "speculative spirit"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "山水",
@@ -36613,7 +37478,8 @@
    "en": [
     "mountain and water; landscape (containing hills and rivers)",
     "landscape picture"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "山海",
@@ -36630,7 +37496,8 @@
    "en": [
     "Japanese wolf (Canis lupus hodophilax, extinct)",
     "wild dog"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "山男",
@@ -36638,7 +37505,8 @@
    "kana": "やまおとこ",
    "en": [
     "giant; woodsman"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "山立",
@@ -36647,7 +37515,8 @@
    "en": [
     "bandit; brigand",
     "hunter"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "山羊",
@@ -36667,6 +37536,16 @@
    ]
   },
   {
+   "w": "山草",
+   "lv": null,
+   "kana": "やまくさ",
+   "en": [
+    "mountain grass; mountain weed",
+    "Gleichenia japonica (species of fern with white-backed leaves)"
+   ],
+   "g1": true
+  },
+  {
    "w": "山行",
    "lv": "N5",
    "kana": "さんこう",
@@ -36680,7 +37559,8 @@
    "kana": "だし",
    "en": [
     "parade float; festival float"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "山里",
@@ -36730,7 +37610,8 @@
    "kana": "かわた",
    "en": [
     "lowly people (Edo period); eta"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "川竹",
@@ -36739,7 +37620,8 @@
    "en": [
     "bamboo growing along a river bank",
     "Japanese timber bamboo (Phyllostachys bambsoides); giant timber bamboo"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "川虫",
@@ -36747,7 +37629,8 @@
    "kana": "かわむし",
    "en": [
     "aquatic insect larva (esp. of caddisflies, mayflies, etc.)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "川風",
@@ -36771,7 +37654,8 @@
    "kana": "こうじん",
    "en": [
     "workman; craftsman"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "工区",
@@ -36787,7 +37671,8 @@
    "kana": "こうぐち",
    "en": [
     "erotic; pornographic"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "工合",
@@ -36804,7 +37689,8 @@
    "kana": "こうだい",
    "en": [
     "technical college"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "工手",
@@ -36812,7 +37698,8 @@
    "kana": "こうしゅ",
    "en": [
     "person engaged in public engineering works"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "左下",
@@ -36820,7 +37707,8 @@
    "kana": "ひだりした",
    "en": [
     "lower left"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "左図",
@@ -36868,7 +37756,8 @@
    "kana": "ひだりめ",
    "en": [
     "left eye"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "左耳",
@@ -36876,7 +37765,8 @@
    "kana": "ひだりみみ",
    "en": [
     "left ear"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "左行",
@@ -37177,7 +38067,8 @@
    "kana": "ねんきゅう",
    "en": [
     "yearly paid vacation (holiday)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "年余",
@@ -37241,7 +38132,8 @@
    "kana": "としおんな",
    "en": [
     "Woman of the Year, referring to a woman born in a year with the same Chinese zodiac sign as the current year"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "年子",
@@ -37249,7 +38141,8 @@
    "kana": "としご",
    "en": [
     "child born within a year of another; children born in consecutive years"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "年少",
@@ -37265,7 +38158,8 @@
    "kana": "ねんねん",
    "en": [
     "year by year; annually"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "年式",
@@ -37305,7 +38199,8 @@
    "kana": "としだま",
    "en": [
     "New Year's gift"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "年見",
@@ -37313,7 +38208,8 @@
    "kana": "としみ",
    "en": [
     "Tōhoku harvest divination event (14th night of the New Year)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "年魚",
@@ -38931,7 +39827,8 @@
    "kana": "てした",
    "en": [
     "subordinate; underling"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "手事",
@@ -38948,7 +39845,8 @@
    "kana": "しゅこう",
    "en": [
     "handing over; delivery (by hand)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "手代",
@@ -38965,7 +39863,8 @@
    "en": [
     "fingers; fingertips",
     "underling; stooge"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "手写",
@@ -38989,7 +39888,8 @@
    "kana": "たぢから",
    "en": [
     "arm strength"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "手合",
@@ -39006,7 +39906,8 @@
    "kana": "てし",
    "en": [
     "four-of-a-kind (in a dealt hand)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "手工",
@@ -39014,7 +39915,8 @@
    "kana": "しゅこう",
    "en": [
     "handicrafts"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "手巾",
@@ -39039,7 +39941,8 @@
    "kana": "てて",
    "en": [
     "hand; hands"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "手持",
@@ -39074,7 +39977,8 @@
    "kana": "てみず",
    "en": [
     "water for washing or moistening one's hands"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "手洗",
@@ -39091,7 +39995,8 @@
    "kana": "てだま",
    "en": [
     "beanbags; jackstones"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "手短",
@@ -39124,7 +40029,8 @@
    "kana": "てぐるま",
    "en": [
     "handcart; wheelbarrow"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "手近",
@@ -39141,7 +40047,8 @@
    "kana": "てきん",
    "en": [
     "deposit"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "手長",
@@ -39404,7 +40311,8 @@
    "kana": "ぶんじん",
    "en": [
     "person of letters; literary person"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "文名",
@@ -39412,7 +40320,8 @@
    "kana": "ぶんめい",
    "en": [
     "literary fame"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "文士",
@@ -39468,7 +40377,8 @@
    "kana": "ふみづき",
    "en": [
     "seventh month of the lunar calendar"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "文正",
@@ -39476,7 +40386,8 @@
    "kana": "ぶんしょう",
    "en": [
     "Bunshō era (1466.2.28-1467.3.5)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "文物",
@@ -39501,7 +40412,8 @@
    "en": [
     "monme (unit of weight, 3.75 g)",
     "monme; Edo period silver coin worth between 1/50th-1/80th of a ryō"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "文言",
@@ -39999,7 +40911,8 @@
    "kana": "にっと",
    "en": [
     "Japan-Turkey"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "日夕",
@@ -40007,7 +40920,8 @@
    "kana": "にっせき",
    "en": [
     "day and night; nightfall"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "日外",
@@ -40024,7 +40938,8 @@
    "en": [
     "Surya (Hindu sun god also revered as one of the twelve devas in Shingon Buddhism)",
     "sun"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "日女",
@@ -40032,7 +40947,8 @@
    "kana": "ひるめ",
    "en": [
     "Sun Goddess; Amaterasu Ōmikami"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "日子",
@@ -40040,7 +40956,8 @@
    "kana": "にっし",
    "en": [
     "(number of) days"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "日文",
@@ -40048,7 +40965,8 @@
    "kana": "ひふみ",
    "en": [
     "Hifumi (script)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "日新",
@@ -40065,7 +40983,8 @@
    "en": [
     "sun and moon",
     "time; days and months"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "日朝",
@@ -40113,7 +41032,8 @@
    "kana": "にっぱく",
    "en": [
     "Japan and Belgium"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "日英",
@@ -40154,7 +41074,8 @@
    "en": [
     "daytime",
     "position of the Sun"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "日銀",
@@ -40212,7 +41133,8 @@
    "kana": "はやで",
    "en": [
     "early arrival"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "早天",
@@ -40220,7 +41142,8 @@
    "kana": "そうてん",
    "en": [
     "early morning; dawn"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "早尚",
@@ -40236,7 +41159,8 @@
    "kana": "はやて",
    "en": [
     "gale; strong wind"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "早早",
@@ -40245,7 +41169,8 @@
    "en": [
     "as soon as...; just after...",
     "hurriedly; in haste"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "早業",
@@ -40262,7 +41187,8 @@
    "en": [
     "early ripening rice",
     "early-ripening fruit (grain, etc.)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "早産",
@@ -40288,7 +41214,8 @@
    "en": [
     "early; a little earlier than usual",
     "a little faster than usual; slightly quicker"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "早矢",
@@ -40304,7 +41231,8 @@
    "kana": "はやみみ",
    "en": [
     "insider; keen of hearing"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "早見",
@@ -40312,7 +41240,8 @@
    "kana": "はやみ",
    "en": [
     "chart; table"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "早計",
@@ -40329,7 +41258,8 @@
    "en": [
     "quick pace; quick steps",
     "trot (horse gait)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "早道",
@@ -41209,7 +42139,8 @@
    "en": [
     "(at a rate of) once a month",
     "10 percent monthly interest"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "月下",
@@ -41217,7 +42148,8 @@
    "kana": "げっか",
    "en": [
     "in the moonlight"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "月中",
@@ -41225,7 +42157,8 @@
    "kana": "げつちゅう",
    "en": [
     "(for the) whole month"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "月事",
@@ -41258,7 +42191,8 @@
    "en": [
     "Chandra (Hindu moon god also revered as one of the twelve devas in Shingon Buddhism)",
     "moon"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "月央",
@@ -41308,7 +42242,8 @@
    "kana": "つきづき",
    "en": [
     "every month; monthly"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "月毎",
@@ -41332,7 +42267,8 @@
    "kana": "げつか",
    "en": [
     "Monday and Tuesday"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "月立",
@@ -41341,7 +42277,8 @@
    "en": [
     "first day of the month",
     "first ten days of the lunar month"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "月色",
@@ -41366,7 +42303,8 @@
    "kana": "げつきん",
    "en": [
     "Mondays and Fridays"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "有休",
@@ -41651,7 +42589,8 @@
    "kana": "もっか",
    "en": [
     "lignification"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "木口",
@@ -41660,7 +42599,8 @@
    "en": [
     "grade of wood; quality of wood",
     "cut end (of a piece of wood)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "木地",
@@ -41684,7 +42624,8 @@
    "kana": "きぎ",
    "en": [
     "(many) trees; every tree"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "木本",
@@ -41692,7 +42633,8 @@
    "kana": "もくほん",
    "en": [
     "tree; woody plant"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "木理",
@@ -41709,7 +42651,8 @@
    "en": [
     "texture (e.g. skin, fabric)",
     "grain (e.g. wood)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "木石",
@@ -41718,7 +42661,8 @@
    "en": [
     "trees and stones",
     "unfeeling person"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "木立",
@@ -41726,7 +42670,8 @@
    "kana": "こだち",
    "en": [
     "cluster of trees; grove"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "木羽",
@@ -41743,7 +42688,17 @@
    "kana": "きくらげ",
    "en": [
     "cloud ear mushroom (Auricularia auricula-judae); wood ear mushroom"
-   ]
+   ],
+   "g1": true
+  },
+  {
+   "w": "木草",
+   "lv": null,
+   "kana": "きくさ",
+   "en": [
+    "trees and grass; vegetation"
+   ],
+   "g1": true
   },
   {
    "w": "木豆",
@@ -41792,7 +42747,8 @@
    "kana": "もくきん",
    "en": [
     "Thursday and Friday"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "木馬",
@@ -41980,7 +42936,8 @@
    "kana": "ほんてん",
    "en": [
     "silk velvet"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "本字",
@@ -41989,7 +42946,8 @@
    "en": [
     "kanji (as opposed to kana)",
     "original form of a Chinese character (as opposed to a simplified or abbreviated form)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "本学",
@@ -41997,7 +42955,8 @@
    "kana": "ほんがく",
    "en": [
     "this university; this educational establishment"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "本官",
@@ -42050,7 +43009,8 @@
    "en": [
     "ace up one's sleeve; trump card",
     "basic melody (esp. on koto and shamisen)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "本月",
@@ -42058,7 +43018,8 @@
    "kana": "ほんげつ",
    "en": [
     "this month"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "本有",
@@ -42074,7 +43035,8 @@
    "kana": "もともと",
    "en": [
     "originally; by nature"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "本歌",
@@ -42090,7 +43052,8 @@
    "kana": "ほんでん",
    "en": [
     "rice paddy"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "本目",
@@ -42098,7 +43061,8 @@
    "kana": "ほんめ",
    "en": [
     "type of flat knot used in nets"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "本県",
@@ -42125,6 +43089,15 @@
    ]
   },
   {
+   "w": "本草",
+   "lv": null,
+   "kana": "ほんぞう",
+   "en": [
+    "plants; medicinal herbs"
+   ],
+   "g1": true
+  },
+  {
    "w": "本道",
    "lv": "N5",
    "kana": "ほんどう",
@@ -42140,7 +43113,8 @@
    "en": [
     "pure gold",
     "capital stock"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "本門",
@@ -42205,7 +43179,8 @@
    "kana": "むらむら",
    "en": [
     "villages"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "村社",
@@ -42221,7 +43196,8 @@
    "kana": "そんりつ",
    "en": [
     "established or operated by a village"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "村道",
@@ -42245,7 +43221,8 @@
    "kana": "むらさめ",
    "en": [
     "passing shower"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "来世",
@@ -42639,7 +43616,8 @@
    "kana": "りんぼく",
    "en": [
     "forest tree"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "林産",
@@ -42703,7 +43681,8 @@
    "kana": "こうめい",
    "en": [
     "name of a school"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "校地",
@@ -42751,7 +43730,8 @@
    "kana": "こうほん",
    "en": [
     "annotated textbook"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "校注",
@@ -42775,7 +43755,8 @@
    "kana": "しんしん",
    "en": [
     "deeply forested"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "森立",
@@ -42783,7 +43764,8 @@
    "kana": "しんりつ",
    "en": [
     "standing close together"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "業火",
@@ -43146,7 +44128,8 @@
    "kana": "せいてい",
    "en": [
     "man in good health between 21 and 60 years of age to whom applied various corvee and taxes (under the ritsuryo system)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "正中",
@@ -43154,7 +44137,8 @@
    "kana": "せいちゅう",
    "en": [
     "the exact middle"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "正使",
@@ -43178,7 +44162,8 @@
    "kana": "しょうさき",
    "en": [
     "downstage center (noh)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "正円",
@@ -43186,7 +44171,8 @@
    "kana": "せいえん",
    "en": [
     "perfect circle"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "正写",
@@ -43202,7 +44188,8 @@
    "kana": "せいしゅつ",
    "en": [
     "legitimate child"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "正切",
@@ -43242,7 +44229,8 @@
    "kana": "せいだい",
    "en": [
     "fairness; justice"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "正子",
@@ -43250,7 +44238,8 @@
    "kana": "しょうし",
    "en": [
     "midnight"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "正字",
@@ -43259,7 +44248,8 @@
    "en": [
     "correctly written character; kanji used with its original meaning",
     "traditional kanji; unsimplified kanji"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "正安",
@@ -43309,7 +44299,8 @@
    "en": [
     "main text (as opposed to any included commentary or annotations)",
     "authentic text (e.g. of a treaty, as opposed to any translation not specified as authentic)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "正方",
@@ -43357,7 +44348,8 @@
    "kana": "まさき",
    "en": [
     "Japanese spindletree (Euonymus japonicus)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "正本",
@@ -43365,7 +44357,8 @@
    "kana": "しょうほん",
    "en": [
     "book of registration; text of a play"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "正東",
@@ -43397,7 +44390,8 @@
    "kana": "せいせい",
    "en": [
     "accurate; exact"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "正気",
@@ -43405,7 +44399,8 @@
    "kana": "しょうき",
    "en": [
     "sanity; consciousness"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "正物",
@@ -43421,7 +44416,8 @@
    "kana": "まさめ",
    "en": [
     "straight grain; quartersawn grain"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "正着",
@@ -43437,7 +44433,8 @@
    "kana": "せいりつ",
    "en": [
     "upright"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "正答",
@@ -43485,7 +44482,8 @@
    "kana": "しょうけん",
    "en": [
     "right view"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "正金",
@@ -43493,7 +44491,8 @@
    "kana": "しょうきん",
    "en": [
     "specie; bullion"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "正長",
@@ -43509,7 +44508,8 @@
    "kana": "せいおん",
    "en": [
     "correct Chinese (on) pronunciation of a character"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "正風",
@@ -43979,7 +44979,8 @@
    "kana": "きか",
    "en": [
     "vaporization; vaporisation"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "気品",
@@ -43996,7 +44997,8 @@
    "kana": "きがく",
    "en": [
     "fortune telling based on Chinese twelve year cycle"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "気室",
@@ -44029,7 +45031,8 @@
    "kana": "きばや",
    "en": [
     "quick-tempered; impatient"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "気死",
@@ -44055,7 +45058,8 @@
    "kana": "きだて",
    "en": [
     "disposition; nature"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "気色",
@@ -44145,7 +45149,8 @@
    "kana": "みずさき",
    "en": [
     "direction of a current; course of a ship"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "水化",
@@ -44153,7 +45158,8 @@
    "kana": "すいか",
    "en": [
     "hydration"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "水場",
@@ -44178,7 +45184,8 @@
    "en": [
     "water and sky",
     "Varuna; Vedic god of water and sky (adopted into Buddhism as god of water and protector of the west)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "水子",
@@ -44187,7 +45194,8 @@
    "en": [
     "aborted, stillborn or miscarried foetus (fetus)",
     "newborn baby"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "水屋",
@@ -44230,7 +45238,8 @@
    "kana": "かこ",
    "en": [
     "sailor; seaman"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "水文",
@@ -44238,7 +45247,8 @@
    "kana": "すいもん",
    "en": [
     "hydrological"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "水族",
@@ -44263,7 +45273,8 @@
    "en": [
     "water and moon",
     "the Moon reflected on the water"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "水木",
@@ -44271,7 +45282,8 @@
    "kana": "みずき",
    "en": [
     "dogwood (Cornus controversa)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "水母",
@@ -44297,7 +45309,8 @@
    "kana": "すいか",
    "en": [
     "fire and water"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "水物",
@@ -44322,7 +45335,8 @@
    "kana": "すいせい",
    "en": [
     "aquatic (life); living in the water"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "水界",
@@ -44339,7 +45353,8 @@
    "kana": "みずめ",
    "en": [
     "Japanese cherry birch; betula grossa"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "水石",
@@ -44347,7 +45362,17 @@
    "kana": "すいせき",
    "en": [
     "viewing stone"
-   ]
+   ],
+   "g1": true
+  },
+  {
+   "w": "水草",
+   "lv": null,
+   "kana": "みずくさ",
+   "en": [
+    "water plant; aquatic plant"
+   ],
+   "g1": true
   },
   {
    "w": "水菜",
@@ -44373,7 +45398,8 @@
    "en": [
     "athlete's foot",
     "water boatman (esp. species Hesperocorixa distanti)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "水行",
@@ -44389,7 +45415,8 @@
    "kana": "みずがい",
    "en": [
     "sliced abalone served in cold water"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "水軍",
@@ -44414,7 +45441,8 @@
    "en": [
     "liquid gold (used for applying gold to ceramics, etc.)",
     "Wednesday and Friday"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "水門",
@@ -44430,7 +45458,8 @@
    "kana": "みずおと",
    "en": [
     "sound of water"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "水食",
@@ -45070,7 +46099,8 @@
    "en": [
     "in the fire; in the flames",
     "burning (something)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "火元",
@@ -45086,7 +46116,8 @@
    "kana": "ひさき",
    "en": [
     "flames; forefront of fire"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "火光",
@@ -45126,7 +46157,8 @@
    "kana": "かしゅ",
    "en": [
     "stoker"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "火木",
@@ -45134,7 +46166,8 @@
    "kana": "かもく",
    "en": [
     "Tuesdays and Thursdays"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "火気",
@@ -45143,7 +46176,8 @@
    "en": [
     "fire; trace of fire",
     "force of a fire"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "火水",
@@ -45151,7 +46185,8 @@
    "kana": "ひみず",
    "en": [
     "(as discordant as) fire and water"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "火玉",
@@ -45159,7 +46194,8 @@
    "kana": "ひだま",
    "en": [
     "falling star; fireball"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "火田",
@@ -45167,7 +46203,8 @@
    "kana": "かでん",
    "en": [
     "slash-and-burn agriculture"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "火病",
@@ -45208,7 +46245,8 @@
    "kana": "ひあし",
    "en": [
     "spreading of a fire"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "火車",
@@ -45217,7 +46255,8 @@
    "en": [
     "fiery chariot",
     "kasha (mythical beast said to devour dead bodies)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "火頭",
@@ -45604,7 +46643,8 @@
    "kana": "えのこ",
    "en": [
     "puppy"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "犬服",
@@ -45669,7 +46709,8 @@
    "en": [
     "eggs; egg",
     "(hen's) egg"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "玉屋",
@@ -45686,7 +46727,8 @@
    "kana": "ぎょくせき",
    "en": [
     "gems and stones; wheat and chaff"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "玉糸",
@@ -45694,7 +46736,8 @@
    "kana": "たまいと",
    "en": [
     "dupion silk; silk that comes from a double cocoon formed jointly by two or more silkworms"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "玉菜",
@@ -45710,7 +46753,8 @@
    "kana": "たまむし",
    "en": [
     "jewel beetle (esp. Chrysochroa fulgidissima); buprestid"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "玉貝",
@@ -45719,7 +46763,8 @@
    "en": [
     "moon snail (Naticidae spp.); moon shell",
     "Marten's pearl oyster (Pinctada fucata martensii); Akoya pearl oyster"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "玉門",
@@ -45737,7 +46782,8 @@
    "en": [
     "the Emperor's voice",
     "beautiful voice; beautiful sound"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "玉顔",
@@ -45761,7 +46807,8 @@
    "kana": "おうか",
    "en": [
     "imperial influence; assimilation of new territory"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "王台",
@@ -45777,7 +46824,8 @@
    "kana": "おうど",
    "en": [
     "royal or imperial domain"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "王家",
@@ -45809,7 +46857,8 @@
    "kana": "おうすい",
    "en": [
     "aqua regia"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "王父",
@@ -45899,7 +46948,8 @@
    "kana": "なまちゅう",
    "en": [
     "medium-size draft beer"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "生別",
@@ -45933,7 +46983,8 @@
    "en": [
     "prisoner of war (Yayoi period)",
     "slaves"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "生国",
@@ -45950,7 +47001,8 @@
    "en": [
     "year of a person's birth",
     "number of years since one's birth; age"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "生所",
@@ -45975,7 +47027,8 @@
    "kana": "せいじつ",
    "en": [
     "birthday"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "生有",
@@ -45992,7 +47045,8 @@
    "en": [
     "live tree",
     "green wood; unseasoned wood"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "生来",
@@ -46025,7 +47079,8 @@
    "kana": "せいき",
    "en": [
     "life; vitality"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "生水",
@@ -46033,7 +47088,8 @@
    "kana": "なまみず",
    "en": [
     "unboiled water"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "生玉",
@@ -46041,7 +47097,8 @@
    "kana": "いくたま",
    "en": [
     "longevity stone (gemstone that gives its bearer long life)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "生生",
@@ -46049,7 +47106,8 @@
    "kana": "せいせい",
    "en": [
     "lively; growing up"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "生米",
@@ -46114,7 +47172,8 @@
    "en": [
     "sliced abalone served in cold water",
     "raw shellfish"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "生起",
@@ -46130,7 +47189,8 @@
    "kana": "なまあし",
    "en": [
     "bare legs; bare feet"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "生食",
@@ -46440,7 +47500,8 @@
    "kana": "たむし",
    "en": [
     "ringworm (of the body); tinea corporis"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "田野",
@@ -46515,7 +47576,8 @@
    "en": [
     "male name",
     "adult name"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "男声",
@@ -46531,7 +47593,8 @@
    "kana": "おとこやま",
    "en": [
     "rugged mountain (of the more rugged mountain of a pair of mountains)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "男工",
@@ -46539,7 +47602,8 @@
    "kana": "だんこう",
    "en": [
     "male worker; male machine operator"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "男心",
@@ -46556,7 +47620,8 @@
    "en": [
     "male help; male labor",
     "man's handwriting"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "男方",
@@ -46574,7 +47639,8 @@
    "en": [
     "male plant (esp. a woody plant); androecious plant",
     "tenoned part of a wooden joint (in construction)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "男気",
@@ -46582,7 +47648,8 @@
    "kana": "おとこぎ",
    "en": [
     "chivalrous spirit; chivalry"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "男物",
@@ -46632,7 +47699,8 @@
    "kana": "ちょうちょう",
    "en": [
     "towns and villages (official urban area classification)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "町代",
@@ -46656,7 +47724,8 @@
    "kana": "ちょうめい",
    "en": [
     "name of a town; name of a street"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "町家",
@@ -46698,7 +47767,8 @@
    "kana": "ちょういし",
    "en": [
     "roadside stone distance indicators placed at intervals of one chō (approx. 109 meters)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "町立",
@@ -46706,7 +47776,8 @@
    "kana": "ちょうりつ",
    "en": [
     "established by the town"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "町道",
@@ -47079,7 +48150,8 @@
    "en": [
     "young man of conscription age who has not yet undergone military training",
     "man with no title and no rank (under the ritsuryo system); commoner"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "白亜",
@@ -47105,7 +48177,8 @@
    "en": [
     "bleaching; whitening",
     "albinism"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "白口",
@@ -47113,7 +48186,8 @@
    "kana": "しろぐち",
    "en": [
     "silver white croaker (Pennahia argentata); silver croaker"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "白味",
@@ -47129,7 +48203,8 @@
    "kana": "しらつち",
    "en": [
     "white clay; white earth"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "白声",
@@ -47163,7 +48238,8 @@
    "en": [
     "soft roe; milt",
     "albino"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "白度",
@@ -47179,7 +48255,8 @@
    "kana": "はくぶん",
    "en": [
     "unpunctuated Chinese texts"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "白日",
@@ -47187,7 +48264,8 @@
    "kana": "はくじつ",
    "en": [
     "bright sunshine; broad daylight"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "白昼",
@@ -47203,7 +48281,8 @@
    "kana": "しらき",
    "en": [
     "plain wood; unfinished woodwork"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "白水",
@@ -47211,7 +48290,8 @@
    "kana": "しろみず",
    "en": [
     "color of water after washing rice (colour)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "白物",
@@ -47228,7 +48308,8 @@
    "kana": "しろいぬ",
    "en": [
     "white dog"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "白玉",
@@ -47237,7 +48318,8 @@
    "en": [
     "white gem (esp. a pearl)",
     "rice flour dumpling"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "白田",
@@ -47246,7 +48328,8 @@
    "en": [
     "snow-covered rice paddy",
     "field"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "白白",
@@ -47254,7 +48337,8 @@
    "kana": "はくはく",
    "en": [
     "clear"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "白目",
@@ -47263,7 +48347,8 @@
    "en": [
     "white of the eye",
     "cold, unwelcoming eyes"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "白石",
@@ -47272,7 +48357,8 @@
    "en": [
     "white stone",
     "white (go pieces)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "白糸",
@@ -47280,7 +48366,8 @@
    "kana": "しらいと",
    "en": [
     "white thread"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "白肉",
@@ -47338,7 +48425,8 @@
    "kana": "はっきん",
    "en": [
     "platinum (Pt)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "白銀",
@@ -47355,7 +48443,8 @@
    "kana": "はくう",
    "en": [
     "rain shower"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "白頭",
@@ -47428,7 +48517,8 @@
    "en": [
     "108; one hundred and eight",
     "the number of kleshas, worldly thoughts and passions"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "百円",
@@ -47436,7 +48526,8 @@
    "kana": "ひゃくえん",
    "en": [
     "100 yen"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "百出",
@@ -47444,7 +48535,8 @@
    "kana": "ひゃくしゅつ",
    "en": [
     "arise in great numbers"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "百千",
@@ -47452,7 +48544,8 @@
    "kana": "ひゃくせん",
    "en": [
     "a large number; all sorts"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "百味",
@@ -47492,7 +48585,8 @@
    "kana": "ひゃくせん",
    "en": [
     "hundred rivers; many rivers"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "百年",
@@ -47500,7 +48594,8 @@
    "kana": "ひゃくねん",
    "en": [
     "century; hundred years"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "百度",
@@ -47525,7 +48620,8 @@
    "kana": "ひゃくにち",
    "en": [
     "hundred days; lengthy time"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "百病",
@@ -47541,7 +48637,8 @@
    "kana": "ひゃくめ",
    "en": [
     "375 grams (100 monme)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "百穴",
@@ -47549,7 +48646,8 @@
    "kana": "ひゃっけつ",
    "en": [
     "cluster of Kofun period graves"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "百聞",
@@ -47574,7 +48672,8 @@
    "kana": "ひゃっか",
    "en": [
     "all varieties of flowers; many flowers"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "百薬",
@@ -47606,7 +48705,8 @@
    "kana": "むかで",
    "en": [
     "centipede"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "百重",
@@ -47639,7 +48739,8 @@
    "kana": "めぢから",
    "en": [
     "strong impression conveyed by one's eyes; eyes that convey a strong sense of purpose"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "目合",
@@ -47672,7 +48773,8 @@
    "kana": "めぎ",
    "en": [
     "Japanese barberry (Berberis thunbergii)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "目耳",
@@ -47680,7 +48782,8 @@
    "kana": "めみみ",
    "en": [
     "(one's own) eyes and ears"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "目色",
@@ -47700,12 +48803,22 @@
    ]
   },
   {
+   "w": "目草",
+   "lv": null,
+   "kana": "まぐさ",
+   "en": [
+    "lintel (lacking the grooves needed for a sliding door)"
+   ],
+   "g1": true
+  },
+  {
    "w": "目見",
    "lv": "N5",
    "kana": "まみ",
    "en": [
     "look; one's eyes"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "目語",
@@ -48509,7 +49622,8 @@
    "kana": "せきじん",
    "en": [
     "stone image of people"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "石化",
@@ -48517,7 +49631,8 @@
    "kana": "せきか",
    "en": [
     "petrifaction; petrification"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "石女",
@@ -48525,7 +49640,8 @@
    "kana": "うまずめ",
    "en": [
     "barren woman; sterile woman"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "石子",
@@ -48533,7 +49649,8 @@
    "kana": "いしなご",
    "en": [
     "pebble throwing game played by young girls"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "石屋",
@@ -48549,7 +49666,8 @@
    "kana": "いしやま",
    "en": [
     "stony mountain"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "石川",
@@ -48557,7 +49675,8 @@
    "kana": "いしかわ",
    "en": [
     "Ishikawa (prefecture)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "石工",
@@ -48565,7 +49684,8 @@
    "kana": "いしく",
    "en": [
     "mason; stonemason"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "石弓",
@@ -48591,7 +49711,8 @@
    "kana": "いしぶみ",
    "en": [
     "stone monument bearing an inscription (esp. memorial for future generations); stele"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "石木",
@@ -48599,7 +49720,8 @@
    "kana": "いしき",
    "en": [
     "stone tree"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "石火",
@@ -48607,7 +49729,8 @@
    "kana": "せっか",
    "en": [
     "flint fire; flash"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "石理",
@@ -48623,7 +49746,8 @@
    "kana": "いしめ",
    "en": [
     "grain (of rock); rift"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "石竹",
@@ -48631,7 +49755,8 @@
    "kana": "せきちく",
    "en": [
     "China pink (species of flower, Dianthus chinensis)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "石見",
@@ -48639,7 +49764,8 @@
    "kana": "いわみ",
    "en": [
     "Iwami (former province located in the west of present-day Shimane Prefecture)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "石貝",
@@ -48647,7 +49773,8 @@
    "kana": "いしがい",
    "en": [
     "Unio douglasiae (species of freshwater mussel)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "石道",
@@ -49125,7 +50252,8 @@
    "kana": "あなご",
    "en": [
     "garden eel; conger eel (esp. the common Japanese conger, Conger myriaster)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "穴門",
@@ -49166,7 +50294,8 @@
    "kana": "くうりき",
    "en": [
     "aerodynamics"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "空合",
@@ -49183,7 +50312,8 @@
    "kana": "くうめい",
    "en": [
     "empty name; false reputation"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "空室",
@@ -49240,7 +50370,8 @@
    "kana": "くうぶん",
    "en": [
     "dead letter"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "空方",
@@ -49265,7 +50396,8 @@
    "kana": "うつぎ",
    "en": [
     "deutzia; Deutzia crenata"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "空理",
@@ -49290,7 +50422,8 @@
    "en": [
     "seeing something that isn't actually there; hallucination",
     "pretending not to see; looking the other way"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "空穴",
@@ -49298,7 +50431,8 @@
    "kana": "からけつ",
    "en": [
     "flat or stone broke"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "空空",
@@ -49306,7 +50440,8 @@
    "kana": "くうくう",
    "en": [
     "empty; vacant"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "空耳",
@@ -49315,7 +50450,8 @@
    "en": [
     "mishearing",
     "(feigned) deafness"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "空自",
@@ -49395,7 +50531,8 @@
    "kana": "そらね",
    "en": [
     "imitated cry (of an animal); lie"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "空風",
@@ -49428,7 +50565,8 @@
    "kana": "たちいり",
    "en": [
     "entering; going into"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "立冬",
@@ -49469,7 +50607,8 @@
    "kana": "りつだい",
    "en": [
     "private university"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "立教",
@@ -49494,7 +50633,8 @@
    "kana": "たちき",
    "en": [
     "standing tree; standing timber"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "立県",
@@ -49535,7 +50675,8 @@
    "kana": "りっか",
    "en": [
     "rikka; formal style of ikebana"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "立見",
@@ -49543,7 +50684,8 @@
    "kana": "たちみ",
    "en": [
     "watching while standing (e.g. a play)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "立言",
@@ -49755,7 +50897,8 @@
    "kana": "いとだま",
    "en": [
     "thread ball; clew"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "糸目",
@@ -49764,7 +50907,8 @@
    "en": [
     "fine line",
     "weight of thread"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "糸竹",
@@ -49772,7 +50916,8 @@
    "kana": "しちく",
    "en": [
     "(traditional Japanese) musical instruments"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "糸車",
@@ -49780,7 +50925,8 @@
    "kana": "いとぐるま",
    "en": [
     "spinning wheel"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "糸道",
@@ -50131,7 +51277,8 @@
    "kana": "じせき",
    "en": [
     "otolith (part of inner ear); statolith"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "耳語",
@@ -50147,7 +51294,8 @@
    "kana": "みみがい",
    "en": [
     "ass's ear abalone (Haliotis asinina); donkey's ear abalone"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "耳金",
@@ -50155,7 +51303,8 @@
    "kana": "みみがね",
    "en": [
     "lug"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "聞手",
@@ -50833,7 +51982,8 @@
    "kana": "はないれ",
    "en": [
     "vase"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "花六",
@@ -50841,7 +51991,8 @@
    "kana": "はなろく",
    "en": [
     "rabbity six (standard dead shape in go); rabbitty six"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "花台",
@@ -50874,7 +52025,8 @@
    "en": [
     "flowers and the moon",
     "refined leisure; elegant pastime"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "花木",
@@ -50883,7 +52035,8 @@
    "en": [
     "flowers and trees",
     "flowering trees"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "花林",
@@ -50892,7 +52045,8 @@
    "en": [
     "Burmese rosewood (Pterocarpus indicus); angsana",
     "flowering quince (of genus Chaenomeles) (Pseudocydonia sinensis); Chinese quince (Chaenomeles sinensis)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "花水",
@@ -50901,7 +52055,8 @@
    "en": [
     "flowers and water offered to Buddha",
     "irrigation of a rice field during flowering"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "花物",
@@ -50917,7 +52072,8 @@
    "kana": "かおう",
    "en": [
     "tree peony (Paeonia suffruticosa)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "花町",
@@ -50925,7 +52081,8 @@
    "kana": "はなまち",
    "en": [
     "red-light district; prostitution quarter"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "花糸",
@@ -50933,7 +52090,8 @@
    "kana": "かし",
    "en": [
     "(flower's) filament"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "花紙",
@@ -50966,7 +52124,8 @@
    "kana": "はながい",
    "en": [
     "Placamen tiara (species of venerid)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "花車",
@@ -50975,7 +52134,8 @@
    "en": [
     "dainty; delicate",
     "fragile (e.g. furniture); delicate"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "花野",
@@ -50991,7 +52151,8 @@
    "kana": "はなきん",
    "en": [
     "thank God it's Friday; TGIF"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "英主",
@@ -51233,6 +52394,35 @@
    ]
   },
   {
+   "w": "草子",
+   "lv": null,
+   "kana": "そうし",
+   "en": [
+    "written work (esp. a bound text, as opposed to a scroll)",
+    "a text written entirely in kana"
+   ],
+   "g1": true
+  },
+  {
+   "w": "草本",
+   "lv": null,
+   "kana": "そうほん",
+   "en": [
+    "herbaceous plant; herb"
+   ],
+   "g1": true
+  },
+  {
+   "w": "草草",
+   "lv": null,
+   "kana": "そうそう",
+   "en": [
+    "hurry; rush",
+    "simple; brief"
+   ],
+   "g1": true
+  },
+  {
    "w": "菜切",
    "lv": "N4",
    "kana": "なきり",
@@ -51402,7 +52592,8 @@
    "kana": "むしけ",
    "en": [
     "nervous weakness"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "虫薬",
@@ -51768,7 +52959,8 @@
    "kana": "みめ",
    "en": [
     "appearance; looks"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "見知",
@@ -52543,7 +53735,8 @@
    "kana": "せっか",
    "en": [
     "Sovietize; Sovietise"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "赤口",
@@ -52551,7 +53744,8 @@
    "kana": "しゃっこう",
    "en": [
     "unlucky for all activities, with only the period around noon being auspicious"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "赤味",
@@ -52567,7 +53761,8 @@
    "kana": "あかつち",
    "en": [
     "red clay; tuff loam"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "赤地",
@@ -52591,7 +53786,8 @@
    "kana": "あかご",
    "en": [
     "baby"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "赤心",
@@ -52607,7 +53803,8 @@
    "kana": "せきしゅ",
    "en": [
     "bare handed"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "赤日",
@@ -52615,7 +53812,8 @@
    "kana": "あかび",
    "en": [
     "menstruation"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "赤木",
@@ -52624,7 +53822,8 @@
    "en": [
     "bishop wood (Bischofia javanica)",
     "barked tree"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "赤本",
@@ -52633,7 +53832,8 @@
    "en": [
     "pulp fiction; dime novel",
     "akahon; university entrance exam workbook (published by Kyōgakusha)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "赤気",
@@ -52642,7 +53842,8 @@
    "en": [
     "red cloud",
     "comet"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "赤物",
@@ -52659,7 +53860,8 @@
    "en": [
     "red ball; amber",
     "patent medicine"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "赤目",
@@ -52668,7 +53870,8 @@
    "en": [
     "red eyes; bloodshot eyes",
     "red-eye"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "赤短",
@@ -52713,7 +53916,8 @@
    "en": [
     "willowherb (Epilobium pyrricholophum)",
     "safflower red"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "赤茶",
@@ -52730,7 +53934,8 @@
    "en": [
     "bloodworm (Halla okadai, species of eunicid worm used as fishing bait)",
     "red mite (Trombicula akamushi); chigger mite"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "赤貝",
@@ -52738,7 +53943,8 @@
    "kana": "あかがい",
    "en": [
     "blood clam (Scapharca broughtonii); ark shell"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "赤赤",
@@ -52746,7 +53952,8 @@
    "kana": "あかあか",
    "en": [
     "bright red; bright"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "赤金",
@@ -52755,7 +53962,8 @@
    "en": [
     "copper (Cu)",
     "bronze (medal)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "赤門",
@@ -52844,7 +54052,8 @@
    "kana": "あしなか",
    "en": [
     "half-soled straw sandals; straw sandals which are designed only for the front half of the foot"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "足乗",
@@ -52868,7 +54077,8 @@
    "kana": "あしさき",
    "en": [
     "part of the feet from the ankles to the tips of the toes"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "足刀",
@@ -52932,7 +54142,8 @@
    "kana": "しゃじょう",
    "en": [
     "aboard a vehicle; in a car"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "車代",
@@ -52956,7 +54167,8 @@
    "kana": "しゃりき",
    "en": [
     "cartman"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "車台",
@@ -52973,7 +54185,8 @@
    "en": [
     "car model",
     "car brand; car make"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "車地",
@@ -53014,7 +54227,8 @@
    "kana": "しゃこう",
    "en": [
     "driving school"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "車知",
@@ -54840,7 +56054,8 @@
    "kana": "きんえん",
    "en": [
     "money"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "金力",
@@ -54848,7 +56063,8 @@
    "kana": "きんりょく",
    "en": [
     "monetary power"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "金口",
@@ -54856,7 +56072,8 @@
    "kana": "きんぐち",
    "en": [
     "gold-colored paper wrapped around the tip of a cigarette (coloured)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "金味",
@@ -54881,7 +56098,8 @@
    "kana": "きんど",
    "en": [
     "Friday and Saturday"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "金地",
@@ -54905,7 +56123,8 @@
    "kana": "きんじ",
    "en": [
     "gold or gilt letters"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "金山",
@@ -54913,7 +56132,8 @@
    "kana": "きんざん",
    "en": [
     "gold mine"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "金工",
@@ -54921,7 +56141,8 @@
    "kana": "きんこう",
    "en": [
     "metalwork; metalsmith"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "金巾",
@@ -54945,7 +56166,8 @@
    "kana": "きんぶん",
    "en": [
     "Chinese bronze inscriptions; type of lettering used on metal objects, especially in China during the Yin and Zhou dynasties"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "金時",
@@ -54970,7 +56192,8 @@
    "kana": "かなけ",
    "en": [
     "metallic taste; taste of iron"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "金物",
@@ -54986,7 +56209,8 @@
    "kana": "きんたま",
    "en": [
     "testicles"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "金目",
@@ -54994,7 +56218,8 @@
    "kana": "かねめ",
    "en": [
     "monetary value"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "金穴",
@@ -55003,7 +56228,8 @@
    "en": [
     "gold mine",
     "provider of funds; financial supporter"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "金糸",
@@ -55011,7 +56237,8 @@
    "kana": "きんし",
    "en": [
     "gold thread"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "金言",
@@ -55027,7 +56254,8 @@
    "kana": "きんあか",
    "en": [
     "bronze-red"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "金運",
@@ -55921,7 +57149,8 @@
    "kana": "うか",
    "en": [
     "raining; downpour"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "雨中",
@@ -55929,7 +57158,8 @@
    "kana": "うちゅう",
    "en": [
     "in the rain"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "雨声",
@@ -55953,7 +57183,8 @@
    "kana": "あめおんな",
    "en": [
     "woman who brings the rain with her wherever she goes; woman who is constantly unlucky with the weather"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "雨子",
@@ -55961,7 +57192,8 @@
    "kana": "あまご",
    "en": [
     "land-locked variety of red-spotted masu trout (Oncorhynchus masou ishikawae); amago"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "雨後",
@@ -55986,7 +57218,8 @@
    "en": [
     "being unable to see the (harvest) moon because of rain",
     "fifth lunar month"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "雨林",
@@ -55994,7 +57227,8 @@
    "kana": "うりん",
    "en": [
     "rain forest"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "雨気",
@@ -56002,7 +57236,8 @@
    "kana": "あまけ",
    "en": [
     "signs of rain; threatening to rain"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "雨注",
@@ -56018,7 +57253,8 @@
    "kana": "あめおとこ",
    "en": [
     "man who brings the rain with him wherever he goes; man who is constantly unlucky with the weather"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "雨着",
@@ -56034,7 +57270,8 @@
    "kana": "あまぞら",
    "en": [
     "rainy sky; sky as it looks when it is about to rain"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "雨足",
@@ -56042,7 +57279,8 @@
    "kana": "あまあし",
    "en": [
     "passing shower; streaks of pouring rain"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "雨間",
@@ -56058,7 +57296,8 @@
    "kana": "あまおと",
    "en": [
     "sound of rainfall"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "雨風",
@@ -56188,7 +57427,8 @@
    "kana": "せいてん",
    "en": [
     "blue sky"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "青女",
@@ -56196,7 +57436,8 @@
    "kana": "あおおんな",
    "en": [
     "young girl unused to the ways of the world"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "青書",
@@ -56212,7 +57453,8 @@
    "kana": "あおもり",
    "en": [
     "Aomori (city, prefecture)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "青漢",
@@ -56237,7 +57479,8 @@
    "kana": "せいぎょく",
    "en": [
     "sapphire; jacinth"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "青田",
@@ -56245,7 +57488,8 @@
    "kana": "あおた",
    "en": [
     "green paddy"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "青白",
@@ -56254,7 +57498,8 @@
    "en": [
     "blue and white",
     "paleness; pallidness"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "青目",
@@ -56263,7 +57508,8 @@
    "en": [
     "blue eyes",
     "a Westerner"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "青短",
@@ -56281,7 +57527,8 @@
    "en": [
     "bluish stone; greenish stone",
     "blue-tinged tuff"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "青竹",
@@ -56289,7 +57536,8 @@
    "kana": "あおだけ",
    "en": [
     "green bamboo"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "青肉",
@@ -56306,7 +57554,17 @@
    "kana": "あおばな",
    "en": [
     "spiderwort (alias)"
-   ]
+   ],
+   "g1": true
+  },
+  {
+   "w": "青草",
+   "lv": null,
+   "kana": "あおくさ",
+   "en": [
+    "green grass"
+   ],
+   "g1": true
   },
   {
    "w": "青菜",
@@ -56322,7 +57580,8 @@
    "kana": "あおむし",
    "en": [
     "cabbageworm (caterpillar of the cabbage white butterfly)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "青豆",
@@ -56339,7 +57598,8 @@
    "kana": "あおがい",
    "en": [
     "limpet"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "青金",
@@ -56347,7 +57607,8 @@
    "kana": "あおきん",
    "en": [
     "green gold"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "青青",
@@ -56355,7 +57616,8 @@
    "kana": "あおあお",
    "en": [
     "verdant; fresh and green"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "青馬",
@@ -56396,7 +57658,8 @@
    "kana": "おんりょく",
    "en": [
     "strength of the voice"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "音名",
@@ -56404,7 +57667,8 @@
    "kana": "おんめい",
    "en": [
     "note name; pitch name"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "音図",
@@ -56428,7 +57692,8 @@
    "kana": "おんだい",
    "en": [
     "college of music"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "音字",
@@ -56436,7 +57701,8 @@
    "kana": "おんじ",
    "en": [
     "syllabary; phonetic symbol"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "音度",
@@ -58081,6 +59347,7 @@
    "en": [
     "all year round"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -58091,6 +59358,7 @@
     "annual (plant)",
     "first-year student"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -58109,6 +59377,7 @@
    "en": [
     "all day long; all the day"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -58145,6 +59414,7 @@
    "en": [
     "49th day after death"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -58155,6 +59425,7 @@
     "festival (shrine visit) by children aged 7, 5 and 3",
     "lucky numbers 7, 5 and 3"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -58165,6 +59436,7 @@
     "thirtieth day of the month",
     "thirty days"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -58174,6 +59446,7 @@
    "en": [
     "new moon; crescent moon"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -58374,6 +59647,7 @@
    "en": [
     "junior high school; middle school"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -58383,6 +59657,7 @@
    "en": [
     "junior high school student; middle school pupil"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -58410,6 +59685,7 @@
    "en": [
     "second week's memorial services"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -58429,6 +59705,7 @@
     "twentieth day of the month",
     "twenty days"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -58438,6 +59715,7 @@
    "en": [
     "the Japanese syllabary"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -58456,6 +59734,7 @@
    "en": [
     "rickshaw; jinrikisha"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -58656,6 +59935,7 @@
    "en": [
     "exit and entrance"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -58747,6 +60027,7 @@
     "eleventh day of the month",
     "eleven days"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -58757,6 +60038,7 @@
     "November",
     "eleventh month of the lunar calendar"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -58767,6 +60049,7 @@
     "seventeenth day of the month",
     "seventeen days"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -58777,6 +60060,7 @@
     "thirteenth day of the month",
     "thirteen days"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -58787,6 +60071,7 @@
     "nineteenth day of the month",
     "nineteen days"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -58806,6 +60091,7 @@
     "twelfth day of the month",
     "twelve days"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -58816,6 +60102,7 @@
     "December",
     "twelfth month of the lunar calendar"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -58826,6 +60113,7 @@
     "fifteenth day of the month",
     "fifteen days"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -58836,6 +60124,7 @@
     "eighteenth day of the month",
     "eighteen days"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -58846,6 +60135,7 @@
     "sixteenth day of the month",
     "sixteen days"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -58856,6 +60146,7 @@
     "fourteenth day of the month",
     "fourteen days"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -59138,6 +60429,7 @@
    "en": [
     "university student; college student"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -59167,6 +60459,7 @@
     "uppercase letter; capital letter",
     "large character; large writing"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -59230,6 +60523,7 @@
    "en": [
     "astronomy"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -59239,6 +60533,7 @@
    "en": [
     "women's college; women's university"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -59257,6 +60552,7 @@
    "en": [
     "girls' school"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -59284,6 +60580,7 @@
    "en": [
     "school's name"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -59320,6 +60617,7 @@
    "en": [
     "primary school; elementary school"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -59329,6 +60627,7 @@
    "en": [
     "elementary school student; primary school student"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -59339,6 +60638,7 @@
     "tip of the hand; (use of) one's hands",
     "cheap trick; superficial wit"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -59349,6 +60649,7 @@
     "lowercase letter",
     "small letter"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -59413,6 +60714,7 @@
    "en": [
     "date"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -59485,6 +60787,7 @@
    "en": [
     "person of culture; cultured person"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -59578,6 +60881,7 @@
    "en": [
     "Japan's best; number one in Japan"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -59587,6 +60891,7 @@
    "en": [
     "throughout Japan"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -59596,6 +60901,7 @@
    "en": [
     "Japanese person; Japanese people"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -59877,6 +61183,7 @@
    "en": [
     "biochemistry"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -60524,7 +61831,8 @@
    "en": [
     "November",
     "eleventh month of the lunar calendar"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "一丁前",
@@ -60541,7 +61849,8 @@
    "kana": "いっていじ",
    "en": [
     "single letter; single character"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "一七日",
@@ -60550,7 +61859,8 @@
    "en": [
     "seventh day after a person's death; first seven-day period after a person's death",
     "seven days; one week"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "一万円",
@@ -60566,7 +61876,8 @@
    "kana": "いちにし",
    "en": [
     "four-of-a-kind and a pair in a dealt hand"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "一二月",
@@ -60575,7 +61886,8 @@
    "en": [
     "December",
     "twelfth month of the lunar calendar"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "一人分",
@@ -60591,7 +61903,8 @@
    "kana": "ひとりご",
    "en": [
     "(an) only child"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "一人用",
@@ -60648,7 +61961,8 @@
    "kana": "いちえんだま",
    "en": [
     "one-yen coin"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "一分別",
@@ -60793,7 +62107,8 @@
    "kana": "いっすんさき",
    "en": [
     "an inch ahead; the immediate future"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "一寸見",
@@ -60801,7 +62116,8 @@
    "kana": "ちょっとみ",
    "en": [
     "look; glance"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "一年前",
@@ -60826,6 +62142,15 @@
    "en": [
     "every (one) year"
    ]
+  },
+  {
+   "w": "一年草",
+   "lv": null,
+   "kana": "いちねんそう",
+   "en": [
+    "annual (plant)"
+   ],
+   "g1": true
   },
   {
    "w": "一意名",
@@ -60857,7 +62182,8 @@
    "kana": "いちもんじ",
    "en": [
     "straight line; beeline"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "一日目",
@@ -60865,7 +62191,8 @@
    "kana": "いちにちめ",
    "en": [
     "first day (e.g. at work, school); day one"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "一昔前",
@@ -60889,7 +62216,8 @@
    "kana": "いっぽんか",
    "en": [
     "unification; centralization"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "一本気",
@@ -60897,7 +62225,8 @@
    "kana": "いっぽんぎ",
    "en": [
     "single-minded (esp. personality or person); one-track mind"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "一本道",
@@ -60978,7 +62307,8 @@
    "kana": "ひとあしさき",
    "en": [
     "(a) step ahead; (a) jump ahead"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "一門会",
@@ -61091,7 +62421,8 @@
    "kana": "みなぬか",
    "en": [
     "21st day after death; 21st day after birth"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "三下半",
@@ -61131,7 +62462,8 @@
    "kana": "さんめいざん",
    "en": [
     "Japan's Three Famous Mountains (Mt. Fuji, Mt. Tate and Mt. Haku)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "三四日",
@@ -61139,7 +62471,8 @@
    "kana": "さんよっか",
    "en": [
     "three or four days"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "三回生",
@@ -61188,7 +62521,8 @@
    "kana": "さんねんせい",
    "en": [
     "third-year student"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "三度豆",
@@ -61229,7 +62563,8 @@
    "kana": "さんぼんあし",
    "en": [
     "three legs (two legs and a cane)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "三業地",
@@ -61270,7 +62605,8 @@
    "en": [
     "excellent-good-poor; first-second-third (class)",
     "(in) three volumes (a literary work)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "上代語",
@@ -61311,7 +62647,8 @@
    "kana": "じょうてんき",
    "en": [
     "fine weather; splendid weather"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "上女中",
@@ -61319,7 +62656,8 @@
    "kana": "かみじょちゅう",
    "en": [
     "head servant"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "上手物",
@@ -61399,7 +62737,8 @@
    "kana": "かちゅうおん",
    "en": [
     "submediant"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "下仕事",
@@ -61431,7 +62770,8 @@
    "kana": "しもじょちゅう",
    "en": [
     "kitchen maid"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "下手人",
@@ -61439,7 +62779,8 @@
    "kana": "げしゅにん",
    "en": [
     "offender; criminal"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "下手物",
@@ -61970,7 +63311,8 @@
    "kana": "ちゅうがくねん",
    "en": [
     "middle grades of primary school (third and fourth grades)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "中山道",
@@ -61986,7 +63328,8 @@
    "kana": "ちゅうねんおんな",
    "en": [
     "middle-aged woman"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "中年男",
@@ -61994,7 +63337,8 @@
    "kana": "ちゅうねんおとこ",
    "en": [
     "middle-aged man"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "中年者",
@@ -62042,7 +63386,8 @@
    "kana": "なかにっぽん",
    "en": [
     "central Japan"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "中水道",
@@ -62341,7 +63686,8 @@
    "kana": "にさんにち",
    "en": [
     "two or three days"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "二人分",
@@ -62357,7 +63703,8 @@
    "kana": "ふたりめ",
    "en": [
     "second person"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "二代目",
@@ -62390,7 +63737,8 @@
    "en": [
     "twenty-five",
     "1am"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "二十代",
@@ -62407,7 +63755,8 @@
    "en": [
     "twenty-six",
     "2am"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "二十年",
@@ -62415,7 +63764,8 @@
    "kana": "はたとせ",
    "en": [
     "twenty years"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "二十重",
@@ -62448,7 +63798,17 @@
    "en": [
     "second-year student",
     "biennial"
-   ]
+   ],
+   "g1": true
+  },
+  {
+   "w": "二年草",
+   "lv": null,
+   "kana": "にねんそう",
+   "en": [
+    "biennial plant"
+   ],
+   "g1": true
   },
   {
    "w": "二度目",
@@ -62481,7 +63841,8 @@
    "en": [
     "two (written) characters",
     "Chinese chive; garlic chive (Allium tuberosum)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "二日間",
@@ -62561,7 +63922,8 @@
    "kana": "ごしちご",
    "en": [
     "five-seven-five syllable verse (haiku, senryu, etc.)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "五七日",
@@ -62569,7 +63931,8 @@
    "kana": "ごしちにち",
    "en": [
     "35th day after a person's death"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "五万米",
@@ -62585,7 +63948,8 @@
    "kana": "ごえんだま",
    "en": [
     "5 yen coin"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "五十日",
@@ -62593,7 +63957,8 @@
    "kana": "ごとおび",
    "en": [
     "days of the month ending in 5 or 0 (when payments are often due)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "五大国",
@@ -62618,7 +63983,8 @@
    "en": [
     "five letters; five signs",
     "first five syllables of a waka or haiku"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "五斗米",
@@ -62650,7 +64016,8 @@
    "kana": "さみだれ",
    "en": [
     "early-summer rain"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "五百万",
@@ -62747,7 +64114,8 @@
    "kana": "じんこうがく",
    "en": [
     "demography"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "人地名",
@@ -62771,7 +64139,8 @@
    "kana": "じんこうりん",
    "en": [
     "planted forest"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "人工池",
@@ -62812,7 +64181,8 @@
    "kana": "じんこうう",
    "en": [
     "artificial rain"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "人心地",
@@ -62829,7 +64199,8 @@
    "kana": "ひともじ",
    "en": [
     "arranging a group of people so as to form a character or spell out a message"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "人文学",
@@ -62837,7 +64208,8 @@
    "kana": "じんぶんがく",
    "en": [
     "humanities; arts"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "人新世",
@@ -62885,7 +64257,8 @@
    "kana": "にんきこう",
    "en": [
     "popular school"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "人物画",
@@ -63312,7 +64685,8 @@
    "kana": "きゅうかざん",
    "en": [
     "dormant volcano"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "休茶屋",
@@ -63872,7 +65246,8 @@
    "kana": "せんせんげつ",
    "en": [
     "month before last"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "先先週",
@@ -63896,7 +65271,8 @@
    "kana": "せんにゅうけん",
    "en": [
     "preconception; prejudice"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "先天病",
@@ -64016,7 +65392,8 @@
    "kana": "にゅうしゅつりょく",
    "en": [
     "input and output; input-output"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "入出金",
@@ -64024,7 +65401,8 @@
    "kana": "にゅうしゅっきん",
    "en": [
     "deposit and withdrawal (of money); receiving and making payments"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "入力文",
@@ -64032,7 +65410,8 @@
    "kana": "にゅうりょくぶん",
    "en": [
     "input sentence; input statement"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "入力用",
@@ -64104,7 +65483,8 @@
    "kana": "にゅうがくせい",
    "en": [
     "new student"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "入学者",
@@ -64120,7 +65500,8 @@
    "kana": "にゅうがくきん",
    "en": [
     "matriculation fee"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "入山料",
@@ -64136,7 +65517,8 @@
    "kana": "にゅうしゅさき",
    "en": [
     "source (of supply); channel"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "入母屋",
@@ -64201,7 +65583,8 @@
    "kana": "はちはちばな",
    "en": [
     "standard hanafuda pattern (orig. used to play hachi-hachi)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "八分目",
@@ -64233,7 +65616,17 @@
    "kana": "はっせんねん",
    "en": [
     "8000 years; thousands of years"
-   ]
+   ],
+   "g1": true
+  },
+  {
+   "w": "八千草",
+   "lv": null,
+   "kana": "やちぐさ",
+   "en": [
+    "variety of plants; various herbs"
+   ],
+   "g1": true
   },
   {
    "w": "八文字",
@@ -64241,7 +65634,8 @@
    "kana": "はちもんじ",
    "en": [
     "(in) the shape of the character hachi (eight)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "八正道",
@@ -64257,7 +65651,8 @@
    "kana": "はちおうじ",
    "en": [
     "Hachiōji (city)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "八百万",
@@ -64482,7 +65877,8 @@
    "kana": "ででむし",
    "en": [
     "snail"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "出前持",
@@ -64619,7 +66015,8 @@
    "kana": "しゅっしょうめい",
    "en": [
     "birth name"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "出生地",
@@ -64667,7 +66064,8 @@
    "kana": "でめきん",
    "en": [
     "telescope (variety of goldfish); telescope eye"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "出走馬",
@@ -65069,7 +66467,8 @@
    "kana": "かがくじょう",
    "en": [
     "from the chemical point of view"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "化学品",
@@ -65101,7 +66500,8 @@
    "kana": "かがくしゃ",
    "en": [
     "chemical fire engine"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "化楽天",
@@ -65117,7 +66517,8 @@
    "kana": "かせきがく",
    "en": [
     "paleontology"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "化石水",
@@ -65125,7 +66526,8 @@
    "kana": "かせきすい",
    "en": [
     "fossil water; paleowater"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "北京語",
@@ -65277,7 +66679,8 @@
    "kana": "じゅうさんがつ",
    "en": [
     "January; 13th month"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "十二夜",
@@ -65293,7 +66696,8 @@
    "kana": "じゅうにてん",
    "en": [
     "twelve devas (esp. of the Shingon sect)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "十二時",
@@ -65325,7 +66729,8 @@
    "kana": "じゅうにんりき",
    "en": [
     "the strength of ten"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "十八界",
@@ -65341,7 +66746,8 @@
    "kana": "じゅうはちきん",
    "en": [
     "18-carat gold"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "十六夜",
@@ -65365,7 +66771,8 @@
    "kana": "じゅうえんだま",
    "en": [
     "10 yen coin"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "十姉妹",
@@ -65381,7 +66788,8 @@
    "kana": "じゅうじか",
    "en": [
     "crossfire"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "十字軍",
@@ -65397,7 +66805,8 @@
    "kana": "じゅうもんじ",
    "en": [
     "cross; cruciform"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "十日夜",
@@ -65430,7 +66839,8 @@
    "en": [
     "strength of a thousand men",
     "cloth with the character for \"strength\" written by a thousand men (soldier's charm)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "千代紙",
@@ -65446,7 +66856,8 @@
    "kana": "せんろっぽん",
    "en": [
     "julienne (esp. of daikon); long, thin strips"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "千年説",
@@ -65470,7 +66881,17 @@
    "kana": "せんにちて",
    "en": [
     "repetition of position (in chess, shogi, etc.); repetition draw"
-   ]
+   ],
+   "g1": true
+  },
+  {
+   "w": "千日草",
+   "lv": null,
+   "kana": "せんにちそう",
+   "en": [
+    "globe amaranth"
+   ],
+   "g1": true
   },
   {
    "w": "千里竹",
@@ -65897,7 +67318,8 @@
    "kana": "くちじょうず",
    "en": [
     "being good at conversation; conversationalist"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "口上書",
@@ -65913,7 +67335,8 @@
    "kana": "くちべた",
    "en": [
     "inarticulate; clumsy with words"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "口入屋",
@@ -65929,7 +67352,8 @@
    "kana": "くちはっちょう",
    "en": [
     "voluble; eloquent"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "口分田",
@@ -66195,7 +67619,8 @@
    "kana": "みぎじょうず",
    "en": [
     "right-handed outside grip (on one's opponent's belt)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "右心室",
@@ -66493,7 +67918,8 @@
    "kana": "めいもくじょう",
    "en": [
     "in name; on paper"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "名言集",
@@ -66598,7 +68024,8 @@
    "kana": "よなのか",
    "en": [
     "28th day after death"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "四分六",
@@ -66639,7 +68066,8 @@
    "en": [
     "the Four Heavenly Kings (Dhrtarastra, Virudhaka, Virupaksa, and Vaisravana)",
     "the big four (i.e. four leaders in a given field)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "四年生",
@@ -66647,7 +68075,8 @@
    "kana": "よねんせい",
    "en": [
     "fourth-year student"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "四方竹",
@@ -66671,7 +68100,8 @@
    "kana": "よんほんあし",
    "en": [
     "four-legged; four legs"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "四王天",
@@ -66679,7 +68109,8 @@
    "kana": "しおうてん",
    "en": [
     "heaven of the Four Great Kings; one of the six heavens of the desire realm"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "回回教",
@@ -66903,7 +68334,8 @@
    "kana": "どちゅうすい",
    "en": [
     "soil moisture"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "土台石",
@@ -66935,7 +68367,8 @@
    "kana": "どにちげつ",
    "en": [
     "Saturday, Sunday and Monday"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "土木通",
@@ -67586,7 +69019,8 @@
    "kana": "だいちゅうしょう",
    "en": [
     "large, medium and small (businesses, rooms, etc.)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "大主教",
@@ -67610,7 +69044,8 @@
    "kana": "だいにんき",
    "en": [
     "very popular; highly favoured"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "大人物",
@@ -67666,7 +69101,8 @@
    "kana": "だいせんせい",
    "en": [
     "great teacher; great master"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "大入道",
@@ -67683,7 +69119,8 @@
    "kana": "だいはちぐるま",
    "en": [
     "large two-wheeled wagon"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "大出来",
@@ -67772,7 +69209,8 @@
    "kana": "だいがっこう",
    "en": [
     "educational facility established in affiliation with a government agency"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "大学者",
@@ -67812,7 +69250,8 @@
    "kana": "たいさんぼく",
    "en": [
     "evergreen magnolia (Magnolia grandiflora); southern magnolia"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "大広間",
@@ -67878,7 +69317,8 @@
    "en": [
     "Japan",
     "Yamato (former province located in present-day Nara Prefecture)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "大時化",
@@ -67903,7 +69343,8 @@
    "kana": "だいほんざん",
    "en": [
     "head temple of a Buddhist sect"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "大本教",
@@ -67927,7 +69368,8 @@
    "kana": "おおしょうがつ",
    "en": [
     "first seven days of the year"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "大気光",
@@ -67943,7 +69385,8 @@
    "kana": "おおみずあお",
    "en": [
     "emperor moth (Actias artemis); Japanese moon moth"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "大海馬",
@@ -68031,7 +69474,8 @@
    "kana": "おおめだま",
    "en": [
     "good scolding"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "大社教",
@@ -68088,7 +69532,8 @@
    "kana": "おおあかじ",
    "en": [
     "being greatly in the red; taking a big loss"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "大転子",
@@ -68185,7 +69630,8 @@
    "kana": "てんじょうがわ",
    "en": [
     "river raised above the surrounding land"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "天上界",
@@ -68201,7 +69647,8 @@
    "kana": "てんかいち",
    "en": [
     "unique thing; best on earth"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "天下人",
@@ -68209,7 +69656,8 @@
    "kana": "てんかびと",
    "en": [
     "ruler of the whole country; person who holds the reins of government"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "天主堂",
@@ -68321,7 +69769,8 @@
    "kana": "てんきあめ",
    "en": [
     "sun shower; sudden rain from a blue sky"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "天王山",
@@ -68329,7 +69778,8 @@
    "kana": "てんのうざん",
    "en": [
     "strategic point; crucial time"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "天理教",
@@ -68361,7 +69811,8 @@
    "kana": "てんもくざん",
    "en": [
     "line between victory and defeat"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "天耳通",
@@ -68401,7 +69852,8 @@
    "kana": "てんせいせき",
    "en": [
     "celestite; celestine"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "太刀先",
@@ -68531,7 +69983,8 @@
    "kana": "じょしりょく",
    "en": [
     "woman's level of motivation in fashion, makeup, taste in clothes, etc.; femininity"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "女子校",
@@ -68539,7 +69992,8 @@
    "kana": "じょしこう",
    "en": [
     "girls' school"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "女子用",
@@ -68555,7 +70009,8 @@
    "kana": "おなごだけ",
    "en": [
     "Simon bamboo (Pleioblastus simonii)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "女学生",
@@ -68563,7 +70018,8 @@
    "kana": "じょがくせい",
    "en": [
     "schoolgirl; female student"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "女学院",
@@ -68587,7 +70043,8 @@
    "kana": "おんなもじ",
    "en": [
     "woman's handwriting; hiragana"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "女校長",
@@ -68603,7 +70060,8 @@
    "kana": "おんなしょうがつ",
    "en": [
     "women's New Year (15th day of the first month of the year); New Year for women who were too busy to celebrate on the 1st (Kyoto-Osaka)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "女王国",
@@ -69165,7 +70623,8 @@
    "kana": "こうなご",
    "en": [
     "young lancefish; young sand lance"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "小家族",
@@ -69247,7 +70706,8 @@
    "kana": "シャオリーベン",
    "en": [
     "Japanese person; Jap"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "小春日",
@@ -69271,7 +70731,8 @@
    "kana": "こしょうがつ",
    "en": [
     "Little New Year (festival held on January 15); 14th-16th days of the first month of the year"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "小気味",
@@ -69287,7 +70748,8 @@
    "kana": "こたまがい",
    "en": [
     "Gomphina melanegis (species of Venus clam)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "小玉銀",
@@ -69505,7 +70967,8 @@
    "kana": "さんりんがく",
    "en": [
     "forestry"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "山母子",
@@ -69569,7 +71032,8 @@
    "kana": "かわやつめ",
    "en": [
     "Arctic lamprey (Lethenteron camtschaticum)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "川千鳥",
@@ -69593,7 +71057,8 @@
    "kana": "かわあなご",
    "en": [
     "spinycheek sleeper (Eleotris oxycephala); spined sleeper"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "工作品",
@@ -69658,7 +71123,8 @@
    "kana": "くんくんしい",
    "en": [
     "notation system for the sanshin"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "工業化",
@@ -69707,7 +71173,8 @@
    "kana": "ひだりじょうず",
    "en": [
     "left-handed outside grip (on one's opponent's belt)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "左中間",
@@ -70230,7 +71697,8 @@
    "kana": "てにゅうりょく",
    "en": [
     "manual input"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "手八丁",
@@ -70238,7 +71706,8 @@
    "kana": "てはっちょう",
    "en": [
     "eloquence; cleverness in speaking"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "手土産",
@@ -70900,7 +72369,8 @@
    "en": [
     "Surya (Hindu sun god also revered as one of the twelve devas in Shingon Buddhism)",
     "sun"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "日時計",
@@ -70916,7 +72386,8 @@
    "kana": "にちげつか",
    "en": [
     "Sunday, Monday and Tuesday"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "日朝間",
@@ -70932,7 +72403,8 @@
    "kana": "にほんえん",
    "en": [
     "Japanese yen"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "日本化",
@@ -70940,7 +72412,8 @@
    "kana": "にほんか",
    "en": [
     "Japanization; Japanisation"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "日本国",
@@ -70956,7 +72429,8 @@
    "kana": "にほんじ",
    "en": [
     "Japanese character (i.e. kana, kanji)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "日本学",
@@ -70964,7 +72438,8 @@
    "kana": "にほんがく",
    "en": [
     "Japanology"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "日本文",
@@ -70972,7 +72447,8 @@
    "kana": "にほんぶん",
    "en": [
     "Japanese writing; Japanese text"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "日本新",
@@ -70988,7 +72464,8 @@
    "kana": "にほんけん",
    "en": [
     "Japanese dog breed (i.e. Shiba, Akita)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "日本町",
@@ -70996,7 +72473,8 @@
    "kana": "にほんまち",
    "en": [
     "Japantown (esp. historical Japantowns in Southeast Asia founded in the 16th-17th centuries)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "日本病",
@@ -71028,7 +72506,8 @@
    "kana": "にほんしゃ",
    "en": [
     "Japanese car; car of Japanese make"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "日本軍",
@@ -71496,7 +72975,8 @@
    "en": [
     "Chandra (Hindu moon god also revered as one of the twelve devas in Shingon Buddhism)",
     "moon"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "月水金",
@@ -71504,7 +72984,8 @@
    "kana": "げっすいきん",
    "en": [
     "Mon-Wed-Fri"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "月火水",
@@ -71512,7 +72993,17 @@
    "kana": "げつかすい",
    "en": [
     "Monday, Tuesday and Wednesday"
-   ]
+   ],
+   "g1": true
+  },
+  {
+   "w": "月見草",
+   "lv": null,
+   "kana": "つきみそう",
+   "en": [
+    "evening primrose (esp. the fourwing evening primrose, Oenothera tetraptera)"
+   ],
+   "g1": true
   },
   {
    "w": "月長石",
@@ -71689,7 +73180,8 @@
    "kana": "きのしたせき",
    "en": [
     "kinoshitalite"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "木化石",
@@ -71697,7 +73189,8 @@
    "kana": "もくかせき",
    "en": [
     "fossil wood"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "木太刀",
@@ -71753,7 +73246,8 @@
    "kana": "もくきんど",
    "en": [
     "Thursday, Friday and Saturday"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "木食虫",
@@ -71932,7 +73426,8 @@
    "kana": "ほんどじん",
    "en": [
     "mainlander; person from the mainland"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "本場所",
@@ -71981,6 +73476,15 @@
    "en": [
     "present invention"
    ]
+  },
+  {
+   "w": "本草学",
+   "lv": null,
+   "kana": "ほんぞうがく",
+   "en": [
+    "study of plants, minerals, and animals for use in Chinese medicine; herbalism"
+   ],
+   "g1": true
   },
   {
    "w": "本試験",
@@ -72260,7 +73764,8 @@
    "kana": "しんりんがく",
    "en": [
     "forestry"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "業界人",
@@ -72582,7 +74087,8 @@
    "kana": "みずかみしも",
    "en": [
     "light blue samurai costume commonly worn when committing suicide"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "水不足",
@@ -72598,7 +74104,8 @@
    "kana": "すいちゅうか",
    "en": [
     "type of artificial flower which \"blossoms\" when placed in water"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "水仕事",
@@ -72622,7 +74129,8 @@
    "kana": "みずさきにん",
    "en": [
     "(boat) pilot"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "水力学",
@@ -72630,7 +74138,8 @@
    "kana": "すいりきがく",
    "en": [
     "hydraulics"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "水化物",
@@ -72654,7 +74163,8 @@
    "kana": "すいじがい",
    "en": [
     "spider conch (Lambis chiragra)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "水文学",
@@ -72662,7 +74172,8 @@
    "kana": "すいもんがく",
    "en": [
     "hydrology"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "水時計",
@@ -72678,7 +74189,8 @@
    "kana": "すいもくきん",
    "en": [
     "Wednesday, Thursday and Friday"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "水死体",
@@ -73022,7 +74534,8 @@
    "kana": "かざんがく",
    "en": [
     "volcanology; vulcanology"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "火工品",
@@ -73038,7 +74551,8 @@
    "kana": "かもくど",
    "en": [
     "Tue-Thurs-Sat"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "火木金",
@@ -73046,7 +74560,8 @@
    "kana": "かもくきん",
    "en": [
     "Tuesday, Thursday and Friday"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "火水木",
@@ -73054,7 +74569,8 @@
    "kana": "かすいもく",
    "en": [
     "Tuesday, Wednesday and Thursday"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "火水母",
@@ -73288,7 +74804,8 @@
    "kana": "いぬしで",
    "en": [
     "Chonowski's hornbeam (Carpinus tschonoskii)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "犬小屋",
@@ -73360,7 +74877,8 @@
    "kana": "きいっぽん",
    "en": [
     "straight-forwardness; honesty"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "生体学",
@@ -73547,6 +75065,15 @@
    ]
   },
   {
+   "w": "田字草",
+   "lv": null,
+   "kana": "でんじそう",
+   "en": [
+    "European waterclover (Marsilea quadrifolia); pepperwort"
+   ],
+   "g1": true
+  },
+  {
    "w": "田計里",
    "lv": "N4",
    "kana": "たげり",
@@ -73633,7 +75160,8 @@
    "kana": "だんしこう",
    "en": [
     "boys' school"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "男子用",
@@ -73657,7 +75185,8 @@
    "kana": "おとこもじ",
    "en": [
     "man's handwriting; kanji"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "男社会",
@@ -74010,7 +75539,8 @@
    "kana": "はくちょうげ",
    "en": [
     "snowrose (Serissa japonica); tree of a thousand stars"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "白亜質",
@@ -74050,7 +75580,8 @@
    "kana": "しろもじ",
    "en": [
     "Lindera triloba (species of spicebush)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "白木耳",
@@ -74058,7 +75589,8 @@
    "kana": "しろきくらげ",
    "en": [
     "snow fungus (Tremella fuciformis); silver ear fungus"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "白百合",
@@ -74122,7 +75654,8 @@
    "kana": "ひゃくにんりき",
    "en": [
     "tremendous strength; strength of a hundred people"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "百円玉",
@@ -74130,7 +75663,8 @@
    "kana": "ひゃくえんだま",
    "en": [
     "100 yen coin"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "百千万",
@@ -74163,7 +75697,8 @@
    "kana": "ひゃくめいざん",
    "en": [
     "one hundred famous mountains (of Japan)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "百声鳥",
@@ -74188,7 +75723,8 @@
    "en": [
     "the hundredth year",
     "out of luck; (at the) end of one's rope"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "百度石",
@@ -74197,6 +75733,15 @@
    "en": [
     "stone used as a marker for hundred times worship"
    ]
+  },
+  {
+   "w": "百日草",
+   "lv": null,
+   "kana": "ひゃくにちそう",
+   "en": [
+    "zinnia"
+   ],
+   "g1": true
   },
   {
    "w": "百物語",
@@ -74534,7 +76079,8 @@
    "kana": "いしだいく",
    "en": [
     "stonemason; mason"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "石川県",
@@ -74558,7 +76104,8 @@
    "kana": "いしむかで",
    "en": [
     "stone centipede (Lithobiomorpha spp.)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "石竹色",
@@ -74888,7 +76435,8 @@
    "kana": "からへた",
    "en": [
     "utterly lacking (in ability); hopeless"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "空元気",
@@ -74944,7 +76492,8 @@
    "kana": "くうきこう",
    "en": [
     "vent"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "空気穴",
@@ -74952,7 +76501,8 @@
    "kana": "くうきあな",
    "en": [
     "air vent (hole)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "空白化",
@@ -74960,7 +76510,8 @@
    "kana": "くうはくか",
    "en": [
     "blanking"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "空白区",
@@ -74976,7 +76527,8 @@
    "kana": "くうはくぶん",
    "en": [
     "empty statement"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "空軍力",
@@ -75000,7 +76552,8 @@
    "kana": "たてさんぼん",
    "en": [
     "three-of-a-kind (in a dealt hand) of the April, May, July, or December suit"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "立会人",
@@ -75457,7 +77010,8 @@
    "kana": "はなもじ",
    "en": [
     "ornate initial; capital letters"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "花時計",
@@ -75473,7 +77027,8 @@
    "kana": "はなみずき",
    "en": [
     "flowering dogwood (Cornus florida)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "花見時",
@@ -75489,7 +77044,8 @@
    "kana": "はなみづき",
    "en": [
     "third lunar month"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "花野菜",
@@ -76348,7 +77904,8 @@
    "kana": "せきじゅうじ",
    "en": [
     "Red Cross"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "赤古里",
@@ -76364,7 +77921,8 @@
    "kana": "あかしで",
    "en": [
     "loose-flowered hornbeam (Carpinus laxiflora); akashide"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "赤新聞",
@@ -76380,7 +77938,8 @@
    "kana": "あかきくらげ",
    "en": [
     "golden ear (Tremella aurantia)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "赤水母",
@@ -76524,7 +78083,8 @@
    "kana": "くるまだいく",
    "en": [
     "cartwright"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "車用品",
@@ -77551,7 +79111,8 @@
    "kana": "きんどにち",
    "en": [
     "Friday, Saturday and Sunday"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "金地金",
@@ -77575,7 +79136,8 @@
    "kana": "きんもじ",
    "en": [
     "gold or gilt letters"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "金明竹",
@@ -77640,7 +79202,8 @@
    "kana": "きんせきがく",
    "en": [
     "epigraphy"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "金石文",
@@ -77648,7 +79211,8 @@
    "kana": "きんせきぶん",
    "en": [
     "epigraph on a stone monument; ancient inscriptions on monuments"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "金花虫",
@@ -77656,7 +79220,8 @@
    "kana": "はむし",
    "en": [
     "leaf beetle (of family Chrysomelidae)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "金赤色",
@@ -78210,6 +79775,15 @@
    ]
   },
   {
+   "w": "青人草",
+   "lv": null,
+   "kana": "あおひとくさ",
+   "en": [
+    "the people; the public"
+   ],
+   "g1": true
+  },
+  {
    "w": "青化物",
    "lv": "N4",
    "kana": "せいかぶつ",
@@ -78231,7 +79805,8 @@
    "kana": "あおもじ",
    "en": [
     "Litsea cubeba"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "青森県",
@@ -78295,7 +79870,8 @@
    "kana": "せいきんせき",
    "en": [
     "Lazurite"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "青電話",
@@ -78949,6 +80525,7 @@
    "en": [
     "each (person); individually"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -78978,6 +80555,7 @@
     "thirty-first day of the month",
     "thirty-one days"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -79006,6 +80584,7 @@
     "twenty-first day of the month",
     "twenty-one days"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -79016,6 +80595,7 @@
     "twenty-seventh day of the month",
     "twenty-seven days"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -79026,6 +80606,7 @@
     "twenty-third day of the month",
     "twenty-three days"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -79036,6 +80617,7 @@
     "twenty-ninth day of the month",
     "twenty-nine days"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -79046,6 +80628,7 @@
     "twenty-second day of the month",
     "twenty-two days"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -79056,6 +80639,7 @@
     "twenty-fifth day of the month",
     "twenty-five days"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -79066,6 +80650,7 @@
     "twenty-eighth day of the month",
     "twenty-eight days"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -79076,6 +80661,7 @@
     "twenty-sixth day of the month",
     "twenty-six days"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -79086,6 +80672,7 @@
     "twenty-fourth day of the month",
     "twenty-four days"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -79095,6 +80682,7 @@
    "en": [
     "210th day (from the first day of spring according to the lunar calendar); the storm day"
    ],
+   "g1": true,
    "common": true,
    "yoji": true
   },
@@ -79215,6 +80803,7 @@
    "en": [
     "elementary and middle school pupils"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -79297,6 +80886,7 @@
    "en": [
     "birth date; date of birth"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -79407,6 +80997,7 @@
    "en": [
     "up and down"
    ],
+   "g1": true,
    "yoji": true
   },
   {
@@ -79442,6 +81033,7 @@
    "en": [
     "being the sole master of the situation; reigning supreme"
    ],
+   "g1": true,
    "yoji": true
   },
   {
@@ -79547,6 +81139,7 @@
    "en": [
     "letter by letter; character by character"
    ],
+   "g1": true,
    "yoji": true
   },
   {
@@ -79556,6 +81149,7 @@
    "en": [
     "word of great value"
    ],
+   "g1": true,
    "yoji": true
   },
   {
@@ -79635,7 +81229,8 @@
    "en": [
     "gradually; day by day",
     "every day; each day"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "一日一歩",
@@ -79662,6 +81257,7 @@
    "en": [
     "a day or two"
    ],
+   "g1": true,
    "yoji": true
   },
   {
@@ -79713,6 +81309,16 @@
    "en": [
     "(when) the time of need arises; should an emergency occur"
    ],
+   "yoji": true
+  },
+  {
+   "w": "一木一草",
+   "lv": null,
+   "kana": "いちぼくいっそう",
+   "en": [
+    "a single tree or blade of grass; every stick and stone (of a place)"
+   ],
+   "g1": true,
    "yoji": true
   },
   {
@@ -79781,7 +81387,8 @@
    "kana": "ひとめせんぼん",
    "en": [
     "place where one can view a vast number of cherry blossom trees at a glance"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "一石三鳥",
@@ -79921,6 +81528,7 @@
    "en": [
     "in groups of twos and threes; in small groups"
    ],
+   "g1": true,
    "yoji": true
   },
   {
@@ -79962,7 +81570,8 @@
    "kana": "みそかづき",
    "en": [
     "new moon; lunar phase when the moon is completely invisible"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "三千世界",
@@ -80039,6 +81648,7 @@
    "en": [
     "short-lived rule; being in power only for a brief period"
    ],
+   "g1": true,
    "yoji": true
   },
   {
@@ -80066,6 +81676,7 @@
    "en": [
     "up and down, left and right; top and bottom, left and right"
    ],
+   "g1": true,
    "yoji": true
   },
   {
@@ -80108,6 +81719,7 @@
    "en": [
     "differences in skill"
    ],
+   "g1": true,
    "yoji": true
   },
   {
@@ -80140,7 +81752,8 @@
    "kana": "げじょげなん",
    "en": [
     "servants"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "下手上手",
@@ -80148,7 +81761,8 @@
    "kana": "へたうま",
    "en": [
     "at first glance poor, but on closer examination skillful (of artwork, etc.); crude but charming"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "下水工事",
@@ -80669,6 +82283,7 @@
    "en": [
     "the 24 seasonal divisions of a year in the old lunar calendar"
    ],
+   "g1": true,
    "yoji": true
   },
   {
@@ -80721,6 +82336,7 @@
    "en": [
     "dirt cheap; very cheap"
    ],
+   "g1": true,
    "yoji": true
   },
   {
@@ -80812,7 +82428,8 @@
    "kana": "ごじゅうえんだま",
    "en": [
     "50 yen coin"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "五十音図",
@@ -80877,7 +82494,8 @@
    "kana": "ごひゃくえんだま",
    "en": [
     "500 yen coin"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "五風十雨",
@@ -81303,7 +82921,8 @@
    "kana": "にゅうしゅつりょくぶん",
    "en": [
     "input-output statement"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "入力方式",
@@ -81361,7 +82980,8 @@
    "kana": "やっとかめ",
    "en": [
     "a long time (since the last time); it's been a while (since I last saw, mailed, etc., you)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "八大明王",
@@ -81377,7 +82997,8 @@
    "kana": "はちがつだいみょう",
    "en": [
     "the 8th month has the least work for farmers"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "八百八寺",
@@ -81395,6 +83016,7 @@
    "en": [
     "the whole enormous extent of Edo; from one side of Edo to the other"
    ],
+   "g1": true,
    "yoji": true
   },
   {
@@ -81606,7 +83228,8 @@
    "kana": "かがくかせき",
    "en": [
     "chemical fossil"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "化学工場",
@@ -81622,7 +83245,8 @@
    "kana": "かがくこうがく",
    "en": [
     "chemical engineering"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "化学工業",
@@ -81775,6 +83399,7 @@
    "en": [
     "in 8 or 9 cases out of ten; in all probability"
    ],
+   "g1": true,
    "yoji": true
   },
   {
@@ -81809,6 +83434,7 @@
    "en": [
     "without intermission for ten (long) years; with constancy of purpose for ten (long) years"
    ],
+   "g1": true,
    "yoji": true
   },
   {
@@ -81835,7 +83461,8 @@
    "en": [
     "babies born on October 10, supposedly conceived on New Year's Day",
     "normal gestation time (i.e. 9 months)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "十死一生",
@@ -81898,6 +83525,7 @@
    "en": [
     "without intermission for many years; with constancy of purpose for many years"
    ],
+   "g1": true,
    "yoji": true
   },
   {
@@ -81991,7 +83619,8 @@
    "kana": "くちさきさんずん",
    "en": [
     "glib tongue; eloquence or flattery designed to deceive"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "口答試問",
@@ -82225,7 +83854,8 @@
    "kana": "めいじんじょうず",
    "en": [
     "person who is a cut above the rest"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "名人気質",
@@ -82325,6 +83955,7 @@
    "en": [
     "forty-ninth day after a person's death"
    ],
+   "g1": true,
    "yoji": true
   },
   {
@@ -82335,6 +83966,7 @@
     "the 48 basic techniques",
     "every trick in the book"
    ],
+   "g1": true,
    "yoji": true
   },
   {
@@ -82627,7 +84259,8 @@
    "kana": "どぼくこうがく",
    "en": [
     "civil engineering"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "土産品店",
@@ -83078,6 +84711,15 @@
    ]
   },
   {
+   "w": "大文字草",
+   "lv": null,
+   "kana": "だいもんじそう",
+   "en": [
+    "Saxifraga fortunei var. alpina (species of rockfoil flower)"
+   ],
+   "g1": true
+  },
+  {
    "w": "大東亜語",
    "lv": "N4",
    "kana": "だいとうあご",
@@ -83107,7 +84749,8 @@
    "kana": "てんいちてんじょう",
    "en": [
     "days on which Ten'ichijin is in heaven (the 30th to the 45th days of the sexagenary cycle)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "天上天下",
@@ -83116,6 +84759,7 @@
    "en": [
     "the whole world; throughout heaven and earth"
    ],
+   "g1": true,
    "yoji": true
   },
   {
@@ -83235,7 +84879,8 @@
    "kana": "じょしだいがく",
    "en": [
     "women's college"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "女子大生",
@@ -83243,7 +84888,8 @@
    "kana": "じょしだいせい",
    "en": [
     "female university student; female college student"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "女子学生",
@@ -83251,7 +84897,8 @@
    "kana": "じょしがくせい",
    "en": [
     "female student"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "女子校生",
@@ -83259,7 +84906,8 @@
    "kana": "じょしこうせい",
    "en": [
     "student of a girls' school"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "女子短大",
@@ -83528,7 +85176,8 @@
    "kana": "しょうちゅうがっこう",
    "en": [
     "elementary and middle schools"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "小夜時雨",
@@ -83572,6 +85221,15 @@
    ]
   },
   {
+   "w": "小草生月",
+   "lv": null,
+   "kana": "おぐさおいづき",
+   "en": [
+    "second lunar month"
+   ],
+   "g1": true
+  },
+  {
    "w": "小間物屋",
    "lv": "N4",
    "kana": "こまものや",
@@ -83610,6 +85268,16 @@
    "en": [
     "being far away across mountains and rivers"
    ],
+   "yoji": true
+  },
+  {
+   "w": "山川草木",
+   "lv": null,
+   "kana": "さんせんそうもく",
+   "en": [
+    "nature; natural scenery"
+   ],
+   "g1": true,
    "yoji": true
   },
   {
@@ -83682,7 +85350,8 @@
    "kana": "とみこうみ",
    "en": [
     "looking to and fro"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "市中銀行",
@@ -83796,6 +85465,7 @@
    "en": [
     "throughout the year; all the year round"
    ],
+   "g1": true,
    "yoji": true
   },
   {
@@ -84092,7 +85762,8 @@
    "kana": "もじにゅうりょく",
    "en": [
     "text entry; character entry"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "文字回転",
@@ -84140,7 +85811,8 @@
    "kana": "ぶんがくせいねん",
    "en": [
     "young literary enthusiast"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "文教地区",
@@ -84359,7 +86031,8 @@
    "kana": "にほんじんまち",
    "en": [
     "Japantown (esp. historical Japantowns in Southeast Asia founded in the 16th-17th centuries)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "日本国外",
@@ -84415,7 +86088,8 @@
    "kana": "にほんぶんがく",
    "en": [
     "Japanese literature"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "日本時間",
@@ -84431,7 +86105,8 @@
    "kana": "にほんほんど",
    "en": [
     "Japan proper (sometimes excluding the Ryukyu islands and other remote islands); mainland Japan"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "日本語化",
@@ -84676,7 +86351,8 @@
    "kana": "げつかすいもく",
    "en": [
     "Monday, Tuesday, Wednesday and Thursday"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "有体動産",
@@ -85413,7 +87089,8 @@
    "kana": "かすいもくきん",
    "en": [
     "Tuesday, Wednesday, Thursday and Friday"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "牛頭天王",
@@ -85722,7 +87399,8 @@
    "kana": "だんしがくせい",
    "en": [
     "male student"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "男子高校",
@@ -85865,6 +87543,7 @@
    "en": [
     "very short-lived regime; very brief reign"
    ],
+   "g1": true,
    "yoji": true
   },
   {
@@ -86157,7 +87836,8 @@
    "kana": "くうきりきがく",
    "en": [
     "aerodynamics"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "空白文字",
@@ -86165,7 +87845,8 @@
    "kana": "くうはくもじ",
    "en": [
     "space character"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "空白時間",
@@ -87698,6 +89379,7 @@
    "en": [
     "being cleared of all the charge (brought against one); being found completely innocent"
    ],
+   "g1": true,
    "yoji": true
   },
   {

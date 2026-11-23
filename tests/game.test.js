@@ -965,7 +965,7 @@ test("レベル N4：山は N5＋N4 の字を2枚ずつ。ログの頭にレベ�
   const g = newGame(3, "normal", "N4");
   assert.equal(g.level, "N4");
   const total = g.deck.length + g.me.cards.length + g.cpu.cards.length + g.field.length;
-  assert.equal(total, D.kanji.count * D.rules.same_char_in_deck);
+  assert.equal(total, (D.kanji.count_by_level.N5 + D.kanji.count_by_level.N4) * D.rules.same_char_in_deck);
   const head = g.logText().split("\n").filter((l) => l.startsWith("#")).join("\n");
   assert.match(head, /# レベル N4（N5＋N4 の字）/);
   assert.match(head, /山=N4 の字を2枚ずつ/);
