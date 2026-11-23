@@ -35,9 +35,9 @@ test("小1：山に入る字はちょうど80字で、80字の外は入らない
 });
 
 test("小1：N5・N4 は小1 を足したことでは動かない（N4 の数は小1 を足す前のまま。N5 は P-047 で 玉＝王＋丶 を足して 王・止 が手に持てる字になり、語が38語 N4→N5）", () => {
-  // 語の数は KJ-032（地名・名字を足す・買春 売春 を外す）で N5 2458→2466・N4 10438→10460。字と手に持てる字は動かない
-  assert.deepEqual([T.CHARS.size, T.WORDS.size, T.HOLD.size], [103, 2466, 140]);
-  assert.deepEqual([T4.CHARS.size, T4.WORDS.size, T4.HOLD.size], [284, 10460, 353]);
+  // 語の数は KJ-032（地名・名字を足す・買春 売春 を外す）で N5 2458→2466・N4 10438→10460。KJ-068（D-087）で 売女・売色 も全レベルで外し N5 2465・N4 10458。字と手に持てる字は動かない
+  assert.deepEqual([T.CHARS.size, T.WORDS.size, T.HOLD.size], [103, 2465, 140]);
+  assert.deepEqual([T4.CHARS.size, T4.WORDS.size, T4.HOLD.size], [284, 10458, 353]);
   for (const w of T4.WORDS.values()) assert.ok(w.lv === "N5" || w.lv === "N4", w.w);
   for (const w of D.words.words.filter((x) => x.lv === null)) assert.ok(w.g1 && !T4.WORDS.has(w.w) && !T.WORDS.has(w.w), `${w.w} は小1 だけの語`);
 });
@@ -45,7 +45,9 @@ test("小1：N5・N4 は小1 を足したことでは動かない（N4 の数は
 test("小1：放てる言葉は、80字と、割る・くっつけるなどで手に持てる字だけで書ける語。1字から四字熟語まで", () => {
   const ws = [...TG1.WORDS.values()];
   assert.ok(ws.length > 1000 && ws.length < 1700, `語 ${ws.length}`);
-  assert.equal(ws.length, D.words.stats.by_level.G1.total);
+  // 小1 だけ外す語（data/blocked_words_g1.json）のうち、小1 の字で書ける語（KJ-068：工口・花町）の分だけ、統計より少ない
+  const g1Writable = D.blocked_words_g1.words.filter((x) => D.words.words.some((w) => w.w === x && w.g1)).length;
+  assert.equal(ws.length, D.words.stats.by_level.G1.total - g1Writable);
   assert.equal(TG1.HOLD.size, D.words.stats.hold_by_level.G1);
   for (const w of ws) for (const c of w.w) assert.ok(TG1.HOLD.has(c), `${w.w} の ${c}`);
   for (const n of [1, 2, 3, 4]) assert.ok(ws.some((w) => [...w.w].length === n), `${n}字の語がある`);
@@ -148,7 +150,17 @@ test("小1 だけ外す語：一覧の語は小1 で放てない・N5 N4 では�
   // 本物の一覧の語は、小1 の手に持てる字では作れない（買 が80字にない）ので、いまは何も外れない。N4 には効かない
   // 買春 は KJ-032（D-048）で全レベルの一覧（data/blocked_words.json）にも入り、words から外れた。N4 にも無い
   assert.ok(!TG1.WORDS.has("買春") && !T4.WORDS.has("買春"), "買春：小1 にも N4 にも無い（全レベルで外した）");
-  assert.equal(TG1.WORDS.size, D.words.stats.by_level.G1.total, "本物の一覧では小1 の語の数は変わらない");
+  // KJ-068（D-087）：小1 だけ外す語は8語。小1 の字で書ける 工口・花町 の2語だけが小1 の表から外れる（残り6語は手に持てない字を含むので、もとから小1 に無い）
+  assert.deepEqual([...D.blocked_words_g1.words].sort(), ["買春", "飯売女", "引手茶屋", "穴兄弟", "未通女", "肉体文学", "合意心中", "工口", "花町"].sort());
+  for (const w of ["工口", "花町"]) assert.ok(!TG1.WORDS.has(w) && !TG1.COMMON_WORDS.some((x) => x.w === w), `${w}：小1 では外れる（CPU も使わない）`);
+  for (const w of ["工口", "花町"]) assert.ok(T4.WORDS.has(w), `${w}：N4 では残る`);
+  assert.ok(T.WORDS.has("工口"), "工口：N5 でも残る");
+  for (const w of ["飯売女", "引手茶屋", "穴兄弟", "未通女", "肉体文学", "合意心中"]) {
+    assert.ok(!TG1.WORDS.has(w), `${w}：小1 では放てない`);
+    assert.ok(T4.WORDS.has(w), `${w}：N4 では今まで通り放てる`);
+  }
+  assert.equal(TG1.WORDS.size, D.words.stats.by_level.G1.total - 2, "小1 の表は、工口・花町 の2語だけ統計より少ない");
+  assert.equal(TG1.BLOCKED.size, D.blocked_words_g1.words.length);
   assert.equal(T4.BLOCKED.size, 0);
   assert.equal(T.BLOCKED.size, 0);
   // 小1 で放てる語を一覧に入れた版で確かめる（山川・大人）
@@ -156,7 +168,7 @@ test("小1 だけ外す語：一覧の語は小1 で放てない・N5 N4 では�
   const L1 = K.makeTables(D2, "G1"), L4 = K.makeTables(D2, "N4"), L5 = K.makeTables(D2, "N5");
   assert.ok(TG1.WORDS.has("山川") && TG1.WORDS.has("大人"), "もとは放てる語");
   assert.ok(!L1.WORDS.has("山川") && !L1.WORDS.has("大人"), "小1 では語の表から外れる");
-  assert.equal(L1.WORDS.size, TG1.WORDS.size - 2);
+  assert.equal(L1.WORDS.size, D.words.stats.by_level.G1.total - 2, "差し替えた一覧（山川・大人）の分だけ、統計より2語少ない");
   assert.ok(L4.WORDS.has("山川") && L4.WORDS.has("大人") && L5.WORDS.has("山川"), "N5・N4 では放てる");
   assert.ok(!L1.COMMON_WORDS.some((w) => w.w === "山川" || w.w === "大人"), "CPU は使わない");
   // 放てない：手札に 山川 を持っていても、小1 ではじかれる。N4 では通る

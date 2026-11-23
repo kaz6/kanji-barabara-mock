@@ -1947,9 +1947,9 @@ test("玉＝王＋丶：N5 でも 王 を含む語（国王・王女 など）�
     assert.equal(T.WORDS.get(w).lv, "N5", w);
     assert.ok(T4.WORDS.has(w), `N4：${w}`);
   }
-  // KJ-032 で地名・名字を足し（N5 +8・N4 +24）、全レベルで 買春・売春 を外した（N4 −2）：N5 2458→2466・N4 10438→10460
-  assert.equal(T.WORDS.size, 2466);
-  assert.equal(T4.WORDS.size, 10460);
+  // KJ-032 で地名・名字を足し（N5 +8・N4 +24）、全レベルで 買春・売春 を外した（N4 −2）：N5 2458→2466・N4 10438→10460。KJ-068（D-087）で 売女・売色 も外した（売色 は N5・N4 に、売女 は N4 だけにあった）：N5 2465・N4 10458
+  assert.equal(T.WORDS.size, 2465);
+  assert.equal(T4.WORDS.size, 10458);
 });
 
 test("玉＝王＋丶・主＝丶＋王：面で落とす。丶 を 王 の上に落とすと 主、下に落とすと 玉（N4）", () => {
