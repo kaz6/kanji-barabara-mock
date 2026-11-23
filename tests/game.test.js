@@ -1803,3 +1803,24 @@ test("大＋丶：N5 では 太・犬 は出ない（N4 の字）", () => {
   assert.deepEqual(K.joinResults(T, "大", "丶"), []);
   assert.equal(T.parts["犬"], undefined);
 });
+
+test("相手の選び（KJ-045）：遊び方は3つ・強さは3つ。前の形のキーを新しい形に読み替える。中のキーとログの書き方は変えない", () => {
+  assert.deepEqual(K.PLAY_MODES.map((o) => o.label), ["ひとりで", "CPU と", "友だちと（合言葉）"]);
+  assert.deepEqual(K.CPU_POWERS.map((o) => [o.key, o.label]), [["weak", "とても弱い"], ["fair", "ふつう"], ["normal", "つよい"]]);
+  // 中のキーは前のまま（ログ・CPU の間隔・部屋が使う）
+  assert.deepEqual(K.OPPONENTS.map((o) => o.key), ["solo", "weak", "fair", "normal"]);
+  assert.equal(K.ROOM_OPPONENT.key, "room");
+  const D = { rules: { opponent_default: "weak" } };
+  assert.deepEqual(K.readOpponent(D, "room"), { key: "room", mode: "room", power: "weak" });
+  assert.deepEqual(K.readOpponent(D, "solo"), { key: "solo", mode: "solo", power: "weak" });
+  assert.deepEqual(K.readOpponent(D, "weak"), { key: "weak", mode: "cpu", power: "weak" });
+  assert.deepEqual(K.readOpponent(D, "fair"), { key: "fair", mode: "cpu", power: "fair" });
+  assert.deepEqual(K.readOpponent(D, "normal"), { key: "normal", mode: "cpu", power: "normal" });
+  for (const bad of [null, undefined, "", "ばか", "cpu", "tutorial"]) assert.deepEqual(K.readOpponent(D, bad), { key: "weak", mode: "cpu", power: "weak" }, `読めない値 ${bad} は CPU と＋とても弱い`);
+  assert.equal(K.opponentKey("solo", "fair"), "solo");
+  assert.equal(K.opponentKey("room", "fair"), "room");
+  assert.equal(K.opponentKey("cpu", "fair"), "fair");
+  assert.equal(K.opponentKey("cpu", "ばか"), "weak");
+  // 画面の初期値は rules.opponent_default（いまの数値ファイルで CPU と＋とても弱い）
+  assert.deepEqual(K.readOpponent(D, null), { key: "weak", mode: "cpu", power: "weak" });
+});
