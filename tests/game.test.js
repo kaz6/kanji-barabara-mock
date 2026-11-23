@@ -1633,7 +1633,7 @@ test("KJ-037 ヒント：段3 どれも無ければ Redraw のボタンが光る
   assert.ok(g2.log.some((e) => e.op === "ヒント" && e.note.includes("使いきった")), "ログには残す");
 });
 
-test("KJ-037 ヒント：光るのは10秒か次に手札を動かすまで。選ぶ・外すだけ（画面）では消えない。ログに残る（狙った言葉はログにだけ）", () => {
+test("KJ-037・KJ-065 ヒント：光るのは10秒。ほかの手（札を動かす・別の言葉を放つ）をしても残る。ログに残る（狙った言葉はログにだけ）", () => {
   const g = newGame(1, "weak", "N5");
   const ids = setHand(g, g.me, "休日山川");
   tryN(g, 3);
@@ -1645,13 +1645,17 @@ test("KJ-037 ヒント：光るのは10秒か次に手札を動かすまで。�
   tryN(g, 3);
   assert.ok(g.hintActive());
   assert.ok(g.swap(g.me, ids[0], ids[2]).ok);
-  assert.equal(g.hintActive(), null, "札を動かしたら消える");
+  assert.ok(g.hintActive(), "KJ-065：札を動かしても、10秒は残る");
+  g.clock.t += 9;
+  assert.ok(g.hintActive(), "動かしたあとも、出してから9秒ではまだ光る");
+  g.clock.t += 1.5;
+  assert.equal(g.hintActive(), null, "出してから10秒で消える");
   tryN(g, 3);
   assert.ok(g.hintActive());
   g.tried(g.me, ["山"], "1字では放てない");
   assert.ok(g.hintActive(), "はじかれる（ためした）では消えない");
   const e = g.log.filter((x) => x.op === "ヒント");
-  assert.equal(e.length, 3, "出した回数だけ ヒント の行がある（3回目は札を動かしたあと）");
+  assert.equal(e.length, 3, "出した回数だけ ヒント の行がある");
   assert.match(e[0].note, /^段1：放つ。狙った言葉：休日$/);
   assert.deepEqual(e[0].from, ["休", "日"], "光らせた札");
   assert.match(g.logText(), /ヒント\t休 日\t\t0\t.*段1：放つ。狙った言葉：休日/);
@@ -1699,6 +1703,38 @@ test("KJ-037 ヒント：狙った言葉を先に使われたら、光りは消�
   assert.equal(g.hintActive().word, "休日");
   g.used.add("休日"); // CPU・相手・先着の負けのどれでも、使った言葉は g.used に入る
   assert.equal(g.hintActive(), null, "もう放てない言葉は光らせ続けない");
+});
+
+test("KJ-065 ヒント：光らせた言葉を放つと消える・光らせた札が手札から全部無くなると消える・ほかの言葉を放っても残る・点は変わらない", () => {
+  const g = newGame(1, "weak", "N5");
+  setHand(g, g.me, "休日山川火水");
+  tryN(g, 3);
+  const h = g.hintActive();
+  assert.equal(h.word, "休日");
+  const sc = g.me.score;
+  const other = g.me.cards.filter((x) => "火水".includes(x.c)).map((x) => x.id);
+  assert.ok(g.release(g.me, other).ok, "ほかの言葉（火水）を放つ");
+  assert.ok(g.hintActive(), "ほかの言葉を放っても、光りは残る");
+  assert.ok(g.me.score > sc);
+  assert.equal(g.hintActive().word, "休日");
+  takeAll(g, g.me); // 放ったあとは場から取りきる
+  assert.ok(g.hintActive(), "取っても残る");
+  assert.ok(g.release(g.me, h.ids).ok, "光らせた言葉を放つ");
+  assert.equal(g.hintActive(), null, "光らせた言葉を放ったら消える");
+
+  const g2 = newGame(1, "weak", "N5");
+  setHand(g2, g2.me, "休日山川");
+  tryN(g2, 3);
+  const lit = g2.hintActive().ids;
+  g2.me.cards = g2.me.cards.filter((x) => !lit.includes(x.id)); // 光らせた札が全部無くなる
+  assert.equal(g2.hintActive(), null, "光らせた札が手札から無くなったら消える");
+
+  const g3 = newGame(1, "weak", "N5");
+  setHand(g3, g3.me, "休日山川");
+  tryN(g3, 3);
+  const l3 = g3.hintActive().ids;
+  g3.me.cards = g3.me.cards.filter((x) => x.id !== l3[0]); // 1枚だけ無くなっても、残りがあれば光る
+  assert.ok(g3.hintActive(), "光らせた札が1枚でも残っていれば光る");
 });
 
 // ---------- KJ-041 はじかれた操作もログに残す（D-055）----------

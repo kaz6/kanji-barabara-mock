@@ -1001,7 +1001,7 @@ test("画面", { skip }, async (t) => {
     const lit = await page.evaluate(() => __KJ.game.hintActive().ids);
     if (process.env.KJ_HINT_SHOT) await page.screenshot({ path: process.env.KJ_HINT_SHOT.replace(/\.png$/, "-1.png") });
     // 光った札を選んでも光りは消えない。そのまま放てる（言葉は光った札の順）
-    for (const id of lit) await page.locator(`#meHand [data-id="${id}"]`).click();
+    for (const id of lit) await page.locator(`#meHand [data-id="${id}"]`).click({ force: true }); // 光る札は動いているので、止まるのを待たない（KJ-065）
     s = await st();
     assert.equal(s.tag, true, "選んでも消えない");
     assert.equal(await page.evaluate(() => document.getElementById("bRelease").disabled), false, "光った札を選ぶと放てる");
@@ -1048,6 +1048,36 @@ test("画面", { skip }, async (t) => {
     assert.match(log, /\tヒント\t休 日\t\t0\t.*段1：放つ。狙った言葉：休日/);
     assert.match(log, /\tヒント\t.*段2：同音。狙った言葉：/);
     assert.match(log, /\tヒント\t\t\t0\t.*段3：引き直し/);
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+
+  await t.test("ヒント（KJ-065）：ほかの手をしても10秒は残る。光る札は持ち上がり、地の色が薄い金。動きを減らす設定では動かさない。375px", async () => {
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 }, "solo", null, true); // 既定は「動きを減らす」。動きを見るので motion: true
+    await page.evaluate(() => { const G = __KJ.game; G.me.cards = [..."休日山川火水"].map((c, i) => ({ id: 7000 + i, c, t: 0, fresh: false })); __KJ.row.length = 0; for (let i = 0; i < 3; i++) G.tried(G.me, ["火", "水"], "辞書にない"); __KJ.render(); });
+    const lit = () => page.evaluate(() => [...document.querySelectorAll("#meHand .hint")].map((e) => +e.dataset.id));
+    const hintId = await page.evaluate(() => __KJ.game.hintActive().ids);
+    assert.deepEqual((await lit()).sort(), [...hintId].sort());
+    const css = () => page.evaluate(() => { const e = document.querySelector("#meHand .hint"), c = getComputedStyle(e); return { bg: c.backgroundColor, anim: c.animationName, tf: c.transform }; });
+    const m = await css();
+    assert.equal(m.bg, "rgb(255, 241, 196)", "地の色が薄い金");
+    assert.match(m.anim, /kjLift/, "持ち上げる（上に数 px ゆっくり上下）");
+    assert.notEqual(m.tf, "none", "いま持ち上がっている");
+    if (process.env.KJ_HINT_SHOT) await page.screenshot({ path: process.env.KJ_HINT_SHOT.replace(/\.png$/, "-065.png") });
+    // ほかの手（札の入れ替え）をしても残る
+    await page.evaluate(() => { const G = __KJ.game; G.swap(G.me, G.me.cards[4].id, G.me.cards[5].id); __KJ.render(); });
+    assert.deepEqual((await lit()).sort(), [...hintId].sort(), "札を動かしても光りは残る");
+    assert.equal(await page.evaluate(() => document.getElementById("hintTag").hidden), false);
+    // 動きを減らす設定：動かさず、縁と地の色だけ
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    const r = await css();
+    assert.equal(r.anim, "none");
+    assert.equal(r.tf, "none", "動かさない");
+    assert.equal(r.bg, "rgb(255, 241, 196)");
+    assert.notEqual(await page.evaluate(() => getComputedStyle(document.querySelector("#meHand .hint")).boxShadow), "none");
+    // 10秒たつと消える
+    await page.evaluate(() => { const G = __KJ.game; G.hint.until = G.now() - 0.01; __KJ.render(); });
+    assert.deepEqual(await lit(), []);
     assert.deepEqual(errors, []);
     await ctx.close();
   });
