@@ -13,7 +13,7 @@
 | くっつける | Join | 作者（同上） |
 | 反転 | Flip（画面の字は Fl＋印＋p。読み上げは Flip） | 作者（同上。印は KJ-048 で作者が F2 を選んだ） |
 | 巡り | Cycle（画面の字は 印＋ycle。読み上げは Cycle） | 作者（同上。印は KJ-048 で作者が C1 を選んだ） |
-| 同音 | Same reading（画面の字は 印＋ame reading。読み上げは Same reading） | 作者（KJ-048。「SOUND conversion は 読み方変換 のような意味にできるかな」→ 候補 A「あ で！」→「あ だとわからないかも」→ 印を字に組み込む S1 を選んだ） |
+| 同音 | Same reading（画面の字は 印＋ame reading。読み上げは Same reading） | 作者（KJ-048。「SOUND conversion は 読み方変換 のような意味にできるかな」→ 候補 A に「aで！」→「あ だとわからないかもだ…」「Sで」→ 印を字に組み込む S1 を選んだ） |
 | 戻す | Back | 作者（同上） |
 | 引き直し | Redraw | 作者（同上） |
 
@@ -55,5 +55,5 @@
 
 ## チュートリアル（KJ-043。作者「文は仮」。正本は data/tutorial.json）
 
-文・段の名前・ボタンの文字（チュートリアル／とばす／本番へ）は data/tutorial.json の1か所。文は日本語。遊びのボタン（Play・Split・Flip・Cycle・Sound conversion）は英語のままで、文の中でもその名前で呼ぶ。話し手・キャラクターは置いていない。決めた人は、文は全部「係の仮決め」（作者が直す）。
+文・段の名前・ボタンの文字（チュートリアル／とばす／本番へ）は data/tutorial.json の1か所。文は日本語。遊びのボタン（Play・Split・Flip・Cycle・Same reading）は英語のままで、文の中でもその名前で呼ぶ。話し手・キャラクターは置いていない。決めた人は、文は全部「係の仮決め」（作者が直す）。
 

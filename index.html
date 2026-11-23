@@ -401,7 +401,7 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
 const K=window.KJ;
 const $title=document.getElementById("title");
 const STR=window.KJ_STR; // 画面の文言（ボタンの文字・角の印。KJ-024）
-for(const id of Object.keys(STR.BUTTONS)){const b=document.getElementById(id);b.setAttribute("aria-label",STR.BUTTONS[id]);b.querySelector(".lb").innerHTML=STR.buttonHtml(id)} // 印を字に組み込んだボタン（Fl＋印＋p など）は SVG 入り。読み上げは aria-label（KJ-048）
+for(const id of Object.keys(STR.BUTTONS)){const b=document.getElementById(id);if(STR.LOGO[id])b.setAttribute("aria-label",STR.BUTTONS[id]);b.querySelector(".lb").innerHTML=STR.buttonHtml(id)} // 印を字に組み込んだボタン（Fl＋印＋p など）は SVG 入り。読み上げは aria-label（KJ-048）
 $title.textContent=STR.TEXT.title; // 題（KJ-042。文は仮。js/strings.js の1か所で直せる）
 const D={};
 let T=null, G=null; // 表・ゲームの状態

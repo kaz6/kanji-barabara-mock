@@ -1471,8 +1471,14 @@ test("画面", { skip }, async (t) => {
       // 印の SVG は文字に数えない：Flip＝Fl＋印＋p、Cycle＝印＋ycle、Same reading＝印＋ame reading。読み上げ（aria-label）は Flip・Cycle・Same reading
       const want = { bRelease: "Play", bSplit: "Split", bJoin: "Join", bInvert: "Flp", bCycle: "ycle", bHomo: "ame reading", bBack: "Back", bRedraw: "Redraw" };
       for (const [id, text] of Object.entries(want)) assert.equal(await label(id), text, `${id} の文字`);
-      const aria = { bRelease: "Play", bSplit: "Split", bJoin: "Join", bInvert: "Flip", bCycle: "Cycle", bHomo: "Same reading", bBack: "Back", bRedraw: "Redraw" };
+      const aria = { bInvert: "Flip", bCycle: "Cycle", bHomo: "Same reading" };
       for (const [id, text] of Object.entries(aria)) assert.equal(await page.getAttribute(`#${id}`, "aria-label"), text, `${id} の読み上げ`);
+      for (const id of ["bRelease", "bSplit", "bJoin", "bBack", "bRedraw"]) assert.equal(await page.getAttribute(`#${id}`, "aria-label"), null, `${id} は印の無いボタン。aria-label を付けない（Redraw の添え字を読み上げから消さない）`);
+      if (vp.width === 375) {
+        const rows = await page.evaluate(() => ["bSplit", "bJoin", "bInvert", "bCycle", "bHomo"].map((i) => { const b = document.getElementById(i); const r = b.getBoundingClientRect(); return { i, h: r.height, w: r.width, lh: parseFloat(getComputedStyle(b).lineHeight) || 0, right: r.right }; }));
+        const h0 = rows[0].h;
+        for (const r of rows) assert.ok(Math.abs(r.h - h0) < 1 && r.right <= 375, `375×700 でボタンが1行に収まる（${r.i} 高さ ${r.h}・右端 ${r.right}）`);
+      }
       assert.equal(await page.locator("#bInvert .lb svg.ic-invert").count(), 1, "Flip の印は SVG");
       assert.equal(await page.locator("#bCycle .lb svg.ic-cycle").count(), 1, "Cycle の印は SVG");
       assert.equal(await page.locator("#bHomo .lb svg.ic-homophone").count(), 1, "Same reading の印は SVG");
