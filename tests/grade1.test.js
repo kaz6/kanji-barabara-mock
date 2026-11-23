@@ -44,7 +44,7 @@ test("小1：N5・N4 は小1 を足したことでは動かない（N4 の数は
 
 test("小1：放てる言葉は、80字と、割る・くっつけるなどで手に持てる字だけで書ける語。1字から四字熟語まで", () => {
   const ws = [...TG1.WORDS.values()];
-  assert.ok(ws.length > 1000 && ws.length < 1700, `語 ${ws.length}`);
+  assert.ok(ws.length > 2000 && ws.length < 2600, `語 ${ws.length}`); // KJ-070（D-089）：同音で N5 の字が手に持てるようになり 1376→2316
   // 小1 だけ外す語（data/blocked_words_g1.json）のうち、小1 の字で書ける語（KJ-068：工口・花町）の分だけ、統計より少ない
   const g1Writable = D.blocked_words_g1.words.filter((x) => D.words.words.some((w) => w.w === x && w.g1)).length;
   assert.equal(ws.length, D.words.stats.by_level.G1.total - g1Writable);
@@ -180,4 +180,65 @@ test("小1 だけ外す語：一覧の語は小1 で放てない・N5 N4 では�
   setHand(g4, g4.me, "山川");
   assert.equal(g4.canRelease(g4.me, g4.me.cards.map((c) => c.id)).ok, true, "N4 では 山川 を放てる");
   // ヒントは語の表（T.WORDS）から探すので、外した語は出ない（CPU の COMMON_WORDS も同じ表から作る）
+});
+
+// ---- 小1 でも Same reading の行き先を N5 の字まで広げる（KJ-070・D-089）----
+const N5ONLY = (c) => D.kanji.kanji.some((k) => k.c === c && k.lv === "N5" && !k.g1); // N5 の字で小1 の80字でない
+
+test("小1・同音：五 は 午・後・語 に変えられる（小1 の80字に ゴ の字は 五 だけだった）。待ち時間・同じ読みでない字ははじく", () => {
+  assert.deepEqual([...K.homoChars(TG1, "五")].sort(), [..."午後語"].sort());
+  const g = newGame(5, "solo", "G1");
+  for (const to of "午後語") {
+    g.clock.t += D.rules.cooldown_sec.homophone;
+    const [id] = setHand(g, g.me, "五");
+    const r = g.homophone(g.me, [id], to);
+    assert.ok(r.ok, `五→${to}：${r.why}`);
+    assert.equal(g.me.cards.map((c) => c.c).join(""), to);
+  }
+  const [id2] = setHand(g, g.me, "五");
+  g.clock.t += D.rules.cooldown_sec.homophone;
+  assert.equal(g.homophone(g.me, [id2], "言").ok, false, "ゴ でない字には変えられない");
+});
+
+test("小1・同音：行き先に入る N5 の字は「N5 の字で小1 の80字でない字」だけ。N4 の字・N5 の字どうしだけの組へは行かない。山には入らない", () => {
+  const extra = [...TG1.HOMO_ONLY];
+  assert.ok(extra.length > 0);
+  for (const c of extra) assert.ok(N5ONLY(c) && !TG1.CHARS.has(c) && TG1.HOLD.has(c) && K.isChar(TG1, c), `${c}`);
+  for (const [c, groups] of TG1.HOMO) {
+    for (const g of groups) {
+      assert.ok(g.chars.some((x) => TG1.CHARS.has(x) || TG1.OUTSIDE.has(x)), `${c}：80字（か巡りの外の字）を含まない組`);
+      for (const x of g.chars) assert.ok(TG1.CHARS.has(x) || TG1.OUTSIDE.has(x) || N5ONLY(x), `${x} は N4 の字か範囲の外`);
+    }
+  }
+  assert.equal(TG1.CHARS.size, 80, "山の字は80字のまま");
+  for (const c of extra) assert.ok(!TG1.CHARS.has(c) && !TG1.OUTSIDE.has(c), `${c} は山にも巡りの外にも入らない`);
+});
+
+test("小1・同音：同じ読みの字が無い字は 20→13（80字のうち）。同音で手に入った N5 の字は放てる（割る・反転・巡りはできない。仮決め）", () => {
+  const none = (L) => [...L.CHARS].filter((c) => !K.homoChars(L, c).length);
+  assert.equal(none(TG1).length, 13);
+  assert.ok(!none(TG1).includes("五"));
+  // 午 は 十二支の字（巡りの outside ではない）。小1 では巡らない（D-027 の 80字の決めのまま）
+  assert.equal(TG1.OUTSIDE.size, 0);
+  // 手に持てる字が増えたぶん、語が増える。手に持てる字だけで書ける語
+  assert.equal(TG1.HOLD.size, D.words.stats.hold_by_level.G1);
+  assert.ok(TG1.WORDS.has("午後"), "午後（午・後 は同音でだけ出会える）");
+  for (const w of TG1.WORDS.values()) for (const c of w.w) assert.ok(TG1.HOLD.has(c), `${w.w} の ${c}`);
+  // 手に持った N5 の字で、語は放てる
+  const g = newGame(5, "solo", "G1");
+  setHand(g, g.me, "午後");
+  assert.ok(g.canRelease(g.me, g.me.cards.map((c) => c.id)).ok, "午後 を放てる");
+});
+
+test("小1・同音：N5・N4 は今まで通り（N5 は N5 の字の中、N4 は N4 の字の中）。N5・N4 に HOMO_ONLY は無い", () => {
+  assert.equal(T.HOMO_ONLY.size, 0);
+  assert.equal(T4.HOMO_ONLY.size, 0);
+  for (const L of [T, T4]) for (const [, groups] of L.HOMO) for (const g of groups) for (const c of g.chars) assert.ok(L.CHARS.has(c) || L.OUTSIDE.has(c), `${L.level}：${c}`);
+  assert.deepEqual([T.CHARS.size, T.WORDS.size, T.HOLD.size], [103, 2465, 140]);
+  assert.deepEqual([T4.CHARS.size, T4.WORDS.size, T4.HOLD.size], [284, 10458, 353]);
+});
+
+
+test("小1・同音（仮決め）：同音で手に入った N5 の字は割れず、反転も巡りもしない。放つ・もう一度 Same reading はできる", () => {
+  for (const c of TG1.HOMO_ONLY) assert.ok(!K.canSplit(TG1, c) && !TG1.INV.has(c) && !TG1.NEXT.has(c) && K.homoChars(TG1, c).length > 0, c);
 });

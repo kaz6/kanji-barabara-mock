@@ -435,6 +435,30 @@ test("画面", { skip }, async (t) => {
     await ctx.close();
   });
 
+  await t.test("小1・同音（KJ-070）：五 を選んで Same reading を押すと 午・後・語 の一覧が出て、選ぶと変わる", async () => {
+    const ctx = await browser.newContext({ viewport: { width: 375, height: 900 } });
+    const page = await ctx.newPage();
+    const errors = [];
+    page.on("pageerror", (e) => errors.push(String(e)));
+    await page.goto(url);
+    await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
+    await page.check('#lvl input[value="G1"]');
+    await pickOpp(page, "solo");
+    await clickStart(page);
+    assert.equal(await page.evaluate(() => __KJ.game.level), "G1");
+    await page.evaluate(() => { __KJ.game.me.cards = [..."五山川日月木火水"].map((c, i) => ({ id: 9900 + i, c, t: 0, fresh: false })); __KJ.render(); });
+    await page.locator("#meHand .tile", { hasText: "五" }).click();
+    await page.click("#bHomo");
+    const opts = (await page.locator("#choices.on button").allTextContents()).map((x) => x.trim()).sort();
+    assert.deepEqual(opts, [..."午後語"].sort(), "小1 でも N5 の字（午・後・語）が選べる");
+    if (process.env.KJ_SHOT) await page.screenshot({ path: "docs/img/kj-070-homophone-g1-375.png" });
+    await page.locator("#choices.on button", { hasText: "後" }).click();
+    assert.equal(await page.locator("#meHand .tile", { hasText: "後" }).count(), 1);
+    assert.equal(await page.locator("#meHand .tile", { hasText: "五" }).count(), 0);
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+
   await t.test("はじまり（KJ-016）：8枚で始まり、すぐ時間が動いて操作できる。ストックに部品が1枚。「最初の1枚を選ぶ」は出ない", async () => {
     const ctx = await browser.newContext({ viewport: { width: 375, height: 900 } });
     const page = await ctx.newPage();

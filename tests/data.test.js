@@ -192,7 +192,7 @@ test("同じ読みの組：字はデータにあり、2字以上。レベルで�
   }
   for (const L of Object.values(TT)) {
     for (const [c, gs] of L.HOMO) for (const g of gs) {
-      const ok = (x) => L.CHARS.has(x) || L.OUTSIDE.has(x); // レベルの字か、巡りで手に入るレベルの外の字（十二支）
+      const ok = (x) => L.CHARS.has(x) || L.OUTSIDE.has(x) || L.HOMO_ONLY.has(x); // レベルの字か、巡りで手に入るレベルの外の字（十二支）か、小1 だけ同音で手に入る N5 の字（KJ-070）
       assert.ok(ok(c) && g.chars.length >= 2 && g.chars.every(ok), c);
     }
   }

@@ -91,12 +91,17 @@
       const c = cy.chars;
       c.forEach((x, i) => { if (!T.NEXT.has(x)) T.NEXT.set(x, c[(i + 1) % c.length]); });
     }
+    // 小1 のときだけ、同音の行き先に N5 の字（lv が N5 で小1 でない字）も入る（KJ-070・D-089）。山には入らない。同音でだけ出会える字（十二支と同じ考え方）。
+    // 小1 の字（か巡りの外の字）を1つも含まない組は使わない（N5 の字どうしだけの組へは行けない）
+    const N5X = new Set(isG1 ? D.kanji.kanji.filter((k) => k.lv === "N5" && !k.g1).map((k) => k.c) : []);
+    const anchor = (c) => T.CHARS.has(c) || T.OUTSIDE.has(c);
     T.HOMO = new Map();
     for (const g0 of D.readings.same_reading_groups) {
-      const g = { ...g0, chars: g0.chars.filter((c) => T.CHARS.has(c) || T.OUTSIDE.has(c)) };
-      if (g.chars.length < 2) continue;
+      const g = { ...g0, chars: g0.chars.filter((c) => anchor(c) || N5X.has(c)) };
+      if (g.chars.length < 2 || !g.chars.some(anchor)) continue;
       for (const c of g.chars) { if (!T.HOMO.has(c)) T.HOMO.set(c, []); T.HOMO.get(c).push(g); }
     }
+    T.HOMO_ONLY = new Set([...T.HOMO.keys()].filter((c) => N5X.has(c))); // 同音でだけ手に入る N5 の字（小1 のときだけ。「字」として見せる。巡りの outside とは別）
     // 手に持てる字（KJ-011・D-029）：レベルの字＋割る・くっつけるで出る字（中継ぎ 交・里 など）＋巡り・対義・同音で行ける字のうち、
     // 「字」として見せるもの。放てる言葉はこの字だけで書ける語（words.json はこれで作る。tools/build_data.py の holdable と同じ決め方）
     T.HOLD = new Set(T.CHARS);
@@ -112,7 +117,7 @@
   const isLevelChar = (T, c) => T.CHARS.has(c);
   const isN5 = isLevelChar; // 古い名前（いまは「遊ぶレベルの字」）
   // 画面で「字」として見せるか（レベルの字か常用漢字）。部品の見た目にしない
-  const isChar = (T, c) => T.CHARS.has(c) || T.JOUYOU.has(c) || T.OUTSIDE.has(c);
+  const isChar = (T, c) => T.CHARS.has(c) || T.JOUYOU.has(c) || T.OUTSIDE.has(c) || T.HOMO_ONLY.has(c);
   const splitOnce = (T, c) => T.parts[c] || [c];
   const canSplit = (T, c) => !!T.parts[c];
   // 部品にバラして届く形（D-003・D-004）。KJ-003 の遊びでは使わない（消すかは作者が決める）
