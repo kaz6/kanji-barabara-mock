@@ -1136,7 +1136,7 @@ function press(id,op,name,run){
   const chars=rowCards().map(x=>x.c);
   if(G.over)return;
   if(TUT){const why=TUT.blocked(op,{chars});if(why){G.triedOp(G.me,name,chars,why);showWhy(why);afterChange();return}} // チュートリアル：いまの段の手だけ
-  if(isOff(id)){const why=G.whyNot(G.me,op,[...row]);G.triedOp(G.me,name,chars,why);afterChange();showWhy(why);return} // 押せない見た目でも、はじかれた理由を画面に出す（KJ-069）。render が msg を書き直すので、そのあとに出す
+  if(isOff(id)){const why=G.whyNot(G.me,op,[...row]);G.triedOp(G.me,name,chars,why);afterChange();showWhy(why);return} // 押せない見た目でも、はじかれた理由を画面に出す（KJ-069）
   const r=run();
   if(r&&r.ok===false){G.triedOp(G.me,name,chars,r.why);afterChange()}
   else if(TUT&&r&&r.ok){TUT.advance(op);afterChange()}
