@@ -45,11 +45,12 @@
     const lg = LOGO[id];
     return lg ? `${lg[0]}${iconSvg(lg[1])}${lg[2]}` : BUTTONS[id];
   }
-  // 引き直しの添え字（点があるとき Redraw -5pt〔作者「Redraw には『-5pt』で。」〕・点がないとき Redraw 30s）。
-  // 30秒待っているあいだは添え字 30s のまま、ボタンの地のゲージで残りを見せる（KJ-034。秒数の文字は出さない）
+  // 引き直しの添え字（KJ-049）：次の値段と残りの回数（例：Redraw 0pt あと5回・Redraw -10pt あと3回。回数の言い方は仮）。
+  // 値段は、その試合で何回目かで決まる（0・5・10・15・20）。使いきったら 値段は出さず「あと0回」
   const redrawNote = {
-    cost: (pt) => `-${pt}pt`,
-    free: (sec) => `${sec}s`,
+    cost: (pt) => (pt > 0 ? `-${pt}pt` : `${pt}pt`),
+    left: (n) => `あと${n}回`,
+    text: (pt, n) => (pt === null ? redrawNote.left(0) : `${redrawNote.cost(pt)} ${redrawNote.left(n)}`),
   };
   // ボタン以外の短い文言（KJ-042。作者「文は仮」。ここ1か所で直せる）。ボタンではないので日本語のまま
   const TEXT = Object.freeze({

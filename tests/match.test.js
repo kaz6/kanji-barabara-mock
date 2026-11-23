@@ -110,13 +110,15 @@ test("合言葉の部屋：点と手札の枚数は相手の画面に届く", as
 test("合言葉の部屋：引き直しは場を動かさない（手札は自分の種から）", async () => {
   const { A, B } = pair();
   const before = A.g.field.map((x) => x.c + x.n).join();
-  A.g.me.score = R.redraw.cost;
+  A.g.me.score = 7;
+  assert.equal((await A.c.redraw()).ok, true, "1回目は0点");
+  assert.equal(A.g.me.score, 7);
   const r = await A.c.redraw();
   assert.equal(r.ok, true);
-  assert.equal(A.g.me.score, 0);
+  assert.equal(A.g.me.score, 2, "2回目は5点（KJ-049）");
   assert.equal(A.g.field.map((x) => x.c + x.n).join(), before);
   assert.equal(B.g.field.map((x) => x.c + x.n).join(), before, "相手の場も動かない");
-  assert.equal(B.g.cpu.score, 0, "払った点が相手に届く");
+  assert.equal(B.g.cpu.score, 2, "払った点が相手に届く");
   assert.equal(A.g.me.cards.length, R.start_hand);
 });
 

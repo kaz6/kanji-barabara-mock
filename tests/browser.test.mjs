@@ -127,10 +127,11 @@ test("画面", { skip }, async (t) => {
       assert.equal(await page.locator("#meHand .tile", { hasText: "山" }).count(), 1, "山 が手札に来た");
       assert.equal(await pos("#field > *"), field0, "取ったあとも場の位置は同じ");
       assert.match(await page.textContent("#released"), /休日.*\+3点/);
-      // 引き直し（3点しかない → 30秒待ち）
+      // 引き直し（1回目は0点。KJ-049）：添え字は次の値段と残りの回数
+      assert.equal(await page.textContent("#cdRedraw"), "0pt あと5回", "はじめは 0pt あと5回");
       await page.click("#bRedraw");
-      assert.equal(await page.textContent("#cdRedraw"), "30s", "待っているあいだも添え字は 30s のまま（秒数は数えない。KJ-034）");
-      assert.equal(await page.evaluate(() => document.getElementById("bRedraw").classList.contains("cd")), true, "Redraw の地がゲージになる");
+      assert.equal(await page.textContent("#cdRedraw"), "-5pt あと4回", "2回目は 5点・あと4回");
+      assert.equal(await page.evaluate(() => document.getElementById("bRedraw").classList.contains("cd")), false, "待たない（ゲージにならない）");
       // ログ
       await page.click("#bLog");
       const log = await page.inputValue("#logText");
@@ -141,7 +142,7 @@ test("画面", { skip }, async (t) => {
       assert.match(log, /\tくっつける\t十 口\t古\t/);
       assert.match(log, /\t放つ\t休 日\t\t3\t3\t0\t/);
       assert.match(log, /\t取る\t山\t山\t0\t/);
-      assert.match(log, /\t引き直し\t\t\t0\t.*30秒待つ/);
+      assert.match(log, /\t引き直し\t.*\t0\t.*1回目 0点/, "引き直しの行に何回目と値段（KJ-049）");
       assert.deepEqual(errors, []);
       await ctx.close();
     });
@@ -898,14 +899,12 @@ test("画面", { skip }, async (t) => {
     assert.ok(Math.abs(s.g - 0.5) < 0.05, "動きを減らす設定でもゲージは満ちていく");
     await setLeft(-0.01);
     assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById("bInvert")).animationName), "none", "動きを減らす設定では光らない");
-    // 引き直しの30秒待ちも同じゲージ（添え字 30s は残す）
-    await page.evaluate(() => { const G = __KJ.game; G.me.score = 0; __KJ.render(); });
+    // 引き直しに待ち（ゲージ）はない（KJ-049）。添え字は次の値段と残りの回数
     await page.click("#bRedraw");
-    await page.evaluate(() => { const G = __KJ.game; G.me.redrawAt = G.now() + __KJ.data.rules.redraw.free_wait_sec / 2; __KJ.render(); });
-    const rd = await page.evaluate(() => { const b = document.getElementById("bRedraw"); return { cd: b.classList.contains("cd"), g: parseFloat(b.style.getPropertyValue("--g")), text: b.textContent.trim() }; });
-    assert.equal(rd.cd, true);
-    assert.ok(Math.abs(rd.g - 0.5) < 0.05, `Redraw の待ちも半分でおよそ半分（${rd.g}）`);
-    assert.equal(rd.text, "Redraw 30s", "Redraw の添え字は 30s のまま");
+    const rd = await page.evaluate(() => { const b = document.getElementById("bRedraw"); return { cd: b.classList.contains("cd"), g: b.style.getPropertyValue("--g"), text: b.textContent.trim() }; });
+    assert.equal(rd.cd, false);
+    assert.equal(rd.g, "");
+    assert.equal(rd.text, "Redraw -5pt あと4回");
     assert.deepEqual(errors, []);
     await ctx.close();
   });
@@ -1077,7 +1076,7 @@ test("画面", { skip }, async (t) => {
       // 字の幅が環境でちがっても、ボタンの中身が枠からはみ出さない（CI の Chromium で3段になった。KJ-010）
       assert.deepEqual(await page.evaluate(() => [...document.querySelectorAll(".ops button")].filter((b) => b.scrollWidth > b.clientWidth + 1).map((b) => b.id)), [], "ボタンの中身が枠に収まる");
       // 待ち時間の表示が入った形でも2段のまま
-      await page.evaluate(() => { const G = __KJ.game; for (const k of ["invert", "cycle", "homophone"]) G.me.cd[k] = G.now() + 0.5; G.me.score = 0; G.me.redrawAt = G.now() + 15; __KJ.render(); }); // ゲージが出ている形（KJ-034）
+      await page.evaluate(() => { const G = __KJ.game; for (const k of ["invert", "cycle", "homophone"]) G.me.cd[k] = G.now() + 0.5; G.me.score = 0; G.me.redraws = 4; __KJ.render(); }); // ゲージが出ている形（KJ-034）・引き直しの添え字がいちばん長い形（-20pt あと1回。KJ-049）
       assert.ok(new Set(await page.evaluate(() => [...document.querySelectorAll(".ops button")].map((b) => Math.round(b.getBoundingClientRect().top)))).size <= 2, "待ち時間が出ても2段");
       assert.deepEqual(await page.evaluate(() => [...document.querySelectorAll(".ops button")].filter((b) => b.scrollWidth > b.clientWidth + 1).map((b) => b.id)), [], "待ち時間が出てもボタンの中身が枠に収まる");
       // 横にあふれない
@@ -1485,11 +1484,14 @@ test("画面", { skip }, async (t) => {
       for (const g of ["⇄", "↻", "♪", "Sound conversion"]) assert.ok(!(await page.evaluate(() => document.body.innerText)).includes(g), `${g} が画面に残っていない`);
       // ボタンの中に日本語（かな・漢字）が無い。待ち時間・引き直しの添え字が入っても
       await page.evaluate(() => { __KJ.game.me.score = 9; __KJ.render(); });
-      assert.match(await page.textContent("#cdRedraw"), /^-\d+pt$/, "点があるときは Redraw -5pt の形（KJ-034 追記）");
-      await page.evaluate(() => { __KJ.game.me.score = 0; __KJ.render(); });
-      assert.match(await page.textContent("#cdRedraw"), /^\d+s$/, "点がないときは Redraw 30s の形");
+      assert.equal(await page.textContent("#cdRedraw"), "0pt あと5回", "はじめは Redraw 0pt あと5回（KJ-049）");
+      await page.evaluate(() => { __KJ.game.me.redraws = 2; __KJ.render(); });
+      assert.equal(await page.textContent("#cdRedraw"), "-10pt あと3回", "3回目は Redraw -10pt あと3回（KJ-049）");
+      await page.evaluate(() => { __KJ.game.me.redraws = 5; __KJ.render(); });
+      assert.equal(await page.textContent("#cdRedraw"), "あと0回", "使いきったら あと0回");
       const jp = /[\u3040-\u30ff\u3400-\u9fff]/;
-      for (const t of await page.locator(".ops button").allTextContents()) assert.doesNotMatch(t, jp, `ボタンに日本語が無い（${t}）`);
+      // 添え字の「あと◯回」はカードの文言（仮）。ボタンの字（.lb）に日本語が無いことを見る
+      for (const t of await page.locator(".ops button .lb").allTextContents()) assert.doesNotMatch(t, jp, `ボタンに日本語が無い（${t}）`);
       // 角の印：上＝反転と同音 → Flip・Same reading の SVG、十＝巡りと同音 → Cycle・Same reading、口＝同音だけ。文字（⇄・↻・♪・反・巡・音）は出ない
       const mk = (ch) => page.evaluate((c) => { const e = [...document.querySelectorAll("#meHand .tile")].find((x) => x.title === c).querySelector(".mk"); return e ? { kinds: [...e.querySelectorAll(".mi svg")].map((v) => v.getAttribute("class").replace("ic ic-", "")), text: e.textContent } : { kinds: [], text: "" }; }, ch);
       assert.deepEqual(await mk("上"), { kinds: ["invert", "homophone"], text: "" });
@@ -1722,15 +1724,15 @@ test("画面", { skip }, async (t) => {
     await page.click("#bBack"); await pick("月");
     await page.evaluate(() => document.getElementById("bHomo").click());
     await page.click("#bBack");
-    // 引き直しを待っている
-    await page.evaluate(() => { const G = __KJ.game; G.me.redrawAt = G.now() + 5; __KJ.render(); });
+    // 引き直しを使いきった（5回まで。KJ-049）
+    await page.evaluate(() => { const G = __KJ.game; G.me.redraws = 5; __KJ.render(); });
     assert.equal(await page.getAttribute("#bRedraw", "aria-disabled"), "true");
     await page.evaluate(() => document.getElementById("bRedraw").click());
     // 場から取れる枚数が無いのに取る
-    await page.evaluate(() => { __KJ.game.me.redrawAt = null; __KJ.render(); });
+    await page.evaluate(() => { __KJ.game.me.redraws = 0; __KJ.render(); });
     await page.locator("#field .tile").first().click();
     const t1 = await tried();
-    assert.deepEqual(t1.map((x) => x.note), ["割る：割れない ×3", "反転：待ち時間", "巡り：できない字", "同音：同じ読みではない", "引き直し：待っている", "取る：取れる枚数がない"]);
+    assert.deepEqual(t1.map((x) => x.note), ["割る：割れない ×3", "反転：待ち時間", "巡り：できない字", "同音：同じ読みではない", "引き直し：引き直しは5回まで", "取る：取れる枚数がない"]);
     assert.deepEqual(t1.map((x) => x.from).slice(0, 4), ["一", "上", "休", "月"], "使った札の欄に札");
     assert.equal(t1[5].from.length, 1, "取るは場の札");
     assert.equal(await hand(), "一休田上月", "どれも手札は動かない");
