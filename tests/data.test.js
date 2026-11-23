@@ -62,9 +62,9 @@ for (const lv of ["N5", "N4"]) {
     for (const r of L.RELAY) assert.ok(Object.values(L.parts).some((v) => v.includes(r)), `relay ${r}`);
     if (lv === "N5") for (const k of Object.keys(L.parts)) assert.ok(LV[k] !== "N4" || L.RELAY.has(k), `N5 で N4 の字 ${k} ができる（田 は中継ぎなのでよい）`);
   });
-  test(`部品表（${lv}）：同じ左右から2つの字ができるのは 十口（古・田）だけ（R-016）`, () => {
+  test(`部品表（${lv}）：同じ左右から2つの字ができるのは 十口（古・田）と、N4 では 大丶（太・犬。KJ-046）だけ（R-016）`, () => {
     const multi = [...L.JOIN].filter(([, v]) => v.length > 1).map(([k, v]) => k + "=" + v.join(""));
-    assert.deepEqual(multi, ["十口=古田"]);
+    assert.deepEqual(multi, lv === "N4" ? ["十口=古田", "大丶=太犬"] : ["十口=古田"]);
   });
 }
 

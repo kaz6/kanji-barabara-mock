@@ -1761,3 +1761,45 @@ test("KJ-018 endShow：放った言葉が0でも作れる（items は空）", ()
   const g = newGame(1, "weak");
   assert.deepEqual(K.endShow(g, T, g.cpu).items, []);
 });
+
+// KJ-046（D-060）：大＋丶 は 太 と 犬 の2通り。選ぶ・面で分かれる・犬を割ると 大 と 丶
+test("大＋丶：Join は 太・犬 の2通り（選ぶ）。選ばなければ 太。割ると 大 と 丶（N4）", () => {
+  assert.deepEqual(K.joinResults(T4, "大", "丶"), ["太", "犬"]);
+  assert.deepEqual(K.joinResults(T4, "丶", "大"), [], "順が逆はくっつかない");
+  assert.equal(K.joinReversed(T4, "丶", "大"), true);
+  let g = newGame(1, "normal", "N4");
+  let ids = setHand(g, g.me, "大丶");
+  assert.equal(chars(g.join(g.me, ids).cards), "太", "選ばなければ最初の 太（いまの動きのまま）");
+  g = newGame(1, "normal", "N4");
+  ids = setHand(g, g.me, "大丶");
+  assert.equal(chars(g.join(g.me, ids, "犬").cards), "犬", "犬 を選べる");
+  g = newGame(1, "normal", "N4");
+  ids = setHand(g, g.me, "大丶");
+  assert.equal(g.join(g.me, ids, "木").ok, false, "ほかの字にはならない");
+  g = newGame(1, "normal", "N4");
+  const [d] = setHand(g, g.me, "犬");
+  assert.equal(chars(g.split(g.me, [d]).cards), "大丶", "犬を割ると 大 と 丶");
+  g = newGame(1, "normal", "N4");
+  const [t] = setHand(g, g.me, "太");
+  assert.equal(chars(g.split(g.me, [t]).cards), "大丶", "太を割るのは今まで通り");
+});
+
+test("大＋丶：面で落とす。下の面＝太、右の面＝犬。ほかの面ではくっつかない（N4）", () => {
+  assert.deepEqual(K.faceJoins(T4, "丶", "大"), { bottom: ["太"], right: ["犬"] });
+  assert.deepEqual(K.faceJoins(T4, "大", "丶"), { top: ["太"], left: ["犬"] }, "大 を 丶 の上に落とすと 太、左に落とすと 犬");
+  let g = newGame(1, "normal", "N4");
+  let [a, b] = setHand(g, g.me, "丶大");
+  assert.equal(chars(g.joinFace(g.me, a, b, "bottom").cards), "太");
+  g = newGame(1, "normal", "N4");
+  [a, b] = setHand(g, g.me, "丶大");
+  assert.equal(chars(g.joinFace(g.me, a, b, "right").cards), "犬");
+  g = newGame(1, "normal", "N4");
+  [a, b] = setHand(g, g.me, "丶大");
+  assert.equal(g.joinFace(g.me, a, b, "top").ok, false, "上の面では字にならない");
+  assert.equal(g.joinFace(g.me, a, b, "left").ok, false, "左の面では字にならない");
+});
+
+test("大＋丶：N5 では 太・犬 は出ない（N4 の字）", () => {
+  assert.deepEqual(K.joinResults(T, "大", "丶"), []);
+  assert.equal(T.parts["犬"], undefined);
+});

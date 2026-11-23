@@ -32,7 +32,8 @@ h1{font-size:17px;margin:0 0 2px;font-weight:700}
 .score{font-variant-numeric:tabular-nums;font-size:13px;font-weight:700;color:var(--sub)}
 .score .n,.clock .n{font-size:30px;line-height:1;color:var(--ink);letter-spacing:-.5px}
 .clock .n{font-size:24px}
-.takes{font-size:13px;color:var(--on-table);font-weight:700}
+.takesline{min-height:20px;margin:0 0 4px;line-height:20px;overflow:hidden} /* 取る番の文：卓の頭に1行（KJ-046）。取る番でないときも高さは空けておく（卓が上下に動かない） */
+.takes{display:block;font-size:13px;color:var(--on-table);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:clip}
 .cds{margin-left:auto;font-size:12px;color:var(--sub);font-variant-numeric:tabular-nums}
 .hand{display:grid;grid-template-columns:repeat(8,1fr);gap:4px}
 .trayhead{font-size:11px;color:var(--sub);margin:8px 0 3px}
@@ -88,9 +89,10 @@ h1{font-size:17px;margin:0 0 2px;font-weight:700}
 .field .tile{cursor:default}
 .field.can .tile{cursor:pointer}
 .field:not(.can) .tile:hover{border-color:var(--line)}
-/* 放ったあと、場から取りきるまで（KJ-039。仮決め）：場の札が光り、ほかのボタンは押せない */
-.field.glow .tile{box-shadow:0 0 0 2px var(--on-table),0 0 10px 2px rgba(242,237,226,.5);animation:kjTake 1s ease-in-out infinite alternate} /* 墨色の卓の上で光る（赤は選んだ札だけ） */
-@keyframes kjTake{from{box-shadow:0 0 0 2px var(--on-table),0 0 3px 0 rgba(242,237,226,.2)}to{box-shadow:0 0 0 2px var(--on-table),0 0 12px 3px rgba(242,237,226,.65)}}
+/* 放ったあと、場から取りきるまで（KJ-039。仮決め）：場の札が光り、ほかのボタンは押せない。KJ-046：金（--hint。ヒント・チュートリアルの「ここを押す」と同じ色。仮）の太い枠にして、場の見出しも金。赤は選んだ札と Play だけなので使わない */
+.field.glow .tile{border:3px solid var(--hint);box-shadow:0 0 0 1px var(--hint),0 0 10px 2px rgba(217,154,0,.55);animation:kjTake 1s ease-in-out infinite alternate}
+.table .fieldside.take .side-head b{color:var(--hint)}
+@keyframes kjTake{from{box-shadow:0 0 0 1px var(--hint),0 0 3px 0 rgba(217,154,0,.3)}to{box-shadow:0 0 0 1px var(--hint),0 0 12px 3px rgba(217,154,0,.75)}}
 @media (prefers-reduced-motion:reduce){.field.glow .tile{animation:none}}
 @media (max-width:540px){
   .me .tile{font-size:26px}
@@ -256,7 +258,7 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
   .fieldside .side-head{margin:0;height:auto}
   .field{max-width:144px;width:144px;flex:none;gap:4px}
   .field .tile{font-size:24px}
-  .fieldside .takes{flex:1;font-size:12px;line-height:1.35;min-width:0}
+  .takes{font-size:12px}
   .bar{gap:5px 6px;margin:4px 0}
   .bar button.op{font-size:13px;padding:4px 9px;min-width:0}
   .clock{font-size:12px;margin-left:auto}
@@ -335,10 +337,10 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
   </section>
 
   <section class="table">
-  <section class="side fieldside">
+  <div class="takesline"><span class="takes" id="takes"></span></div>
+  <section class="side fieldside" id="fieldSide">
     <div class="side-head"><b>場</b></div>
     <div class="field" id="field"></div>
-    <span class="takes" id="takes"></span>
   </section>
 
   <section class="stage">
@@ -956,6 +958,7 @@ function renderHand(el,p,interactive,tray){
 function renderField(){
   const el=$("field"),can=!G.over&&G.me.takes>0&&G.canTakeMore(G.me);
   el.className="field"+(can?" can glow":"");el.innerHTML="";
+  $("fieldSide").classList.toggle("take",can); // 取る番：場の見出しも金（KJ-046）
   el.style.gridTemplateColumns=`repeat(${D.rules.field_size},1fr)`;
   for(const x of G.field)el.appendChild(tileEl(x,{onClick:()=>tapField(x.id)}));
   $("takes").textContent=!G.over&&G.me.takes>0?`場から あと ${G.me.takes} 枚 取る（タップ）`:"";
@@ -1087,7 +1090,7 @@ function buildHowto(){
     `<b>台</b>は並べて見る場所：選んだ札は手札・ストックのマスにいるまま、台にはその写しが出る（枚数は変わらない）。`,
     `<b>レベル</b>：はじめる前に選ぶ（N5／N4。N4 は N5＋N4 の字）。山に入る字・語・割り方・対義・巡り・同音がレベルで変わる。いまは ${K.levelLabel(T.level)}（字 ${T.CHARS.size}・語 ${T.WORDS.size}）。`,
     `<b>相手</b>：はじめる前に選ぶ。ひとりで（CPU なし。50 点では終わらず、${(TL||R.win.time_limit_sec)/60} 分たったら点を出す。この端末の自己ベストを覚える）／とても弱い（CPU は ${R.cpu.weak_interval_sec[0]}〜${R.cpu.weak_interval_sec[1]} 秒に1回）／ふつう（${R.cpu.fair_interval_sec[0]}〜${R.cpu.fair_interval_sec[1]} 秒に1回）／いまの強さ（${R.cpu.interval_sec[0]}〜${R.cpu.interval_sec[1]} 秒に1回）。`,
-    `<b>割る</b>：台の1枚を部品表で一段だけ割る。<b>くっつける</b>：台の2枚を、左→右の順でくっつける。逆に並べたときは「並べる順が逆」と出る。十・口 のように2通りの字になるときは選ぶ。`,
+    `<b>割る</b>：台の1枚を部品表で一段だけ割る。<b>くっつける</b>：台の2枚を、左→右の順でくっつける。逆に並べたときは「並べる順が逆」と出る。十・口（古・田）や 大・丶（太・犬）のように2通りの字になるときは選ぶ。`,
     `<b>反転</b>（印：${STR.ICONS.invert}）対義の字に。${R.cooldown_sec.invert} 秒待ち。<b>巡り</b>（印：${STR.ICONS.cycle}）${T.CYCLES.map(c=>c.name).join("・")}を1つ先へ。${R.cooldown_sec.cycle} 秒待ち。<b>同音</b>（印：${STR.ICONS.homophone}）同じ読みの字から選ぶ。${R.cooldown_sec.homophone} 秒待ち。待ち時間は操作ごとで、二人は別々。`,
     `<b>引き直し</b>：${R.redraw.cost} 点払って手札を全部入れ替える（${R.start_hand} 枚）。${R.redraw.cost} 点ないときは ${R.redraw.free_wait_sec} 秒待てば 0 点で入れ替わる（待つあいだも動ける）。`,
     `<b>勝ち</b>：先に ${R.win.score} 点。または ${(TL||R.win.time_limit_sec)/60} 分たって点の多い方。CPU の速さは相手の選び方で変わる。`,
