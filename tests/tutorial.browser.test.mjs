@@ -128,6 +128,10 @@ async function playThrough(page, onStep) {
     await page.locator(".choices button", { hasText: "気" }).click();
     await tile(page, "分").click();
     await page.click("#bRelease");
+    // 取りきるまでは「8 / 8 おわり」に進まない（KJ-046）：段7 のまま、案内は取る
+    assert.match(await stepText(page), /^7 \/ 8　同音$/, "気分 のあと取りきるまでは段7");
+    assert.match(await lineText(page), /放った字数と同じ枚数を、場から取る/);
+    assert.equal(await page.isVisible("#tutGo"), false);
     await takeTwo(page);
   });
 }

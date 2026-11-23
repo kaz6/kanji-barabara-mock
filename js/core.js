@@ -986,7 +986,9 @@
     const tut = {
       g, steps, info, ui, acts,
       get total() { return steps.length; },
-      act, stepNo: () => act().step + 1, title: () => steps[act().step].title,
+      // 画面に出す段：最後の段（おわり）の前の放ったあとは、取りきるまで前の段のまま（段7 の 気分 のあとの「取る」が「8/8 おわり」に見えない。KJ-046）
+      act, shownStep: () => (lockedNow() && act().op === "end" && cur > 0 ? acts[cur - 1].step : act().step),
+      stepNo: () => tut.shownStep() + 1, title: () => steps[tut.shownStep()].title,
       // いま画面に出す1行。放ったあと場から取りきるまでは、取る案内
       line() {
         if (info.finished) return "";
@@ -1040,7 +1042,7 @@
         const a = act();
         if (kind === "skip") {
           info.finished = "skip";
-          g.addLog("—", "とばす", [], [], 0, `${a.step + 1} ${steps[a.step].title}でとばした（${info.done}段が済み）`);
+          g.addLog("—", "とばす", [], [], 0, `${tut.stepNo()} ${tut.title()}でとばした（${info.done}段が済み）`);
         } else {
           info.finished = "done";
           g.addLog("—", "終わり", [], [], 0, `チュートリアルを終えた（${info.done}段が済み。秒：${info.secs.join("・")}）`);

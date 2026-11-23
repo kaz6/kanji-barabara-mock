@@ -278,3 +278,38 @@ test("ふつうの試合には出ない：createGame の相手・時間は変わ
   assert.equal(K.OPPONENTS.some((o) => o.key === "tutorial"), false, "相手の選びには出さない");
   assert.equal(K.TUTORIAL_OPPONENT.key, "tutorial");
 });
+
+// KJ-046（D-060）：段7（同音）の 気分 を放ったあと、取りきるまでは「8/8 おわり」に進まない
+test("段7 の 気分 のあと：取りきるまで段7 のまま、取りきったら段8（おわり）。ほかの段は今まで通り", () => {
+  const tut = newTut(), g = tut.g;
+  while (!(tut.act().op === "release" && tut.act().word === "気分")) {
+    if (g.me.takes > 0 && tut.act().op !== "take") { takeAll(tut); continue; }
+    PLAY[tut.act().op](tut, tut.act());
+  }
+  assert.equal(tut.stepNo(), 7);
+  assert.equal(tut.title(), "同音");
+  PLAY.release(tut, tut.act());
+  assert.equal(g.me.takes, 2);
+  assert.equal(tut.act().op, "end", "手の順は次の段へ進んでいる");
+  assert.equal(tut.stepNo(), 7, "取りきるまで画面の段は 7");
+  assert.equal(tut.title(), "同音");
+  assert.equal(tut.atEnd(), false);
+  assert.match(tut.line(), /放った字数と同じ枚数を、場から取る（あと 2 枚/);
+  assert.equal(g.take(g.me, g.field[0].id).ok, true); tut.advance("take");
+  assert.equal(tut.stepNo(), 7, "1枚ではまだ");
+  assert.equal(g.take(g.me, g.field[0].id).ok, true); tut.advance("take");
+  assert.equal(tut.stepNo(), 8);
+  assert.equal(tut.title(), "おわり");
+  assert.equal(tut.atEnd(), true);
+});
+
+test("段7 の取りきる前にとばす：ログは 7 同音 でとばした（8 おわり ではない）", () => {
+  const tut = newTut(), g = tut.g;
+  while (!(tut.act().op === "release" && tut.act().word === "気分")) {
+    if (g.me.takes > 0 && tut.act().op !== "take") { takeAll(tut); continue; }
+    PLAY[tut.act().op](tut, tut.act());
+  }
+  PLAY.release(tut, tut.act());
+  assert.equal(tut.finish("skip"), true);
+  assert.ok(g.log.some((e) => e.op === "とばす" && /^7 同音でとばした/.test(e.note)), g.log.map((e) => e.note).join("|"));
+});

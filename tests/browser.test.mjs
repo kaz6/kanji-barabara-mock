@@ -1741,4 +1741,75 @@ test("画面", { skip }, async (t) => {
     assert.deepEqual(errors, []);
     await ctx.close();
   });
+  await t.test("取る番の見た目（KJ-046）：場の札が金の太い枠・見出しも金・文は卓の頭に1行・取りきったら戻る。大＋丶 は 太 と 犬（選ぶ・面で分かれる）", async () => {
+    const GOLD = "rgb(217, 154, 0)";
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 }, null);
+    await page.evaluate(() => {
+      const G = __KJ.game; G.cpuTurn = () => null;
+      G.me.cards = [..."丶大上休十口日月"].map((c, i) => ({ id: 9600 + i, c, t: 0, fresh: false }));
+      G.field = [..."山川玉"].map((c, i) => ({ id: 9700 + i, c, t: 0, fresh: false }));
+      __KJ.row.length = 0; __KJ.render();
+    });
+    const look = () => page.evaluate(() => {
+      const f = [...document.querySelectorAll("#field .tile")].map((e) => { const cs = getComputedStyle(e); return { bc: cs.borderTopColor, bw: parseFloat(cs.borderTopWidth) }; });
+      const h = getComputedStyle(document.querySelector("#fieldSide .side-head b")).color;
+      const tk = document.getElementById("takes"), r = tk.getBoundingClientRect(), tb = document.querySelector(".table").getBoundingClientRect(), fd = document.getElementById("field").getBoundingClientRect();
+      return { f, h, text: tk.textContent, lines: Math.round(r.height / parseFloat(getComputedStyle(tk).lineHeight || 20)), h1: r.height, over: tk.scrollWidth > tk.clientWidth, topIn: r.top >= tb.top && r.bottom <= fd.top, right: r.right };
+    });
+    let s = await look();
+    assert.ok(s.f.every((x) => x.bc !== GOLD), "取る番でないときは金の枠ではない");
+    assert.notEqual(s.h, GOLD, "取る番でないときは見出しは金ではない");
+    assert.equal(s.text, "");
+    const yBefore = await page.evaluate(() => document.getElementById("field").getBoundingClientRect().top);
+    await page.evaluate(() => { __KJ.game.me.takes = 2; __KJ.render(); });
+    s = await look();
+    assert.ok(s.f.length === 3 && s.f.every((x) => x.bc === GOLD && x.bw >= 3), `取る番は場の札が金の太い枠（${JSON.stringify(s.f)}）`);
+    assert.equal(s.h, GOLD, "場の見出しも金");
+    assert.match(s.text, /場から あと 2 枚 取る/);
+    assert.ok(s.h1 <= 24 && !s.over, `文は1行で折り返さない（高さ${s.h1}）`);
+    assert.ok(s.topIn, "文は場の上（卓の頭）にある");
+    assert.ok(s.right <= 375, "文が画面の横に収まる");
+    assert.equal(await page.evaluate(() => document.getElementById("field").getBoundingClientRect().top), yBefore, "文が出ても場は動かない");
+    const reds = await page.evaluate(() => [...document.querySelectorAll("#field .tile")].map((e) => { const cs = getComputedStyle(e); return cs.borderTopColor + cs.boxShadow; }).join("|"));
+    assert.doesNotMatch(reds, /200, 64, 42/, "赤は使わない");
+    if (process.env.KJ_SHOT) await page.screenshot({ path: process.env.KJ_SHOT.replace(/\.png$/, "-kj046.png") });
+    await page.locator("#field .tile").nth(0).click();
+    await page.locator("#field .tile").nth(1).click();
+    s = await look();
+    assert.ok(s.f.every((x) => x.bc !== GOLD), "取りきったら元に戻る（枠）");
+    assert.notEqual(s.h, GOLD, "取りきったら元に戻る（見出し）");
+    assert.equal(s.text, "");
+    // Join：大・丶 を並べて選ぶと 太 か 犬
+    await page.evaluate(() => { __KJ.game.me.cards = [..."大丶上休十口日月"].map((c, i) => ({ id: 9800 + i, c, t: 0, fresh: false })); __KJ.render(); });
+    await page.locator("#meHand .tile", { hasText: "大" }).click();
+    await page.locator("#meHand .tile", { hasText: "丶" }).click();
+    await page.click("#bJoin");
+    assert.equal(await page.locator("#choices.on button").count(), 2, "太 と 犬 の2つを選べる");
+    assert.deepEqual(await page.locator("#choices.on button").allTextContents(), ["太", "犬"]);
+    await page.locator("#choices.on button", { hasText: "犬" }).click();
+    assert.equal(await page.locator("#meHand .tile", { hasText: "犬" }).count(), 1, "犬 ができる");
+    assert.equal(await page.locator("#meHand .tile", { hasText: "太" }).count(), 0);
+    // 犬 を割ると 大 と 丶
+    assert.equal(await page.locator("#row .tile").count(), 1, "できた字は選ばれたまま台にいる");
+    await page.click("#bSplit");
+    assert.equal(await page.locator("#meHand .tile", { hasText: "大" }).count(), 1);
+    assert.equal(await page.locator("#meHand .tile", { hasText: "丶" }).count(), 1);
+    // 面：丶 を 大 の下に落とすと 太、右に落とすと 犬
+    const drop = async (rx, ry) => {
+      await page.evaluate(() => { __KJ.game.me.cards = [..."丶大上休十口日月"].map((c, i) => ({ id: 9900 + i + Math.floor(Math.random() * 1e5) * 10, c, t: 0, fresh: false })); __KJ.render(); });
+      await page.locator("#meHand").scrollIntoViewIfNeeded();
+      const f = await page.locator("#meHand .tile", { hasText: "丶" }).first().boundingBox();
+      const tb = await page.locator("#meHand .tile", { hasText: "大" }).first().boundingBox();
+      const x1 = f.x + f.width / 2, y1 = f.y + f.height / 2, x2 = tb.x + tb.width * rx, y2 = tb.y + tb.height * ry;
+      await page.mouse.move(x1, y1); await page.mouse.down();
+      await page.mouse.move((x1 + x2) / 2, (y1 + y2) / 2, { steps: 4 });
+      await page.mouse.move(x2, y2, { steps: 4 });
+      await page.mouse.up();
+      return page.locator("#meHand > .tile").evaluateAll((els) => els.map((e) => e.title).join(""));
+    };
+    assert.match(await drop(0.5, 0.88), /太/, "下の面に落とすと 太");
+    assert.match(await drop(0.9, 0.5), /犬/, "右の面に落とすと 犬");
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
 });
