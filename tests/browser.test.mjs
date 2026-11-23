@@ -1271,6 +1271,14 @@ test("画面", { skip }, async (t) => {
         assert.ok(r > g && g > b && r - b >= 40 && r - b <= 110, `${k} の色 ${v} は茶色（赤>緑>青で、赤と青の差が大きい。グレーでも濃い茶でもない）`);
         assert.ok(r >= 150 && r <= 210, `${k} の色 ${v} は字の線を邪魔しない薄さ`);
       }
+      // 選んだ札（赤地）の上は今まで通り白（KJ-052）
+      await page.locator("#meHand .tile").filter({ has: page.locator(".cutv, .cuth") }).first().click();
+      const selCol = await page.evaluate(() => {
+        const e = document.querySelector("#meHand .tile.sel .cutv, #meHand .tile.sel .cuth");
+        if (!e) return null;
+        const cs = getComputedStyle(e); return cs.borderLeftWidth !== "0px" && cs.borderLeftStyle !== "none" ? cs.borderLeftColor : cs.borderTopColor;
+      });
+      assert.equal(selCol, "rgb(255, 255, 255)", "選んだ札の点線は白");
       // 同梱の字体が読み込まれ、𢀖・⺍・电・𠆢 が描ける（空白ではない）
       const r = await page.evaluate(async () => {
         await document.fonts.load('32px "KJ Glyphs"', "𢀖");
