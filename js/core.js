@@ -242,7 +242,7 @@
   // match_id と用途（"field"＝場の列、"host"／"guest"＝その人の手札と引き直し）ごとの乱数
   const matchRand = (matchId, tag) => seededRand(strSeed(matchId + ":" + tag));
   const ROLES = ["host", "guest"];
-  const ROOM_OPPONENT = { key: "room", label: "人と（合言葉）" }; // 画面の「相手」の、いまの強さの後ろに出す（KJ-033 後半）
+  const ROOM_OPPONENT = { key: "room", label: "人と（合言葉）" }; // 画面の「遊び方」の「友だちと（合言葉）」（KJ-033 後半・KJ-045）
   // はじめる前の画面の「相手」は2段（KJ-045）。1段目「遊び方」：ひとりで／CPU と／友だちと（合言葉）。「CPU と」のときだけ2段目「強さ」。
   // 中で使う相手のキー（solo・weak・fair・normal・room）とログの「相手」の書き方（OPPONENTS・ROOM_OPPONENT の label）は変えない。画面の呼び名だけ別に持つ
   const PLAY_MODES = [
