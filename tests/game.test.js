@@ -1,7 +1,7 @@
 // 遊びの決まり：割る・くっつける・待ち時間（KJ-002 から残す）と、KJ-003 の 放つ・点数・取る・使用済み・引き直し・勝ち・CPU・ログ
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { K, D, T, T4, newGame, setHand, takeAll } = require("./helpers");
+const { K, D, T, T4, TG1, newGame, setHand, takeAll } = require("./helpers");
 
 const chars = (cards) => cards.map((x) => x.c).join("");
 
@@ -1780,7 +1780,32 @@ test("KJ-041：待ち時間中の Flip・巡りの無い字の Cycle・読みの
   g.triedOp(g.me, "巡り", ["休"], g.whyNot(g.me, "cycle", [c]));
   const [d] = setHand(g, g.me, "田");
   g.triedOp(g.me, "同音", ["田"], g.whyNot(g.me, "homophone", [d]));
-  assert.deepEqual(triedRows(g).map((e) => e.note), ["反転：待ち時間", "巡り：できない字", "同音：同じ読みではない"]);
+  assert.deepEqual(triedRows(g).map((e) => e.note), ["反転：待ち時間", "巡り：できない字", "同音：同じ読みの字がない"]);
+});
+
+test("KJ-069：同じ読みの字が1つも無い札は「同じ読みの字がない」。行き先が違うときだけ「同じ読みではない」。小1・N5・N4 とも whyNot と実際の操作が同じ理由", () => {
+  for (const level of ["G1", "N5", "N4"]) {
+    const g = newGame(1, "weak", level);
+    const TT = level === "G1" ? TG1 : level === "N4" ? T4 : T;
+    let none = 0, some = 0;
+    for (const c of TT.HOLD) {
+      const homo = K.homoChars(TT, c);
+      const [id] = setHand(g, g.me, c);
+      const why = g.whyNot(g.me, "homophone", [id]);
+      if (!homo.length) {
+        none++;
+        assert.equal(why, "同じ読みの字がない", `${level} ${c}`);
+        assert.equal(g.homophone(g.me, [id], "x").why, "同じ読みの字がない", `${level} ${c}`);
+        assert.equal(TT.HOMO.has(c), false, `${level} ${c}：ボタンの見た目（TT.HOMO.has）と判定が食い違わない`);
+      } else {
+        some++;
+        assert.equal(why, null, `${level} ${c}`);
+        assert.equal(g.homophone(g.me, [id], "x").why, "同じ読みではない", `${level} ${c}：行き先が違う`);
+        assert.equal(TT.HOMO.has(c), true, `${level} ${c}`);
+      }
+    }
+    assert.ok(none > 0 && some > 0, `${level}：${none} 字は同じ読みの字なし・${some} 字はあり`);
+  }
 });
 
 test("KJ-041：同じ札・同じ理由が続けて押されたら1行（×回数）。間に別の行が入る・札が違う・理由が違うと新しい行", () => {
