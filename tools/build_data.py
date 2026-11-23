@@ -38,10 +38,14 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 DATA = os.path.join(ROOT, "data")
 
-VERSION = "2026-11-21.2"
+VERSION = "2026-11-23.2"
 # レベルと KANJIDIC2 の jlpt（旧級）の対応。tanos の表への差し替えはまだ（D-009）
 LEVELS = {"N5": "4", "N4": "3"}
 LEVEL_ORDER = ["N5", "N4"]
+# 小1（KJ-044・D-058）：KANJIDIC2 の grade=1（小学1年で習う80字）。N5・N4 の「上」にも「下」にもならない別の組。
+# N5・N4 の字には lv のほかに g1:true を付け、どちらにも無い字（石・竹・王・玉・草・虫・糸・貝）は lv="G1" の行にする
+# （lv="G1" の字は小1 のときだけ山に入る）。語は g1:true を付ける（lv が null で g1 だけの語は小1 だけで放てる）
+G1_KEY = "G1"
 COMMON_TAGS = {"news1", "ichi1", "spec1", "spec2", "gai1"}  # JMdict の「よく使う」の印
 SKIP_KANJI_INFO = {  # 書き方として外すもの
     "word containing out-dated kanji",
@@ -145,6 +149,14 @@ def main():
             if c not in lv_of:
                 lv_of[c] = lv
                 chars.append(c)
+    # 小1：N5・N4 に無い字は lv="G1" で足す（--level N5 のときは N4 の字もここに入る）
+    g1_chars = [r[0] for r in db.execute("select literal from character where grade = 1 order by cast(freq as integer)")]
+    g1set = set(g1_chars)
+    for c in g1_chars:
+        if c not in lv_of:
+            lv_of[c] = G1_KEY
+            chars.append(c)
+    sources.append(f"小1=KANJIDIC2 grade=1（{len(g1_chars)}字）")
     list_source = "・".join(sources)
     charset = set(chars)
     # レベルの外の字（KJ-009）：data/cycles.json の outside。山には入れない。巡りでだけ手に入り、同音で別の字に変えられる
@@ -164,7 +176,7 @@ def main():
         if not row:
             print(f"警告: KANJIDIC2 に {ch} がありません", file=sys.stderr)
             if not is_out:
-                kanji.append({"c": ch, "lv": lv_of[ch]})
+                kanji.append({"c": ch, "lv": lv_of[ch], **({"g1": True} if ch in g1set else {})})
             continue
         cid, strokes, freq = row
         on, kun = [], []
@@ -178,8 +190,8 @@ def main():
         if is_out:
             outside_rows.append({"c": ch, "strokes": strokes, "freq": int(freq) if freq else None, "en": meanings[:2]})
         else:
-            kanji.append({"c": ch, "lv": lv_of[ch], "strokes": strokes, "freq": int(freq) if freq else None,
-                          "en": meanings[:2]})
+            kanji.append({"c": ch, "lv": lv_of[ch], **({"g1": True} if ch in g1set else {}),
+                          "strokes": strokes, "freq": int(freq) if freq else None, "en": meanings[:2]})
         readings[ch] = {"on": on, "kun": kun}
 
     write("kanji.json", {
@@ -187,9 +199,10 @@ def main():
         "level": args.level,
         "levels": levels,
         "source": list_source,
-        "note": "lv＝その字のレベル。N4 で遊ぶときは N5＋N4 の字を使う。本来は tanos.co.uk の表（D-009）。tools/build_data.py --kanji-list で N5 を差し替える",
+        "note": "lv＝その字のレベル（N5／N4。どちらにも無い小1の字は G1）。N4 で遊ぶときは N5＋N4 の字を使う。g1:true＝小1（小学1年の80字。KJ-044）の字で、小1 で遊ぶときはこの80字を使う。本来は tanos.co.uk の表（D-009）。tools/build_data.py --kanji-list で N5 を差し替える",
         "count": len(kanji),
-        "count_by_level": {lv: sum(1 for k in kanji if k["lv"] == lv) for lv in levels},
+        "count_by_level": {lv: sum(1 for k in kanji if k["lv"] == lv) for lv in [*levels, G1_KEY]},
+        "count_g1": sum(1 for k in kanji if k.get("g1")),
         "kanji": kanji,
         "outside_note": "レベルの外の字（KJ-009・D-027。十二支）。山には入れない。巡りでだけ手に入る。画面では「字」として見せる。data/cycles.json の outside から作る",
         "outside": outside_rows,
@@ -222,23 +235,28 @@ def main():
     parts_json, cycles_json, antonyms_json = load_json("parts.json"), load_json("cycles.json"), load_json("antonyms.json")
     hold_of = {}
     for i, lv in enumerate(levels):
-        lvchars = [c for c in chars if LEVEL_ORDER.index(lv_of[c]) <= i]
+        lvchars = [c for c in chars if lv_of[c] in LEVEL_ORDER and LEVEL_ORDER.index(lv_of[c]) <= i]
         hold_of[lv] = holdable(lvchars, parts_json, cycles_json, antonyms_json)
     hold_all = hold_of[levels[-1]]
+    hold_g1 = holdable(g1_chars, parts_json, cycles_json, antonyms_json)
 
     def word_level(text):
+        """N5／N4 のうち、その語がいちばん低く放てるレベル。どちらでも放てない（小1 だけの）語は None"""
         if len(text) == 1:
-            return lv_of.get(text)
+            return lv_of.get(text) if lv_of.get(text) in levels else None
         for lv in levels:
             if all(c in hold_of[lv] for c in text):
                 return lv
         return None
 
+    def word_g1(text):
+        return text in g1set if len(text) == 1 else all(c in hold_g1 for c in text)
+
     # ---- 語 ----
     rows = db.execute("select k.ID, k.idseq, k.text from Kanji k")
     cand = defaultdict(list)  # text -> [(kid, idseq)]
     for kid, idseq, text in rows:
-        if len(text) == 1 and text in charset or 2 <= len(text) <= 4 and all(c in hold_all for c in text):
+        if len(text) == 1 and text in charset or 2 <= len(text) <= 4 and (all(c in hold_all for c in text) or all(c in hold_g1 for c in text)):
             cand[text].append((kid, idseq))
 
     def kanji_info(kid):
@@ -290,6 +308,8 @@ def main():
             continue
         misc = entry_misc(idseq)
         w = {"w": text, "lv": word_level(text), "kana": kana, "en": glosses(idseq)}
+        if word_g1(text):
+            w["g1"] = True
         if common:
             w["common"] = True
         if "yojijukugo" in misc or any("yojijukugo" in entry_misc(i) for _, i in kids):
@@ -303,8 +323,9 @@ def main():
                 "common": sum(1 for w in ws if w.get("common")),
                 "yoji": sum(1 for w in ws if w.get("yoji"))}
     stats = {
-        "hold_by_level": {lv: len(hold_of[lv]) for lv in levels},
-        "by_level": {lv: stat_of([w for w in words if LEVEL_ORDER.index(w["lv"]) <= LEVEL_ORDER.index(lv)]) for lv in levels},
+        "hold_by_level": {**{lv: len(hold_of[lv]) for lv in levels}, G1_KEY: len(hold_g1)},
+        "by_level": {**{lv: stat_of([w for w in words if w["lv"] and LEVEL_ORDER.index(w["lv"]) <= LEVEL_ORDER.index(lv)]) for lv in levels},
+                     G1_KEY: stat_of([w for w in words if w.get("g1")])},
         "total": len(words),
         "by_length": {str(n): sum(1 for w in words if len(w["w"]) == n) for n in range(1, 5)},
         "common": sum(1 for w in words if w.get("common")),
@@ -313,12 +334,12 @@ def main():
     write("words.json", {
         "version": VERSION,
         "source": f"JMdict（jamdict-data, jmdict {meta.get('jmdict.version')}）。2〜4字の語は「手に持てる字」（レベルの字＋割る・くっつけるで出る字）だけで書けるもの（KJ-011・D-029）。1字の語はレベルの字だけ",
-        "fields": {"w": "語", "lv": "レベル（その語の字がすべて手に持てる、いちばん低いレベル）", "kana": "かな読み（最初の1つ）", "en": "英語の意味（最初の2つ）",
+        "fields": {"w": "語", "lv": "レベル（その語の字がすべて手に持てる、いちばん低い N5／N4。小1 だけで放てる語は null）", "g1": "小1 で放てる（字がすべて小1 の手に持てる字。KJ-044）", "kana": "かな読み（最初の1つ）", "en": "英語の意味（最初の2つ）",
                    "common": "よく使う（news1/ichi1/spec1/spec2/gai1）", "yoji": "四字熟語"},
         "stats": stats,
         "words": words,
     })
-    print(json.dumps({"kanji": len(kanji), "same_reading_groups": len(same), **stats}, ensure_ascii=False))
+    print(json.dumps({"kanji": len(kanji), "g1_chars": len(g1_chars), "same_reading_groups": len(same), **stats}, ensure_ascii=False))
 
 
 if __name__ == "__main__":

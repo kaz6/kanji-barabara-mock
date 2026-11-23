@@ -14,20 +14,21 @@ test("どのファイルにも version がある", () => {
 
 const ALL = new Set(D.kanji.kanji.map((k) => k.c)); // データにある字（N5＋N4）
 const LV = Object.fromEntries(D.kanji.kanji.map((k) => [k.c, k.lv]));
-const TT = { N5: K.makeTables(D, "N5"), N4: K.makeTables(D, "N4") };
+const TT = { G1: K.makeTables(D, "G1"), N5: K.makeTables(D, "N5"), N4: K.makeTables(D, "N4") };
 const OUT = new Set((D.kanji.outside || []).map((k) => k.c)); // レベルの外の字（十二支。KJ-009）。山には入らない
+const G1_OF = Object.fromEntries(D.kanji.kanji.filter((k) => k.g1).map((k) => [k.c, true])); // 小1 の字（KJ-044）
 const ZODIAC = [..."子丑寅卯辰巳午未申酉戌亥"];
 
-test("kanji.json：数と字がそろっている。どの字にもレベル（N5／N4）がある", () => {
+test("kanji.json：数と字がそろっている。どの字にもレベル（N5／N4。どちらにも無い小1の字は G1）がある", () => {
   assert.equal(D.kanji.count, D.kanji.kanji.length);
   assert.equal(ALL.size, D.kanji.kanji.length, "同じ字が2度ない");
-  for (const k of D.kanji.kanji) assert.ok(k.lv === "N5" || k.lv === "N4", k.c);
-  assert.equal(D.kanji.count_by_level.N5 + D.kanji.count_by_level.N4, D.kanji.count);
+  for (const k of D.kanji.kanji) assert.ok(k.lv === "N5" || k.lv === "N4" || (k.lv === "G1" && k.g1 === true), k.c);
+  assert.equal(D.kanji.count_by_level.N5 + D.kanji.count_by_level.N4 + D.kanji.count_by_level.G1, D.kanji.count);
 });
 
 test("レベル：字と語の数がレベルで変わる（N5 ⊂ N4）", () => {
   assert.equal(TT.N5.CHARS.size, D.kanji.count_by_level.N5);
-  assert.equal(TT.N4.CHARS.size, D.kanji.count);
+  assert.equal(TT.N4.CHARS.size, D.kanji.count_by_level.N5 + D.kanji.count_by_level.N4, "N4 の山に lv=G1 の字は入らない");
   assert.ok(TT.N5.CHARS.size < TT.N4.CHARS.size);
   assert.ok(TT.N5.WORDS.size < TT.N4.WORDS.size);
   for (const c of TT.N5.CHARS) assert.ok(TT.N4.CHARS.has(c), c);
@@ -50,7 +51,7 @@ test("部品表：できる字はデータの字か中継ぎ（relay）で、中
   for (const r of relay) {
     assert.ok(parts[r], `relay ${r} に部品がない`);
     assert.ok(isCompOfSomething(r), `relay ${r} はどの字の部品でもない`);
-    assert.ok(!ALL.has(r) || r === "田", `relay ${r} は N4 の字（田 は N5 の中継ぎのまま残す）`);
+    assert.ok(!ALL.has(r) || r === "田" || LV[r] === "G1", `relay ${r} は N4 の字（田 は N5 の中継ぎのまま残す。貝 は小1 だけの字で、N5・N4 では中継ぎ）`);
     assert.ok(!N5.has(r), `relay ${r} は N5 の字`);
   }
 });
@@ -204,21 +205,24 @@ test("語：1〜4字。2字以上は字がすべて手に持てる字で、lv �
     assert.ok(cs.length >= 1 && cs.length <= 4, w.w);
     if (cs.length === 1) {
       assert.ok(ALL.has(w.w), w.w);
-      assert.equal(w.lv, LV[w.w], w.w);
+      assert.equal(w.lv, LV[w.w] === "G1" ? null : LV[w.w], w.w);
+      assert.equal(!!w.g1, !!G1_OF[w.w], `${w.w} の g1`);
     } else {
-      assert.ok(cs.every((c) => TT.N4.HOLD.has(c)), `${w.w} に手に持てない字`);
-      assert.equal(w.lv, cs.every((c) => TT.N5.HOLD.has(c)) ? "N5" : "N4", w.w);
+      assert.ok(cs.every((c) => TT.N4.HOLD.has(c)) || cs.every((c) => TT.G1.HOLD.has(c)), `${w.w} に手に持てない字`);
+      assert.equal(w.lv, cs.every((c) => TT.N5.HOLD.has(c)) ? "N5" : cs.every((c) => TT.N4.HOLD.has(c)) ? "N4" : null, w.w);
+      assert.equal(!!w.g1, cs.every((c) => TT.G1.HOLD.has(c)), `${w.w} の g1`);
     }
+    assert.ok(w.lv || w.g1, `${w.w} はどのレベルでも放てない`);
     assert.ok(!seen.has(w.w), w.w);
     seen.add(w.w);
   }
-  for (const lv of ["N5", "N4"]) {
+  for (const lv of ["G1", "N5", "N4"]) {
     for (const w of TT[lv].WORDS.values()) for (const c of w.w) assert.ok(TT[lv].HOLD.has(c), `${lv} の ${w.w} の ${c}`);
   }
 });
 
 test("手に持てる字（KJ-011）：レベルの字＋割る・くっつけるで出る「字」。部品の色のものは入らない。N5 ⊂ N4。数は words.json と同じ", () => {
-  for (const lv of ["N5", "N4"]) {
+  for (const lv of ["G1", "N5", "N4"]) {
     const L = TT[lv];
     for (const c of L.CHARS) assert.ok(L.HOLD.has(c), c);
     for (const c of L.HOLD) assert.ok(K.isChar(L, c), `${lv} の ${c} は部品の見た目`);
