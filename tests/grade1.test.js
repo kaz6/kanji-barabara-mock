@@ -214,7 +214,7 @@ test("小1・同音：行き先に入る N5 の字は「N5 の字で小1 の80�
   for (const c of extra) assert.ok(!TG1.CHARS.has(c) && !TG1.OUTSIDE.has(c), `${c} は山にも巡りの外にも入らない`);
 });
 
-test("小1・同音：同じ読みの字が無い字は 20→13（80字のうち）。同音で手に入った N5 の字は 反転・巡り・割る・放つ も今まで通り", () => {
+test("小1・同音：同じ読みの字が無い字は 20→13（80字のうち）。同音で手に入った N5 の字は放てる（割る・反転・巡りはできない。仮決め）", () => {
   const none = (L) => [...L.CHARS].filter((c) => !K.homoChars(L, c).length);
   assert.equal(none(TG1).length, 13);
   assert.ok(!none(TG1).includes("五"));
@@ -238,3 +238,7 @@ test("小1・同音：N5・N4 は今まで通り（N5 は N5 の字の中、N4 �
   assert.deepEqual([T4.CHARS.size, T4.WORDS.size, T4.HOLD.size], [284, 10458, 353]);
 });
 
+
+test("小1・同音（仮決め）：同音で手に入った N5 の字は割れず、反転も巡りもしない。放つ・もう一度 Same reading はできる", () => {
+  for (const c of TG1.HOMO_ONLY) assert.ok(!K.canSplit(TG1, c) && !TG1.INV.has(c) && !TG1.NEXT.has(c) && K.homoChars(TG1, c).length > 0, c);
+});
