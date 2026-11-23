@@ -2054,7 +2054,9 @@ test("画面", { skip }, async (t) => {
     await page.evaluate(() => { window.__late = []; new MutationObserver((ms) => { for (const m of ms) for (const n of m.addedNodes) if (__KJ.game.over) window.__late.push(n.className); }).observe(document.getElementById("fxPts"), { childList: true }); });
     await page.evaluate(() => { const G = __KJ.game; G.endsAt = G.now() - 1; G.tick(); __KJ.drain(); __KJ.render(); }); // 飛んでいる途中で終わる
     assert.equal(await page.evaluate(() => __KJ.game.over), true);
+    assert.match(await page.textContent("#cpuScore"), /^52 点/, "終わったあと卓の相手の欄が本当の点（数えている途中の古い点のままにならない）");
     await page.waitForTimeout(1000); // 飛ぶ時間（0.42秒）のあと
+    assert.match(await page.textContent("#cpuScore"), /^52 点/, "あとから古い点に戻らない");
     assert.deepEqual(await page.evaluate(() => window.__late), [], "終わったあとに、輪などを新しく出さない");
     assert.equal(await page.locator("#fxPts .pf").count(), 0, "終わりのあとに演出が残らない");
     assert.deepEqual(errors, []);

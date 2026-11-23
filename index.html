@@ -1031,7 +1031,7 @@ function ptsCountUp(key,n,from,to,ms){
 function ptsFx(key,p,sc,n){ // render のたび：点が変わっていたら演出を出す
   if(PTS_FX.g!==G){PTS_FX.g=G;PTS_FX.prev={me:null,cpu:null};PTS_FX.disp={me:null,cpu:null};PTS_FX.last=null;$("fxPts").innerHTML=""}
   const prev=PTS_FX.prev[key];PTS_FX.prev[key]=p.score;
-  if(G.over){PTS_FX.disp[key]=null;$("fxPts").innerHTML="";return} // 終わりの画面（R-069）の上には出さない
+  if(G.over){PTS_FX.disp[key]=null;n.textContent=p.score;$("fxPts").innerHTML="";return} // 終わりの画面（R-069）の上には出さない
   if(prev===null||prev===p.score)return;
   const d=p.score-prev,small=key==="cpu",calm=reduceMotion(),box=n.getBoundingClientRect();
   if(box.width===0&&box.height===0)return; // 画面に出ていない
