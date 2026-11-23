@@ -44,7 +44,7 @@ test("小1：N5・N4 は小1 を足したことでは動かない（N4 の数は
 
 test("小1：放てる言葉は、80字と、割る・くっつけるなどで手に持てる字だけで書ける語。1字から四字熟語まで", () => {
   const ws = [...TG1.WORDS.values()];
-  assert.ok(ws.length > 2000 && ws.length < 2600, `語 ${ws.length}`); // KJ-070（D-089）：同音で N5 の字が手に持てるようになり 1376→2316
+  assert.ok(ws.length > 2000 && ws.length < 2800, `語 ${ws.length}`); // KJ-070（D-089）：同音で N5 の字が手に持てるようになり 1376→2316。KJ-071：その字の割り方・対義の行を使い 2316→2610
   // 小1 だけ外す語（data/blocked_words_g1.json）のうち、小1 の字で書ける語（KJ-068：工口・花町）の分だけ、統計より少ない
   const g1Writable = D.blocked_words_g1.words.filter((x) => D.words.words.some((w) => w.w === x && w.g1)).length;
   assert.equal(ws.length, D.words.stats.by_level.G1.total - g1Writable);
@@ -239,6 +239,60 @@ test("小1・同音：N5・N4 は今まで通り（N5 は N5 の字の中、N4 �
 });
 
 
-test("小1・同音（仮決め）：同音で手に入った N5 の字は割れず、反転も巡りもしない。放つ・もう一度 Same reading はできる", () => {
-  for (const c of TG1.HOMO_ONLY) assert.ok(!K.canSplit(TG1, c) && !TG1.INV.has(c) && !TG1.NEXT.has(c) && K.homoChars(TG1, c).length > 0, c);
+test("小1・同音（KJ-071）：同音で手に入った N5 の字には、N5 のときと同じ割り方・対義の行を使う。巡りは小1 のまま", () => {
+  assert.equal(TG1.HOMO_ONLY.size, 34);
+  // 手に持てる N5 の字＝同音の34字＋その字の割り方で出る N5 の字・対義の相手の N5 の字（父・前・北・東・古）
+  assert.deepEqual([...TG1.N5HELD].filter((c) => !TG1.HOMO_ONLY.has(c)).sort(), [..."父前北東古"].sort());
+  for (const c of TG1.N5HELD) assert.ok(N5ONLY(c) && !TG1.CHARS.has(c) && TG1.HOLD.has(c) && K.isChar(TG1, c), c);
+  for (const c of TG1.N5HELD) {
+    assert.deepEqual(TG1.parts[c], T.parts[c], `${c}：割り方は N5 と同じ`);
+    assert.ok(!TG1.NEXT.has(c), `${c}：巡りには乗らない`);
+  }
+  for (const c of TG1.N5HELD) if (T.INV.has(c) && TG1.N5HELD.has(T.INV.get(c))) assert.equal(TG1.INV.get(c), T.INV.get(c), `${c}：対義は N5 と同じ`);
+  assert.deepEqual(K.splitOnce(TG1, "後"), K.splitOnce(T, "後"), "後 を割れる（N5 と同じ割り方）");
+  assert.deepEqual(K.splitOnce(TG1, "分"), [..."八刀"]);
+  assert.deepEqual(K.splitOnce(TG1, "語"), K.splitOnce(T, "語"));
+  assert.equal(TG1.INV.get("行"), "来");
+  assert.equal(TG1.INV.get("多"), "少");
+  assert.equal(TG1.INV.get("前"), "後");
+  // 山は80字のまま。N5 の字は小1 の山にも巡りにも入らない
+  assert.equal(TG1.CHARS.size, 80);
+  assert.deepEqual(TG1.CYCLES.map((c) => c.chars.join("")), ["月火水木金土日", "一二三四五六七八九十"]);
+  for (const c of TG1.N5HELD) assert.ok(!TG1.CHARS.has(c) && ![...TG1.NEXT.values()].includes(c));
+  // N5 に行が無い字は、小1 でも割れない（N5 の字でない字の行は使わない）
+  for (const k of Object.keys(TG1.parts)) assert.ok(TG1.CHARS.has(k) || TG1.N5HELD.has(k) || TG1.RELAY.has(k) || T.parts[k], k);
+});
+
+test("小1・同音（KJ-071）：同音で手に入れた 後 を割る・くっつける・反転する。割って出た N5 の字（父 などの字）も手に持てる", () => {
+  const g = newGame(5, "solo", "G1");
+  const [id] = setHand(g, g.me, "後");
+  const sp = g.split(g.me, [id]);
+  assert.ok(sp.ok, sp.why);
+  assert.equal(g.me.cards.map((c) => c.c).join(""), K.splitOnce(TG1, "後").join(""));
+  const jn = g.join(g.me, g.me.cards.map((c) => c.id));
+  assert.ok(jn.ok, jn.why);
+  assert.equal(g.me.cards.map((c) => c.c).join(""), "後");
+  const [id2] = setHand(g, g.me, "前");
+  g.clock.t += D.rules.cooldown_sec.invert;
+  assert.ok(g.invert(g.me, [id2]).ok);
+  assert.equal(g.me.cards.map((c) => c.c).join(""), "後", "前→後");
+  // 巡りはしない
+  g.clock.t += D.rules.cooldown_sec.cycle;
+  assert.equal(g.cycle(g.me, [g.me.cards[0].id]).ok, false);
+  // 山・場・手札に N5 の字は出ない（手に持つのは同音・割る・反転でだけ）
+  for (const seed of [1, 7, 42]) {
+    const h = newGame(seed, "weak", "G1");
+    for (let i = 0; i < 20; i++) { h.clock.t += 40; h.redraw(h.me); for (const c of [...h.deck.map((x) => ({ c: x })), ...h.me.cards, ...h.field]) assert.ok(G1.includes(c.c), `seed ${seed}: ${c.c}`); }
+  }
+});
+
+test("小1・同音（KJ-071）：N5・N4 は動かない。語は 小1 の山の字と手に持てる字だけで書けて、N5 の字だけの語は出ない", () => {
+  assert.deepEqual([T.CHARS.size, T.WORDS.size, T.HOLD.size], [103, 2465, 140]);
+  assert.deepEqual([T4.CHARS.size, T4.WORDS.size, T4.HOLD.size], [284, 10458, 353]);
+  assert.equal(T.N5HELD.size, 0);
+  assert.equal(T4.N5HELD.size, 0);
+  assert.equal(TG1.HOLD.size, 137, "手に持てる字 121→137");
+  assert.equal(D.words.stats.hold_by_level.G1, 137);
+  assert.equal(TG1.WORDS.size, 2610, "放てる語 2316→2610");
+  for (const w of TG1.WORDS.values()) for (const c of w.w) assert.ok(TG1.HOLD.has(c), `${w.w} の ${c}`);
 });
