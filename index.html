@@ -161,6 +161,16 @@ button.op.full{animation:kjGaugeFull .6s ease-out}
 .setup button.op{border:0;border-bottom:3px solid var(--btn-edge);background:var(--btn);color:var(--ink)}
 .setup button.op:disabled,.setup button.op[aria-disabled=true]{background:var(--btn-off);border-bottom-color:var(--btn-off);color:var(--btn-off-ink)}
 .setup button.op.main{width:100%;margin-top:6px;padding:14px;font-size:17px;background:var(--accent);border-bottom-color:var(--accent-edge);color:#fff}
+/* チュートリアル（KJ-043）：案内は1行（2行ぶんの高さを確保して、段が替わっても下の札が動かない）。金＝ヒントの色を案内にも使い、光る札と「ここを見る」でつなぐ */
+.tut{background:#fff6dc;border:1px solid var(--hint);border-radius:6px;padding:6px 10px 8px;margin:6px 0}
+.tut-head{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:#7a5600;min-height:26px}
+.tut-head .sp{flex:1}
+.tut button.op{font-size:12px;padding:2px 10px;min-width:0;background:#fff;border-color:#7a5600;color:#7a5600}
+.tut p{margin:2px 0 0;font-size:14px;line-height:1.45;color:var(--ink);min-height:41px}
+.tut button.op.go{display:block;width:100%;margin-top:6px;padding:9px 12px;font-size:15px;font-weight:700;background:var(--ink);border-color:var(--ink);color:#fff}
+body.tutorial #clock,body.tutorial #again,body.tutorial #bLog,body.tutorial #bCopyEnd,body.tutorial .lead{display:none}
+.choices button.hint{border-color:var(--hint);box-shadow:0 0 0 2px var(--hint),0 0 10px 2px rgba(217,154,0,.55)}
+.setup #bTutorial{display:block;width:100%;margin-top:8px;padding:10px 12px}
 /* 合言葉の部屋（KJ-033 後半）：部屋を作る・合言葉で入る・待つ */
 .roomrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0}
 .roomrow input{font:inherit;font-size:18px;width:7.5em;padding:6px 8px;border:0;background:var(--tile);color:var(--ink);border-radius:4px;letter-spacing:.15em;font-variant-numeric:tabular-nums}
@@ -252,6 +262,7 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
     </div>
     <p class="note" id="setupInfo"></p>
     <button class="op main" id="start">はじめる</button>
+    <button class="op" id="bTutorial" hidden></button>
   </section>
 
   <div id="game" hidden>
@@ -263,6 +274,12 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
     <span class="clock" id="clock"></span>
   </div>
   <div class="msgline"><span class="hint-tag" id="hintTag" hidden>ヒント</span><span class="msg" id="msg"></span></div>
+  <!-- チュートリアルの案内（KJ-043）。文もボタンの文字も data/tutorial.json から入れる -->
+  <section class="tut" id="tut" hidden>
+    <div class="tut-head"><span id="tutStep"></span><span class="sp"></span><button class="op" id="tutSkip"></button></div>
+    <p id="tutLine"></p>
+    <button class="op go" id="tutGo" hidden></button>
+  </section>
 
   <section class="panel" id="logPanel">
     <textarea id="logText" readonly></textarea>
@@ -336,6 +353,7 @@ for(const [id,text] of Object.entries(STR.BUTTONS))document.querySelector(`#${id
 $title.textContent=STR.TEXT.title; // 題（KJ-042。文は仮。js/strings.js の1か所で直せる）
 const D={};
 let T=null, G=null; // 表・ゲームの状態
+let TUT=null;       // チュートリアルの進み（KJ.createTutorial。チュートリアルのあいだだけ。G は TUT.g）
 const TABLES={};    // レベルごとの表（KJ-006）
 const LVL_KEY="kj-level";
 let level=null;     // レベル（"N5"／"N4"）。はじめるときに効く。端末に覚える
@@ -395,7 +413,7 @@ function showScreen(playing){$("setup").hidden=playing;$("game").hidden=!playing
 function start(){
   clearTimeout(cpuTimer);
   sendAbandoned();
-  leaveRoom();
+  leaveRoom();leaveTutorial();
   T=tablesFor(level);buildHowto();
   G=K.createGame(D,T,{now:clock,opponent,timeLimit});
   row=[];lastTried="";
@@ -406,10 +424,45 @@ function start(){
   if(!G.solo)scheduleCpu();
   render();
 }
-$("start").onclick=start;
+// はじめて「はじめる」を押した人（端末に印が無い人）は、チュートリアルから（KJ-043。人と対戦〔合言葉〕には「はじめる」が無いので出ない）
+$("start").onclick=()=>{if(tutorialSeen())start();else startTutorial()};
 $("again").onclick=()=>{if(G&&G.match)toSetup();else start()}; // 合言葉の部屋の「もう一度」は、はじめる前の画面へ（部屋を作り直す。仮）
-function toSetup(){clearTimeout(cpuTimer);sendAbandoned();leaveRoom();G=null;row=[];hideChoices();$("logPanel").classList.remove("on");showScreen(false);T=tablesFor(level);showCounts();buildHowto();roomUi()}
+function toSetup(){clearTimeout(cpuTimer);sendAbandoned();leaveRoom();leaveTutorial();G=null;row=[];hideChoices();$("logPanel").classList.remove("on");showScreen(false);T=tablesFor(level);showCounts();buildHowto();roomUi()}
 $("bSetup").onclick=toSetup;
+// ---------- チュートリアル（KJ-043・D-057）----------
+// 決まった手札・場（data/tutorial.json）で、操作を1つずつ見せる。時間なし・CPU なし。終えるか「とばす」を押したら端末に印を付け、選んでいた設定の本番へ（合言葉の部屋を選んでいたら、はじめる前の画面へ）
+const TUTORIAL_KEY="kj-tutorial";
+let tutSeenMem=false; // localStorage が書けない端末でも、同じページのあいだは出し直さない
+const tutorialSeen=()=>tutSeenMem||lsGet(TUTORIAL_KEY)==="1";
+function markTutorial(){tutSeenMem=true;lsSet(TUTORIAL_KEY,1)}
+function leaveTutorial(){TUT=null;document.body.classList.remove("tutorial");$("tut").hidden=true}
+function startTutorial(){
+  clearTimeout(cpuTimer);sendAbandoned();leaveRoom();
+  T=tablesFor(D.tutorial.level); // 好 などが割れるよう、N4 の表（段の中身は data/tutorial.json）
+  TUT=K.createTutorial(D,T,{now:clock});G=TUT.g;
+  row=[];lastTried="";
+  $("msg").textContent="";$("msg").className="msg";
+  $("bCopyEnd").hidden=true;$("logPanel").classList.remove("on");
+  hideChoices();buildHowto();
+  document.body.classList.add("tutorial");
+  showScreen(true);render();
+}
+function finishTutorial(kind){
+  if(!TUT||!TUT.finish(kind))return;
+  sendLog(G);markTutorial();
+  if(opponent===K.ROOM_OPPONENT.key)toSetup();else start();
+}
+function renderTut(){
+  $("tut").hidden=!TUT;
+  if(!TUT)return;
+  const ui=TUT.ui;
+  $("tutStep").textContent=`${ui.stepOf.replace("{n}",TUT.stepNo()).replace("{total}",TUT.total)}　${TUT.title()}`;
+  $("tutLine").textContent=TUT.line();
+  $("tutSkip").textContent=ui.skip;$("tutGo").textContent=ui.go;$("tutGo").hidden=!TUT.atEnd();
+}
+$("bTutorial").onclick=startTutorial;
+$("tutSkip").onclick=()=>finishTutorial("skip");
+$("tutGo").onclick=()=>finishTutorial("done");
 function scheduleCpu(){cpuTimer=setTimeout(()=>{if(!G||G.over)return;G.cpuTurn();afterChange();if(!G.over)scheduleCpu()},G.cpuDelay()*1000)}
 function drain(){
   if(!G)return;
@@ -605,7 +658,7 @@ $("bEnter").onclick=async()=>{
 // 二人とも 'start' 行が届いたときに始める。始まりの時刻はその行の created_at から
 function beginRoom(startRow){
   const rm=ROOM;if(!rm||!rm.matchId||MC)return;
-  clearTimeout(cpuTimer);sendAbandoned();
+  clearTimeout(cpuTimer);sendAbandoned();leaveTutorial();
   const startAt=K.roomStartAt(startRow.created_at,Date.now()/1000,clock());
   T=tablesFor(rm.level);
   G=K.createGame(D,T,{now:clock,timeLimit:rm.timeLimit,match:{id:rm.matchId,role:rm.role,startAt}});
@@ -638,6 +691,7 @@ let dragEnded=false; // 引きずって離したあとに出るタップを無�
 function tapHand(id){
   if(G.over||dragEnded||G.locked(G.me))return; // 放ったあと、場から取りきるまでは選べない（KJ-039）
   if(row.includes(id)){tapRow(id);return} // もう一度タップで選びが外れる
+  if(TUT){const x=G.byId(G.me,id);if(!x||!TUT.canSelect(x.c))return} // チュートリアル：その手に使う札だけ選べる
   row.push(id);lastTried="";hideChoices();render();
 }
 // 面でくっつける（KJ-017・D-035）：札の上のどこを指しているか。真ん中の四角（幅・高さの30%〜70%）が中央、まわりは対角線で上・下・左・右に分ける
@@ -652,6 +706,7 @@ function attachDrag(b,id){
   b.dataset.id=id;
   b.addEventListener("pointerdown",e=>{
     if(!G||G.over||G.locked(G.me)||(e.pointerType==="mouse"&&e.button!==0))return;
+    if(TUT){const x=G.byId(G.me,id);if(!x||!TUT.canDrag(x.c))return} // チュートリアル：引きずれるのは、くっつける手の 十 だけ
     const sx=e.clientX,sy=e.clientY;let moved=false,over=null,jt=null;
     const rows=[$("meHand"),$("meTray")];
     const under=(ev)=>{const t=document.elementFromPoint(ev.clientX,ev.clientY);const el=t&&t.closest("[data-id],.slot.free");return el&&el!==b&&+el.dataset.id!==id&&rows.includes(el.parentNode)&&(el.dataset.id||el.parentNode!==b.parentNode)?el:null};
@@ -687,8 +742,13 @@ function attachDrag(b,id){
       clearJt();document.querySelectorAll(".tile.joinable").forEach(el=>el.classList.remove("joinable"));
       b.classList.remove("drag");if(over)over.classList.remove("over");
       if(!t||ev.type!=="pointerup"||!G||G.over)return;
+      if(TUT){ // チュートリアル：決めた札の決めた面にだけくっつく。入れ替え・移すはしない（はじかれた落とし先は「ためした」に残す）
+        const tc=t.dataset.id?(G.byId(G.me,+t.dataset.id)||{}).c:null;
+        const why=TUT.blocked("join",{from:myChar(),to:tc,face:hit?hit.face:null});
+        if(why){G.triedOp(G.me,"面でくっつける",[myChar(),tc].filter(Boolean),why);showWhy(why);afterChange();return}
+      }
       if(hit){
-        const tid=+t.dataset.id,done=(r)=>{hideChoices();if(r&&r.ok)lastTried="";else if(r&&r.why)G.triedOp(G.me,"面でくっつける",[myChar(),(G.byId(G.me,tid)||{}).c].filter(Boolean),r.why);afterChange()};
+        const tid=+t.dataset.id,done=(r)=>{hideChoices();if(r&&r.ok){lastTried="";if(TUT)TUT.advance("join")}else if(r&&r.why)G.triedOp(G.me,"面でくっつける",[myChar(),(G.byId(G.me,tid)||{}).c].filter(Boolean),r.why);afterChange()};
         if(hit.chars.length>1){showChoices([{label:"できる字",chars:hit.chars,pick:x=>done(G.joinFace(G.me,id,tid,hit.face,x))}]);return}
         done(G.joinFace(G.me,id,tid,hit.face));return;
       }
@@ -706,7 +766,7 @@ function tapRow(id){if(G.over||G.locked(G.me))return;noteTried();row=row.filter(
 function tapField(id){
   if(!G||G.over)return;
   if(MC){const mc=MC;mc.take(id).then(r=>{if(stale(mc))return;if(!r.ok){showWhy(r.why);triedTake(id,r.why,r.c)}afterChange()});afterChange();return} // 合言葉の部屋：先に入れた方だけ取れる
-  const r=G.take(G.me,id);if(!r.ok){showWhy(r.why);triedTake(id,r.why,r.c)}afterChange()
+  const r=G.take(G.me,id);if(!r.ok){showWhy(r.why);triedTake(id,r.why,r.c)}else if(TUT)TUT.advance("take");afterChange()
 }
 // 取るがはじかれた（KJ-041）：「ためした」に、場の札と理由を残す
 function triedTake(id,why,c){const f=G.field.find(x=>x.id===id);const ch=f?f.c:c;if(ch)G.triedOp(G.me,"取る",[ch],why)} // 先着に負けると場から消えているので、返事の c（取ろうとした字）を使う
@@ -717,13 +777,15 @@ function afterOp(res){if(res&&res.ok){row=res.cards?res.cards.map(x=>x.id):[];la
 const isSingleTry=s=>s.rc.length===1&&!s.rl.ok&&[...s.text].length===1; // 1字は押せるが、はじかれる（KJ-008）
 $("bRelease").onclick=()=>{
   const s=rowState();
+  if(TUT){const why=TUT.blocked("release",{text:s.text});if(why){G.triedOp(G.me,"放つ",s.rc.map(x=>x.c),why);showWhy(why);afterChange();return}}
   // 1字は放てない（KJ-008）：はじいて理由を出し、ログに「ためした」で残す。札は台（選び）に残る
   if(isSingleTry(s)){
     const why=s.rl.why;G.tried(G.me,[s.text],why);
     const m=$("msg");m.textContent=why;m.className="msg";hideChoices();afterChange();return;
   }
   if(MC){const mc=MC;mc.release([...row]).then(r=>{if(stale(mc))return;if(!r.ok&&r.why&&(r.lost||r.why==="つながらない"||r.why==="通信中"))showWhy(r.why);afterOp(r)});afterChange();return} // 合言葉の部屋：言葉は先に放った方だけ
-  afterOp(G.release(G.me,[...row]));
+  const r=G.release(G.me,[...row]);if(TUT&&r&&r.ok)TUT.advance("release");
+  afterOp(r);
 };
 $("bSplit").onclick=()=>press("bSplit","split","割る",()=>{const r=G.split(G.me,row);afterOp(r);return r});
 $("bJoin").onclick=()=>press("bJoin","join","くっつける",()=>{
@@ -735,20 +797,24 @@ $("bInvert").onclick=()=>press("bInvert","invert","反転",()=>{const r=G.invert
 $("bCycle").onclick=()=>press("bCycle","cycle","巡り",()=>{const r=G.cycle(G.me,row);afterOp(r);return r});
 $("bBack").onclick=()=>{noteTried();row=[];hideChoices();afterChange()};
 $("bRedraw").onclick=()=>{
-  if(isOff("bRedraw")){if(!G.over){G.triedOp(G.me,"引き直し",[],G.whyNot(G.me,"redraw"));afterChange()}return} // 引き直しを待っているあいだに押した（KJ-041）
+  if(isOff("bRedraw")){if(!G.over){G.triedOp(G.me,"引き直し",[],(TUT&&TUT.blocked("redraw"))||G.whyNot(G.me,"redraw"));afterChange()}return} // 引き直しを待っているあいだに押した（KJ-041）
   row=[];hideChoices();if(MC){const mc=MC;mc.redraw().then(()=>{if(!stale(mc))afterChange()});afterChange();return}G.redraw(G.me);afterChange()}; // 部屋：手札はすぐ入れ替わる。点の送りの返事は待たずに描く
 $("bHomo").onclick=()=>{
+  if(TUT){const why=TUT.blocked("homophone",{chars:rowCards().map(x=>x.c)});if(why){G.triedOp(G.me,"同音",rowCards().map(x=>x.c),why);showWhy(why);afterChange();return}}
   if(isOff("bHomo")){if(!G.over){G.triedOp(G.me,"同音",rowCards().map(x=>x.c),G.whyNot(G.me,"homophone",[...row]));afterChange()}return} // 押せない見た目：選びの一覧は出さず、理由を残す（KJ-041）
   const c=rowText();
   showChoices((T.HOMO.get(c)||[]).map(g=>({label:`${g.type==="on"?"音":"訓"}：${g.reading}`,chars:g.chars.filter(x=>x!==c),
-    pick:x=>{if(rowText()!==c)return;const r=G.homophone(G.me,row,x);afterOp(r);if(!r.ok){G.triedOp(G.me,"同音",[c],r.why);afterChange()}}})));
+    pick:x=>{
+      if(rowText()!==c)return;
+      if(TUT){const why=TUT.blocked("homophone",{chars:[c],pick:x});if(why){G.triedOp(G.me,"同音",[c],why);showWhy(why);afterChange();return}}
+      const r=G.homophone(G.me,row,x);if(TUT&&r.ok)TUT.advance("homophone");afterOp(r);if(!r.ok){G.triedOp(G.me,"同音",[c],r.why);afterChange()}}})));
 };
 function showChoices(groups){
   const box=$("choices");box.innerHTML="";
   for(const g of groups){
     const d=document.createElement("div");d.className="g";
     d.innerHTML=`<span>${g.label}</span>`;
-    for(const x of g.chars){const b=document.createElement("button");b.textContent=x;b.onclick=()=>g.pick(x);d.appendChild(b)}
+    for(const x of g.chars){const b=document.createElement("button");b.textContent=x;b.onclick=()=>g.pick(x);if(TUT&&TUT.glow().pick===x)b.classList.add("hint");d.appendChild(b)}
     box.appendChild(d);
   }
   box.classList.add("on");
@@ -856,9 +922,11 @@ const isOff=id=>$(id).getAttribute("aria-disabled")==="true";
 function press(id,op,name,run){
   const chars=rowCards().map(x=>x.c);
   if(G.over)return;
+  if(TUT){const why=TUT.blocked(op,{chars});if(why){G.triedOp(G.me,name,chars,why);showWhy(why);afterChange();return}} // チュートリアル：いまの段の手だけ
   if(isOff(id)){G.triedOp(G.me,name,chars,G.whyNot(G.me,op,[...row]));afterChange();return}
   const r=run();
   if(r&&r.ok===false){G.triedOp(G.me,name,chars,r.why);afterChange()}
+  else if(TUT&&r&&r.ok){TUT.advance(op);afterChange()}
 }
 function renderOps(){
   const s=rowState(),one=s.rc.length===1?s.rc[0].c:null,me=G.me,live=!G.over&&!G.locked(G.me); // 放ったあと、場から取りきるまでは、ほかのボタンは全部押せない（KJ-039）
@@ -868,7 +936,7 @@ function renderOps(){
   const gone=!!(MC&&MC.oppGone()&&!G.over);
   $("cpuCds").textContent=gone?"相手の通信が切れた":cds.length?"待ち："+cds.join("・"):"";
   $("cpuCds").classList.toggle("gone",gone);
-  $("bRelease").disabled=!(live&&(s.rl.ok||isSingleTry(s)));
+  $("bRelease").disabled=!(live&&(s.rl.ok||isSingleTry(s)))||(!!TUT&&!TUT.buttonOn("bRelease")); // チュートリアル：いまの段の手のボタンだけ
   // 押せない見た目の操作ボタンは disabled でなく aria-disabled（見た目は同じ）。押すと何も起きず、「ためした」に理由が残る（KJ-041）
   setOff("bSplit",!(live&&one&&K.canSplit(T,one)&&G.fits(me,row,2)));
   setOff("bJoin",!(live&&s.joins.length&&fit1));
@@ -877,6 +945,7 @@ function renderOps(){
   setOff("bHomo",!(live&&one&&T.HOMO.has(one)&&G.ready(me,"homophone")&&fit1));
   $("bBack").disabled=!(live&&s.rc.length);
   setOff("bRedraw",!(live&&me.redrawAt===null));
+  if(TUT)for(const id of ["bSplit","bJoin","bInvert","bCycle","bHomo","bRedraw"])if(!TUT.buttonOn(id))setOff(id,true); // チュートリアル：いまの段の手のボタン以外は押せない見た目
   // 待ち時間はボタンの地のゲージで見せる（KJ-034。秒数の文字は出さない）
   gauge($("bInvert"),G.cdLeft(me,"invert")>0,G.cdFrac(me,"invert"));
   gauge($("bCycle"),G.cdLeft(me,"cycle")>0,G.cdFrac(me,"cycle"));
@@ -887,12 +956,14 @@ function renderOps(){
   const rc=D.rules.redraw;
   // ヒント（KJ-037）：光らせる札とボタン。言葉は出さない。光りは core が決め、10秒か次の操作で消える
   const hint=G.hintActive();
-  for(const el of document.querySelectorAll("#meHand [data-id],#meTray [data-id]"))el.classList.toggle("hint",!!hint&&hint.ids.includes(+el.dataset.id));
-  for(const id of ["bSplit","bInvert","bCycle","bHomo","bRedraw"])$(id).classList.toggle("hint",!!hint&&hint.button===id);
+  const tg=TUT?TUT.glow():null; // チュートリアルの光り（その手に使う札とボタン。ヒントと同じ金）
+  for(const el of document.querySelectorAll("#meHand [data-id],#meTray [data-id]")){const x=tg&&G.byId(me,+el.dataset.id);el.classList.toggle("hint",(!!hint&&hint.ids.includes(+el.dataset.id))||(!!x&&tg.chars.includes(x.c)))}
+  for(const id of ["bRelease","bSplit","bInvert","bCycle","bHomo","bRedraw"])$(id).classList.toggle("hint",(!!hint&&hint.button===id)||(!!tg&&tg.button===id));
   $("hintTag").hidden=!hint;
   $("cdRedraw").textContent=me.redrawAt!==null||me.score<rc.cost?STR.redrawNote.free(rc.free_wait_sec):STR.redrawNote.cost(rc.cost);
   const left=Math.ceil(G.timeLeft());
   $("clock").innerHTML=`残り <span class="n">${Math.floor(left/60)}:${String(left%60).padStart(2,"0")}</span>`; // 残り時間は大きな数字（KJ-042）
+  renderTut();
 }
 function renderReleased(){
   const ul=$("released"),items=G.log.filter(e=>e.op==="放つ");
@@ -953,10 +1024,10 @@ document.addEventListener("visibilitychange",()=>{
   if(!G.over&&!G.solo&&!G.match){clearTimeout(cpuTimer);scheduleCpu()} // 人と対戦は CPU を出さない
 });
 
-window.__KJ={get game(){return G},get row(){return row},get tables(){return T},get mc(){return MC},get room(){return ROOM},data:D,render}; // ブラウザのテスト用
+window.__KJ={get game(){return G},get tut(){return TUT},get row(){return row},get tables(){return T},get mc(){return MC},get room(){return ROOM},data:D,render}; // ブラウザのテスト用
 
 Promise.all(K.FILES.map(f=>fetch(`data/${f}.json`).then(r=>r.json()).then(j=>D[f]=j)))
-  .then(()=>{loadSettings();T=tablesFor(level);buildPickers();buildHowto();showCounts();roomUi()})
+  .then(()=>{loadSettings();T=tablesFor(level);buildPickers();buildHowto();showCounts();roomUi();$("bTutorial").textContent=D.tutorial.ui.button;$("bTutorial").hidden=false})
   .catch(e=>{$("setupInfo").textContent="データを読めませんでした（file:// では開けません。Pages かローカルのサーバーで開いてください）"});
 </script>
 </body>

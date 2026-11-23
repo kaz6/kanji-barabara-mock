@@ -27,7 +27,7 @@
   const timeLabel = (sec) => `${sec / 60}分`;
   const cpuInterval = (D, key) => (key === "weak" ? D.rules.cpu.weak_interval_sec : key === "fair" ? D.rules.cpu.fair_interval_sec : D.rules.cpu.interval_sec);
 
-  const FILES = ["kanji", "words", "readings", "parts", "antonyms", "cycles", "radical_forms", "special", "rules", "split_shapes"];
+  const FILES = ["kanji", "words", "readings", "parts", "antonyms", "cycles", "radical_forms", "special", "rules", "split_shapes", "tutorial"];
 
   // ---------- 表を引く ----------
   // level を省くと rules.json の level_default（なければ N4）
@@ -186,6 +186,7 @@
   // ログの頭に書く仮置きの値
   function opponentLabel(D, key, limit) {
     limit = normTime(D, limit);
+    if (key === TUTORIAL_OPPONENT.key) return "チュートリアル（決まった手札と場。時間なし・CPU なし・場の取り合いなし。点は勝ち負けに関係しない）";
     if (key === ROOM_OPPONENT.key) return `${ROOM_OPPONENT.label}（相手は人。CPU なし。場の札・言葉・勝ちの点は先に入れた方。相手の手は、こちらから見えたものだけ書く）`;
     if (key === "solo") return `ひとりで（CPU なし。場の取り合いなし。50点では終わらず、${limit / 60}分たったら終わって点を出す。CPU の列は 0）`;
     const [a, b] = cpuInterval(D, key);
@@ -198,6 +199,7 @@
     level = level || R.level_default || "N4";
     key = key || R.opponent_default;
     const [a, b] = cpuInterval(D, key);
+    if (key === TUTORIAL_OPPONENT.key) return ["チュートリアル（KJ-043）：手札・ストック・場は data/tutorial.json の決まったもの。段ごとに、その手だけ押せる（ほかのボタンは押せない見た目）。時間なし・CPU なし・ヒントなし"];
     return [
       `場=${R.field_size}枚 最初の手札=${R.start_hand}枚 手札の上限=${R.hand_max}枚＋ストック${R.split_extra}枚（全部で${R.hand_max + R.split_extra}マス。場から取るのは上の段・ストックを合わせて${R.hand_max + R.split_extra}マスが埋まるまで（上の段が埋まっていればストックへ）。割る・くっつけるでできた札は、字も部品も、手札が埋まっていればストックへ。手札とストックの間は自分で動かせる）山=${level} の字を${R.same_char_in_deck}枚ずつ（尽きたら足す）`,
       `点数 ${Object.entries(S.by_length).map(([n, p]) => `${n}字${p}`).join("・")} 四字熟語×${S.yoji_mult} 特別な語×${S.special_mult}（1字は放てない）`,
@@ -235,6 +237,8 @@
   const ROLES = ["host", "guest"];
   const ROOM_OPPONENT = { key: "room", label: "人と（合言葉）" }; // 画面の「相手」の、いまの強さの後ろに出す（KJ-033 後半）
   const ROOM_OPP_NAME = "相手";
+  // チュートリアル（KJ-043）。相手の選びには出さない（はじめる前の「チュートリアル」ボタンと、はじめて「はじめる」を押したときだけ）
+  const TUTORIAL_OPPONENT = { key: "tutorial", label: "チュートリアル" };
   // 時間切れのあと、相手の最後の点（end の行）を待つ秒数。届かなければ、最後に見えた相手の点で比べる（技術の値。遊びの数値ではない）
   const MATCH_END_GRACE_SEC = 5;
   // つなぎの技術の値（遊びの数値ではない。KJ-033 後半・R-059）
@@ -267,8 +271,9 @@
     const rand = env.rand || (M ? matchRand(M.id, M.role) : Math.random);
     const R = D.rules;
     let uid = 0;
-    const opponent = M ? ROOM_OPPONENT.key : OPPONENTS.some((o) => o.key === env.opponent) ? env.opponent : R.opponent_default;
-    const g = { D, T, level: T.level, opponent, solo: opponent === "solo", log: [], events: [], used: new Set(), over: false, winner: null,
+    const TUT = env.tutorial && !M ? env.tutorial : null; // チュートリアル（KJ-043）：決まった手札・ストック・場。時間なし・CPU なし
+    const opponent = M ? ROOM_OPPONENT.key : TUT ? TUTORIAL_OPPONENT.key : OPPONENTS.some((o) => o.key === env.opponent) ? env.opponent : R.opponent_default;
+    const g = { D, T, level: T.level, opponent, solo: opponent === "solo" || !!TUT, tutorial: !!TUT, log: [], events: [], used: new Set(), over: false, winner: null,
       startedAt: (env.date || (() => new Date()))() };
     g.timeLimit = normTime(D, env.timeLimit); // 制限時間（秒。KJ-007）
     g.match = M ? { id: M.id, role: M.role, oppRole: M.role === "host" ? "guest" : "host" } : null;
@@ -363,6 +368,12 @@
         }
       }
     }
+    if (TUT) {
+      // チュートリアル：手札・ストック・場・補充を決まったものに（data/tutorial.json）。ストックの部品は入れない
+      g.me.cards = [...TUT.hand.map((c) => card(c)), ...TUT.stock.map((c) => { const x = card(c); x.tray = true; return x; })];
+      g.field = TUT.field.map((c) => card(c));
+      g.deck = TUT.refill.slice();
+    }
     g.opp = (p) => (p === g.me ? g.cpu : g.me);
     g.byId = (p, id) => p.cards.find((x) => x.id === id);
     g.ready = (p, k) => now() >= p.cd[k];
@@ -374,8 +385,8 @@
     g.redrawFrac = (p) => (p.redrawAt === null ? 1 : frac(g.redrawLeft(p), R.redraw.free_wait_sec));
     const useCd = (p, k) => { p.cd[k] = now() + R.cooldown_sec[k]; };
 
-    const QUIET = new Set(["はじまり", "ためした", "ヒント", "終わり", "動けない", "動ける", "入れ替え", "移す"]);
-    const HINT_KEEP = new Set(["はじめ", "はじまり", "ためした", "ヒント", "動けない", "動ける", "終わり"]);
+    const QUIET = new Set(["はじまり", "ためした", "ヒント", "終わり", "動けない", "動ける", "入れ替え", "移す", "段", "とばす"]);
+    const HINT_KEEP = new Set(["はじめ", "はじまり", "ためした", "ヒント", "動けない", "動ける", "終わり", "段", "とばす"]);
     function addLog(who, op, from, to, pts, note) {
       g.log.push({ t: logT(), who, op, from: from || [], to: to || [], pts: pts || 0,
         meScore: g.me.score, cpuScore: g.cpu.score, me: nCards(g.me), cpu: nCards(g.cpu), note: note || "" });
@@ -414,7 +425,7 @@
       return out;
     };
     function checkStuck() {
-      if (!g.me || !g.cpu || g.over) return;
+      if (!g.me || !g.cpu || g.over || g.tutorial) return; // チュートリアルでは「動けない」を数えない
       for (const p of players()) {
         const w = g.releasableInHand(p);
         if (!w && !p.stuck) {
@@ -531,7 +542,7 @@
       return { tier: 3, ids: [], button: null, op: "引き直し（待っている）", word: "" };
     };
     const maybeHint = (p) => {
-      if (g.hintStreak < HR.fail_streak) return;
+      if (g.tutorial || g.hintStreak < HR.fail_streak) return; // チュートリアルは自分の光りを出す（createTutorial）。自動のヒントは出さない
       g.hintStreak = 0; // ヒントを出したら数え直し
       const h = makeHint(p);
       g.hint = h.ids.length || h.button ? { ...h, until: now() + HR.glow_sec } : null; // 光らせる物が無いとき（引き直しを待っている）は、札も出さない
@@ -867,7 +878,7 @@
     }
     // 画面が定期的に呼ぶ：0点の引き直しの待ちと、時間切れ
     g.tick = () => {
-      if (!live()) return false;
+      if (!live() || g.tutorial) return false; // チュートリアルに時間はない
       let changed = false;
       for (const p of players()) {
         if (p.redrawAt !== null && now() >= p.redrawAt) { doRedraw(p, 0, `${R.redraw.free_wait_sec}秒待った（0点）`); changed = true; }
@@ -937,9 +948,9 @@
         `# はじめた時刻 ${ds}（端末の時計）`,
         `# レベル ${levelLabel(g.level)}`,
         `# 相手 ${opponentLabel(D, g.opponent, g.timeLimit)}`,
-        `# 時間 ${timeLabel(g.timeLimit)}`,
+        `# 時間 ${g.tutorial ? "なし（チュートリアル）" : timeLabel(g.timeLimit)}`,
         ...rulesLabel(D, g.opponent, g.level, g.timeLimit).map((x) => "# 仮置き " + x),
-        "# 手 はじめ・割る・くっつける・反転・巡り・同音・放つ・取る・引き直し・入れ替え（札の位置を替えた。手札とストックの間も）・移す（手札⇄ストックの空いたマスへ）・ためした（放つ・くっつける・割る・反転・巡り・同音・取る・引き直しがはじかれた。並べてやめた並びも）・動けない（放てる言葉が手札に無くなった。使った札＝その時の手札）・動ける・ヒント（続けて3回はじかれて自動で出した。光らせた札と、狙った言葉はメモに）・終わり",
+        "# 手 はじめ・割る・くっつける・反転・巡り・同音・放つ・取る・引き直し・入れ替え（札の位置を替えた。手札とストックの間も）・移す（手札⇄ストックの空いたマスへ）・ためした（放つ・くっつける・割る・反転・巡り・同音・取る・引き直しがはじかれた。並べてやめた並びも）・動けない（放てる言葉が手札に無くなった。使った札＝その時の手札）・動ける・ヒント（続けて3回はじかれて自動で出した。光らせた札と、狙った言葉はメモに）・段（チュートリアルの1段が終わった。メモに段の名前と秒数）・とばす（チュートリアルをとばした）・終わり",
         "# 点＝その手で増えた点（引き直しで払った点はマイナス）",
         "# データ " + FILES.map((f) => `${f}=${D[f].version}`).join(" "),
         `# 字 ${T.CHARS.size}（手に持てる字 ${T.HOLD.size}）・語 ${T.WORDS.size}（巡り ${T.CYCLES.map((c) => c.name).join("・")}）`,
@@ -951,6 +962,95 @@
     return g;
   }
 
+
+  // ---------- チュートリアル（KJ-043・D-057）----------
+  // 決まった手札・ストック・場（data/tutorial.json）で、操作を1つずつ見せる。時間なし・CPU なし・自動のヒントなし。
+  // 段の中身と文は D.tutorial の1か所。この関数は DOM に触らない。画面は、操作の前に blocked() で通してよいか聞き、通ったら advance() で進める。
+  // 段は steps[i]、段の中の1手は actions[j]（op は release／take／split／join〔引きずる〕／invert／cycle／homophone／end）。
+  // 放ったあと場から取りきるまでは、ほかの手は何もできない（KJ-039）ので、取る手は段2 のほか、放つたびに（段の外で）要る
+  function createTutorial(D, T, env) {
+    const TD = D.tutorial;
+    const g = createGame(D, T, { ...(env || {}), tutorial: TD, startStock: false });
+    const steps = TD.steps, ui = TD.ui;
+    const acts = [];
+    steps.forEach((s, i) => s.actions.forEach((a, j) => acts.push({ ...a, step: i, k: j, last: j === s.actions.length - 1 })));
+    const info = { total: steps.length, done: 0, finished: null, secs: [] }; // done＝済んだ段の数
+    g.tutorialInfo = info;
+    let cur = 0, stepStart = g.now();
+    const BTN = { release: "bRelease", split: "bSplit", invert: "bInvert", cycle: "bCycle", homophone: "bHomo" }; // 光らせるボタン（join は引きずるのでボタンなし）
+    const fmt = (s, o) => String(s).replace(/\{(\w+)\}/g, (_, k) => (k in o ? o[k] : ""));
+    const act = () => acts[cur];
+    const lockedNow = () => g.me.takes > 0;
+    const same = (a, b) => (a || []).join("") === (b || []).join("");
+    const useText = (a) => (a.op === "join" ? `${a.from} を ${a.to} の${FACE_LABEL[a.face]}の面に` : a.op === "homophone" ? `${a.use.join("")} → ${a.pick}` : a.use.join(" → "));
+    const tut = {
+      g, steps, info, ui, acts,
+      get total() { return steps.length; },
+      act, stepNo: () => act().step + 1, title: () => steps[act().step].title,
+      // いま画面に出す1行。放ったあと場から取りきるまでは、取る案内
+      line() {
+        if (info.finished) return "";
+        if (lockedNow() && act().op !== "take") return fmt(ui.take, { n: g.me.takes });
+        return act().line;
+      },
+      atEnd: () => !info.finished && act().op === "end" && !lockedNow(),
+      // 光らせるもの：札（字）・ボタン（id）・同音の選びの字
+      glow() {
+        const a = act();
+        if (info.finished || lockedNow()) return { chars: [], button: null, pick: null };
+        return { chars: a.op === "join" ? [a.from, a.to] : a.use || [], button: BTN[a.op] || null, pick: a.pick || null };
+      },
+      // 札を選んでよいか（その手に使う字だけ）。引きずってよいか（くっつける手の、落とす札だけ）
+      canSelect: (c) => !info.finished && !lockedNow() && (act().use || []).includes(c),
+      canDrag: (c) => !info.finished && !lockedNow() && act().op === "join" && act().from === c,
+      // 押せる見た目にするボタン（Back は選びを外すだけなので別）
+      buttonOn: (id) => !info.finished && !lockedNow() && BTN[act().op] === id,
+      // 通してよいか。通すなら null、はじくなら理由（「ためした」に残す）。info：release＝{text}／split・invert・cycle＝{chars}／homophone＝{chars, pick?}／join＝{from, to, face}
+      blocked(op, x) {
+        x = x || {};
+        const a = act();
+        if (info.finished) return null;
+        if (op === "take") return null; // 取れる枚数があるかは遊びの決まりが見る
+        const notNow = fmt(ui.notNow, { n: a.step + 1, title: steps[a.step].title });
+        if (a.op !== op) return notNow;
+        const wrong = fmt(ui.wrongCards, { use: useText(a) });
+        if (op === "release") return x.text === a.word ? null : wrong;
+        if (op === "join") return x.from === a.from && x.to === a.to && x.face === a.face ? null : wrong;
+        if (!same(x.chars, a.use)) return wrong;
+        if (op === "homophone" && x.pick !== undefined && x.pick !== a.pick) return wrong;
+        return null;
+      },
+      // 通した手が決まりでも通ったあとに呼ぶ。段の最後の手なら、その段の秒数をログに残して次へ。取る手は取りきったときだけ進む
+      advance(op) {
+        const a = act();
+        if (info.finished || a.op === "end" || a.op !== op) return false;
+        if (op === "take" && g.me.takes > 0) return false;
+        if (a.last) {
+          const secs = Math.round((g.now() - stepStart) * 10) / 10;
+          info.secs.push(secs); info.done++;
+          g.addLog("—", "段", [], [], 0, `${a.step + 1} ${steps[a.step].title}：${secs}秒`);
+          stepStart = g.now();
+        }
+        cur++;
+        return true;
+      },
+      // 終える：kind は "done"（おわりの段で「本番へ」）か "skip"（とばす）。終えたら試合として閉じる（点・時間は関係しない）
+      finish(kind) {
+        if (info.finished || (kind === "done" && !tut.atEnd())) return false;
+        const a = act();
+        if (kind === "skip") {
+          info.finished = "skip";
+          g.addLog("—", "とばす", [], [], 0, `${a.step + 1} ${steps[a.step].title}でとばした（${info.done}段が済み）`);
+        } else {
+          info.finished = "done";
+          g.addLog("—", "終わり", [], [], 0, `チュートリアルを終えた（${info.done}段が済み。秒：${info.secs.join("・")}）`);
+        }
+        g.over = true;
+        return true;
+      },
+    };
+    return tut;
+  }
 
   // ---------- 合言葉の部屋（KJ-033・D-049）：先着の決め方 ----------
   // 表 public.kj_claims（match_id, kind, key, player, payload, created_at。主キー (match_id, kind, key)。入れる・読むだけ）を使う。
@@ -1237,6 +1337,10 @@
   }
   // 終わりの1行（例：あなたの勝ち（10分 27対6））。終わっていなければ「途中でやめた」
   function playLogResult(g) {
+    if (g.tutorialInfo) { // チュートリアル（KJ-043）：どの段まで進んだか・とばしたか
+      const t = g.tutorialInfo, n = t.finished === "done" ? t.total : Math.min(t.total, t.done + 1); // いま（やめた・とばした）段
+      return `チュートリアル（${t.finished === "skip" ? "とばした" : t.finished === "done" ? "終えた" : "途中でやめた"}・${t.total}段のうち ${n} 段まで・${t.done}段が済み）`.slice(0, PLAY_LOG_LIMITS.result);
+    }
     const sc = g.solo ? "" : ` ${g.me.score}対${g.cpu.score}`;
     const body = `${timeLabel(g.timeLimit)}${sc}`;
     if (!g.over) return `途中でやめた（${body}・${g.me.score}点）`.slice(0, PLAY_LOG_LIMITS.result);
@@ -1245,7 +1349,7 @@
   }
   // play_logs に1行送る中身。1手も動いていなければ null（送らない）
   function playLogRow(g, deviceId) {
-    if (!g || !playedAny(g)) return null;
+    if (!g || !(playedAny(g) || (g.tutorialInfo && g.tutorialInfo.finished === "skip"))) return null; // チュートリアルは、1手も動かずにとばしたことも送る
     return {
       device_id: String(deviceId || "").slice(0, PLAY_LOG_LIMITS.device_id) || "unknown",
       app_version: String(g.D.rules.version || ""),
@@ -1266,7 +1370,7 @@
 
   return {
     FILES, OPPONENTS, LEVELS, timeChoices, normTime, timeLabel, levelLabel, makeTables, isN5, isLevelChar, isChar, splitOnce, canSplit, delivered, joinResults, joinReversed,
-    releasable, scoreOf, homoChars, marks, markKinds, cutSpec, FACES, FACE_LABEL, faceJoins, faceResults, rulesLabel, opponentLabel, createGame, playLogRow, logSendAllowed, playLogResult, PLAY_LOG_LIMITS,
+    releasable, scoreOf, homoChars, marks, markKinds, cutSpec, FACES, FACE_LABEL, faceJoins, faceResults, rulesLabel, opponentLabel, createGame, createTutorial, TUTORIAL_OPPONENT, playLogRow, logSendAllowed, playLogResult, PLAY_LOG_LIMITS,
     strSeed, seededRand, matchRand, ROLES, ROOM_OPPONENT, MATCH_END_GRACE_SEC, MATCH_INSERT_TIMEOUT_SEC, MATCH_PING_SEC, MATCH_GONE_SEC, ROOM_LOBBY_TTL_SEC,
     createMatchClient, memoryClaims, newMatchId, newRoomCode, roomLobbyId, findRoom, hostRoom, joinRoom, startRoom, roomStartAt, roomWaiter,
   };
