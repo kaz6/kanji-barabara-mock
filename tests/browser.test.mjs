@@ -1475,9 +1475,8 @@ test("画面", { skip }, async (t) => {
       for (const [id, text] of Object.entries(aria)) assert.equal(await page.getAttribute(`#${id}`, "aria-label"), text, `${id} の読み上げ`);
       for (const id of ["bRelease", "bSplit", "bJoin", "bBack", "bRedraw"]) assert.equal(await page.getAttribute(`#${id}`, "aria-label"), null, `${id} は印の無いボタン。aria-label を付けない（Redraw の添え字を読み上げから消さない）`);
       if (vp.width === 375) {
-        const rows = await page.evaluate(() => ["bSplit", "bJoin", "bInvert", "bCycle", "bHomo"].map((i) => { const b = document.getElementById(i); const r = b.getBoundingClientRect(); return { i, h: r.height, w: r.width, lh: parseFloat(getComputedStyle(b).lineHeight) || 0, right: r.right }; }));
-        const h0 = rows[0].h;
-        for (const r of rows) assert.ok(Math.abs(r.h - h0) < 1 && r.right <= 375, `375×700 でボタンが1行に収まる（${r.i} 高さ ${r.h}・右端 ${r.right}）`);
+        const rows = await page.evaluate(() => ["bSplit", "bJoin", "bInvert", "bCycle", "bHomo"].map((i) => { const b = document.getElementById(i); const lb = b.querySelector(".lb"); return { i, lines: lb.getClientRects().length, right: b.getBoundingClientRect().right }; }));
+        for (const r of rows) assert.ok(r.lines === 1 && r.right <= 375, `375×700 でボタンが1行に収まる（${r.i} の行 ${r.lines}・右端 ${r.right}）`);
       }
       assert.equal(await page.locator("#bInvert .lb svg.ic-invert").count(), 1, "Flip の印は SVG");
       assert.equal(await page.locator("#bCycle .lb svg.ic-cycle").count(), 1, "Cycle の印は SVG");
