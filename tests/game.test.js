@@ -1705,7 +1705,7 @@ test("KJ-037 ヒント：狙った言葉を先に使われたら、光りは消�
   assert.equal(g.hintActive(), null, "もう放てない言葉は光らせ続けない");
 });
 
-test("KJ-065 ヒント：光らせた言葉を放つと消える・光らせた札が手札から全部無くなると消える・ほかの言葉を放っても残る・点は変わらない", () => {
+test("KJ-065 ヒント：光らせた言葉を放つと消える・光らせた札が1枚でも手札から無くなると消える・ほかの言葉を放っても残る・点は変わらない", () => {
   const g = newGame(1, "weak", "N5");
   setHand(g, g.me, "休日山川火水");
   tryN(g, 3);
@@ -1733,8 +1733,25 @@ test("KJ-065 ヒント：光らせた言葉を放つと消える・光らせた�
   setHand(g3, g3.me, "休日山川");
   tryN(g3, 3);
   const l3 = g3.hintActive().ids;
-  g3.me.cards = g3.me.cards.filter((x) => x.id !== l3[0]); // 1枚だけ無くなっても、残りがあれば光る
-  assert.ok(g3.hintActive(), "光らせた札が1枚でも残っていれば光る");
+  g3.me.cards = g3.me.cards.filter((x) => x.id !== l3[0]); // 1枚だけ無くなったら消える
+  assert.equal(g3.hintActive(), null, "光らせた札が1枚でも無くなったら消える");
+});
+
+test("KJ-065 ヒント：段2は光らせた操作をしたら消える（札が替わる）・段3は引き直しを使ったら消える", () => {
+  const g = newGame(1, "weak", "N5");
+  setHand(g, g.me, "日分");
+  tryN(g, 3);
+  assert.equal(g.hintActive().tier, 2);
+  const split = g.me.cards.find((x) => x.c === "分");
+  assert.ok(g.split(g.me, [split.id]).ok, "光らせた札を割る");
+  assert.equal(g.hintActive(), null, "操作した札が替わったら消える");
+
+  const g2 = newGame(1, "weak", "N5");
+  setHand(g2, g2.me, "刀刀");
+  tryN(g2, 3);
+  assert.equal(g2.hintActive().tier, 3);
+  assert.ok(g2.redraw(g2.me).ok, "引き直す");
+  assert.equal(g2.hintActive(), null, "引き直しを使ったら消える");
 });
 
 // ---------- KJ-041 はじかれた操作もログに残す（D-055）----------

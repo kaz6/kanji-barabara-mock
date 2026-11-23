@@ -153,9 +153,11 @@ button.op.full{animation:kjGaugeFull .6s ease-out}
 @media (prefers-reduced-motion:reduce){button.op.full{animation:none}} /* 動きを減らす設定：光るのだけやめる（ゲージの満ち方は出す） */
 /* ヒント（KJ-037）：続けて3回はじかれたら、使う札と操作のボタンが金色に光る（10秒か次の操作まで）。言葉は文字で出さない */
 /* KJ-065：自動のヒントは10秒のあいだ残る。見えるように、地の色を薄い金にし、札とボタンを上に数 px ゆっくり上下させる（.lift。チュートリアルの「ここを押す」には付けない）。動きを減らす設定では動かさず、縁と地の色だけ */
-.tile.hint,button.op.hint{border-color:var(--hint);background:#fff1c4;box-shadow:0 0 0 2px var(--hint),0 0 10px 2px rgba(217,154,0,.55);animation:kjHint 1.2s ease-in-out infinite alternate}
-.tile.sel.hint{border-color:var(--hint);background:var(--accent)} /* 選んだ札は赤地に白のまま（薄い金の地にしない） */
+.tile.hint,button.op.hint{border-color:var(--hint);box-shadow:0 0 0 2px var(--hint),0 0 10px 2px rgba(217,154,0,.55);animation:kjHint 1.2s ease-in-out infinite alternate}
 .tile.hint.lift,button.op.hint.lift{animation:kjHint 1.2s ease-in-out infinite alternate,kjLift 2s ease-in-out infinite alternate}
+.tile.hint.lift{background:#fff1c4}
+.table button.op.hint.lift,.table button.op.hint.lift:disabled,.table button.op.hint.lift[aria-disabled=true],.table button.op.hint.lift.quiet,.table button.op.hint.lift.quiet.cd{background:#fff1c4;color:var(--ink);border-bottom-color:var(--hint)} /* 押せない・quiet・待ち中のボタンでも薄い金の地（文字は墨色） */
+.tile.sel.hint,.tile.sel.hint.lift{border-color:var(--hint);background:var(--accent)} /* 選んだ札は赤地に白のまま（薄い金の地にしない） */
 @keyframes kjHint{from{box-shadow:0 0 0 2px var(--hint),0 0 4px 0 rgba(217,154,0,.3)}to{box-shadow:0 0 0 2px var(--hint),0 0 12px 3px rgba(217,154,0,.7)}}
 @keyframes kjLift{from{transform:translateY(-2px)}to{transform:translateY(-6px)}}
 @media (prefers-reduced-motion:reduce){.tile.hint,button.op.hint,.tile.hint.lift,button.op.hint.lift{animation:none}}
@@ -1209,7 +1211,7 @@ function buildHowto(){
     `<b>引き直し</b>：手札を全部入れ替える（${R.start_hand} 枚）。値段は、その試合で何回目かで上がる（${R.redraw.costs.map(c=>c+" 点").join("→")}）。${R.redraw.costs.length} 回まで。点が足りなくても払える（マイナスになってよい）。`,
     `<b>勝ち</b>：先に ${R.win.score} 点。または ${(TL||R.win.time_limit_sec)/60} 分たって点の多い方。CPU の速さは強さで変わる。`,
     `${Object.keys(D.radical_forms.left).join("・")} を左に置いてくっつけられるときは、${Object.values(D.radical_forms.left).join("・")} の形で見せる（札はもとの字のまま）。色の薄い札は部品（字ではない）。`,
-    `<b>ヒント</b>：続けて ${R.hint.fail_streak} 回はじかれると、使う札と操作のボタンが光る（${R.hint.glow_sec} 秒。ほかの手をしても残る。光らせた言葉を放つと消える）。言葉は文字では出ない。点はかからない。`,
+    `<b>ヒント</b>：続けて ${R.hint.fail_streak} 回はじかれると、使う札と操作のボタンが光る（${R.hint.glow_sec} 秒。ほかの手をしても残る。光らせた言葉を放つ・光らせた札が無くなる・引き直しを使うと消える）。言葉は文字では出ない。点はかからない。`,
     `<b>ログ</b>：一手ごとの記録。上の「ログ」で見てコピーできる。終わったら「ログをコピー」が出る。`,
   ].map(x=>`<li>${x}</li>`).join("");
 }

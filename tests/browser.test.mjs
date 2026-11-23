@@ -1068,6 +1068,18 @@ test("画面", { skip }, async (t) => {
     await page.evaluate(() => { const G = __KJ.game; G.swap(G.me, G.me.cards[4].id, G.me.cards[5].id); __KJ.render(); });
     assert.deepEqual((await lit()).sort(), [...hintId].sort(), "札を動かしても光りは残る");
     assert.equal(await page.evaluate(() => document.getElementById("hintTag").hidden), false);
+    // ボタンも薄い金の地で持ち上がる（段3：Redraw は quiet。段2：当の札を選ぶまで押せない見た目）
+    await page.evaluate(() => { const G = __KJ.game; G.hint = null; G.me.cards = [..."刀刀"].map((c, i) => ({ id: 7100 + i, c, t: 0, fresh: false })); for (let i = 0; i < 3; i++) G.tried(G.me, ["刀", "刀"], "x"); __KJ.render(); });
+    const btn = (id) => page.evaluate((i) => { const c = getComputedStyle(document.getElementById(i)); return { bg: c.backgroundColor, anim: c.animationName, color: c.color }; }, id);
+    let bb = await btn("bRedraw");
+    assert.equal(bb.bg, "rgb(255, 241, 196)", "Redraw（quiet）も薄い金の地");
+    assert.match(bb.anim, /kjLift/);
+    await page.evaluate(() => { const G = __KJ.game; G.hint = null; G.me.cards = [..."日分"].map((c, i) => ({ id: 7200 + i, c, t: 0, fresh: false })); for (let i = 0; i < 3; i++) G.tried(G.me, ["日", "分"], "x"); __KJ.render(); });
+    assert.equal(await page.evaluate(() => __KJ.game.hintActive().button), "bSplit");
+    bb = await btn("bSplit");
+    assert.equal(bb.bg, "rgb(255, 241, 196)", "Split（当の札を選ぶまで押せない見た目）も薄い金の地");
+    assert.match(bb.anim, /kjLift/);
+    await page.evaluate(() => { const G = __KJ.game; G.me.cards = [..."休日山川火水"].map((c, i) => ({ id: 7000 + i, c, t: 0, fresh: false })); G.hint = null; for (let i = 0; i < 3; i++) G.tried(G.me, ["火", "水"], "x"); __KJ.render(); });
     // 動きを減らす設定：動かさず、縁と地の色だけ
     await page.emulateMedia({ reducedMotion: "reduce" });
     const r = await css();
