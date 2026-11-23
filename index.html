@@ -1055,7 +1055,7 @@ function ptsFx(key,p,sc,n){ // render のたび：点が変わっていたら演
     const n0=prev,cnt=Math.min(700,320+tier*120);
     PTS_FX.disp[key]=prev;n.textContent=prev; // 飛んでいるあいだは前の点のまま。着いたらカウントアップ
     setTimeout(()=>{
-      if(PTS_FX.g!==G)return;
+      if(PTS_FX.g!==G||G.over)return; // 飛んでいるあいだに試合が終わったら、続きは出さない
       ptsCountUp(key,n,n0,p.score,cnt);
       ptsPop(n,[1.25,1.4,1.7][tier-1],420+tier*80);
       // 「+〇」：点の上に大きく出て、点に吸い込まれる

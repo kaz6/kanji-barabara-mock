@@ -2045,6 +2045,21 @@ test("画面", { skip }, async (t) => {
     assert.deepEqual([...errors, ...r2.errors], []);
     await r2.ctx.close();
   });
+  await t.test("点の演出：字が飛んでいるあいだに試合が終わったら、光の輪などの続きは出ない", async () => {
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 }, null, null, true);
+    await page.evaluate(() => { const G = __KJ.game; G.cpu.score = 40; __KJ.render(); });
+    await page.waitForFunction(() => document.getElementById("fxPts").childElementCount === 0, null, { timeout: 4500 }); // 40点に動いた分の演出が終わるまで
+    await page.evaluate(() => { const G = __KJ.game; G.events.push({ type: "release", who: G.cpu.name, text: "一日一日", pts: 12 }); G.cpu.score += 12; __KJ.drain(); __KJ.render(); });
+    await page.waitForSelector("#fxPts .pf.chip", { state: "attached" });
+    await page.evaluate(() => { window.__late = []; new MutationObserver((ms) => { for (const m of ms) for (const n of m.addedNodes) if (__KJ.game.over) window.__late.push(n.className); }).observe(document.getElementById("fxPts"), { childList: true }); });
+    await page.evaluate(() => { const G = __KJ.game; G.endsAt = G.now() - 1; G.tick(); __KJ.drain(); __KJ.render(); }); // 飛んでいる途中で終わる
+    assert.equal(await page.evaluate(() => __KJ.game.over), true);
+    await page.waitForTimeout(1000); // 飛ぶ時間（0.42秒）のあと
+    assert.deepEqual(await page.evaluate(() => window.__late), [], "終わったあとに、輪などを新しく出さない");
+    assert.equal(await page.locator("#fxPts .pf").count(), 0, "終わりのあとに演出が残らない");
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
   await t.test("点の演出：動きを減らす設定では数字（+〇・-〇）を出すだけで、動かさない（飛ばない・カウントアップしない・ポンも揺れもしない）", async () => {
     const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 }, null, null, false); // 既定は reduce
     assert.equal(await page.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches), true);
