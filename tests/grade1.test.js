@@ -34,8 +34,8 @@ test("小1：山に入る字はちょうど80字で、80字の外は入らない
   for (const c of neither) assert.ok(!T4.CHARS.has(c) && !T.CHARS.has(c), `${c} は N5・N4 の山に入らない`);
 });
 
-test("小1：N5・N4 は小1 を足したことでは動かない（N4 の数は小1 を足す前のまま。N5 は P-047 で 玉＝王＋丶 を足して 王 が手に持てる字になり、語が29語 N4→N5）", () => {
-  assert.deepEqual([T.CHARS.size, T.WORDS.size, T.HOLD.size], [103, 2449, 139]);
+test("小1：N5・N4 は小1 を足したことでは動かない（N4 の数は小1 を足す前のまま。N5 は P-047 で 玉＝王＋丶 を足して 王・止 が手に持てる字になり、語が38語 N4→N5）", () => {
+  assert.deepEqual([T.CHARS.size, T.WORDS.size, T.HOLD.size], [103, 2458, 140]);
   assert.deepEqual([T4.CHARS.size, T4.WORDS.size, T4.HOLD.size], [284, 10438, 353]);
   for (const w of T4.WORDS.values()) assert.ok(w.lv === "N5" || w.lv === "N4", w.w);
   for (const w of D.words.words.filter((x) => x.lv === null)) assert.ok(w.g1 && !T4.WORDS.has(w.w) && !T.WORDS.has(w.w), `${w.w} は小1 だけの語`);

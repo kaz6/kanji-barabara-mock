@@ -12,20 +12,20 @@
  },
  "stats": {
   "hold_by_level": {
-   "N5": 139,
+   "N5": 140,
    "N4": 353,
-   "G1": 86
+   "G1": 87
   },
   "by_level": {
    "N5": {
-    "total": 2449,
+    "total": 2458,
     "by_length": {
      "1": 97,
-     "2": 1737,
-     "3": 466,
-     "4": 149
+     "2": 1743,
+     "3": 467,
+     "4": 151
     },
-    "common": 727,
+    "common": 729,
     "yoji": 43
    },
    "N4": {
@@ -40,14 +40,14 @@
     "yoji": 202
    },
    "G1": {
-    "total": 1357,
+    "total": 1365,
     "by_length": {
      "1": 78,
-     "2": 969,
-     "3": 238,
-     "4": 72
+     "2": 975,
+     "3": 239,
+     "4": 73
     },
-    "common": 427,
+    "common": 429,
     "yoji": 24
    }
   },
@@ -4213,11 +4213,12 @@
   },
   {
    "w": "中止",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "ちゅうし",
    "en": [
     "suspension; stoppage"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -5286,11 +5287,12 @@
   },
   {
    "w": "休止",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "きゅうし",
    "en": [
     "pause; cessation"
    ],
+   "g1": true,
    "common": true
   },
   {
@@ -44089,38 +44091,42 @@
   },
   {
    "w": "止木",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "とまりぎ",
    "en": [
     "perch",
     "barstool"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "止水",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "しすい",
    "en": [
     "stagnant water; still water",
     "water stopping"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "止男",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "とめおとこ",
    "en": [
     "tout",
     "arbitrator (esp. in a play)"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "止金",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "とめがね",
    "en": [
     "clasp; latch"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "正丁",
@@ -70499,11 +70505,12 @@
   },
   {
    "w": "小休止",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "しょうきゅうし",
    "en": [
     "short break; breather"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "小作人",
@@ -81279,7 +81286,7 @@
   },
   {
    "w": "一時休止",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "いちじきゅうし",
    "en": [
     "adjournment; pause"
@@ -89173,11 +89180,12 @@
   },
   {
    "w": "雨天中止",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "うてんちゅうし",
    "en": [
     "cancelled because of rain; wash out"
-   ]
+   ],
+   "g1": true
   },
   {
    "w": "電光石火",
