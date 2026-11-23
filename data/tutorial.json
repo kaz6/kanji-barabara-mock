@@ -1,0 +1,73 @@
+{
+  "version": "2026-11-23.1",
+  "note": "KJ-043 チュートリアル（受け箱 P-043。作者 2026-11-23 04:54。D-057）。文は全部仮（作者が直せる形でここ1か所に置く。話し手・キャラクター・声は置かない）。手札・ストック・場は決まったもの。段の中身（札・言葉）は相談チャットが表で確かめた。ボタンの文字（Play・Split・Flip・Cycle・Sound conversion）は英語のまま、文の中でもその名前で呼ぶ。",
+  "level": "N4",
+  "hand": ["大", "雨", "好", "十", "口", "下", "月", "木"],
+  "stock": ["本", "手", "山", "分"],
+  "field": ["水", "白", "百"],
+  "refill": ["田", "川", "魚", "目", "耳", "足", "犬", "花", "休", "車", "鳥", "空", "森", "林"],
+  "ui": {
+    "button": "チュートリアル",
+    "skip": "とばす",
+    "go": "本番へ",
+    "stepOf": "{n} / {total}",
+    "take": "放った字数と同じ枚数を、場から取る（あと {n} 枚。場の札をタップ）",
+    "notNow": "いまは使わない（チュートリアル {n}：{title}）",
+    "wrongCards": "チュートリアル：いまは {use} を使う"
+  },
+  "steps": [
+    {
+      "id": "release", "title": "放つ",
+      "actions": [
+        { "op": "release", "use": ["大", "雨"], "word": "大雨", "line": "大 → 雨 の順にタップして、Play で放つ（大雨）" }
+      ]
+    },
+    {
+      "id": "take", "title": "取る",
+      "actions": [
+        { "op": "take", "line": "放つと、字数と同じ枚数を場から取れる。場の札を2枚タップして取る" }
+      ]
+    },
+    {
+      "id": "split", "title": "割る",
+      "actions": [
+        { "op": "split", "use": ["好"], "line": "好 をタップして Split。女 と 子 に割れる" },
+        { "op": "release", "use": ["女", "子"], "word": "女子", "line": "女 → 子 の順に選んで、Play（女子）" }
+      ]
+    },
+    {
+      "id": "join", "title": "くっつける",
+      "actions": [
+        { "op": "join", "from": "十", "to": "口", "face": "top", "line": "十 を指で引きずって、口 の上の面に落とす" },
+        { "op": "release", "use": ["古", "本"], "word": "古本", "line": "古 → 本 の順に選んで、Play（古本）" }
+      ]
+    },
+    {
+      "id": "invert", "title": "反転",
+      "actions": [
+        { "op": "invert", "use": ["下"], "line": "下 をタップして Flip。反対の 上 になる" },
+        { "op": "release", "use": ["上", "手"], "word": "上手", "line": "上 → 手 の順に選んで、Play（上手）" }
+      ]
+    },
+    {
+      "id": "cycle", "title": "巡り",
+      "actions": [
+        { "op": "cycle", "use": ["月"], "line": "月 をタップして Cycle。曜日の次の 火 になる" },
+        { "op": "release", "use": ["火", "山"], "word": "火山", "line": "火 → 山 の順に選んで、Play（火山）" }
+      ]
+    },
+    {
+      "id": "homophone", "title": "同音",
+      "actions": [
+        { "op": "homophone", "use": ["木"], "pick": "気", "line": "木 をタップして Sound conversion。同じ読みの 気 を選ぶ" },
+        { "op": "release", "use": ["気", "分"], "word": "気分", "line": "気 → 分 の順に選んで、Play（気分）" }
+      ]
+    },
+    {
+      "id": "end", "title": "おわり",
+      "actions": [
+        { "op": "end", "line": "分からなくなったら、札が光ってヒントが出る。さあ、本番へ" }
+      ]
+    }
+  ]
+}

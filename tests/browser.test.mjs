@@ -29,6 +29,25 @@ function serve() {
 
 const skip = chromium ? false : "Playwright が入っていない";
 
+// 新しい端末の「はじめる」はチュートリアルから始まる（KJ-043）。既存の画面テストは「チュートリアルを見た」印（kj-tutorial）を付けた端末で始める。
+// チュートリアルを見るテストは、newContext に { noTutorialMark: true } を渡す
+async function launch() {
+  const b = await chromium.launch();
+  const nc = b.newContext.bind(b);
+  b.newContext = async (o) => {
+    const { noTutorialMark, ...opts } = o || {};
+    const ctx = await nc(opts);
+    if (!noTutorialMark) await ctx.addInitScript(() => { try { localStorage.setItem("kj-tutorial", "1"); } catch (e) { /* 読めない端末 */ } });
+    return ctx;
+  };
+  return b;
+}
+// localStorage が読めない端末ではチュートリアルの印が残らないので、「はじめる」のあとにとばす
+async function clickStart(page) {
+  await page.click("#start");
+  if (await page.locator("#tut:not([hidden])").count()) await page.click("#tutSkip");
+}
+
 async function open(browser, url, vp, opponent, pre = null) {
   const ctx = await browser.newContext({ viewport: vp });
   await ctx.grantPermissions(["clipboard-read", "clipboard-write"]).catch(() => {});
@@ -40,7 +59,7 @@ async function open(browser, url, vp, opponent, pre = null) {
   await page.goto(url);
   await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
   if (opponent) await page.check(`#opp input[value="${opponent}"]`);
-  await page.click("#start");
+  await clickStart(page);
   // CPU を止め、手を決める
   await page.evaluate(() => {
     const G = __KJ.game; G.cpuTurn = () => null;
@@ -54,7 +73,7 @@ async function open(browser, url, vp, opponent, pre = null) {
 test("画面", { skip }, async (t) => {
   const srv = await serve();
   const url = `http://127.0.0.1:${srv.address().port}/`;
-  const browser = await chromium.launch();
+  const browser = await launch();
   t.after(async () => { await browser.close(); srv.close(); });
 
   for (const vp of [{ width: 760, height: 1100, name: "広い画面" }, { width: 375, height: 900, name: "スマホ幅" }]) {
@@ -219,7 +238,7 @@ test("画面", { skip }, async (t) => {
     await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
     for (const [id, v] of [["opp", "weak"], ["lvl", "N4"], ["tim", "600"]]) assert.equal(await page.locator(`#${id} input:checked`).getAttribute("value"), v, id);
     await page.check('#tim input[value="900"]'); // 選んでも壊れない（覚えないだけ）
-    await page.click("#start");
+    await clickStart(page); // 印が残せない端末はチュートリアルから。とばして本番へ
     assert.equal(await page.evaluate(() => __KJ.game.timeLimit), 900);
     assert.equal(await page.evaluate(() => __KJ.game.opponent), "weak");
     assert.deepEqual(errors, []);
@@ -276,7 +295,7 @@ test("画面", { skip }, async (t) => {
     await page.reload();
     await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
     assert.equal(await page.locator("#lvl input:checked").getAttribute("value"), "N4");
-    await page.click("#start");
+    await clickStart(page);
     assert.equal(await page.evaluate(() => __KJ.game.level), "N4");
     assert.deepEqual(errors, []);
     await ctx.close();
@@ -1192,9 +1211,12 @@ test("画面", { skip }, async (t) => {
       await p.addInitScript(() => { Object.defineProperty(window, "localStorage", { get() { throw new Error("blocked"); } }); });
     });
     await winNow(page);
-    await until(() => posts.length >= 1);
-    assert.equal(posts.length, 1);
-    assert.ok(posts[0].body.device_id.length >= 8, "読めないときは試合ごとの無作為");
+    // 読めない端末はチュートリアルの印が残らず、はじめにチュートリアルをとばした行（opponent=tutorial）も送られる（KJ-043）。試合の行だけ数える
+    const games = () => posts.filter((p) => p.body.opponent !== "tutorial");
+    await until(() => games().length >= 1);
+    assert.equal(games().length, 1);
+    assert.equal(posts.filter((p) => p.body.opponent === "tutorial").length, 1, "とばしたチュートリアルの行");
+    assert.ok(games()[0].body.device_id.length >= 8, "読めないときは試合ごとの無作為");
     await ctx.close();
     const { ctx: c2, page: p2 } = await open(browser, url, { width: 375, height: 900 }, null, async (p) => {
       await p.addInitScript(() => { window.__KJ_LOG_FORCE = true; });
