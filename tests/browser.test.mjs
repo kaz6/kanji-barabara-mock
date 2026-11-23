@@ -473,8 +473,8 @@ test("画面", { skip }, async (t) => {
   await t.test("KJ-036 裏から戻ると、制限時間をすぎていればすぐ終わる（終わりの秒は制限時間を超えない）", async () => {
     const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 }, "normal");
     // 裏にいて時計の処理が止まった形：interval を止め、制限時間の1時間後まで進んだ
-    await page.evaluate(() => { const G = __KJ.game; G.cpuTurn = () => null; G.endsAt = G.now() - 3596; window.__hold = true; });
-    await page.evaluate(() => { const G = __KJ.game; G.tick = (orig => function () { return window.__hold ? false : orig.call(this); })(G.tick); });
+    // 止める細工を先に入れてから、制限時間を過去にする（同じ evaluate の中。別々にすると、そのあいだの 250ms の pump が終わらせてしまい、遅い実行環境で落ちる）
+    await page.evaluate(() => { const G = __KJ.game; G.cpuTurn = () => null; window.__hold = true; G.tick = (orig => function () { return window.__hold ? false : orig.call(this); })(G.tick); G.endsAt = G.now() - 3596; });
     await page.waitForTimeout(600);
     assert.equal(await page.evaluate(() => __KJ.game.over), false, "止めているあいだは終わらない");
     // 戻った一拍のうちに（setInterval を待たずに）終わる＝visibilitychange の処理が効いている
