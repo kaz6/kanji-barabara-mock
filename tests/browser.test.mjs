@@ -1068,6 +1068,10 @@ test("画面", { skip }, async (t) => {
     await page.evaluate(() => { const G = __KJ.game; G.swap(G.me, G.me.cards[4].id, G.me.cards[5].id); __KJ.render(); });
     assert.deepEqual((await lit()).sort(), [...hintId].sort(), "札を動かしても光りは残る");
     assert.equal(await page.evaluate(() => document.getElementById("hintTag").hidden), false);
+    // くっつけ先（.jt）になった光る札は、持ち上げを止めて 1.5 倍のまま
+    await page.evaluate(() => document.querySelector("#meHand .hint").classList.add("jt"));
+    assert.doesNotMatch(await page.evaluate(() => getComputedStyle(document.querySelector("#meHand .hint.jt")).animationName), /kjLift/);
+    await page.evaluate(() => document.querySelector("#meHand .hint.jt").classList.remove("jt"));
     // ボタンも薄い金の地で持ち上がる（段3：Redraw は quiet。段2：当の札を選ぶまで押せない見た目）
     await page.evaluate(() => { const G = __KJ.game; G.hint = null; G.me.cards = [..."刀刀"].map((c, i) => ({ id: 7100 + i, c, t: 0, fresh: false })); for (let i = 0; i < 3; i++) G.tried(G.me, ["刀", "刀"], "x"); __KJ.render(); });
     const btn = (id) => page.evaluate((i) => { const c = getComputedStyle(document.getElementById(i)); return { bg: c.backgroundColor, anim: c.animationName, color: c.color }; }, id);

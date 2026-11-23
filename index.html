@@ -156,6 +156,7 @@ button.op.full{animation:kjGaugeFull .6s ease-out}
 .tile.hint,button.op.hint{border-color:var(--hint);box-shadow:0 0 0 2px var(--hint),0 0 10px 2px rgba(217,154,0,.55);animation:kjHint 1.2s ease-in-out infinite alternate}
 .tile.hint.lift,button.op.hint.lift{animation:kjHint 1.2s ease-in-out infinite alternate,kjLift 2s ease-in-out infinite alternate}
 .tile.hint.lift{background:#fff1c4}
+.tile.hint.lift.jt{animation:kjHint 1.2s ease-in-out infinite alternate} /* くっつけ先（.jt。1.5倍）のあいだは持ち上げを止める（アニメーションの transform が .jt に勝つため） */
 .table button.op.hint.lift,.table button.op.hint.lift:disabled,.table button.op.hint.lift[aria-disabled=true],.table button.op.hint.lift.quiet,.table button.op.hint.lift.quiet.cd{background:#fff1c4;color:var(--ink);border-bottom-color:var(--hint)} /* 押せない・quiet・待ち中のボタンでも薄い金の地（文字は墨色） */
 .tile.sel.hint,.tile.sel.hint.lift{border-color:var(--hint);background:var(--accent)} /* 選んだ札は赤地に白のまま（薄い金の地にしない） */
 @keyframes kjHint{from{box-shadow:0 0 0 2px var(--hint),0 0 4px 0 rgba(217,154,0,.3)}to{box-shadow:0 0 0 2px var(--hint),0 0 12px 3px rgba(217,154,0,.7)}}
