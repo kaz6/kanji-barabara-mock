@@ -112,9 +112,9 @@ test("地名・名字：CPU が知っている語（common）は増やさない�
   assert.ok(!T4.COMMON_WORDS.some((w) => w.w === "東京都"), "足した 東京都 は CPU が使わない");
 });
 
-test("全レベルで外す語：買春・売春 は語に無く、どのレベルでも放てない", () => {
+test("全レベルで外す語：買春・売春・売女・売色 は語に無く、どのレベルでも放てない", () => {
   assert.ok(BLOCKED.version);
-  assert.deepEqual(BLOCKED.words, ["買春", "売春"]);
+  assert.deepEqual(BLOCKED.words, ["買春", "売春", "売女", "売色"]);
   for (const t of BLOCKED.words) {
     assert.ok(!W.has(t), `${t} は words に無い`);
     for (const lv of ["G1", "N5", "N4"]) {
