@@ -110,14 +110,33 @@ test("合言葉の部屋：点と手札の枚数は相手の画面に届く", as
 test("合言葉の部屋：引き直しは場を動かさない（手札は自分の種から）", async () => {
   const { A, B } = pair();
   const before = A.g.field.map((x) => x.c + x.n).join();
-  A.g.me.score = R.redraw.cost;
+  A.g.me.score = 7;
+  assert.equal((await A.c.redraw()).ok, true, "1回目は0点");
+  assert.equal(A.g.me.score, 7);
   const r = await A.c.redraw();
   assert.equal(r.ok, true);
-  assert.equal(A.g.me.score, 0);
+  assert.equal(A.g.me.score, 2, "2回目は5点（KJ-049）");
   assert.equal(A.g.field.map((x) => x.c + x.n).join(), before);
   assert.equal(B.g.field.map((x) => x.c + x.n).join(), before, "相手の場も動かない");
-  assert.equal(B.g.cpu.score, 0, "払った点が相手に届く");
+  assert.equal(B.g.cpu.score, 2, "払った点が相手に届く");
   assert.equal(A.g.me.cards.length, R.start_hand);
+});
+
+test("合言葉の部屋（KJ-049）：マイナスの点が相手に届く。マイナスのまま放てる。6回目の引き直しははじかれる", async () => {
+  const { A, B } = pair();
+  A.g.me.score = 0;
+  for (let i = 0; i < 2; i++) assert.equal((await A.c.redraw()).ok, true);
+  assert.equal(A.g.me.score, -5);
+  assert.equal(B.g.cpu.score, -5, "マイナスの点も相手に届く");
+  const ia = setHand(A.g, A.g.me, "学生");
+  await A.c.release(ia);
+  assert.equal(A.g.me.score, -2, "マイナスのまま放って +3");
+  assert.equal(B.g.cpu.score, -2, "放った行の点も届く");
+  assert.ok(B.g.used.has("学生"), "相手の画面でも使用済み");
+  const C = pair("m-test-6").A;
+  for (let i = 0; i < 5; i++) assert.equal((await C.c.redraw()).ok, true);
+  assert.equal((await C.c.redraw()).ok, false, "部屋でも6回目はできない");
+  assert.equal(C.g.me.score, -50);
 });
 
 test("合言葉の部屋：先に勝ちの点に届いた方の勝ちが、二人の画面でそろう", async () => {
@@ -344,7 +363,7 @@ test("合言葉の部屋：ぶつかった行の player を返すつなぎなら
   assert.equal(mem.rows().filter((x) => x.kind === "card").length, 1);
 });
 
-test("合言葉の部屋：形の合わない行は捨てる（番号は0以上の整数だけ・点は0以上の整数・枚数は上限まで）", async () => {
+test("合言葉の部屋：形の合わない行は捨てる（番号は0以上の整数だけ・点は引き直しの下限 -50 から上限までの整数・枚数は上限まで）", async () => {
   const { A } = pair("m-bad");
   const mid = "m-bad";
   const before = A.g.field.map((x) => x.n).join(",");
@@ -355,7 +374,7 @@ test("合言葉の部屋：形の合わない行は捨てる（番号は0以上�
     { match_id: mid, kind: "card", key: "0", player: "someone", payload: {} },
     { match_id: mid, kind: "card", key: "0", player: "guest", payload: [1] },
     { match_id: "m-other", kind: "card", key: "0", player: "guest", payload: {} },
-    { match_id: mid, kind: "word", key: "学生", player: "guest", payload: { score: -3 } },
+    { match_id: mid, kind: "word", key: "学生", player: "guest", payload: { score: -51 } },
     { match_id: mid, kind: "word", key: "学", player: "guest", payload: { score: 3 } },
     { match_id: mid, kind: "event", key: "x1", player: "guest", payload: { type: "state", seq: 0, score: 3, count: 999 } },
     { match_id: mid, kind: "event", key: "x2", player: "guest", payload: { type: "state", seq: 1.5, score: 3, count: 8 } },

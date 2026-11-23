@@ -253,7 +253,9 @@ test("決まり：数値がそろっている（KJ-003 の仮置き）", () => {
   assert.equal(r.cooldown_sec.cycle, 1, "巡りの待ちは1秒（追記 P-008）");
   assert.equal(r.score.yoji_mult, 2);
   assert.equal(r.score.special_mult, 2);
-  assert.deepEqual([r.redraw.cost, r.redraw.free_wait_sec], [5, 30]);
+  assert.deepEqual(r.redraw.costs, [0, 5, 10, 15, 20], "引き直しの値段は回数で上がる。長さが回数の上限＝5回（KJ-049）");
+  assert.equal(r.redraw.cost, undefined, "固定の値段はなくした（KJ-049）");
+  assert.equal(r.redraw.free_wait_sec, undefined, "30秒待って0点はなくした（KJ-049）");
   assert.equal(r.win.score, 50);
   assert.equal(r.win.time_limit_sec, 600, "制限時間は10分（追記 P-005）");
   assert.equal(r.layout_default, undefined, "並べ方の切り替えはなくした（KJ-030）");

@@ -204,13 +204,6 @@ test("待ち時間のゲージ（KJ-034）：使った直後は空に近い・�
   g.clock.t += 0.1;
   assert.equal(g.cdFrac(g.me, "invert"), 1, "満ちた");
   assert.ok(g.invert(g.me, [id]).ok, "満ちたら押せる");
-  // 引き直し（点がないとき30秒待ち）
-  g.me.score = 0;
-  assert.equal(g.redrawFrac(g.me), 1);
-  assert.equal(g.redraw(g.me).waiting, D.rules.redraw.free_wait_sec);
-  assert.ok(g.redrawFrac(g.me) < 0.05);
-  g.clock.t += D.rules.redraw.free_wait_sec / 2;
-  assert.ok(Math.abs(g.redrawFrac(g.me) - 0.5) < 0.01);
 });
 
 
@@ -466,35 +459,49 @@ test("取る：早い者勝ち。相手が先に取った札は取れない。16
   assert.equal(g.me.takes, 2, "取れる枚数は残る（2字放ったので2枚）");
 });
 
-test("引き直し：5点払って手札を全部入れ替える（8枚）", () => {
+test("引き直し：その試合の何回目かで値段が決まる（0・5・10・15・20）。手札を全部入れ替える（8枚）。一人ずつ数える（KJ-049）", () => {
   const g = newGame();
   setHand(g, g.me, "古");
   g.me.score = 7;
+  assert.equal(g.redrawCost(g.me), 0);
+  assert.equal(g.redrawsLeft(g.me), 5);
   const r = g.redraw(g.me);
   assert.ok(r.ok);
-  assert.equal(g.me.score, 2);
+  assert.deepEqual([r.paid, r.nth], [0, 1]);
+  assert.equal(g.me.score, 7, "1回目は0点");
   assert.equal(g.me.cards.length, D.rules.start_hand);
-  const e = g.log[g.log.length - 1].op === "引き直し" ? g.log[g.log.length - 1] : g.log.filter((x) => x.op === "引き直し").pop();
-  assert.deepEqual([e.from, e.pts], [["古"], -5]);
+  const e = g.log.filter((x) => x.op === "引き直し").pop();
+  assert.deepEqual([e.from, e.pts], [["古"], 0]);
+  assert.match(e.note, /1回目 0点/, "ログに何回目と値段");
+  assert.equal(g.redrawCost(g.me), 5);
+  assert.equal(g.redrawCost(g.cpu), 0, "相手の回数は別（一人ずつ数える）");
+  const paid = [];
+  for (let i = 0; i < 4; i++) { const x = g.redraw(g.me); paid.push(x.paid); }
+  assert.deepEqual(paid, [5, 10, 15, 20]);
+  assert.equal(g.me.score, 7 - 50);
+  const e5 = g.log.filter((x) => x.op === "引き直し").pop();
+  assert.deepEqual([e5.pts], [-20]);
+  assert.match(e5.note, /5回目 20点/);
 });
 
-test("引き直し：5点ない人は30秒待てば0点で入れ替わる。待つあいだも動ける", () => {
+test("引き直し：5回まで。6回目は押せない（理由つき）。点が足りなくても払えて、マイナスになってよい。30秒待ちはない（KJ-049）", () => {
   const g = newGame();
-  setHand(g, g.me, "古山川");
-  g.me.score = 2;
+  g.me.score = 0;
+  for (let i = 0; i < 5; i++) assert.ok(g.redraw(g.me).ok, `${i + 1}回目`);
+  assert.equal(g.me.score, -50, "0＋5＋10＋15＋20 を払って -50 点");
+  const before = g.me.cards.map((x) => x.id).join();
   const r = g.redraw(g.me);
-  assert.equal(r.waiting, 30);
-  assert.equal(g.redraw(g.me).why, "待っている");
-  assert.ok(g.release(g.me, g.me.cards.slice(1).map((x) => x.id)).ok, "待つあいだも放てる（山川）");
-  assert.equal(g.me.score, 5);
-  g.clock.t += 29.9;
-  g.tick();
-  assert.equal(chars(g.me.cards), "古");
-  g.clock.t += 0.2;
-  assert.equal(g.tick(), true);
-  assert.equal(g.me.cards.length, D.rules.start_hand);
-  assert.equal(g.me.score, 5, "0点で入れ替わる");
-  assert.equal(g.me.redrawAt, null);
+  assert.equal(r.ok, false);
+  assert.equal(r.why, "引き直しは5回まで");
+  assert.equal(g.me.cards.map((x) => x.id).join(), before, "6回目は何も変えない");
+  assert.equal(g.redrawCost(g.me), null);
+  assert.equal(g.redrawsLeft(g.me), 0);
+  assert.equal(g.whyNot(g.me, "redraw"), "引き直しは5回まで");
+  assert.equal(g.me.redrawAt, undefined, "待つ仕組みはない");
+  g.clock.t += 60;
+  assert.equal(g.tick(), false, "待ちが明けて勝手に入れ替わることはない");
+  assert.equal(g.me.score, -50);
+  assert.equal(g.redraw(g.cpu).ok, true, "相手は相手の回数で引き直せる");
 });
 
 test("勝ち：先に50点。終わったら動かせない", () => {
@@ -540,13 +547,15 @@ test("CPU（ふつう・KJ-035）：決まった乱数（1・7・42）で ふつ
     const g = newGame(seed, opp, level, { startStock: true });
     let turns = 0;
     while (!g.over) { g.clock.t += g.cpuDelay(); g.tick(); if (g.over) break; g.cpuTurn(); turns++; }
-    return { turns, releases: cpuReleases(g).length, score: g.cpu.score };
+    return { turns, secs: g.clock.t - 1000, releases: cpuReleases(g).length, score: g.cpu.score };
   };
   for (const level of ["N5", "N4"]) {
     for (const seed of [1, 7, 42]) {
       const [w, f] = ["weak", "fair"].map((o) => run(seed, o, level));
-      assert.ok(f.turns >= 600 / 20 - 1 && f.turns <= 600 / 15 + 1, `${level} seed ${seed}: ふつうの番 ${f.turns}`);
-      assert.ok(w.turns < f.turns, `${level} seed ${seed}: 弱い ${w.turns} < ふつう ${f.turns}`);
+      // 50点で早く終わることがある（KJ-049 で CPU が引き直しで点を捨てなくなった）ので、番の数でなく、1秒あたりの番で見る
+      const rate = (x) => x.turns / x.secs;
+      assert.ok(rate(f) >= 1 / 20 - 0.005 && rate(f) <= 1 / 15 + 0.005, `${level} seed ${seed}: ふつうの番 ${f.turns}（${f.secs}秒）`);
+      assert.ok(rate(w) < rate(f), `${level} seed ${seed}: 弱い ${w.turns}/${w.secs} < ふつう ${f.turns}/${f.secs}`);
       assert.ok(f.releases >= 1, `${level} seed ${seed}: ふつうが放った回数 ${f.releases}`);
     }
   }
@@ -580,7 +589,36 @@ test("CPU：放ったらすぐ場から取る。放てる言葉がなければ�
   const g2 = newGame();
   setHand(g2, g2.cpu, "卜卜");
   const r2 = g2.cpuTurn();
-  assert.equal(r2.waiting, 30, "0点なので30秒待つ引き直し");
+  assert.deepEqual([r2.ok, r2.nth, r2.paid], [true, 1, 0], "放てる言葉も1手先もなければ、1回目は0点で引き直す（KJ-049）");
+});
+
+test("CPU（KJ-049）：1手先（反転・巡り・同音）で放てる語が作れるなら、引き直さずに待つ／その手を使う", () => {
+  const g = newGame(3, "weak", "N5");
+  setHand(g, g.cpu, "人円"); // 人 を 同じ読みの 一 にすると 一円 が放てる（1手先）
+  assert.ok(g.cpu.cards.length === 2);
+  for (const k of ["homophone", "cycle", "invert"]) g.cpu.cd[k] = g.now() + 20; // どの手も待ち時間中
+  assert.equal(g.cpuTurn(), null, "待ち時間中は、引き直さずに待つ");
+  assert.equal(g.cpu.redraws, 0);
+  assert.equal(g.log.filter((e) => e.who === "CPU" && e.op === "引き直し").length, 0);
+  g.clock.t += 21;
+  const r = g.cpuTurn();
+  assert.ok(r && r.ok, "待ちが明けたら、その手を使う");
+  assert.notEqual(r.op, "引き直し");
+  assert.equal(g.cpu.redraws, 0, "引き直さずに手を使った");
+});
+
+test("CPU（KJ-049）：引き直しの値段と5回までは人と同じ。5回使いきったら引き直さない。点はマイナスになる", () => {
+  const g = newGame(1, "weak", "N5");
+  const paid = [];
+  for (let i = 0; i < 7; i++) {
+    setHand(g, g.cpu, "卜卜"); // 放てる語も1手先も無い手札
+    g.cpu.cd.homophone = g.cpu.cd.cycle = g.cpu.cd.invert = 0;
+    const r = g.cpuTurn();
+    paid.push(r && r.ok ? r.paid : null);
+  }
+  assert.deepEqual(paid, [0, 5, 10, 15, 20, null, null]);
+  assert.equal(g.cpu.score, -50);
+  assert.equal(g.cpu.redraws, 5);
 });
 
 test("CPU：1字を放たない。手札が1字だけなら引き直す。2字以上の語が作れるときだけ放つ（KJ-008）", () => {
@@ -590,7 +628,7 @@ test("CPU：1字を放たない。手札が1字だけなら引き直す。2字�
       setHand(g, g.cpu, "山");
       const before = g.log.length;
       const r = g.cpuTurn();
-      assert.equal(r.waiting, 30, `${opp} seed ${seed}: 1字しかなければ 動けない のときの動き（点がなければ待つ引き直し）`);
+      assert.deepEqual([r.ok, r.nth, r.paid], [true, 1, 0], `${opp} seed ${seed}: 1字しかなければ 動けない のときの動き（1回目の引き直しは0点）`);
       assert.equal(g.log.slice(before).some((e) => e.op === "放つ"), false, "1字は放たない");
       assert.equal(g.cpu.score, 0);
     }
@@ -633,7 +671,7 @@ test("CPU（KJ-015）：知っている語が無く、画面では「動ける�
   setHand(g, g.cpu, "図学"); // 図学 は N4 の語の表にある（よく使う語ではない）。割る・くっつける・巡り・反転の手もない手札
   assert.equal(g.releasableInHand(g.cpu), "図学", "画面の「動けない」判定は 動ける");
   const r = g.cpuTurn();
-  assert.equal(r.waiting, 30, "0点なので30秒待つ引き直し（前は null を返して何もしなかった）");
+  assert.deepEqual([r.ok, r.nth], [true, 1], "引き直す（前は null を返して何もしなかった）");
 });
 
 test("CPU（KJ-015）：CPU が知っている語は、どのレベルでもそのレベルの語の表にある", () => {
@@ -650,7 +688,9 @@ test("CPU（KJ-015）：N4 でも、決まった乱数（1・7・42）で 10分�
       const rel = cpuReleases(g);
       assert.ok(rel.length >= 1, `N4 ${opp} seed ${seed}: 放った回数 ${rel.length}`);
       assert.ok(rel.every((e) => e.from.length >= 2), "2字以上");
-      assert.ok(g.log.some((e) => e.who === "CPU" && e.op === "引き直し"), `N4 ${opp} seed ${seed}: 放てないときは引き直している`);
+      const rds = g.log.filter((e) => e.who === "CPU" && e.op === "引き直し");
+      assert.ok(rds.length <= 5, `N4 ${opp} seed ${seed}: 引き直しは5回まで（${rds.length}回）`);
+      rds.forEach((e, i) => assert.match(e.note, new RegExp(`^${i + 1}回目 ${D.rules.redraw.costs[i]}点`), "引き直しの何回目と値段がログに残る"));
     }
   }
 });
@@ -713,7 +753,7 @@ test("ログ：書き出しの頭に仮置きの値を全部書く", () => {
   assert.match(head, /# 相手 いまの強さ（CPU は 8〜12秒に1回動く）/);
   assert.match(head, /点数 2字3・3字6・4字12 四字熟語×2 特別な語×2（1字は放てない）/);
   assert.match(head, /放った字数×1枚を場から選んで、取りきるまで、ほかの手は何もできない（取れる枚数はためられない）/);
-  assert.match(head, /引き直し 5点で手札を全部入れ替え（8枚）。5点ない人は30秒待って0点で/);
+  assert.match(head, /引き直し 1試合5回まで・0点→5点→10点→15点→20点と回数で上がる・手札を全部入れ替え（8枚）。点はマイナスになってよい（足りなくても払える）/);
   assert.match(head, /勝ち 先に50点、または10分で点の多い方/);
   assert.match(head, /反転=10秒 巡り=1秒 同音=20秒/);
   assert.match(head, /CPU 8〜12秒に1回動く/);
@@ -733,7 +773,7 @@ test("動けない：2字以上の言葉が作れなくなったら残し、戻�
   const e = g.log.find((x) => x.op === "動けない" && x.who === "CPU");
   assert.ok(e, "CPU の 動けない がある（1字の 古 や 一 は放てる言葉に数えない）");
   assert.deepEqual(e.from, ["古", "一"]);
-  assert.match(e.note, /放てる言葉なし。使える手：割る・反転・巡り・同音・引き直し（30秒待つ）/);
+  assert.match(e.note, /放てる言葉なし。使える手：割る・反転・巡り・同音・引き直し（0点）/);
   g.clock.t += 1;
   assert.ok(g.invert(g.cpu, [g.cpu.cards[0].id]).ok);
   const back = g.log.find((x) => x.op === "動ける" && x.who === "CPU");
@@ -821,13 +861,13 @@ test("ひとりで：50点になっても終わらない。制限時間（10分�
   assert.equal(g.release(g.me, setHand(g, g.me, "山川")).ok, false, "終わったら動かせない");
 });
 
-test("ひとりで：引き直しの待ちも動く。CPU の待ちは見ない", () => {
+test("ひとりで：引き直しも同じ（1回目は0点・5回まで）。待つ仕組みはない（KJ-049）", () => {
   const g = newGame(1, "solo");
   g.me.score = 0;
-  assert.equal(g.redraw(g.me).waiting, 30);
-  g.clock.t += 30;
-  assert.equal(g.tick(), true);
+  assert.equal(g.redraw(g.me).paid, 0, "1回目の引き直しは0点");
   assert.equal(g.me.cards.length, D.rules.start_hand);
+  assert.equal(g.redraw(g.me).paid, 5);
+  assert.equal(g.me.score, -5);
 });
 
 test("ログ：頭に選んだ相手を書く（ひとりで／とても弱い／ふつう／いまの強さ）", () => {
@@ -1390,7 +1430,11 @@ test("文言（KJ-024・KJ-048）：js/strings.js のボタンは8つで英語�
   assert.equal(S.buttonHtml("bHomo"), `${svg("homophone")}ame reading`);
   for (const t of [...Object.values(S.BUTTONS), ...Object.values(S.LOGO).flat()]) assert.doesNotMatch(t, /[⇄↻♪]|Sound conversion/, "古い印・古い名前が残っていない");
   assert.equal(S.redrawNote.cost(5), "-5pt", "点が減ることが分かる添え字（KJ-034 追記）");
-  assert.equal(S.redrawNote.free(30), "30s");
+  assert.equal(S.redrawNote.cost(0), "0pt", "1回目は 0pt（KJ-049）");
+  assert.equal(S.redrawNote.text(0, 5), "0pt あと5回");
+  assert.equal(S.redrawNote.text(10, 3), "-10pt あと3回");
+  assert.equal(S.redrawNote.text(null, 0), "あと0回", "使いきったら値段は出さない");
+  assert.equal(S.redrawNote.free, undefined, "30秒待ちの添え字はなくした（KJ-049）");
   assert.equal(S.redrawNote.wait, undefined, "待っているあいだの秒数の文字は出さない（KJ-034）");
   const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
   for (const id of Object.keys(S.BUTTONS)) assert.match(html, new RegExp(`<button class="op[^"]*" id="${id}"><span class="lb"></span>`), `${id} の文字は strings.js から入れる（直書きしない）`);
@@ -1572,7 +1616,7 @@ test("KJ-037 ヒント：待ち時間の操作・手札がいっぱいで割れ�
   assert.notEqual(g2.hint.op, "割る", "いっぱいで割れないときは割るを光らせない");
 });
 
-test("KJ-037 ヒント：段3 どれも無ければ Redraw のボタンが光る。待っているときは札もボタンも光らない", () => {
+test("KJ-037 ヒント：段3 どれも無ければ Redraw のボタンが光る。5回使いきったあとは札もボタンも光らない（KJ-049）", () => {
   const g = newGame(1, "weak", "N5");
   setHand(g, g.me, "日刀");
   tryN(g, 3);
@@ -1582,11 +1626,11 @@ test("KJ-037 ヒント：段3 どれも無ければ Redraw のボタンが光る
   assert.equal(h.button, "bRedraw");
   const g2 = newGame(1, "weak", "N5");
   setHand(g2, g2.me, "日刀");
-  assert.ok(g2.redraw(g2.me).ok); // 5点ないので30秒待つ
-  assert.notEqual(g2.me.redrawAt, null);
+  for (let i = 0; i < 5; i++) assert.ok(g2.redraw(g2.me).ok);
+  setHand(g2, g2.me, "日刀");
   tryN(g2, 3);
-  assert.equal(g2.hint, null, "引き直しを待っているときは何も光らせず、札も出さない");
-  assert.ok(g2.log.some((e) => e.op === "ヒント" && e.note.includes("待っている")), "ログには残す");
+  assert.equal(g2.hint, null, "引き直しを使いきったときは何も光らせず、札も出さない");
+  assert.ok(g2.log.some((e) => e.op === "ヒント" && e.note.includes("使いきった")), "ログには残す");
 });
 
 test("KJ-037 ヒント：光るのは10秒か次に手札を動かすまで。選ぶ・外すだけ（画面）では消えない。ログに残る（狙った言葉はログにだけ）", () => {
@@ -1743,9 +1787,9 @@ test("KJ-041：whyNot は、実際の操作がはじかれる理由と同じ（�
   }
   const g = newGame(1, "weak", "N5");
   assert.equal(g.whyNot(g.me, "redraw"), null);
-  g.me.redrawAt = g.now() + 5;
-  assert.equal(g.whyNot(g.me, "redraw"), "待っている");
-  assert.equal(g.redraw(g.me).why, "待っている");
+  g.me.redraws = D.rules.redraw.costs.length;
+  assert.equal(g.whyNot(g.me, "redraw"), "引き直しは5回まで");
+  assert.equal(g.redraw(g.me).why, "引き直しは5回まで");
 });
 
 // ---------- KJ-018：試合が終わったときの表示の中身（K.endShow）----------

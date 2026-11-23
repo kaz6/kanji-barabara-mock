@@ -213,7 +213,7 @@
       `はじまり：最初の手札${R.start_hand}枚で、すぐ時間が動く。ストックに使いやすい部品を${R.start_stock_parts}枚入れて始める（部品表で行き先が多い字でない部品の上位${R.start_stock_top}個から無作為）`,
       `台（机）は並べて見る場所。台に出した札は出す前の段にいるままで、上の段・下の段の枚数に数える`,
       `放ったら 放った字数×${R.take_per_char}枚を場から選んで、取りきるまで、ほかの手は何もできない（取れる枚数はためられない）。放った言葉は消える（相手には届かない）`,
-      `引き直し ${R.redraw.cost}点で手札を全部入れ替え（${R.start_hand}枚）。${R.redraw.cost}点ない人は${R.redraw.free_wait_sec}秒待って0点で`,
+      `引き直し 1試合${R.redraw.costs.length}回まで・${R.redraw.costs.map((c) => c + "点").join("→")}と回数で上がる・手札を全部入れ替え（${R.start_hand}枚）。点はマイナスになってよい（足りなくても払える）`,
       `勝ち 先に${R.win.score}点、または${limit / 60}分で点の多い方（同点は引き分け）。ひとりでは50点で終わらず${limit / 60}分で終わる`,
       `ヒント 人が続けて${R.hint.fail_streak}回はじかれたら、自動で札とボタンを光らせる（${R.hint.glow_sec}秒か次の操作まで。言葉は文字で出さない。点はかけない）`,
       `待ち時間 反転=${R.cooldown_sec.invert}秒 巡り=${R.cooldown_sec.cycle}秒 同音=${R.cooldown_sec.homophone}秒（その人の操作ごと）`,
@@ -335,13 +335,13 @@
     }
     function player(key, name, n) {
       return { key, name, cards: draw(n).map((c) => card(c)), cd: { invert: 0, cycle: 0, homophone: 0 },
-        score: 0, takes: 0, redrawAt: null, lastSpecial: null, stuck: false };
+        score: 0, takes: 0, redraws: 0, lastSpecial: null, stuck: false };
     }
     g.me = player("me", "あなた", R.start_hand);
     if (M) {
       // 相手は人。札はこの端末に無い（枚数だけ。相手が送る 'event' で更新）。山からも引かない
       g.cpu = { key: "cpu", name: ROOM_OPP_NAME, cards: [], remote: true, hand: R.start_hand, count: R.start_hand + (env.startStock !== false ? R.start_stock_parts || 0 : 0),
-        cd: { invert: 0, cycle: 0, homophone: 0 }, score: 0, takes: 0, redrawAt: null, lastSpecial: null, stuck: false };
+        cd: { invert: 0, cycle: 0, homophone: 0 }, score: 0, takes: 0, redraws: 0, lastSpecial: null, stuck: false };
     } else {
       g.cpu = player("cpu", "CPU", g.solo ? 0 : R.start_hand); // ひとりで：CPU は出さない（山からも引かない）
     }
@@ -408,11 +408,12 @@
     g.byId = (p, id) => p.cards.find((x) => x.id === id);
     g.ready = (p, k) => now() >= p.cd[k];
     g.cdLeft = (p, k) => Math.max(0, p.cd[k] - now());
-    g.redrawLeft = (p) => (p.redrawAt === null ? 0 : Math.max(0, p.redrawAt - now()));
+    // 引き直し（KJ-049）：その人がその試合で何回目かで値段が決まる（R.redraw.costs の並び）。回数は redraws
+    g.redrawsLeft = (p) => Math.max(0, R.redraw.costs.length - p.redraws);
+    g.redrawCost = (p) => (g.redrawsLeft(p) > 0 ? R.redraw.costs[p.redraws] : null); // 次の値段。もう引き直せないなら null
     // 待ち時間のゲージ（KJ-034）：0＝使った直後（空）〜1＝満ちた（押せる）。待っていなければ 1
     const frac = (left, total) => (total > 0 ? Math.min(1, Math.max(0, 1 - left / total)) : 1);
     g.cdFrac = (p, k) => frac(g.cdLeft(p, k), R.cooldown_sec[k]);
-    g.redrawFrac = (p) => (p.redrawAt === null ? 1 : frac(g.redrawLeft(p), R.redraw.free_wait_sec));
     const useCd = (p, k) => { p.cd[k] = now() + R.cooldown_sec[k]; };
 
     const QUIET = new Set(["はじまり", "ためした", "ヒント", "終わり", "動けない", "動ける", "入れ替え", "移す", "段", "とばす"]);
@@ -451,7 +452,7 @@
         const left = g.cdLeft(p, k);
         out.push(left > 0 ? `${name}（待ち ${Math.ceil(left)}秒）` : name);
       }
-      out.push(p.score >= R.redraw.cost ? `引き直し（${R.redraw.cost}点）` : `引き直し（${R.redraw.free_wait_sec}秒待つ）`);
+      if (g.redrawsLeft(p) > 0) out.push(`引き直し（${g.redrawCost(p)}点）`);
       return out;
     };
     function checkStuck() {
@@ -568,14 +569,14 @@
       }
       if (best) return best;
       // 段3：引き直し
-      if (p.redrawAt === null) return { tier: 3, ids: [], button: "bRedraw", op: "引き直し", word: "" };
-      return { tier: 3, ids: [], button: null, op: "引き直し（待っている）", word: "" };
+      if (g.redrawsLeft(p) > 0) return { tier: 3, ids: [], button: "bRedraw", op: "引き直し", word: "" };
+      return { tier: 3, ids: [], button: null, op: "引き直し（使いきった）", word: "" };
     };
     const maybeHint = (p) => {
       if (g.tutorial || g.hintStreak < HR.fail_streak) return; // チュートリアルは自分の光りを出す（createTutorial）。自動のヒントは出さない
       g.hintStreak = 0; // ヒントを出したら数え直し
       const h = makeHint(p);
-      g.hint = h.ids.length || h.button ? { ...h, until: now() + HR.glow_sec } : null; // 光らせる物が無いとき（引き直しを待っている）は、札も出さない
+      g.hint = h.ids.length || h.button ? { ...h, until: now() + HR.glow_sec } : null; // 光らせる物が無いとき（引き直しを使いきった）は、札も出さない
       g.hintCount++;
       const lit = h.ids.map((id) => g.byId(p, id)).filter(Boolean).map((x) => x.c);
       addLog(p.name, "ヒント", lit, [], 0, `段${h.tier}：${h.op}${h.word ? `。狙った言葉：${h.word}` : ""}`);
@@ -795,21 +796,18 @@
       g.deck.push(...old.filter((c) => T.CHARS.has(c))); // 山に戻すのはレベルの字だけ（部品・中継ぎ・レベルの外の字は山に入れない。KJ-011）
       shuffle(g.deck);
       p.cards = draw(R.start_hand).map((c) => card(c, true));
-      p.redrawAt = null;
       addLog(p.name, "引き直し", old, p.cards.map((x) => x.c), pts, note);
     }
+    const REDRAW_MAX_WHY = `引き直しは${R.redraw.costs.length}回まで`;
     g.redraw = (p) => {
       if (!live()) return fail("終わった");
       if (locked(p)) return fail(LOCK_WHY);
-      if (p.redrawAt !== null) return fail("待っている");
-      if (p.score >= R.redraw.cost) {
-        p.score -= R.redraw.cost;
-        doRedraw(p, -R.redraw.cost, `${R.redraw.cost}点払った`);
-        return { ok: true, paid: R.redraw.cost };
-      }
-      p.redrawAt = now() + R.redraw.free_wait_sec;
-      addLog(p.name, "引き直し", [], [], 0, `${R.redraw.cost}点ないので${R.redraw.free_wait_sec}秒待つ（待つあいだも動ける）`);
-      return { ok: true, waiting: R.redraw.free_wait_sec };
+      const cost = g.redrawCost(p);
+      if (cost === null) return fail(REDRAW_MAX_WHY);
+      p.redraws++;
+      p.score -= cost; // 点が足りなくても払える（マイナスになってよい）
+      doRedraw(p, cost ? -cost : 0, `${p.redraws}回目 ${cost}点払った`);
+      return { ok: true, paid: cost, nth: p.redraws };
     };
 
     // 2枚の位置を入れ替える。手札とストックの間でもよい（入れ替えた札はそれぞれ相手の段へ）。持っている札も数も変わらない
@@ -848,7 +846,7 @@
     // 理由と順番は g.split・g.join・g.invert・g.cycle・g.homophone・g.redraw と同じ（テストが突き合わせる）。通るなら null
     g.whyNot = (p, op, ids) => {
       if (!live()) return null;
-      if (op === "redraw") return locked(p) ? LOCK_WHY : p.redrawAt !== null ? "待っている" : null;
+      if (op === "redraw") return locked(p) ? LOCK_WHY : g.redrawsLeft(p) === 0 ? REDRAW_MAX_WHY : null;
       const cs = cardsOf(p, ids || []);
       if (locked(p)) return LOCK_WHY;
       if (op === "join") {
@@ -906,13 +904,10 @@
       if (g.solo) return; // ひとりでは50点で終わらない
       if (hit.length) finish(hit[0], `先に${R.win.score}点`);
     }
-    // 画面が定期的に呼ぶ：0点の引き直しの待ちと、時間切れ
+    // 画面が定期的に呼ぶ：時間切れ
     g.tick = () => {
       if (!live() || g.tutorial) return false; // チュートリアルに時間はない
       let changed = false;
-      for (const p of players()) {
-        if (p.redrawAt !== null && now() >= p.redrawAt) { doRedraw(p, 0, `${R.redraw.free_wait_sec}秒待った（0点）`); changed = true; }
-      }
       if (M) return changed; // 合言葉の部屋の時間切れは createMatchClient が二人の点をそろえてから終える
       if (now() >= g.endsAt && g.solo) {
         finish(null, `${g.timeLimit / 60}分`);
@@ -937,6 +932,22 @@
       while (p.takes > 0 && g.canTakeMore(p)) {
         if (!g.take(p, cpuPickField(p).id).ok) break;
       }
+    }
+    // 札を1枚だけ反転・巡り・同音で替えたとき、CPU が探せる語（よく使う語で、まだ使っていない）で放てるようになる手。ready は、いま押せるもの
+    function cpuAhead(p) {
+      const words = T.COMMON_WORDS.filter((w) => !g.used.has(w.w));
+      const covers = (have, word) => {
+        const left = have.slice();
+        return [...word].every((ch) => { const i = left.indexOf(ch); if (i < 0) return false; left.splice(i, 1); return true; });
+      };
+      const found = [];
+      for (const [k, outsOf] of [["cycle", (c) => (T.NEXT.has(c) ? [T.NEXT.get(c)] : [])], ["invert", (c) => (T.INV.has(c) ? [T.INV.get(c)] : [])], ["homophone", (c) => homoChars(T, c)]]) {
+        for (const x of p.cards) for (const to of outsOf(x.c)) {
+          const after = p.cards.filter((y) => y !== x).map((y) => y.c).concat(to);
+          if (words.some((w) => covers(after, w.w))) found.push({ k, x, to, isReady: g.ready(p, k) });
+        }
+      }
+      return found.length ? { ready: found.filter((m) => m.isReady) } : null;
     }
     g.cpuTurn = () => {
       if (!live() || g.solo || M) return null; // 合言葉の部屋は CPU を出さない
@@ -964,7 +975,15 @@
       if (inv.length && g.ready(p, "invert") && rand() < 0.3) return g.invert(p, [pick(inv).id]);
       // CPU が知っている語で放てるものがない＝動けない（KJ-015）。画面の「動けない」（語の表の全部で見る）とは別。
       // 知らない語が手札にあるだけで引き直さずに止まっていた（N4 で語の表が増えて目立った）
-      if (!ws.length && p.redrawAt === null) return g.redraw(p);
+      // 引き直す前に：1手先（反転・巡り・同音）で、自分が探せる語を放てるようになるなら、引き直さずにその手を使う。待ち時間中なら待つ（KJ-049）
+      const ahead = cpuAhead(p);
+      if (ahead) {
+        if (!ahead.ready.length) return null;
+        const m = pick(ahead.ready);
+        return m.k === "homophone" ? g.homophone(p, [m.x.id], m.to) : g[m.k](p, [m.x.id]);
+      }
+      // 引き直しは人と同じ値段・5回まで（KJ-049）。回数を使いきっていたら何もしない
+      if (g.redrawsLeft(p) > 0) return g.redraw(p);
       return null;
     };
 
@@ -1186,6 +1205,9 @@
     // 届いた行の中身の確かめ（相手の端末から来るので、形の合わない行は捨てる）
     const nat = (v, max) => Number.isInteger(v) && v >= 0 && v <= max;
     const SCORE_MAX = 100000;
+    // 点は引き直しでマイナスになってよい（KJ-049）。下限は引き直しを5回使いきった分
+    const SCORE_MIN = -R.redraw.costs.reduce((a, b) => a + b, 0);
+    const scoreOk = (v) => Number.isInteger(v) && v >= SCORE_MIN && v <= SCORE_MAX;
     function rowOk(row) {
       if (!row || typeof row !== "object" || row.match_id !== mid) return false;
       if (!ROLES.includes(row.player) || typeof row.kind !== "string" || typeof row.key !== "string" || !row.key || row.key.length > 64) return false;
@@ -1196,12 +1218,12 @@
     function payloadOk(row) {
       const p = row.payload || {};
       if (row.kind === "card") return /^[0-9]{1,6}$/.test(row.key);
-      if (row.kind === "word") { const n = [...row.key].length; return n >= 2 && n <= 8 && (p.score === undefined || nat(p.score, SCORE_MAX)); }
+      if (row.kind === "word") { const n = [...row.key].length; return n >= 2 && n <= 8 && (p.score === undefined || scoreOk(p.score)); }
       if (row.kind === "end") {
-        if (row.key === "score") return ROLES.includes(p.winner) && (p.score === undefined || nat(p.score, SCORE_MAX));
-        return p.score === undefined || nat(p.score, SCORE_MAX);
+        if (row.key === "score") return ROLES.includes(p.winner) && (p.score === undefined || scoreOk(p.score));
+        return p.score === undefined || scoreOk(p.score);
       }
-      if (row.kind === "event" && p.type === "state") return nat(p.seq, 1e9) && nat(p.score, SCORE_MAX) && nat(p.count, totalMax) && (p.hand === undefined || nat(p.hand, R.hand_max));
+      if (row.kind === "event" && p.type === "state") return nat(p.seq, 1e9) && scoreOk(p.score) && nat(p.count, totalMax) && (p.hand === undefined || nat(p.hand, R.hand_max));
       return true;
     }
     // 届いた行（相手の行も、自分の行も届く）
@@ -1227,7 +1249,7 @@
       if (row.kind === "event" && p.type === "leave") { const was = c.oppLeft; c.oppLeft = true; return !was; }
       return false;
     };
-    // 画面が定期的に呼ぶ：0点の引き直しの待ちと、時間切れ。時間切れでは自分の点を 'end' で送り、相手の点が届くか graceSec たったら比べる
+    // 画面が定期的に呼ぶ：時間切れ。時間切れでは自分の点を 'end' で送り、相手の点が届くか graceSec たったら比べる
     // 相手が抜けた・つながらないときも、時間はそのまま進み、時間切れで最後に見えた点を比べる
     c.tick = async () => {
       if (g.over) return false;
