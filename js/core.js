@@ -215,7 +215,7 @@
       `放ったら 放った字数×${R.take_per_char}枚を場から選んで、取りきるまで、ほかの手は何もできない（取れる枚数はためられない）。放った言葉は消える（相手には届かない）`,
       `引き直し 1試合${R.redraw.costs.length}回まで・${R.redraw.costs.map((c) => c + "点").join("→")}と回数で上がる・手札を全部入れ替え（${R.start_hand}枚）。点はマイナスになってよい（足りなくても払える）`,
       `勝ち 先に${R.win.score}点、または${limit / 60}分で点の多い方（同点は引き分け）。ひとりでは50点で終わらず${limit / 60}分で終わる`,
-      `ヒント 人が続けて${R.hint.fail_streak}回はじかれたら、自動で札とボタンを光らせる（${R.hint.glow_sec}秒か次の操作まで。言葉は文字で出さない。点はかけない）`,
+      `ヒント 人が続けて${R.hint.fail_streak}回はじかれたら、自動で札とボタンを光らせる（${R.hint.glow_sec}秒のあいだ、ほかの手をしても残る。光らせた言葉を放つか、光らせた札が（1枚でも）手札から無くなる・引き直しを使うと消える。言葉は文字で出さない。点はかけない）`,
       `待ち時間 反転=${R.cooldown_sec.invert}秒 巡り=${R.cooldown_sec.cycle}秒 同音=${R.cooldown_sec.homophone}秒（その人の操作ごと）`,
       key === "solo" || key === ROOM_OPPONENT.key ? "CPU なし" : `CPU ${a}〜${b}秒に1回動く`,
     ];
@@ -417,11 +417,9 @@
     const useCd = (p, k) => { p.cd[k] = now() + R.cooldown_sec[k]; };
 
     const QUIET = new Set(["はじまり", "ためした", "ヒント", "終わり", "動けない", "動ける", "入れ替え", "移す", "段", "とばす"]);
-    const HINT_KEEP = new Set(["はじめ", "はじまり", "ためした", "ヒント", "動けない", "動ける", "終わり", "段", "とばす"]);
     function addLog(who, op, from, to, pts, note) {
       g.log.push({ t: logT(), who, op, from: from || [], to: to || [], pts: pts || 0,
         meScore: g.me.score, cpuScore: g.cpu.score, me: nCards(g.me), cpu: nCards(g.cpu), note: note || "" });
-      if (who === g.me.name && !HINT_KEEP.has(op)) g.hint = null; // 手札を動かしたら、ヒントの光りは消える（選ぶ・外すだけでは動かない。KJ-037）
       if (!QUIET.has(op)) checkStuck();
     }
     g.addLog = addLog;
@@ -501,9 +499,17 @@
     g.hintStreak = 0;
     g.hintCount = 0;
     g.hint = null; // { tier: 1|2|3, ids: [光らせる札の id], button: ボタンの id（段1は無し）, op, word, until }
-    g.hintActive = () => (g.hint && !g.over && now() < g.hint.until && !(g.hint.word && g.used.has(g.hint.word)) ? g.hint : null); // 狙った言葉を先に使われたら、光りは消える
+    // KJ-065：ヒントは glow_sec（10秒）のあいだ、ほかの手をしても残る。消えるのは、10秒たったとき・光らせた言葉が使われたとき（自分が放った・CPU や相手が先に放った）・光らせた札が手札から無くなったとき（1枚でも）
+    g.hintActive = () => {
+      const h = g.hint;
+      if (!h || g.over || now() >= h.until) return null;
+      if (h.word && g.used.has(h.word)) return null;
+      if (h.ids.some((id) => !g.byId(g.me, id))) return null; // 光らせた札が1枚でも手札から無くなったら（操作で替わった・放った）消える
+      if (h.tier === 3 && g.me.redraws !== h.redraws) return null; // 引き直しを使ったら消える
+      return h;
+    };
     g.clearHint = () => { g.hint = null; };
-    const solved = (p) => { if (p === g.me) { g.hintStreak = 0; g.hint = null; } }; // 通った：数え直し・光りを消す
+    const solved = (p) => { if (p === g.me) g.hintStreak = 0; }; // 通った：数え直す（光りは消さない。KJ-065）
     const countOf = (chs) => { const m = new Map(); for (const c of chs) m.set(c, (m.get(c) || 0) + 1); return m; };
     const fitsIn = (word, have) => { // word の字が have（字→枚数）に収まるか
       const need = new Map();
@@ -576,7 +582,7 @@
       if (g.tutorial || g.hintStreak < HR.fail_streak) return; // チュートリアルは自分の光りを出す（createTutorial）。自動のヒントは出さない
       g.hintStreak = 0; // ヒントを出したら数え直し
       const h = makeHint(p);
-      g.hint = h.ids.length || h.button ? { ...h, until: now() + HR.glow_sec } : null; // 光らせる物が無いとき（引き直しを使いきった）は、札も出さない
+      g.hint = h.ids.length || h.button ? { ...h, until: now() + HR.glow_sec, redraws: p.redraws } : null; // 光らせる物が無いとき（引き直しを使いきった）は、札も出さない
       g.hintCount++;
       const lit = h.ids.map((id) => g.byId(p, id)).filter(Boolean).map((x) => x.c);
       addLog(p.name, "ヒント", lit, [], 0, `段${h.tier}：${h.op}${h.word ? `。狙った言葉：${h.word}` : ""}`);
