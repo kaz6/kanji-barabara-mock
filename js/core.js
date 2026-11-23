@@ -243,6 +243,29 @@
   const matchRand = (matchId, tag) => seededRand(strSeed(matchId + ":" + tag));
   const ROLES = ["host", "guest"];
   const ROOM_OPPONENT = { key: "room", label: "人と（合言葉）" }; // 画面の「相手」の、いまの強さの後ろに出す（KJ-033 後半）
+  // はじめる前の画面の「相手」は2段（KJ-045）。1段目「遊び方」：ひとりで／CPU と／友だちと（合言葉）。「CPU と」のときだけ2段目「強さ」。
+  // 中で使う相手のキー（solo・weak・fair・normal・room）とログの「相手」の書き方（OPPONENTS・ROOM_OPPONENT の label）は変えない。画面の呼び名だけ別に持つ
+  const PLAY_MODES = [
+    { key: "solo", label: "ひとりで" },
+    { key: "cpu", label: "CPU と" },
+    { key: ROOM_OPPONENT.key, label: "友だちと（合言葉）" },
+  ];
+  const CPU_POWERS = [
+    { key: "weak", label: "とても弱い" },
+    { key: "fair", label: "ふつう" },
+    { key: "normal", label: "つよい" }, // 前の呼び名は「いまの強さ」（ログには今も OPPONENTS の label で出る）
+  ];
+  // 端末に覚えた相手のキー（前の形のまま）を、新しい形（遊び方＋強さ）に読み替える。読めなければ初期値（rules.opponent_default。CPU と＋とても弱い）
+  function readOpponent(D, stored) {
+    const defKey = D.rules.opponent_default;
+    const known = (k) => k === ROOM_OPPONENT.key || OPPONENTS.some((o) => o.key === k);
+    const key = known(stored) ? stored : known(defKey) ? defKey : "weak";
+    const isPower = (k) => CPU_POWERS.some((o) => o.key === k);
+    const power = isPower(key) ? key : isPower(defKey) ? defKey : "weak";
+    return { key, mode: key === "solo" ? "solo" : key === ROOM_OPPONENT.key ? "room" : "cpu", power };
+  }
+  // 遊び方＋強さ → 中で使う相手のキー
+  const opponentKey = (mode, power) => (mode === "cpu" ? (CPU_POWERS.some((o) => o.key === power) ? power : "weak") : mode === "room" ? ROOM_OPPONENT.key : "solo");
   const ROOM_OPP_NAME = "相手";
   // チュートリアル（KJ-043）。相手の選びには出さない（はじめる前の「チュートリアル」ボタンと、はじめて「はじめる」を押したときだけ）
   const TUTORIAL_OPPONENT = { key: "tutorial", label: "チュートリアル" };
@@ -1391,7 +1414,7 @@
   }
 
   return {
-    FILES, OPPONENTS, LEVELS, timeChoices, normTime, timeLabel, levelLabel, levelShort, makeTables, isN5, isLevelChar, isChar, splitOnce, canSplit, delivered, joinResults, joinReversed,
+    FILES, OPPONENTS, PLAY_MODES, CPU_POWERS, readOpponent, opponentKey, LEVELS, timeChoices, normTime, timeLabel, levelLabel, levelShort, makeTables, isN5, isLevelChar, isChar, splitOnce, canSplit, delivered, joinResults, joinReversed,
     releasable, scoreOf, homoChars, marks, markKinds, cutSpec, FACES, FACE_LABEL, faceJoins, faceResults, rulesLabel, opponentLabel, createGame, createTutorial, TUTORIAL_OPPONENT, playLogRow, endShow, END_LABELS, logSendAllowed, playLogResult, PLAY_LOG_LIMITS,
     strSeed, seededRand, matchRand, ROLES, ROOM_OPPONENT, MATCH_END_GRACE_SEC, MATCH_INSERT_TIMEOUT_SEC, MATCH_PING_SEC, MATCH_GONE_SEC, ROOM_LOBBY_TTL_SEC,
     createMatchClient, memoryClaims, newMatchId, newRoomCode, roomLobbyId, findRoom, hostRoom, joinRoom, startRoom, roomStartAt, roomWaiter,

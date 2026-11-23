@@ -31,6 +31,12 @@ const BTNS = ["bRelease", "bSplit", "bJoin", "bInvert", "bCycle", "bHomo", "bRed
 const until = async (fn, ms = 3000) => { const t0 = Date.now(); while (!fn() && Date.now() - t0 < ms) await new Promise((r) => setTimeout(r, 25)); };
 
 // 印の無い（はじめての）端末のページ。ログは送る処理を見られるよう force し、通信は偽物で受ける（本物の送り先には出さない）
+// 相手を選ぶ（KJ-045）：中のキー（solo・weak・fair・normal・room）から、画面の2段（遊び方→強さ）を押す
+async function pickOpp(page, key) {
+  if (key === "solo" || key === "room") return page.check(`#opp input[value="${key}"]`);
+  await page.check('#opp input[value="cpu"]');
+  await page.check(`#pow input[value="${key}"]`);
+}
 async function fresh(browser, url, { vp = { width: 375, height: 700 }, posts = [], mark = false, opponent = null } = {}) {
   const ctx = await browser.newContext({ viewport: vp });
   const page = await ctx.newPage();
@@ -44,7 +50,7 @@ async function fresh(browser, url, { vp = { width: 375, height: 700 }, posts = [
   page.on("console", (m) => { if (m.type() === "error") errors.push(m.text()); });
   await page.goto(url);
   await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
-  if (opponent) await page.check(`#opp input[value="${opponent}"]`);
+  if (opponent) await pickOpp(page, opponent);
   return { ctx, page, errors, posts };
 }
 const tile = (page, ch) => page.locator(`#meHand .tile[title="${ch}"], #meTray .tile[title="${ch}"]`).first();
@@ -251,7 +257,7 @@ test("チュートリアルの画面", { skip }, async (t) => {
 
   await t.test("人と対戦（合言葉）では出ない：「はじめる」が無く、はじめて部屋を選んだ人にチュートリアルは出ない。ボタンから見て終えると、はじめる前の画面へ戻る", async () => {
     const { ctx, page, errors } = await fresh(browser, url);
-    await page.check('#opp input[value="room"]');
+    await pickOpp(page, "room");
     assert.equal(await page.isVisible("#start"), false);
     assert.equal(await page.isVisible("#tut"), false);
     assert.equal(await page.isVisible("#roomBox"), true);

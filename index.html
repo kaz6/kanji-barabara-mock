@@ -288,12 +288,17 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
 
   <section class="setup" id="setup">
     <h2>はじめる前に選ぶ</h2>
-    <div class="grp"><p class="gt">相手</p><span class="opp" id="opp" role="radiogroup" aria-label="相手"></span></div>
-    <div class="grp"><p class="gt">レベル</p><span class="opp" id="lvl" role="radiogroup" aria-label="レベル"></span></div>
-    <div class="grp"><p class="gt">時間</p><span class="opp" id="tim" role="radiogroup" aria-label="時間"></span></div>
+    <div class="grp"><p class="gt">遊び方</p><span class="opp" id="opp" role="radiogroup" aria-label="遊び方"></span></div>
+    <div class="grp" id="powBox" hidden><p class="gt">強さ</p><span class="opp" id="pow" role="radiogroup" aria-label="強さ"></span></div>
+    <div id="setSlot">
+      <div class="grp" id="grpLvl"><p class="gt">レベル</p><span class="opp" id="lvl" role="radiogroup" aria-label="レベル"></span></div>
+      <div class="grp" id="grpTim"><p class="gt">時間</p><span class="opp" id="tim" role="radiogroup" aria-label="時間"></span></div>
+    </div>
     <div class="grp" id="roomBox" hidden>
-      <p class="gt">合言葉の部屋（人と対戦。部屋を作った人のレベル・時間で遊ぶ）</p>
+      <p class="gt">合言葉の部屋（友だちと対戦）</p>
+      <div id="hostSlot"></div><!-- 友だちと のときは、レベル・時間をここ（部屋を作る側）に置く。入る側には出さない（作った人のレベル・時間で遊ぶため）。KJ-045 -->
       <div class="roomrow"><button class="op" id="bHost">部屋を作る</button></div>
+      <p class="gt">入る側は、作った人のレベル・時間で遊ぶ</p>
       <div class="roomrow"><input id="roomCode" inputmode="numeric" autocomplete="off" maxlength="4" placeholder="数字4けた" aria-label="合言葉"><button class="op" id="bEnter">合言葉で入る</button></div>
       <p class="roomcode" id="roomShow" hidden></p>
       <p class="note" id="roomMsg"></p>
@@ -405,7 +410,8 @@ let level=null;     // レベル（"G1"〔小1〕／"N5"／"N4"）。はじめ�
 let row=[];         // 選んだ札の id（選んだ順。台にはその写しを左から並べる）
 let lastTried="";
 const OPP_KEY="kj-opponent",TIME_KEY="kj-time";
-let opponent=null;  // 相手。端末に覚える（KJ-007）
+let opponent=null;  // 相手のキー（solo・weak・fair・normal・room）。端末に覚える（KJ-007）。画面では「遊び方」と「強さ」の2段で選ぶ（KJ-045）
+let cpuPower="weak"; // 「CPU と」のときの強さ。遊び方を行き来しても覚えている
 let timeLimit=null; // 制限時間（秒）。端末に覚える（KJ-007）
 const $=id=>document.getElementById(id);
 const clock=()=>performance.now()/1000;
@@ -431,7 +437,7 @@ let cpuTimer=null;
 function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
 function lsSet(k,v){try{localStorage.setItem(k,String(v))}catch(e){}}
 function loadSettings(){
-  const o=lsGet(OPP_KEY);opponent=OPP_CHOICES().some(x=>x.key===o)?o:D.rules.opponent_default;
+  const r=K.readOpponent(D,lsGet(OPP_KEY));opponent=r.key;cpuPower=r.power; // 前の形で覚えた値（weak・room など）も、そのまま新しい形に読み替わる（KJ-045）
   const l=lsGet(LVL_KEY);level=K.LEVELS.some(x=>x.key===l)?l:(D.rules.level_default||"N4");
   timeLimit=K.normTime(D,lsGet(TIME_KEY));
 }
@@ -446,11 +452,12 @@ function radios(box,name,items,cur,onPick){
   }
 }
 function buildPickers(){
-  radios($("opp"),"opp",OPP_CHOICES().map(o=>({value:o.key,label:o.label})),opponent,v=>{cancelRoom();opponent=v;lsSet(OPP_KEY,v);roomUi()});
+  radios($("opp"),"opp",K.PLAY_MODES.map(o=>({value:o.key,label:o.label})),playMode(),v=>{cancelRoom();opponent=K.opponentKey(v,cpuPower);lsSet(OPP_KEY,opponent);roomUi()});
+  radios($("pow"),"pow",K.CPU_POWERS.map(o=>({value:o.key,label:o.label})),cpuPower,v=>{cpuPower=v;opponent=K.opponentKey("cpu",v);lsSet(OPP_KEY,opponent)});
   radios($("lvl"),"lvl",K.LEVELS.map(o=>({value:o.key,label:o.short,title:o.label})),level,v=>{level=v;lsSet(LVL_KEY,v);T=tablesFor(level);showCounts()});
   radios($("tim"),"tim",K.timeChoices(D).map(sec=>({value:sec,label:K.timeLabel(sec)})),timeLimit,v=>{timeLimit=+v;lsSet(TIME_KEY,v);buildHowto()});
 }
-const OPP_CHOICES=()=>[...K.OPPONENTS,K.ROOM_OPPONENT]; // 「人と（合言葉）」はいまの強さの後ろ（KJ-033）
+const playMode=()=>K.readOpponent(D,opponent).mode; // solo／cpu／room
 function tablesFor(lv){return TABLES[lv]||(TABLES[lv]=K.makeTables(D,lv))}
 function showCounts(){$("setupInfo").textContent=`字 ${T.CHARS.size}・語 ${T.WORDS.size}（レベル ${K.levelLabel(T.level)}）`}
 // 画面は2つ：はじめる前の画面と、遊ぶ画面。「もう一度」は同じ設定ですぐ始まる。「設定を変える」で前の画面へ戻る
@@ -708,7 +715,10 @@ let ROOM=null; // 待っている部屋 { role, matchId, code, level, timeLimit 
 function setRoomMsg(t){$("roomMsg").textContent=t||""}
 function roomUi(){
   const on=opponent===K.ROOM_OPPONENT.key,wait=!!ROOM;
-  $("roomBox").hidden=!on;$("start").hidden=on;
+  $("powBox").hidden=playMode()!=="cpu";               // 強さは「CPU と」のときだけ（KJ-045）
+  $("roomBox").hidden=!on;
+  (on?$("hostSlot"):$("setSlot")).append($("grpLvl"),$("grpTim")); // 友だちと のときは、レベル・時間は部屋を作る側に置く
+  $("start").hidden=on;
   $("bHost").disabled=wait;$("bEnter").disabled=wait;$("roomCode").disabled=wait;
   $("bRoomCancel").hidden=!wait;
   $("roomShow").hidden=!(wait&&ROOM.role==="host"&&ROOM.code);$("roomShow").textContent=ROOM&&ROOM.code?ROOM.code:"";
