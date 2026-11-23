@@ -29,6 +29,7 @@ npm test
 ```
 
 - 中身は `node --test "tests/*.test.js" "tests/*.test.mjs"`（Node 22 以上）
+- 落ちたときは、落ちたテストのファイル・名前・失敗の文が、標準出力の最後と `test-results/failures.txt`（git に入れない）にまとまって出る（`tests/failures-reporter.mjs`。KJ-062）。回し直す前にこれを控える
 - `tests/data.test.js`：データの整合（レベル・部品表〔輪がない〕・対義・巡り・偏の形・同じ読み・語・特別な語・決まり）
 - `tests/game.test.js`：割る・くっつける・待ち時間・放つ・点数・使用済み・取る・引き直し・勝ち・CPU・ログ。時計と乱数は差し替えている（`tests/helpers.js`）
 - `tests/match.test.js`：合言葉の部屋の先着（場の札・言葉・勝ちの点・時間切れ・相手が抜けた）と、部屋を作る／入る・届いた行の確かめ・insert の時間切れ。つなぎは偽物（`KJ.memoryClaims`）。本物の Supabase には出さない
