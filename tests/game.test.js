@@ -625,18 +625,31 @@ test("CPU（KJ-058）：1手先は強さごとに違う。とても弱い＝使�
   assert.deepEqual(busy("normal", "人円"), [null, 0], "つよい：同音の1手先が待ち時間中なら、引き直さずに待つ");
 });
 
-test("CPU（KJ-049）：引き直しの値段と5回までは人と同じ。5回使いきったら引き直さない。点はマイナスになる", () => {
-  const g = newGame(1, "weak", "N5");
-  const paid = [];
-  for (let i = 0; i < 7; i++) {
-    setHand(g, g.cpu, "卜卜"); // 放てる語も1手先も無い手札
-    g.cpu.cd.homophone = g.cpu.cd.cycle = g.cpu.cd.invert = 0;
-    const r = g.cpuTurn();
-    paid.push(r && r.ok ? r.paid : null);
+test("CPU（KJ-073）：引き直しは次の値段が 5点以下（1回目 0点・2回目 5点）のときだけ。3回目からは引き直さず何もしない（強さ3つとも）", () => {
+  assert.equal(D.rules.cpu.redraw_max_cost, 5);
+  for (const opp of ["weak", "fair", "normal"]) {
+    const g = newGame(1, opp, "N5");
+    const paid = [];
+    for (let i = 0; i < 7; i++) {
+      setHand(g, g.cpu, "卜卜"); // 放てる語も1手先も無い手札
+      g.cpu.cd.homophone = g.cpu.cd.cycle = g.cpu.cd.invert = 0;
+      const r = g.cpuTurn();
+      paid.push(r && r.ok ? r.paid : null);
+    }
+    assert.deepEqual(paid, [0, 5, null, null, null, null, null], opp);
+    assert.equal(g.cpu.score, -5, opp);
+    assert.equal(g.cpu.redraws, 2, opp);
+    assert.equal(g.log.filter((e) => e.who === "CPU" && e.op === "引き直し").length, 2, opp);
   }
-  assert.deepEqual(paid, [0, 5, 10, 15, 20, null, null]);
-  assert.equal(g.cpu.score, -50);
-  assert.equal(g.cpu.redraws, 5);
+});
+
+test("人の引き直しは今まで通り（KJ-073 で変えない）：0・5・10・15・20点・5回まで", () => {
+  const g = newGame(1, "normal", "N5");
+  const paid = [];
+  for (let i = 0; i < 6; i++) { const r = g.redraw(g.me); paid.push(r.ok ? r.paid : null); }
+  assert.deepEqual(paid, [0, 5, 10, 15, 20, null]);
+  assert.equal(g.me.score, -50);
+  assert.equal(g.me.redraws, 5);
 });
 
 test("CPU：1字を放たない。手札が1字だけなら引き直す。2字以上の語が作れるときだけ放つ（KJ-008）", () => {

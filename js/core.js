@@ -1038,8 +1038,9 @@
         const m = pick(ahead.ready);
         return m.k === "homophone" ? g.homophone(p, [m.x.id], m.to) : g[m.k](p, [m.x.id]);
       }
-      // 引き直しは人と同じ値段・5回まで（KJ-049）。回数を使いきっていたら何もしない
-      if (g.redrawsLeft(p) > 0) return g.redraw(p);
+      // 引き直しは人と同じ値段・5回まで（KJ-049）。ただし CPU は、次の値段が rules.cpu.redraw_max_cost 以下（1回目 0点・2回目 5点）のときだけ引き直す（KJ-073）。
+      // 3回目から（10点以上）と、回数を使いきっていたら、何もしない（次の番にまた見る）。人の決まりは変えない
+      if (g.redrawsLeft(p) > 0 && g.redrawCost(p) <= D.rules.cpu.redraw_max_cost) return g.redraw(p);
       return null;
     };
 
