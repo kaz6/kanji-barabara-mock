@@ -1625,6 +1625,43 @@ test("KJ-037 ヒント：放った言葉は狙わない。よく使う語を先�
   assert.ok(T.COMMON_WORDS.some((w) => w.w === g2.hint.word), "段1 の語はよく使う語（common）から");
 });
 
+test("KJ-061 ヒント：3字以上の語が作れるときは、2字より先に狙う（段1・段2）。2字しか無いときは今まで通り。ログに字数", () => {
+  // 段1：休日（2字）と 休火山（3字）の両方が並べられる手札
+  const g = newGame(1, "weak", "N5");
+  const ids = setHand(g, g.me, "休日山川火");
+  tryN(g, 3);
+  const h = g.hintActive();
+  assert.equal(h.tier, 1);
+  assert.equal([...h.word].length, 3, "3字を先に");
+  assert.ok(h.ids.length >= 3);
+  assert.ok(g.log.some((e) => e.op === "ヒント" && e.note.includes(`狙った言葉：${h.word}（3字）`)), "ログに字数");
+  // 2字しか作れないときは今まで通り
+  const g2 = newGame(1, "weak", "N5");
+  setHand(g2, g2.me, "休日山川");
+  tryN(g2, 3);
+  assert.equal(g2.hint.word, "休日");
+  assert.ok(g2.log.some((e) => e.op === "ヒント" && e.note.endsWith("狙った言葉：休日（2字）")));
+  // 同じ字数の中では、よく使う語（common）を先に。円石（common でない）と 休日（common）が両方並べられる手札（追記 P-061）
+  const g4 = newGame(1, "weak", "N4");
+  setHand(g4, g4.me, "円石休日");
+  tryN(g4, 3);
+  assert.equal(g4.hint.word, "休日", "common の語を先に（円石は後）");
+  // 段2 でも、同じ字数なら common を先に。割るを使った後でも、七白→七日（common）を同音の 七百（common でない）より先に（追記 P-061）
+  const g5 = newGame(1, "weak", "G1");
+  setHand(g5, g5.me, "七白");
+  g5.log.push({ t: 0, who: g5.me.name, op: "割る", from: ["一"], to: ["二"], pts: 0, meScore: 0, cpuScore: 0, me: 0, cpu: 0, note: "" });
+  tryN(g5, 3);
+  assert.equal(g5.hint.tier, 2);
+  assert.equal(g5.hint.word, "七日", "割るを使ったあとでも common が先");
+  // 段2：見見 を割ると 見 目 儿（見る・見る目 が作れる）。3字の 見る目 を先に
+  const g3 = newGame(1, "weak", "N5");
+  setHand(g3, g3.me, "見見");
+  tryN(g3, 3);
+  assert.equal(g3.hint.tier, 2);
+  assert.equal(g3.hint.op, "割る");
+  assert.equal(g3.hint.word, "見る目", "段2 も3字を先に");
+});
+
 test("KJ-037 ヒント：段2 1手（割る・反転・巡り・同音）で放てる言葉になる札と、その操作のボタンが光る", () => {
   for (const [hand, op, btn, word] of [["日年", "巡り", "bCycle", "年月"], ["日分", "割る", "bSplit", "八日"], ["日男", "反転", "bInvert", "日女"], ["日国", "同音", "bHomo", "国書"]]) {
     const g = newGame(1, "weak", "N5");
@@ -1645,12 +1682,17 @@ test("KJ-037 ヒント：段2 は、その試合でまだ使っていない操�
   setHand(first, first.me, "日年国");
   tryN(first, 3);
   assert.equal(first.hint.op, "巡り", "まだどれも使っていないときは、よく使う語が先（年月）");
+  // 同じ字数・どちらも common の 一人（割る）と 何人（同音）で比べる（common が違うときは common が先。追記 P-061）
+  const f1 = newGame(1, "weak", "N5");
+  setHand(f1, f1.me, "一何");
+  tryN(f1, 3);
+  assert.equal(f1.hint.op, "割る");
   const g = newGame(1, "weak", "N5");
-  setHand(g, g.me, "日年国");
-  g.log.push({ t: 0, who: g.me.name, op: "巡り", from: ["一"], to: ["二"], pts: 0, meScore: 0, cpuScore: 0, me: 0, cpu: 0, note: "" }); // 巡りは使った
+  setHand(g, g.me, "一何");
+  g.log.push({ t: 0, who: g.me.name, op: "割る", from: ["一"], to: ["二"], pts: 0, meScore: 0, cpuScore: 0, me: 0, cpu: 0, note: "" }); // 割るは使った
   tryN(g, 3);
   assert.equal(g.hint.tier, 2);
-  assert.equal(g.hint.op, "同音", "巡りは使ったので、まだ使っていない 同音 を先に");
+  assert.equal(g.hint.op, "同音", "割るは使ったので、まだ使っていない 同音 を先に");
   assert.equal(g.hint.button, "bHomo");
 });
 
@@ -1707,7 +1749,7 @@ test("KJ-037・KJ-065 ヒント：光るのは10秒。ほかの手（札を動�
   assert.ok(g.hintActive(), "はじかれる（ためした）では消えない");
   const e = g.log.filter((x) => x.op === "ヒント");
   assert.equal(e.length, 3, "出した回数だけ ヒント の行がある");
-  assert.match(e[0].note, /^段1：放つ。狙った言葉：休日$/);
+  assert.match(e[0].note, /^段1：放つ。狙った言葉：休日（2字）$/);
   assert.deepEqual(e[0].from, ["休", "日"], "光らせた札");
   assert.match(g.logText(), /ヒント\t休 日\t\t0\t.*段1：放つ。狙った言葉：休日/);
   assert.match(g.logText(), /# 手 .*ヒント/, "ログの頭に ヒント の説明");
@@ -1758,13 +1800,13 @@ test("KJ-037 ヒント：狙った言葉を先に使われたら、光りは消�
 
 test("KJ-065 ヒント：光らせた言葉を放つと消える・光らせた札が1枚でも手札から無くなると消える・ほかの言葉を放っても残る・点は変わらない", () => {
   const g = newGame(1, "weak", "N5");
-  setHand(g, g.me, "休日山川火水");
+  setHand(g, g.me, "休日山川");
   tryN(g, 3);
   const h = g.hintActive();
   assert.equal(h.word, "休日");
   const sc = g.me.score;
-  const other = g.me.cards.filter((x) => "火水".includes(x.c)).map((x) => x.id);
-  assert.ok(g.release(g.me, other).ok, "ほかの言葉（火水）を放つ");
+  const other = g.me.cards.filter((x) => "山川".includes(x.c)).map((x) => x.id);
+  assert.ok(g.release(g.me, other).ok, "ほかの言葉（山川）を放つ");
   assert.ok(g.hintActive(), "ほかの言葉を放っても、光りは残る");
   assert.ok(g.me.score > sc);
   assert.equal(g.hintActive().word, "休日");

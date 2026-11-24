@@ -563,7 +563,8 @@
       const seen = new Set(), out = [];
       for (const w of T.COMMON_WORDS) { if (!seen.has(w.w)) { seen.add(w.w); out.push(w.w); } }
       for (const w of T.WORDS.values()) { if (!seen.has(w.w)) { seen.add(w.w); out.push(w.w); } }
-      return out.filter((w) => [...w].length >= 2 && !g.used.has(w));
+      // KJ-061（D-078）：字数の多い語を先に（4字＞3字＞2字）。同じ字数の中ではよく使う語（上で先に並べた順）のまま（安定ソート）
+      return out.filter((w) => [...w].length >= 2 && !g.used.has(w)).sort((a, b) => [...b].length - [...a].length);
     };
     // 札（pool）から word の字ぶんを順に選ぶ（手札を先に）。選べなければ null
     const pickFrom = (pool, word) => {
@@ -581,8 +582,9 @@
         const ids = pickFrom(cards, w);
         if (ids) return { tier: 1, ids, button: null, op: "放つ", word: w };
       }
-      // 段2：1手（割る・反転・巡り・同音）で放てる言葉になる。その試合でまだ使っていない操作を先に。同じなら、よく使う語を先に
+      // 段2：1手（割る・反転・巡り・同音）で放てる言葉になる。字数（多い順）→ よく使う語 → まだ使っていない操作 → 語の順（KJ-061）
       const usedOps = new Set(g.log.filter((e) => e.who === p.name).map((e) => e.op));
+      const commonSet = new Set(T.COMMON_WORDS.map((x) => x.w));
       let best = null;
       for (const [opName, k, btn] of HINT_OPS) {
         if (k !== "split" && !g.ready(p, k)) continue;
@@ -606,8 +608,10 @@
               const ids = pickFrom(virtual, w);
               if (!ids) continue;
               const lit = [x.id, ...ids.filter((id) => id >= 0)];
-              const rank = [usedOps.has(opName) ? 1 : 0, wi];
-              if (!best || rank[0] < best.rank[0] || (rank[0] === best.rank[0] && rank[1] < best.rank[1])) {
+              const rank = [-[...w].length, commonSet.has(w) ? 0 : 1, usedOps.has(opName) ? 1 : 0, wi]; // 字数の多い語 → よく使う語（追記 P-061）→ まだ使っていない操作 → 語の順（KJ-061）
+              let better = !best;
+              for (let i = 0; !better && i < rank.length && rank[i] <= best.rank[i]; i++) if (rank[i] < best.rank[i]) better = true; // 辞書順で小さければ入れ替え
+              if (better) {
                 best = { tier: 2, ids: lit, button: btn, op: opName, word: w, rank };
               }
               break; // この操作・この札の最初の語（よく使う語が先）
@@ -627,7 +631,7 @@
       g.hint = h.ids.length || h.button ? { ...h, until: now() + HR.glow_sec, redraws: p.redraws } : null; // 光らせる物が無いとき（引き直しを使いきった）は、札も出さない
       g.hintCount++;
       const lit = h.ids.map((id) => g.byId(p, id)).filter(Boolean).map((x) => x.c);
-      addLog(p.name, "ヒント", lit, [], 0, `段${h.tier}：${h.op}${h.word ? `。狙った言葉：${h.word}` : ""}`);
+      addLog(p.name, "ヒント", lit, [], 0, `段${h.tier}：${h.op}${h.word ? `。狙った言葉：${h.word}（${[...h.word].length}字）` : ""}`);
     };
 
     g.split = (p, ids) => {
