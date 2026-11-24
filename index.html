@@ -261,6 +261,11 @@ summary{cursor:pointer;font-weight:700}
 details p,details li{font-size:13px;color:#3d3a34}
 details ul{padding-left:18px}
 .credit{color:var(--sub);font-size:12px}
+/* はじかれたとき（KJ-022）：画面の真ん中に大きく 🚫 と、短い理由。1.5秒で消える。音なし・操作は邪魔しない */
+#nope{position:fixed;left:50%;top:42%;transform:translate(-50%,-50%);z-index:12;display:none;flex-direction:column;align-items:center;gap:6px;min-width:min(80vw,300px);max-width:90vw;padding:14px 22px;box-sizing:border-box;background:rgba(246,244,239,.96);border:2px solid var(--ink);border-radius:10px;pointer-events:none;text-align:center}
+#nope.on{display:flex}
+#nope .no-ic{font-size:min(26vw,120px);line-height:1}
+#nope .no-why{font-size:20px;font-weight:700;color:var(--ink);line-height:1.3;text-wrap:balance}
 /* 特別な語の演出 */
 #fx{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(246,244,239,.92);z-index:10;pointer-events:none}
 #fx.on{display:flex}
@@ -420,6 +425,7 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
     <p class="credit">データ：JMdict・KANJIDIC2（© Electronic Dictionary Research and Development Group, EDRDG。CC BY-SA 3.0。<a href="https://www.edrdg.org/edrdg/licence.html">ライセンス</a>）。jamdict-data 経由で取り込み、語・字・読みを抜き出して加工しています。N5 の字は KANJIDIC2 の旧4級（103字）で代用。</p>
   </details>
 </main>
+<div id="nope" role="status" aria-live="polite"><div class="no-ic" aria-hidden="true">🚫</div><div class="no-why" id="nopeWhy"></div></div>
 <div id="fx"><div class="who" id="fxWho"></div><div id="fxChars" style="display:flex;gap:2vw"></div></div>
 
 <script src="js/core.js"></script>
@@ -510,7 +516,7 @@ function start(){
   leaveRoom();leaveTutorial();
   T=tablesFor(level);buildHowto();
   G=K.createGame(D,T,{now:clock,opponent,timeLimit});
-  row=[];lastTried="";vibSpecial=false;
+  row=[];lastTried="";vibSpecial=false;hideNope();
   $("msg").textContent="";$("msg").className="msg";
   $("bCopyEnd").hidden=true;
   hideChoices();
@@ -563,7 +569,7 @@ function startTutorial(){
   clearTimeout(cpuTimer);sendAbandoned();leaveRoom();
   T=tablesFor(D.tutorial.level); // 好 などが割れるよう、N4 の表（段の中身は data/tutorial.json）
   TUT=K.createTutorial(D,T,{now:clock});G=TUT.g;
-  row=[];lastTried="";
+  row=[];lastTried="";hideNope();
   $("msg").textContent="";$("msg").className="msg";
   $("bCopyEnd").hidden=true;$("logPanel").classList.remove("on");
   hideChoices();buildHowto();
@@ -830,8 +836,8 @@ function beginRoom(startRow){
   T=tablesFor(rm.level);
   G=K.createGame(D,T,{now:clock,timeLimit:rm.timeLimit,match:{id:rm.matchId,role:rm.role,startAt}});
   MC=K.createMatchClient(G,CLAIMS,{rand:cryptoRand});
-  row=[];lastTried="";
-  showWhy(rm.role==="guest"?`作った人の設定：レベル ${K.levelShort(rm.level)}・${K.timeLabel(rm.timeLimit)}`:"");
+  row=[];lastTried="";hideNope();
+  showMsg(rm.role==="guest"?`作った人の設定：レベル ${K.levelShort(rm.level)}・${K.timeLabel(rm.timeLimit)}`:"");
   $("bCopyEnd").hidden=true;hideChoices();setRoomMsg("");
   buildHowto();showScreen(true);render();
 }
@@ -916,7 +922,7 @@ function attachDrag(b,id){
         if(why){G.triedOp(G.me,"面でくっつける",[myChar(),tc].filter(Boolean),why);showWhy(why);afterChange();return}
       }
       if(hit){
-        const tid=+t.dataset.id,done=(r)=>{hideChoices();if(r&&r.ok){lastTried="";if(TUT)TUT.advance("join")}else if(r&&r.why)G.triedOp(G.me,"面でくっつける",[myChar(),(G.byId(G.me,tid)||{}).c].filter(Boolean),r.why);afterChange()};
+        const tid=+t.dataset.id,done=(r)=>{hideChoices();if(r&&r.ok){lastTried="";if(TUT)TUT.advance("join")}else if(r&&r.why){G.triedOp(G.me,"面でくっつける",[myChar(),(G.byId(G.me,tid)||{}).c].filter(Boolean),r.why);showWhy(r.why)}afterChange()};
         if(hit.chars.length>1){showChoices([{label:"できる字",chars:hit.chars,pick:x=>done(G.joinFace(G.me,id,tid,hit.face,x))}]);return}
         done(G.joinFace(G.me,id,tid,hit.face));return;
       }
@@ -941,18 +947,26 @@ function tapField(id){
 function triedTake(id,why,c){const f=G.field.find(x=>x.id===id);const ch=f?f.c:c;if(ch)G.triedOp(G.me,"取る",[ch],why)} // 先着に負けると場から消えているので、返事の c（取ろうとした字）を使う
 // 返事待ちのあいだに試合が終わった・捨てた・別の試合になったときの返事は、画面に反映しない（勝ち負けの表示を上書きしない）
 function stale(mc){if(MC===mc&&G&&!G.over)return false;if(G)afterChange();return true}
-function showWhy(why){const m=$("msg");m.textContent=why||"";m.className="msg"}
+function showMsg(t){const m=$("msg");m.textContent=t||"";m.className="msg"}
+// はじかれた理由（KJ-022・D-040）：画面の真ん中に 🚫 と短い言い切りの理由。REJECT_MS で消える（次のはじかれで出し直し）。K.rejectText が言い換える
+const REJECT_MS=1500;let nopeTimer=null;
+function hideNope(){clearTimeout(nopeTimer);nopeTimer=null;$("nope").classList.remove("on")}
+function showWhy(why){
+  if(!why)return;
+  $("nopeWhy").textContent=K.rejectText(why);$("nope").classList.add("on");
+  clearTimeout(nopeTimer);nopeTimer=setTimeout(hideNope,REJECT_MS);
+}
 function afterOp(res){if(res&&res.ok){row=res.sel||(res.cards?res.cards.map(x=>x.id):[]);lastTried=""}hideChoices();afterChange()} // 1枚に効く操作は、前に選んでいた札の選びを残す（res.sel。KJ-054）
-const isSingleTry=s=>s.rc.length===1&&!s.rl.ok&&[...s.text].length===1; // 1字は押せるが、はじかれる（KJ-008）
+const isTry=s=>!s.rl.ok&&((s.rc.length===1&&[...s.text].length===1)||!!s.rl.counter); // 1字は押せるが、はじかれる（KJ-008）。使った助数詞の 数＋助数詞 も押せて、🚫 ではじかれる（KJ-022）
 $("bRelease").onclick=()=>{
   const s=rowState();
   if(TUT){const why=TUT.blocked("release",{text:s.text});if(why){G.triedOp(G.me,"放つ",s.rc.map(x=>x.c),why);showWhy(why);buzz("reject");afterChange();return}}
   // 1字は放てない（KJ-008）：はじいて理由を出し、ログに「ためした」で残す。札は台（選び）に残る
-  if(isSingleTry(s)){
-    const why=s.rl.why;G.tried(G.me,[s.text],why);
-    const m=$("msg");m.textContent=why;m.className="msg";buzz("reject");hideChoices();afterChange();return;
+  if(isTry(s)){
+    const why=s.rl.why;G.tried(G.me,[...s.text],why);
+    showWhy(why);buzz("reject");hideChoices();afterChange();return;
   }
-  if(MC){const mc=MC;mc.release([...row]).then(r=>{if(stale(mc))return;if(!r.ok&&r.why&&(r.lost||r.why==="つながらない"||r.why==="通信中"))showWhy(r.why);if(!r.ok&&r.why)buzz("reject");afterOp(r)});afterChange();return} // 合言葉の部屋：言葉は先に放った方だけ
+  if(MC){const mc=MC;mc.release([...row]).then(r=>{if(stale(mc))return;if(!r.ok&&r.why){showWhy(r.why);buzz("reject")};afterOp(r)});afterChange();return} // 合言葉の部屋：言葉は先に放った方だけ
   const r=G.release(G.me,[...row]);if(TUT&&r&&r.ok)TUT.advance("release");
   if(r&&r.ok===false)buzz("reject");
   afterOp(r);
@@ -961,7 +975,7 @@ function openCut(){if(reduceMotion())return;const b=$("bSplit");b.classList.remo
 $("bSplit").onclick=()=>press("bSplit","split","割る",()=>{const r=G.split(G.me,row);afterOp(r);if(r&&r.ok){openCut();buzz("split")}return r});
 $("bJoin").onclick=()=>press("bJoin","join","くっつける",()=>{
   const s=rowState();
-  if(s.joins.length>1){showChoices([{label:"できる字",chars:s.joins,pick:x=>{const r=G.join(G.me,row,x);afterOp(r);if(r&&r.ok)buzz("join");else if(r&&r.ok===false)buzz("reject")}}]);return null}
+  if(s.joins.length>1){showChoices([{label:"できる字",chars:s.joins,pick:x=>{const r=G.join(G.me,row,x);afterOp(r);if(r&&r.ok)buzz("join");else if(r&&r.ok===false){buzz("reject");showWhy(r.why)}}}]);return null}
   const r=G.join(G.me,row);afterOp(r);if(r&&r.ok)buzz("join");return r;
 });
 $("bInvert").onclick=()=>press("bInvert","invert","反転",()=>{const r=G.invert(G.me,row);afterOp(r);return r});
@@ -980,7 +994,7 @@ $("bHomo").onclick=()=>{
     pick:x=>{
       const l2=lastCard();if(!l2||l2.c!==c)return;
       if(TUT){const why=TUT.blocked("homophone",{chars:[c],pick:x});if(why){G.triedOp(G.me,"同音",[c],why);showWhy(why);buzz("reject");afterChange();return}}
-      const r=G.homophone(G.me,row,x);if(TUT&&r.ok)TUT.advance("homophone");afterOp(r);if(!r.ok){G.triedOp(G.me,"同音",[c],r.why);buzz("reject");afterChange()}}})),"homo");
+      const r=G.homophone(G.me,row,x);if(TUT&&r.ok)TUT.advance("homophone");afterOp(r);if(!r.ok){G.triedOp(G.me,"同音",[c],r.why);buzz("reject");afterChange();showWhy(r.why)}}})),"homo");
 };
 function showChoices(groups,kind=""){
   const box=$("choices");box.innerHTML="";box.dataset.kind=kind; // kind="homo"：Same reading の一覧（もう一度 Same reading で閉じる。KJ-069）
@@ -1174,6 +1188,7 @@ function render(){
   if(!s.text)info.innerHTML="";
   else if(w)info.innerHTML=`<span class="w">${s.text}</span>${pts} ${w.kana}${w.pn_kana?`／${w.pn_kana}`:""}${w.pn?`<span class="pn">〔${w.pn.join("・")}〕</span>`:""}${w.yoji?"（四字熟語）":""} — ${w.en.join(" / ")}${s.rl.ok?"":` <span class="no">（${s.rl.why}）</span>`}${rev}`;
   else if(s.reversed)info.innerHTML=rev.trim();
+  else if(s.rl.ok&&K.counterReading(T,s.text))info.innerHTML=`<span class="w">${s.text}</span>${pts} ${K.counterReading(T,s.text).join("・")}（数＋助数詞）`; // 辞書に無い 数＋助数詞（KJ-022）：読みは data/counters.json
   else if(s.rl.ok&&D.readings.readings[s.text]){const r=D.readings.readings[s.text];info.innerHTML=`<span class="w">${s.text}</span>${pts} ${[...r.on,...r.kun].slice(0,6).join("・")}`}
   else if(s.joins.length)info.innerHTML=`くっつけると ${s.joins.join(" か ")}`;
   else info.innerHTML=s.rl.ok?`<span class="w">${s.text}</span>${pts}`:`<span class="no">${s.rl.why}</span>`;
@@ -1193,7 +1208,7 @@ function press(id,op,name,run){
   if(TUT){const why=TUT.blocked(op,{chars});if(why){G.triedOp(G.me,name,chars,why);showWhy(why);buzz("reject");afterChange();return}} // チュートリアル：いまの段の手だけ
   if(isOff(id)){const why=G.whyNot(G.me,op,[...row]);G.triedOp(G.me,name,chars,why);buzz("reject");afterChange();showWhy(why);return} // 押せない見た目でも、はじかれた理由を画面に出す（KJ-069）
   const r=run();
-  if(r&&r.ok===false){G.triedOp(G.me,name,chars,r.why);buzz("reject");afterChange()}
+  if(r&&r.ok===false){G.triedOp(G.me,name,chars,r.why);buzz("reject");afterChange();showWhy(r.why)}
   else if(TUT&&r&&r.ok){TUT.advance(op);afterChange()}
 }
 function renderOps(){
@@ -1203,7 +1218,7 @@ function renderOps(){
   const gone=!!(MC&&MC.oppGone()&&!G.over);
   $("cpuCds").textContent=gone?"相手の通信が切れた":cds.length?"待ち："+cds.join("・"):"";
   $("cpuCds").classList.toggle("gone",gone);
-  $("bRelease").disabled=!(live&&(s.rl.ok||isSingleTry(s)))||(!!TUT&&!TUT.buttonOn("bRelease")); // チュートリアル：いまの段の手のボタンだけ
+  $("bRelease").disabled=!(live&&(s.rl.ok||isTry(s)))||(!!TUT&&!TUT.buttonOn("bRelease")); // チュートリアル：いまの段の手のボタンだけ
   // 押せない見た目の操作ボタンは disabled でなく aria-disabled（見た目は同じ）。押すと何も起きず、「ためした」に理由が残る（KJ-041）
   setOff("bSplit",!(live&&one&&K.canSplit(T,one)&&fitL(2)));
   setOff("bJoin",!(live&&s.joins.length&&fit1));

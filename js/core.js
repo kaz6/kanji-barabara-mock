@@ -41,7 +41,7 @@
   const timeLabel = (sec) => `${sec / 60}分`;
   const cpuInterval = (D, key) => (key === "weak" ? D.rules.cpu.weak_interval_sec : key === "fair" ? D.rules.cpu.fair_interval_sec : D.rules.cpu.interval_sec);
 
-  const FILES = ["kanji", "words", "readings", "parts", "antonyms", "cycles", "radical_forms", "special", "rules", "split_shapes", "tutorial", "blocked_words_g1", "radical_meanings"];
+  const FILES = ["kanji", "words", "readings", "parts", "antonyms", "cycles", "radical_forms", "special", "rules", "split_shapes", "tutorial", "blocked_words_g1", "radical_meanings", "counters"];
 
   // ---------- 表を引く ----------
   // level を省くと rules.json の level_default（なければ N4）
@@ -144,6 +144,11 @@
     T.FX_WORDS = new Map((D.special.fx_words || []).map((s) => [s.w, s])); // 演出だけ特別の語（KJ-064。金玉。点・倍率・つながりは special と別で、変えない）
     // CPU が知っている語＝よく使う語（このレベルの語の表にあるものだけ。KJ-015：表にない語を知っていると、放てずに止まる）
     T.COMMON_WORDS = D.words.words.filter((w) => w.common && w.w.length >= 2 && T.WORDS.has(w.w));
+    // 数＋助数詞（KJ-022・D-040。data/counters.json）：数（一〜十・百・千・万、2字は 二十〜九十・十一〜十九）＋助数詞は、辞書に無くても言葉として放てる
+    const CT = D.counters;
+    T.COUNTERS = new Set(CT ? CT.counters : []);
+    T.COUNTER_NUMS = new Set(CT ? [...CT.numbers, ...CT.numbers2] : []);
+    T.COUNTER_READ = new Map(CT ? Object.entries(CT.readings) : []);
     return T;
   }
   const isLevelChar = (T, c) => T.CHARS.has(c);
@@ -207,6 +212,39 @@
   const wordCharOk = (T, c) => T.HOLD.has(c) || (!!T.KANA_OK && T.KANA_OK.has(c));
   // 放てるか：words.json の2〜4字の語。1字は放てない（KJ-008。くっつけて作った字でも例外なし）。一度放った言葉は二人とも使えない（D-005）
   // text は札の並びのまま渡してよい（ノ・儿・ナ はかなに読む。KJ-053）。部品だけ（かなだけ）の並びは放てない
+  // 数＋助数詞（KJ-022・D-040）：2〜3字の言葉が 数＋助数詞 の形なら { num, counter }。そうでなければ null
+  const counterParts = (T, text) => {
+    const cs = [...text];
+    if (!T.COUNTERS || cs.length < 2 || cs.length > 3 || !T.COUNTERS.has(cs[cs.length - 1])) return null;
+    const num = cs.slice(0, -1).join("");
+    return T.COUNTER_NUMS.has(num) ? { num, counter: cs[cs.length - 1] } : null;
+  };
+  // 放った言葉（used）に使われた助数詞（辞書にもともとある 百円・一人 なども数える。二人とも同じ）
+  const usedCounters = (T, used) => {
+    const out = new Set();
+    for (const w of used) { const p = counterParts(T, w); if (p) out.add(p.counter); }
+    return out;
+  };
+  // text が 数＋助数詞 で、その助数詞がもう使われていれば、その助数詞。使えるなら null
+  const counterBlocked = (T, used, text) => {
+    const p = counterParts(T, text);
+    return p && usedCounters(T, used).has(p.counter) ? p.counter : null;
+  };
+  const counterWhy = (c) => `〇${c}は一度きり`;
+  const counterReading = (T, text) => (T.COUNTER_READ && T.COUNTER_READ.get(text)) || null; // 組み合わせごとの読み（先頭が代表）。数＋助数詞でなければ null
+  // はじかれたときに画面の真ん中へ出す理由（KJ-022・D-040）：言い切り・！で終える。決まりの側の理由（ログの「ためした」）はそのまま、出すときだけこれで言い換える
+  // 表にあるもの以外は、短い理由に ！ を足す。長い文（チュートリアルの案内など）は足さない。一覧は docs/REJECT_MESSAGES.md
+  const REJECT_TEXT = {
+    "1字では放てない（2字以上の言葉）": "2字から！",
+    "かなだけでは放てない（漢字の札が1枚以上いる）": "漢字の札が要る！",
+    "放った言葉": "もう放った言葉！",
+    "並べる順が逆": "順番が逆！",
+  };
+  const rejectText = (why) => {
+    if (!why) return "";
+    if (REJECT_TEXT[why]) return REJECT_TEXT[why];
+    return /[！？。…]$/.test(why) || why.length > 16 ? why : why + "！";
+  };
   const SINGLE_WHY = "1字では放てない（2字以上の言葉）";
   const KANA_ONLY_WHY = "かなだけでは放てない（漢字の札が1枚以上いる）";
   function releasable(T, used, text) {
@@ -215,7 +253,10 @@
     if ([...text].length === 1) return { ok: false, why: SINGLE_WHY };
     if ([...text].every((c) => isKanaChar(T, c))) return { ok: false, why: KANA_ONLY_WHY };
     if (used.has(text)) return { ok: false, why: "放った言葉" };
+    const cb = counterBlocked(T, used, text); // 数＋助数詞は、助数詞ごとに一度きり（辞書にある語も。KJ-022）
+    if (cb) return { ok: false, why: counterWhy(cb), counter: cb };
     if (T.WORDS.has(text)) return { ok: true };
+    if (counterParts(T, text)) return { ok: true, numCounter: true }; // 辞書に無くても、数＋助数詞は言葉として通す
     return { ok: false, why: "辞書にない" };
   }
   // 役の点数（R-026）。1字1・2字3・3字9・4字12、四字熟語の印つきは倍、特別な語はさらに倍
@@ -371,6 +412,15 @@
     const opponent = M ? ROOM_OPPONENT.key : TUT ? TUTORIAL_OPPONENT.key : OPPONENTS.some((o) => o.key === env.opponent) ? env.opponent : R.opponent_default;
     const g = { D, T, level: T.level, opponent, solo: opponent === "solo" || !!TUT, tutorial: !!TUT, log: [], events: [], used: new Set(), over: false, winner: null,
       startedAt: (env.date || (() => new Date()))() };
+    // 使えない語か：放った言葉、または 数＋助数詞 でその助数詞がもう使われている（KJ-022）。CPU・ヒント・動けない の語えらびはこれで見る
+    let ucN = -1, ucS = new Set();
+    g.isUsed = (w) => {
+      if (g.used.has(w)) return true;
+      const p = counterParts(T, w);
+      if (!p) return false;
+      if (g.used.size !== ucN) { ucN = g.used.size; ucS = usedCounters(T, g.used); }
+      return ucS.has(p.counter);
+    };
     g.timeLimit = normTime(D, env.timeLimit); // 制限時間（秒。KJ-007）
     g.match = M ? { id: M.id, role: M.role, oppRole: M.role === "host" ? "guest" : "host" } : null;
     g.hold = false; // 合言葉の部屋：先着の返事を待っているあいだ、自分の手を止める（createMatchClient が立てる）
@@ -497,11 +547,20 @@
       const have = {};
       for (const c of cs) have[c] = (have[c] || 0) + 1;
       for (const w of T.WORDS.values()) {
-        if ([...w.w].length < 2 || g.used.has(w.w)) continue;
+        if ([...w.w].length < 2 || g.isUsed(w.w)) continue;
         const need = {};
         let ok = true;
         for (const c of w.w) { need[c] = (need[c] || 0) + 1; if (!have[c] || need[c] > have[c]) { ok = false; break; } }
         if (ok) return w.w;
+      }
+      // 辞書に無い 数＋助数詞（十円 など。KJ-022）も放てる言葉
+      for (const n of T.COUNTER_NUMS) for (const c of T.COUNTERS) {
+        const w = n + c;
+        if (g.isUsed(w)) continue;
+        const need = {};
+        let ok = true;
+        for (const ch of w) { need[ch] = (need[ch] || 0) + 1; if (!have[ch] || need[ch] > have[ch]) { ok = false; break; } }
+        if (ok) return w;
       }
       return null;
     };
@@ -571,7 +630,7 @@
     g.hintActive = () => {
       const h = g.hint;
       if (!h || g.over || now() >= h.until) return null;
-      if (h.word && g.used.has(h.word)) return null;
+      if (h.word && g.isUsed(h.word)) return null;
       if (h.ids.some((id) => !g.byId(g.me, id))) return null; // 光らせた札が1枚でも手札から無くなったら（操作で替わった・放った）消える
       if (h.tier === 3 && g.me.redraws !== h.redraws) return null; // 引き直しを使ったら消える
       return h;
@@ -590,7 +649,7 @@
       for (const w of T.COMMON_WORDS) { if (!seen.has(w.w)) { seen.add(w.w); out.push(w.w); } }
       for (const w of T.WORDS.values()) { if (!seen.has(w.w)) { seen.add(w.w); out.push(w.w); } }
       // KJ-061（D-078）：字数の多い語を先に（4字＞3字＞2字）。同じ字数の中ではよく使う語（上で先に並べた順）のまま（安定ソート）
-      return out.filter((w) => [...w].length >= 2 && !g.used.has(w)).sort((a, b) => [...b].length - [...a].length);
+      return out.filter((w) => [...w].length >= 2 && !g.isUsed(w)).sort((a, b) => [...b].length - [...a].length);
     };
     // 札（pool）から word の字ぶんを順に選ぶ（手札を先に）。選べなければ null
     const pickFrom = (pool, word) => {
@@ -871,7 +930,7 @@
         const left = have.slice();
         return [...word].every((ch) => { const i = left.indexOf(ch); if (i < 0) return false; left.splice(i, 1); return true; });
       };
-      const useful = g.field.filter((f) => T.COMMON_WORDS.some((w) => !g.used.has(w.w) && w.w.includes(f.c) && covers([...hand, f.c], w.w)));
+      const useful = g.field.filter((f) => T.COMMON_WORDS.some((w) => !g.isUsed(w.w) && w.w.includes(f.c) && covers([...hand, f.c], w.w)));
       return pick(useful.length ? useful : g.field);
     }
     // ---------- 引き直し（D-018） ----------
@@ -1021,7 +1080,7 @@
     // 強さごとに使える手が違う（KJ-058。rules.cpu.ahead。とても弱い＝なし・ふつう＝反転と巡り・つよい＝反転・巡り・同音・割る〔KJ-019〕）
     function cpuAhead(p) {
       const allowed = (D.rules.cpu.ahead || {})[g.opponent] || [];
-      const words = T.COMMON_WORDS.filter((w) => !g.used.has(w.w));
+      const words = T.COMMON_WORDS.filter((w) => !g.isUsed(w.w));
       const covers = (have, word) => {
         const left = have.slice();
         return [...word].every((ch) => { const i = left.indexOf(ch); if (i < 0) return false; left.splice(i, 1); return true; });
@@ -1043,7 +1102,7 @@
       if (now() >= g.endsAt) { g.tick(); return null; } // 時間切れのあとは動かない（裏にいた間の手を取り戻さない。KJ-036）
       const p = g.cpu;
       if (p.takes > 0 && g.canTakeMore(p)) { cpuTakeAll(p); return { ok: true, op: "取る" }; }
-      const ws = T.COMMON_WORDS.filter((w) => !g.used.has(w.w) && pickIds(p, w.w)); // CPU が知っていて、手札でいま放てる語
+      const ws = T.COMMON_WORDS.filter((w) => !g.isUsed(w.w) && pickIds(p, w.w)); // CPU が知っていて、手札でいま放てる語
       if (ws.length) {
         const best = Math.max(...ws.map((w) => scoreOf(D, T, w.w).pts));
         const w = pick(ws.filter((x) => scoreOf(D, T, x.w).pts === best));
@@ -1535,7 +1594,7 @@
 
   return {
     FILES, OPPONENTS, PLAY_MODES, CPU_POWERS, readOpponent, opponentKey, LEVELS, timeChoices, normTime, vibratePattern, timeLabel, levelLabel, levelShort, makeTables, isN5, isLevelChar, isChar, radicalNote, radicalFormNote, splitOnce, canSplit, delivered, joinResults, joinReversed,
-    releasable, scoreOf, kanaOf, kanaText, wordCharOk, KANA_ONLY_WHY, homoChars, marks, markKinds, cutSpec, FACES, FACE_LABEL, faceJoins, faceResults, rulesLabel, opponentLabel, createGame, createTutorial, TUTORIAL_OPPONENT, playLogRow, endShow, END_LABELS, logSendAllowed, playLogResult, PLAY_LOG_LIMITS,
+    releasable, counterParts, usedCounters, counterBlocked, counterReading, rejectText, scoreOf, kanaOf, kanaText, wordCharOk, KANA_ONLY_WHY, homoChars, marks, markKinds, cutSpec, FACES, FACE_LABEL, faceJoins, faceResults, rulesLabel, opponentLabel, createGame, createTutorial, TUTORIAL_OPPONENT, playLogRow, endShow, END_LABELS, logSendAllowed, playLogResult, PLAY_LOG_LIMITS,
     strSeed, seededRand, matchRand, ROLES, ROOM_OPPONENT, MATCH_END_GRACE_SEC, MATCH_INSERT_TIMEOUT_SEC, MATCH_PING_SEC, MATCH_GONE_SEC, ROOM_LOBBY_TTL_SEC,
     createMatchClient, memoryClaims, newMatchId, newRoomCode, roomLobbyId, findRoom, hostRoom, joinRoom, startRoom, roomStartAt, roomWaiter,
   };
