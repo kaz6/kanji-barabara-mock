@@ -358,10 +358,10 @@ test("置き場の札：割ってできた札は手札に空きがなければ�
   assert.ok(g.release(g.me, [777777, 777778]).ok, "置き場の札も放てる（山川）");
 });
 
-test("点数：2字3・3字6・4字12、四字熟語は倍、特別な語はさらに倍。1字の点はない（KJ-008）", () => {
+test("点数：2字3・3字9・4字12、四字熟語は倍、特別な語はさらに倍。1字の点はない（KJ-008）", () => {
   assert.equal(K.scoreOf(D, T, "日").pts, 0);
   assert.equal(K.scoreOf(D, T, "休日").pts, 3);
-  assert.equal(K.scoreOf(D, T, "一日中").pts, 6);
+  assert.equal(K.scoreOf(D, T, "一日中").pts, 9);
   const yoji = [...T.WORDS.values()].find((w) => w.yoji && !T.SPECIAL.has(w.w));
   assert.equal(K.scoreOf(D, T, yoji.w).pts, 24, yoji.w);
   const four = [...T.WORDS.values()].find((w) => [...w.w].length === 4 && !w.yoji);
@@ -769,7 +769,7 @@ test("ログ：書き出しの頭に仮置きの値を全部書く", () => {
   const head = text.split("\n").filter((l) => l.startsWith("#")).join("\n");
   assert.match(head, /場=3枚 最初の手札=8枚 手札の上限=8枚＋ストック8枚（全部で16マス。場から取るのは上の段・ストックを合わせて16マスが埋まるまで（上の段が埋まっていればストックへ）。割る・くっつけるでできた札は、字も部品も、手札が埋まっていればストックへ。手札とストックの間は自分で動かせる）/);
   assert.match(head, /# 相手 いまの強さ（CPU は 15〜20秒に1回動く）/);
-  assert.match(head, /点数 2字3・3字6・4字12 四字熟語×2 特別な語×2（1字は放てない）/);
+  assert.match(head, /点数 2字3・3字9・4字12 四字熟語×2 特別な語×2（1字は放てない）/);
   assert.match(head, /放った字数×1枚を場から選んで、取りきるまで、ほかの手は何もできない（取れる枚数はためられない）/);
   assert.match(head, /引き直し 1試合5回まで・0点→5点→10点→15点→20点と回数で上がる・手札を全部入れ替え（8枚）。点はマイナスになってよい（足りなくても払える）/);
   assert.match(head, /勝ち 先に50点、または10分で点の多い方/);

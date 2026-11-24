@@ -250,7 +250,7 @@ test("決まり：数値がそろっている（KJ-003 の仮置き）", () => {
   for (const k of ["field_size", "start_hand", "hand_max", "same_char_in_deck", "take_per_char"]) assert.ok(r[k] > 0, k);
   assert.ok(r.start_hand <= r.hand_max);
   for (const k of ["invert", "cycle", "homophone"]) assert.ok(r.cooldown_sec[k] > 0, k);
-  assert.deepEqual(r.score.by_length, { 2: 3, 3: 6, 4: 12 }, "1字は放てない（KJ-008）ので1字の点はない");
+  assert.deepEqual(r.score.by_length, { 2: 3, 3: 9, 4: 12 }, "1字は放てない（KJ-008）ので1字の点はない");
   assert.equal(r.cpu.single_release_chance, undefined, "CPU が1字を放つ値は消えた（KJ-008）");
   assert.equal(r.cooldown_sec.cycle, 1, "巡りの待ちは1秒（追記 P-008）");
   assert.equal(r.score.yoji_mult, 2);

@@ -187,12 +187,12 @@ test("画面", { skip }, async (t) => {
     assert.match(await page.textContent("#info"), /^見る 3点 みる/);
     await page.click("#bBack");
     await tap("天"); await tap("ノ"); await tap("川");
-    assert.match(await page.textContent("#info"), /^天の川 6点 あまのがわ/);
+    assert.match(await page.textContent("#info"), /^天の川 9点 あまのがわ/);
     assert.doesNotMatch(await page.textContent("#info"), /ノ/);
     if (process.env.KJ_SHOT_KANA) await page.screenshot({ path: process.env.KJ_SHOT_KANA }); // 報告の画像（KJ-053）
     await page.click("#bRelease");
-    assert.equal(await page.evaluate(() => __KJ.game.me.score), 6);
-    assert.match(await page.textContent("#released"), /天の川 あまのがわ \+6点/);
+    assert.equal(await page.evaluate(() => __KJ.game.me.score), 9);
+    assert.match(await page.textContent("#released"), /天の川 あまのがわ \+9点/);
     assert.ok(await page.evaluate(() => __KJ.game.log.some((e) => e.op === "放つ" && e.from.join("") === "天の川")), "ログの 放つ はひらがな");
     assert.deepEqual(errors, []);
     await ctx.close();
@@ -2213,7 +2213,7 @@ test("画面", { skip }, async (t) => {
     for (const ch of "日本語") await tapC(page, ch);
     await page.click("#bRelease");
     await page.waitForSelector("#fxPts .pf.gain.t2", { state: "attached" });
-    assert.match(await page.textContent("#fxPts .pf.gain.t2"), /^\+6$/);
+    assert.match(await page.textContent("#fxPts .pf.gain.t2"), /^\+9$/);
     await page.waitForFunction(() => document.getElementById("fxPts").childElementCount === 0, null, { timeout: 4500 });
     // 相手：点が入る（放った言葉は届いていない形）。自分の欄より小さい
     await page.evaluate(() => { __KJ.game.cpu.score += 3; __KJ.render(); });
