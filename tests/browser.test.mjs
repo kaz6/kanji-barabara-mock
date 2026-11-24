@@ -681,7 +681,7 @@ test("画面", { skip }, async (t) => {
       await tile("日").click();
       assert.match(await page.textContent("#info"), /1字では放てない（2字以上の言葉）/);
       await page.click("#bRelease"); // 押せるが、はじかれる
-      assert.match(await page.textContent("#msg"), /1字では放てない（2字以上の言葉）/);
+      assert.equal(await page.textContent("#nopeWhy"), "2字から！", "はじかれた理由は画面の真ん中に出す（KJ-022）");
       assert.match(await page.textContent("#meScore"), /^0 点/);
       assert.equal(await page.locator("#meHand .tile.sel").count(), 1, "札は選んだまま");
       await page.click("#bBack");
@@ -753,7 +753,7 @@ test("画面", { skip }, async (t) => {
       // 最後の札（木）は割れない：押せない見た目。押すと「割れない」
       assert.equal(await page.getAttribute("#bSplit", "aria-disabled"), "true");
       await page.evaluate(() => document.getElementById("bSplit").click()); // 押せない見た目（aria-disabled）でも押せる
-      assert.equal(await page.textContent("#msg"), "割れない");
+      assert.equal(await page.textContent("#nopeWhy"), "割れない！");
       assert.equal(await rowText(), "日人木", "はじかれても選びはそのまま");
       // Flip：日 上 の順に選ぶと 上 が 下 になる。日 の選びは残る
       await page.click("#bBack");
@@ -1676,7 +1676,7 @@ test("画面", { skip }, async (t) => {
       assert.equal(await page.evaluate(() => document.getElementById("bSplit").classList.contains("cutopen")), false, "開いたあとは戻る");
       // はじかれたら動かさない（木 は割れない）
       await page.evaluate(() => document.getElementById("bSplit").click());
-      assert.equal(await page.textContent("#msg"), "割れない");
+      assert.equal(await page.textContent("#nopeWhy"), "割れない！");
       assert.equal(await page.evaluate(() => document.getElementById("bSplit").classList.contains("cutopen")), false, "はじかれたら動かさない");
       assert.deepEqual(errors, []); await ctx.close();
     }
@@ -1928,7 +1928,7 @@ test("画面", { skip }, async (t) => {
   // KJ-069：押せない見た目のボタンを押すと理由が画面に出る・Same reading の一覧は、もう一度 Same reading で閉じる
   await t.test("KJ-069：押せない見た目のボタンを押すと、はじかれた理由が画面に出る。Same reading の一覧はもう一度押すと閉じる（待ち時間なし・ログなし）", async () => {
     const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 }, "weak");
-    const msg = () => page.textContent("#msg");
+    const msg = () => page.textContent("#nopeWhy"); // はじかれた理由（KJ-022：画面の真ん中の 🚫 の下）
     const hand = () => page.locator("#meHand .tile").evaluateAll((els) => els.map((e) => e.title).join(""));
     const pick = async (c) => { await page.locator("#meHand .tile:not(.sel)", { hasText: c }).first().click(); };
     const click = (id) => page.evaluate((i) => document.getElementById(i).click(), id);
@@ -1940,7 +1940,7 @@ test("画面", { skip }, async (t) => {
     await pick(noHomo);
     assert.equal(await page.getAttribute("#bHomo", "aria-disabled"), "true");
     await click("bHomo");
-    assert.equal(await msg(), "同じ読みの字がない");
+    assert.equal(await msg(), "同じ読みの字がない！");
     assert.equal(await page.evaluate(() => __KJ.game.log.filter((e) => e.op === "ためした").map((e) => e.note).join("|")), "同音：同じ読みの字がない", "ログの「ためした」は今まで通り");
     // ほかの押せないボタン（Split・Flip・Cycle・Join）も理由が出る
     await click("bSplit"); assert.match(await msg(), /割れない/);
