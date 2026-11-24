@@ -141,6 +141,7 @@
     const partsSeen = new Set(Object.entries(T.parts).flatMap(([k, v]) => [k, ...v]));
     T.KANA_OK = new Set([...T.KANA].filter(([pt]) => partsSeen.has(pt)).map(([, k]) => k));
     T.SPECIAL = new Map(D.special.special.map((s) => [s.w, s]));
+    T.FX_WORDS = new Map((D.special.fx_words || []).map((s) => [s.w, s])); // 演出だけ特別の語（KJ-064。金玉。点・倍率・つながりは special と別で、変えない）
     // CPU が知っている語＝よく使う語（このレベルの語の表にあるものだけ。KJ-015：表にない語を知っていると、放てずに止まる）
     T.COMMON_WORDS = D.words.words.filter((w) => w.common && w.w.length >= 2 && T.WORDS.has(w.w));
     return T;
@@ -782,6 +783,7 @@
       const prev = p.lastSpecial && T.SPECIAL.get(p.lastSpecial);
       if (prev && prev.next.includes(text)) g.events.push({ type: "fx", who: p.name, text: p.lastSpecial + text });
       else if (T.SPECIAL.has(text)) g.events.push({ type: "fx", who: p.name, text });
+      else if (T.FX_WORDS.has(text)) { const f = T.FX_WORDS.get(text); g.events.push({ type: "fx", who: p.name, text, together: !!f.together, tone: f.tone || null }); } // 演出だけ（点は scoreOf のまま）
       p.lastSpecial = T.SPECIAL.has(text) ? text : null;
       solved(p);
       g.events.push({ type: "release", who: p.name, text, pts });

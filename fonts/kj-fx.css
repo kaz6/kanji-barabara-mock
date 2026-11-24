@@ -1,2 +1,2 @@
 /* KJ-063：tools/build_fx_font.py が作る。特別な語の演出（#fx .c）の字だけ。Yuji Syuku（OFL 1.1。fonts/OFL-YujiSyuku.txt） */
-@font-face{font-family:"KJ Fx";src:url("kj-fx.woff") format("woff");unicode-range:U+4E0A,U+4E0B,U+5929;font-display:block}
+@font-face{font-family:"KJ Fx";src:url("kj-fx.woff") format("woff");unicode-range:U+4E0A,U+4E0B,U+5929,U+7389,U+91D1;font-display:block}

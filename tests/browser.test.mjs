@@ -1422,6 +1422,38 @@ test("画面", { skip }, async (t) => {
     await ctx.close();
   });
 
+  await t.test("KJ-064 金玉を放つと、金色の筆文字の2字が同時に出る（点は3）。天上天下は1字ずつのまま。375px", async () => {
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 });
+    await page.evaluate(() => { __KJ.game.me.cards = [..."金玉十口休日天下"].map((c, i) => ({ id: 9300 + i, c, t: 0, fresh: false })); __KJ.render(); });
+    const before = await page.evaluate(() => __KJ.game.me.score);
+    await page.locator("#meHand .tile").nth(0).click();
+    await page.locator("#meHand .tile").nth(1).click();
+    await page.click("#bRelease");
+    await page.waitForSelector("#fx.on");
+    assert.equal(await page.evaluate(() => document.getElementById("fx").classList.contains("gold")), true, "金色の印");
+    await page.waitForFunction(() => document.querySelectorAll("#fxChars .c.in").length >= 1, null, { timeout: 2000 });
+    assert.equal(await page.evaluate(() => [...document.querySelectorAll("#fxChars .c")].map((e) => e.classList.contains("in")).join()), "true,true", "2字が同時に出ている（1字ずつではない）");
+    assert.equal(await page.evaluate(() => [...document.querySelectorAll("#fxChars .c")].map((e) => e.textContent).join("")), "金玉");
+    const st = await page.$eval("#fxChars .c", (e) => { const c = getComputedStyle(e); return { ff: c.fontFamily, color: c.color }; });
+    assert.match(st.ff, /KJ Fx/, "筆文字");
+    assert.equal(st.color, await page.evaluate(() => { const d = document.createElement("i"); d.style.color = "var(--shine)"; document.body.appendChild(d); const c = getComputedStyle(d).color; d.remove(); return c; }), "色は --shine（新しい色を足さない）");
+    assert.equal(await page.evaluate(() => __KJ.game.me.score), before + 3, "点は2字3点のまま");
+    await page.screenshot({ path: "test-results/kj064-kintama-375.png" });
+    await page.waitForFunction(() => !document.getElementById("fx").classList.contains("on"), null, { timeout: 4000 });
+    assert.deepEqual(errors, []);
+    await ctx.close();
+    // 天上天下は今まで通り：金色でない・1字ずつ（放ったあとは取りきるまで手ができないので、開き直す）
+    const o = await open(browser, url, { width: 375, height: 700 });
+    for (let i = 0; i < 4; i++) await o.page.locator("#meHand .tile").nth(i).click();
+    await o.page.click("#bRelease");
+    await o.page.waitForSelector("#fx.on");
+    assert.equal(await o.page.evaluate(() => document.getElementById("fx").classList.contains("gold")), false, "天上天下は金色にしない");
+    await o.page.waitForTimeout(450);
+    assert.equal(await o.page.evaluate(() => document.querySelectorAll("#fxChars .c.in").length), 1, "天上天下は1字ずつ（450ms では1字目だけ）");
+    assert.deepEqual(o.errors, []);
+    await o.ctx.close();
+  });
+
   await t.test("KJ-018 終わり：特別な語で勝つと、放った言葉の演出（#fx）が終わってから出る。動きを減らす設定では動かさない", async () => {
     const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 });
     await page.emulateMedia({ reducedMotion: "reduce" });

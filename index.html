@@ -265,6 +265,7 @@ details ul{padding-left:18px}
 #fx.on{display:flex}
 #fx .c{font-family:"KJ Fx",var(--kanji);font-size:min(22vw,150px);line-height:1;opacity:0;transform:scale(1.6);transition:opacity .12s,transform .18s}
 #fx .c.in{opacity:1;transform:scale(1)}
+#fx.gold .c{color:var(--shine);text-shadow:0 0 1px var(--cut),0 2px 0 var(--cut),0 0 22px var(--shine)} /* 金玉（KJ-064）：金色は今ある --shine。地が薄いので --cut の縁を付けて読めるように */
 #fx .who{position:absolute;top:18%;font-size:14px;color:var(--sub)}
 /* ストックが空のときは低く薄く（札が入ったら手札と同じ形）。引きずっている間は、落とせるよう元の大きさにする（KJ-010） */
 .tray.empty .slot{aspect-ratio:auto;height:18px}
@@ -589,7 +590,7 @@ function drain(){
   if(!G)return;
   while(G.events.length){
     const e=G.events.shift();
-    if(e.type==="fx"){showFx(e.who,e.text);if(e.who===G.me.name)vibSpecial=true}
+    if(e.type==="fx"){showFx(e.who,e.text,e);if(e.who===G.me.name)vibSpecial=true}
     if(e.type==="release"){
       PTS_FX.last={who:e.who,text:e.text,pts:e.pts}; // 点の演出が、どの言葉の点かを知るため（KJ-050）
       if(e.who===G.me.name){const w=T.WORDS.get(e.text);buzz("release",{text:e.text,len:[...e.text].length,special:vibSpecial||T.SPECIAL.has(e.text),yoji:!!(w&&w.yoji)})} // 振動：自分が放ったときだけ（相手の手では震えない）
@@ -1236,13 +1237,15 @@ function renderReleased(){
   }
 }
 // KJ-063：特別な語の演出の筆文字は、はじめる前の画面のうちに読んでおく（演出の途中で字が入れ替わらないように）。読めなかったときは今の字で出る
-function preloadFx(){try{if(document.fonts&&document.fonts.load)document.fonts.load('100px "KJ Fx"',(D.special.special||[]).map(w=>w.w).join("")).catch(()=>{})}catch(e){}}
-function showFx(who,text){
+function preloadFx(){try{if(document.fonts&&document.fonts.load)document.fonts.load('100px "KJ Fx"',[...(D.special.special||[]),...(D.special.fx_words||[])].map(w=>w.w).join("")).catch(()=>{})}catch(e){}}
+function showFx(who,text,o){
+  o=o||{}; // together＝字を同時に出す・tone＝色（KJ-064。金玉）
   const fx=$("fx"),box=$("fxChars");box.innerHTML="";$("fxWho").textContent=who;
+  fx.classList.toggle("gold",o.tone==="gold");
   fx.classList.add("on");
   [...text].forEach((c,i)=>{const s=document.createElement("div");s.className="c";s.textContent=c;box.appendChild(s);
-    setTimeout(()=>s.classList.add("in"),180+i*380)});
-  const ms=400+text.length*380+900;showFx.until=Date.now()+ms;
+    setTimeout(()=>s.classList.add("in"),180+(o.together?0:i*380))});
+  const ms=400+(o.together?1:text.length)*380+900;showFx.until=Date.now()+ms;
   clearTimeout(showFx.t);showFx.t=setTimeout(()=>fx.classList.remove("on"),ms);
 }
 function buildHowto(){
