@@ -794,6 +794,7 @@ function beginRoom(startRow){
 // ---------- 人の操作 ----------
 const rowCards=()=>row.map(id=>G.byId(G.me,id)).filter(Boolean);
 const rowText=()=>rowCards().map(x=>x.c).join("");
+const lastCard=()=>{const rc=rowCards();return rc.length?rc[rc.length-1]:null}; // 割る・反転・巡り・同音は、最後に選んだ札に効く（KJ-054・D-070）
 function rowState(){
   const rc=rowCards(),text=K.kanaText(T,rowText()),rl=K.releasable(T,G.used,text); // 言葉の書き方：ノ・儿・ナ の札はかな（天ノ川 → 天の川。KJ-053）
   const pair=rc.length===2?[rc[0].c,rc[1].c]:null;
@@ -895,7 +896,7 @@ function triedTake(id,why,c){const f=G.field.find(x=>x.id===id);const ch=f?f.c:c
 // 返事待ちのあいだに試合が終わった・捨てた・別の試合になったときの返事は、画面に反映しない（勝ち負けの表示を上書きしない）
 function stale(mc){if(MC===mc&&G&&!G.over)return false;if(G)afterChange();return true}
 function showWhy(why){const m=$("msg");m.textContent=why||"";m.className="msg"}
-function afterOp(res){if(res&&res.ok){row=res.cards?res.cards.map(x=>x.id):[];lastTried=""}hideChoices();afterChange()}
+function afterOp(res){if(res&&res.ok){row=res.sel||(res.cards?res.cards.map(x=>x.id):[]);lastTried=""}hideChoices();afterChange()} // 1枚に効く操作は、前に選んでいた札の選びを残す（res.sel。KJ-054）
 const isSingleTry=s=>s.rc.length===1&&!s.rl.ok&&[...s.text].length===1; // 1字は押せるが、はじかれる（KJ-008）
 $("bRelease").onclick=()=>{
   const s=rowState();
@@ -923,12 +924,13 @@ $("bRedraw").onclick=()=>{
   row=[];hideChoices();if(MC){const mc=MC;mc.redraw().then(()=>{if(!stale(mc))afterChange()});afterChange();return}G.redraw(G.me);afterChange()}; // 部屋：手札はすぐ入れ替わる。点の送りの返事は待たずに描く
 $("bHomo").onclick=()=>{
   if($("choices").dataset.kind==="homo"){hideChoices();return} // 選びの一覧が出ているときにもう一度押すと、閉じて元に戻る。何も変えない・待ち時間もかからない・ログにも残さない（KJ-069）
-  if(TUT){const why=TUT.blocked("homophone",{chars:rowCards().map(x=>x.c)});if(why){G.triedOp(G.me,"同音",rowCards().map(x=>x.c),why);showWhy(why);afterChange();return}}
-  if(isOff("bHomo")){if(!G.over){const why=G.whyNot(G.me,"homophone",[...row]);G.triedOp(G.me,"同音",rowCards().map(x=>x.c),why);afterChange();showWhy(why)}return} // 押せない見た目：選びの一覧は出さず、理由を残す（KJ-041）
-  const c=rowText();
+  const lc=lastCard(); // 最後に選んだ札（KJ-054）
+  if(TUT){const why=TUT.blocked("homophone",{chars:lc?[lc.c]:[]});if(why){G.triedOp(G.me,"同音",rowCards().map(x=>x.c),why);showWhy(why);afterChange();return}}
+  if(isOff("bHomo")){if(!G.over){const why=G.whyNot(G.me,"homophone",[...row]);G.triedOp(G.me,"同音",lc?[lc.c]:[],why);afterChange();showWhy(why)}return} // 押せない見た目：選びの一覧は出さず、理由を残す（KJ-041）
+  const c=lc.c;
   showChoices((T.HOMO.get(c)||[]).map(g=>({label:`${g.type==="on"?"音":"訓"}：${g.reading}`,chars:g.chars.filter(x=>x!==c),
     pick:x=>{
-      if(rowText()!==c)return;
+      const l2=lastCard();if(!l2||l2.c!==c)return;
       if(TUT){const why=TUT.blocked("homophone",{chars:[c],pick:x});if(why){G.triedOp(G.me,"同音",[c],why);showWhy(why);afterChange();return}}
       const r=G.homophone(G.me,row,x);if(TUT&&r.ok)TUT.advance("homophone");afterOp(r);if(!r.ok){G.triedOp(G.me,"同音",[c],r.why);afterChange()}}})),"homo");
 };
@@ -1133,7 +1135,7 @@ const setOff=(id,off)=>$(id).setAttribute("aria-disabled",off?"true":"false");
 const isOff=id=>$(id).getAttribute("aria-disabled")==="true";
 // 操作ボタンが押された（KJ-041）：押せない見た目なら何もせず、はじかれた理由を「ためした」に残す。押せるなら op を行い、通らなかったら理由を残す
 function press(id,op,name,run){
-  const chars=rowCards().map(x=>x.c);
+  const lc=lastCard(),chars=op==="join"?rowCards().map(x=>x.c):lc?[lc.c]:[]; // 1枚に効く操作は、最後に選んだ札（KJ-054）
   if(G.over)return;
   if(TUT){const why=TUT.blocked(op,{chars});if(why){G.triedOp(G.me,name,chars,why);showWhy(why);afterChange();return}} // チュートリアル：いまの段の手だけ
   if(isOff(id)){const why=G.whyNot(G.me,op,[...row]);G.triedOp(G.me,name,chars,why);afterChange();showWhy(why);return} // 押せない見た目でも、はじかれた理由を画面に出す（KJ-069）
@@ -1142,19 +1144,19 @@ function press(id,op,name,run){
   else if(TUT&&r&&r.ok){TUT.advance(op);afterChange()}
 }
 function renderOps(){
-  const s=rowState(),one=s.rc.length===1?s.rc[0].c:null,me=G.me,live=!G.over&&!G.locked(G.me); // 放ったあと、場から取りきるまでは、ほかのボタンは全部押せない（KJ-039）
-  const fit1=G.fits(me,row,1);
+  const s=rowState(),lc=lastCard(),one=lc?lc.c:null,me=G.me,live=!G.over&&!G.locked(G.me); // 放ったあと、場から取りきるまでは、ほかのボタンは全部押せない（KJ-039）
+  const fit1=G.fits(me,row,1),lid=lc?[lc.id]:[],fitL=n=>G.fits(me,lid,n); // 1枚に効く操作の空きは、最後に選んだ札で見る（KJ-054）
   const cds=[["反転","invert"],["巡り","cycle"],["同音","homophone"]].map(([n,k])=>cdText(G.cpu,k)&&`${n} ${cdText(G.cpu,k)}`).filter(Boolean);
   const gone=!!(MC&&MC.oppGone()&&!G.over);
   $("cpuCds").textContent=gone?"相手の通信が切れた":cds.length?"待ち："+cds.join("・"):"";
   $("cpuCds").classList.toggle("gone",gone);
   $("bRelease").disabled=!(live&&(s.rl.ok||isSingleTry(s)))||(!!TUT&&!TUT.buttonOn("bRelease")); // チュートリアル：いまの段の手のボタンだけ
   // 押せない見た目の操作ボタンは disabled でなく aria-disabled（見た目は同じ）。押すと何も起きず、「ためした」に理由が残る（KJ-041）
-  setOff("bSplit",!(live&&one&&K.canSplit(T,one)&&G.fits(me,row,2)));
+  setOff("bSplit",!(live&&one&&K.canSplit(T,one)&&fitL(2)));
   setOff("bJoin",!(live&&s.joins.length&&fit1));
-  setOff("bInvert",!(live&&one&&T.INV.has(one)&&G.ready(me,"invert")&&fit1));
-  setOff("bCycle",!(live&&one&&T.NEXT.has(one)&&G.ready(me,"cycle")&&fit1));
-  setOff("bHomo",!(live&&one&&T.HOMO.has(one)&&G.ready(me,"homophone")&&fit1));
+  setOff("bInvert",!(live&&one&&T.INV.has(one)&&G.ready(me,"invert")&&fitL(1)));
+  setOff("bCycle",!(live&&one&&T.NEXT.has(one)&&G.ready(me,"cycle")&&fitL(1)));
+  setOff("bHomo",!(live&&one&&T.HOMO.has(one)&&G.ready(me,"homophone")&&fitL(1)));
   $("bBack").disabled=!(live&&s.rc.length);
   setOff("bRedraw",!(live&&G.redrawsLeft(me)>0)); // 5回まで（KJ-049）。使いきったら押せない見た目
   if(TUT)for(const id of ["bSplit","bJoin","bInvert","bCycle","bHomo","bRedraw"])if(!TUT.buttonOn(id))setOff(id,true); // チュートリアル：いまの段の手のボタン以外は押せない見た目
