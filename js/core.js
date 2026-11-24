@@ -279,10 +279,10 @@
   const matchRand = (matchId, tag) => seededRand(strSeed(matchId + ":" + tag));
   const ROLES = ["host", "guest"];
   const ROOM_OPPONENT = { key: "room", label: "人と（合言葉）" }; // 画面の「遊び方」の「友だちと（合言葉）」（KJ-033 後半・KJ-045）
-  // はじめる前の画面の「相手」は2段（KJ-045）。1段目「遊び方」：ひとりで／CPU と／友だちと（合言葉）。「CPU と」のときだけ2段目「強さ」。
+  // はじめる前の画面の「相手」は2段（KJ-045）。1段目「遊び方」：CPU と／友だちと（合言葉）。「CPU と」のときだけ2段目「強さ」。
+  // 「ひとりで」は画面から外した（KJ-056・D-072）。中の「CPU なしで動く」作り（solo。チュートリアル・テストが使う）は残してある
   // 中で使う相手のキー（solo・weak・fair・normal・room）とログの「相手」の書き方（OPPONENTS・ROOM_OPPONENT の label）は変えない。画面の呼び名だけ別に持つ
   const PLAY_MODES = [
-    { key: "solo", label: "ひとりで" },
     { key: "cpu", label: "CPU と" },
     { key: ROOM_OPPONENT.key, label: "友だちと（合言葉）" },
   ];
@@ -294,14 +294,15 @@
   // 端末に覚えた相手のキー（前の形のまま）を、新しい形（遊び方＋強さ）に読み替える。読めなければ初期値（rules.opponent_default。CPU と＋とても弱い）
   function readOpponent(D, stored) {
     const defKey = D.rules.opponent_default;
-    const known = (k) => k === ROOM_OPPONENT.key || OPPONENTS.some((o) => o.key === k);
+    // 端末に solo（ひとりで）を覚えていたら、読めない値と同じに扱う（CPU と＋とても弱い）。画面から選べなくなったため（KJ-056）
+    const known = (k) => k === ROOM_OPPONENT.key || OPPONENTS.some((o) => o.key === k && o.key !== "solo");
     const key = known(stored) ? stored : known(defKey) ? defKey : "weak";
     const isPower = (k) => CPU_POWERS.some((o) => o.key === k);
     const power = isPower(key) ? key : isPower(defKey) ? defKey : "weak";
-    return { key, mode: key === "solo" ? "solo" : key === ROOM_OPPONENT.key ? "room" : "cpu", power };
+    return { key, mode: key === ROOM_OPPONENT.key ? "room" : "cpu", power };
   }
   // 遊び方＋強さ → 中で使う相手のキー
-  const opponentKey = (mode, power) => (mode === "cpu" ? (CPU_POWERS.some((o) => o.key === power) ? power : "weak") : mode === "room" ? ROOM_OPPONENT.key : "solo");
+  const opponentKey = (mode, power) => (mode === "cpu" ? (CPU_POWERS.some((o) => o.key === power) ? power : "weak") : mode === "room" ? ROOM_OPPONENT.key : "weak");
   const ROOM_OPP_NAME = "相手";
   // チュートリアル（KJ-043）。相手の選びには出さない（はじめる前の「チュートリアル」ボタンと、はじめて「はじめる」を押したときだけ）
   const TUTORIAL_OPPONENT = { key: "tutorial", label: "チュートリアル" };
