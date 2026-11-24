@@ -233,11 +233,11 @@
     if (key === ROOM_OPPONENT.key) return `${ROOM_OPPONENT.label}（相手は人。CPU なし。場の札・言葉・勝ちの点は先に入れた方。相手の手は、こちらから見えたものだけ書く）`;
     if (key === "solo") return `ひとりで（CPU なし。場の取り合いなし。50点では終わらず、${limit / 60}分たったら終わって点を出す。CPU の列は 0）`;
     const [a, b] = cpuInterval(D, key);
-    const NAMES = { invert: "反転", cycle: "巡り", homophone: "同音" };
+    const NAMES = { invert: "反転", cycle: "巡り", homophone: "同音", split: "割る" };
     const ah = ((D.rules.cpu.ahead || {})[key] || []).map((k) => NAMES[k] || k);
     const aheadText = ah.length ? `1手先は${ah.join("・")}` : "1手先は使わない"; // rules.cpu.ahead から作る（KJ-058）
     if (key === "fair") return `ふつう（CPU は ${a}〜${b}秒に1回動く。${aheadText}）`;
-    return key === "weak" ? `とても弱い（CPU は ${a}〜${b}秒に1回動く。${aheadText}）` : `いまの強さ（CPU は ${a}〜${b}秒に1回動く）`;
+    return `${key === "weak" ? "とても弱い" : "つよい"}（CPU は ${a}〜${b}秒に1回動く。${aheadText}）`; // 呼び名は画面と同じ（KJ-019 追記2。前は つよい も「いまの強さ」と出ていた）
   }
   function rulesLabel(D, key, level, limit) {
     const R = D.rules, S = R.score;
@@ -284,7 +284,7 @@
   const ROOM_OPPONENT = { key: "room", label: "人と（合言葉）" }; // 画面の「遊び方」の「友だちと（合言葉）」（KJ-033 後半・KJ-045）
   // はじめる前の画面の「相手」は2段（KJ-045）。1段目「遊び方」：CPU と／友だちと（合言葉）。「CPU と」のときだけ2段目「強さ」。
   // 「ひとりで」は画面から外した（KJ-056・D-072）。中の「CPU なしで動く」作り（solo。チュートリアル・テストが使う）は残してある
-  // 中で使う相手のキー（solo・weak・fair・normal・room）とログの「相手」の書き方（OPPONENTS・ROOM_OPPONENT の label）は変えない。画面の呼び名だけ別に持つ
+  // 中で使う相手のキー（solo・weak・fair・normal・room）と OPPONENTS・ROOM_OPPONENT の label は変えない（ログの頭の「相手」の行は opponentLabel が画面の呼び名で書く。KJ-019）。画面の呼び名だけ別に持つ
   const PLAY_MODES = [
     { key: "cpu", label: "CPU と" },
     { key: ROOM_OPPONENT.key, label: "友だちと（合言葉）" },
@@ -292,7 +292,7 @@
   const CPU_POWERS = [
     { key: "weak", label: "とても弱い" },
     { key: "fair", label: "ふつう" },
-    { key: "normal", label: "つよい" }, // 前の呼び名は「いまの強さ」（ログには今も OPPONENTS の label で出る）
+    { key: "normal", label: "つよい" }, // 前の呼び名は「いまの強さ」（ログの頭の「相手」の行は opponentLabel が画面の呼び名で書く。KJ-019）
   ];
   // 端末に覚えた相手のキー（前の形のまま）を、新しい形（遊び方＋強さ）に読み替える。読めなければ初期値（rules.opponent_default。CPU と＋とても弱い）
   function readOpponent(D, stored) {
@@ -991,7 +991,7 @@
       }
     }
     // 札を1枚だけ反転・巡り・同音で替えたとき、CPU が探せる語（よく使う語で、まだ使っていない）で放てるようになる手。ready は、いま押せるもの
-    // 強さごとに使える手が違う（KJ-058。rules.cpu.ahead。とても弱い＝なし・ふつう＝反転と巡り・つよい＝反転・巡り・同音）
+    // 強さごとに使える手が違う（KJ-058。rules.cpu.ahead。とても弱い＝なし・ふつう＝反転と巡り・つよい＝反転・巡り・同音・割る〔KJ-019〕）
     function cpuAhead(p) {
       const allowed = (D.rules.cpu.ahead || {})[g.opponent] || [];
       const words = T.COMMON_WORDS.filter((w) => !g.used.has(w.w));
@@ -1000,11 +1000,13 @@
         return [...word].every((ch) => { const i = left.indexOf(ch); if (i < 0) return false; left.splice(i, 1); return true; });
       };
       const found = [];
-      for (const [k, outsOf] of [["cycle", (c) => (T.NEXT.has(c) ? [T.NEXT.get(c)] : [])], ["invert", (c) => (T.INV.has(c) ? [T.INV.get(c)] : [])], ["homophone", (c) => homoChars(T, c)]]) {
+      for (const [k, outsOf] of [["cycle", (c) => (T.NEXT.has(c) ? [[T.NEXT.get(c)]] : [])], ["invert", (c) => (T.INV.has(c) ? [[T.INV.get(c)]] : [])], ["homophone", (c) => homoChars(T, c).map((h) => [h])],
+        // 割る（KJ-019・D-037）：割れる字だけ。割った部品が手札・ストックに入るときだけ（人と同じ置き場の決まり）。待ち時間はない
+        ["split", (c, x) => (canSplit(T, c) && fits(p, [x], splitOnce(T, c).length) ? [splitOnce(T, c)] : [])]]) {
         if (!allowed.includes(k)) continue;
-        for (const x of p.cards) for (const to of outsOf(x.c)) {
+        for (const x of p.cards) for (const to of outsOf(x.c, x)) {
           const after = p.cards.filter((y) => y !== x).map((y) => y.c).concat(to).map((c) => kanaOf(T, c));
-          if (words.some((w) => covers(after, w.w))) found.push({ k, x, to, isReady: g.ready(p, k) });
+          if (words.some((w) => covers(after, w.w))) found.push({ k, x, to: k === "split" ? to : to[0], isReady: k === "split" ? true : g.ready(p, k) });
         }
       }
       return found.length ? { ready: found.filter((m) => m.isReady) } : null;
@@ -1040,7 +1042,7 @@
       if (ahead) {
         if (!ahead.ready.length) return null;
         const m = pick(ahead.ready);
-        return m.k === "homophone" ? g.homophone(p, [m.x.id], m.to) : g[m.k](p, [m.x.id]);
+        return m.k === "homophone" ? g.homophone(p, [m.x.id], m.to) : g[m.k](p, [m.x.id]); // 割る＝g.split（1回の動きで1つの操作。割ったあとに放つのは次の番）
       }
       // 引き直しは人と同じ値段・5回まで（KJ-049）。ただし CPU は、次の値段が rules.cpu.redraw_max_cost 以下（1回目 0点・2回目 5点）のときだけ引き直す（KJ-073）。
       // 3回目から（10点以上）と、回数を使いきっていたら、何もしない（次の番にまた見る）。人の決まりは変えない
