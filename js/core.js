@@ -1412,9 +1412,9 @@
   // ---------- ログの自動送信（KJ-020。D-038）----------
   // 送る中身の形と、送ってよい場所の判定。送る処理そのもの（fetch・端末への保存）は index.html
   const PLAY_LOG_LIMITS = { device_id: 64, result: 200, log: 200000 };
-  // 自分（人）が1手でも動いたか（はじめ・終わり・動けない・最初の1枚は数えない）
+  // 自分（人）が1手でも動いたか（はじめ・終わり・動けない・動ける・最初の1枚は数えない）
   function playedAny(g) {
-    return g.log.some((e) => e.who === g.me.name && e.op !== "最初の1枚");
+    return g.log.some((e) => e.who === g.me.name && e.op !== "最初の1枚" && e.op !== "動けない" && e.op !== "動ける");
   }
   // 終わりの1行（例：あなたの勝ち（10分 27対6））。終わっていなければ「途中でやめた」
   function playLogResult(g) {

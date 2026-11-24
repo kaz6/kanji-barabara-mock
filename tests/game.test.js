@@ -1372,6 +1372,22 @@ test("ログの送信（KJ-020）：1手も動いていなければ送らない�
   assert.ok(row.result.length <= K.PLAY_LOG_LIMITS.result && row.device_id.length <= K.PLAY_LOG_LIMITS.device_id);
 });
 
+test("ログの送信（KJ-020・KJ-062）：はじめの手札で放てる言葉が無く「動けない」から始まっても、1手も動かずに捨てたら送らない", () => {
+  // 配りを決める：N5 の seed 66（ストックつき）と N4 の seed 8 は、はじめから自分が「動けない」
+  for (const [seed, lv] of [[66, "N5"], [8, "N4"]]) {
+    const g = newGame(seed, "normal", lv, { startStock: true });
+    assert.ok(g.log.some((e) => e.who === g.me.name && e.op === "動けない"), `${lv} seed ${seed}：はじめから動けない`);
+    assert.equal(K.playLogRow(g, "dev-1"), null, `${lv}：「動けない」は1手と数えない`);
+    // 放てる手札に替わって「動ける」が付いても、まだ1手も動いていない
+    setHand(g, g.me, "休日");
+    g.addLog("—", "確かめ");
+    assert.ok(g.log.some((e) => e.who === g.me.name && e.op === "動ける"), `${lv}：動ける`);
+    assert.equal(K.playLogRow(g, "dev-1"), null, `${lv}：「動ける」も1手と数えない`);
+    g.tried(g.me, ["天", "口"], "辞書にない");
+    assert.ok(K.playLogRow(g, "dev-1"), `${lv}：動いたら送る`);
+  }
+});
+
 test("ログの送信（KJ-020）：終わったときの result（勝ち・ひとりで）と、長すぎる値は切る", () => {
   const g = newGame(1, "normal");
   setHand(g, g.me, "休日");

@@ -924,3 +924,10 @@ R-025〜R-027 はカードに書いてあった仮置き、R-028〜R-031 は係�
 - 変えていない：山の字・点・N5・N4 の表・同音の組のデータ（data/readings.json）・巡り・小1 の80字の割り方
 - テスト：P-070 で足した「割れず・反転も巡りもしない」を固定するテストを書き換えた（割り方は N5 と同じ・巡りには乗らない・後を割る→くっつける・前→後）
 - 戻し方：この PR の merge コミットを revert（js/core.js・tools/build_data.py・data/words.json・tests/grade1.test.js）。端末に残るものは無い
+
+### R-085 「動けない」「動ける」を1手と数えない（KJ-062。受け箱 P-062。相談チャット 2026-11-24 07:47【答え P-062】。不具合の直し）
+- きっかけ：npm test の揺れ（tests/browser.test.mjs「ログの送信（KJ-020）：途中で捨てても…」が expected 0 / actual 1 でたまに落ちる）。はじめの手札で放てる言葉が無いと、配った直後に自分の「動けない」がログに付き、core.js の playedAny がそれを1手と数えていた。1手も動かずに捨てた試合もログが送られる（画面で約1割）
+- 決めたこと（相談チャット）：案A。playedAny で「動けない」「動ける」も数えない。KJ-020・D-038 の「1手も動いていなければ送らない」と、playedAny の説明（動けないは数えない）に中身を合わせる直しで、決まりの変更ではない
+- テスト：tests/game.test.js に、はじめから「動けない」になる配り（N5 seed 66 ストックつき・N4 seed 8）で、1手も動かずに捨てたら送らない・「動ける」が付いても送らない・動いたら送る、を足した
+- 係の仮決め（技術）：npm test が落ちたとき、落ちたテストのファイル・名前・失敗の文を標準出力の最後と test-results/failures.txt にまとめる reporter（tests/failures-reporter.mjs）を足した。test-results/ は .gitignore
+- 戻し方：この PR の merge コミットを revert（js/core.js・tests/game.test.js・tests/failures-reporter.mjs・package.json・.gitignore・CLAUDE.md）。端末に残るものは無い
