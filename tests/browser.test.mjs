@@ -276,7 +276,7 @@ test("画面", { skip }, async (t) => {
     assert.equal(await page.locator("#pow input:checked").getAttribute("value"), "fair", "ふつうを覚えている");
     await page.click("#start");
     await page.click("#bLog");
-    assert.match(await page.inputValue("#logText"), /# 相手 ふつう（CPU は 25〜30秒に1回動く。1手先は反転・巡りだけ）/);
+    assert.match(await page.inputValue("#logText"), /# 相手 ふつう（CPU は 25〜30秒に1回動く。1手先は反転・巡り）/);
     await page.click("#bLog");
     await page.click("#bSetup");
     // 知らない値が残っていても初期値で動く

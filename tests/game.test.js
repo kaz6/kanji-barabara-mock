@@ -892,7 +892,7 @@ test("ログ：頭に選んだ相手を書く（ひとりで／とても弱い�
   const head = (opp) => newGame(1, opp).logText().split("\n").filter((l) => l.startsWith("# 相手")).join("");
   assert.match(head("solo"), /# 相手 ひとりで（CPU なし。場の取り合いなし。50点では終わらず、10分たったら終わって点を出す/);
   assert.match(head("weak"), /# 相手 とても弱い（CPU は 30〜45秒に1回動く。1手先は使わない）/);
-  assert.match(head("fair"), /# 相手 ふつう（CPU は 25〜30秒に1回動く。1手先は反転・巡りだけ）/);
+  assert.match(head("fair"), /# 相手 ふつう（CPU は 25〜30秒に1回動く。1手先は反転・巡り）/);
   assert.match(head("normal"), /# 相手 いまの強さ（CPU は 15〜20秒に1回動く）/);
   assert.match(newGame(1, "weak").logText(), /# 仮置き CPU 30〜45秒に1回動く/);
   assert.match(newGame(1, "solo").logText(), /# 仮置き CPU なし/);

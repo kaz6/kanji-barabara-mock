@@ -233,8 +233,11 @@
     if (key === ROOM_OPPONENT.key) return `${ROOM_OPPONENT.label}（相手は人。CPU なし。場の札・言葉・勝ちの点は先に入れた方。相手の手は、こちらから見えたものだけ書く）`;
     if (key === "solo") return `ひとりで（CPU なし。場の取り合いなし。50点では終わらず、${limit / 60}分たったら終わって点を出す。CPU の列は 0）`;
     const [a, b] = cpuInterval(D, key);
-    if (key === "fair") return `ふつう（CPU は ${a}〜${b}秒に1回動く。1手先は反転・巡りだけ）`;
-    return key === "weak" ? `とても弱い（CPU は ${a}〜${b}秒に1回動く。1手先は使わない）` : `いまの強さ（CPU は ${a}〜${b}秒に1回動く）`;
+    const NAMES = { invert: "反転", cycle: "巡り", homophone: "同音" };
+    const ah = ((D.rules.cpu.ahead || {})[key] || []).map((k) => NAMES[k] || k);
+    const aheadText = ah.length ? `1手先は${ah.join("・")}` : "1手先は使わない"; // rules.cpu.ahead から作る（KJ-058）
+    if (key === "fair") return `ふつう（CPU は ${a}〜${b}秒に1回動く。${aheadText}）`;
+    return key === "weak" ? `とても弱い（CPU は ${a}〜${b}秒に1回動く。${aheadText}）` : `いまの強さ（CPU は ${a}〜${b}秒に1回動く）`;
   }
   function rulesLabel(D, key, level, limit) {
     const R = D.rules, S = R.score;
