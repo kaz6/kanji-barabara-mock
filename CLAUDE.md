@@ -12,6 +12,7 @@
 
 - `js/core.js`：遊びの決まり（表引き・割る・くっつける・放つ・点数・場から取る・引き直し・待ち時間・勝ち・CPU・ログ）。DOM に触らない。ブラウザでは `window.KJ`、Node では `require`。合言葉の部屋（人と対戦。KJ-033）の先着は `createMatchClient`、部屋を作る／入るは `hostRoom`・`findRoom`・`joinRoom`・`roomWaiter`（つなぎは差し替え。テストは `memoryClaims`。本物のつなぎ〔kj_claims の REST と Realtime〕は index.html）
 - `index.html`：画面だけ。決まりは core.js を呼ぶ
+- `data/parts.json` の `reach`：山に入らない「行き先だけの字」（KJ-077。氷・丸・刃・凡・勺。丶 の行き先）。割り方（`parts`）とは別の表。左右の部品が両方そのレベルで手に入るときだけ `T.REACH` として使う（`makeTables` と `tools/build_data.py` の `holdable` を同じ決め方に）。字として見せるので `jouyou` にも入れる。形は split_shapes。テストは tests/reach.test.js
 - `data/kanji.json`・`words.json`：字と語に `lv`（N5／N4）と、小1（KJ-044。小学1年の80字）の印 `g1`（N5・N4 のどちらにも無い小1 の字は `lv`＝G1）。遊ぶときは `makeTables(D, level)` でレベルに絞る。作り直しは `python3 tools/build_data.py`（`pip install jamdict-data`。`--level N5` で N5 だけ）。手作りの表（parts など）はこのスクリプトでは作らない。N4 で足した割り方の一覧は docs/N4_TABLES.md、小1 の字と割り方は docs/G1_TABLES.md
 - `fonts/kj-glyphs.otf`・`fonts/kj-glyphs.css`・`data/glyphs.json`・`docs/GLYPHS.md`：端末の字体に無い字（JIS X 0208 の外。部首補助・簡体字の形・拡張B など）の字形を同梱したもの。部品表・偏・巡りに新しい字を足したら `python3 tools/build_glyphs.py`（要 fontTools と Noto Serif CJK JP）で作り直す。テスト（tests/data.test.js）が、札の字が全部この一覧にあるかを見る
 - `fonts/kj-fx.woff`・`fonts/kj-fx.css`・`fonts/OFL-YujiSyuku.txt`：特別な語の演出（`#fx .c`）だけの筆文字（Yuji Syuku。KJ-063）。字は `data/special.json` の語（`special`）と演出だけ特別の語（`fx_words`。金玉。KJ-064：点は変えず、2字を金色で同時に出す）に絞る。特別な語・演出だけの語を足したら `python3 tools/build_fx_font.py`（元の字体は `npm pack @fontsource/yuji-syuku` で取る。使い方は先頭の説明）で作り直す。テスト：tests/fxfont.test.js・tests/fxfont.browser.test.mjs
@@ -41,6 +42,7 @@ npm test
 - `tests/counters.test.js`・`tests/counters.browser.test.mjs`：数＋助数詞（KJ-022。データ・読み・十円 が放てる・使った助数詞は使えない〔辞書の語にも・CPU も・二人とも〕・動けない・言い方／画面：🚫 と「〇円は一度きり！」が真ん中に出て消える・ほかのはじかれ方でも出る）
 - `tests/vibrate.test.js`・`tests/vibrate.browser.test.mjs`：スマホの振動（KJ-074。形の選び方・手ごとの形・切なら震えない・相手の手で震えない・`navigator.vibrate` が無い端末で落ちない。`navigator.vibrate` は差し替え）
 - `tests/radical.test.js`・`tests/radical.browser.test.mjs`：部品の札の意味（KJ-021。部品すべてに行がある・radical_forms と食い違わない・一行の形・一覧にそろっている／画面：部品の札を選ぶと台の行に出る・字の札では出ない・外すと消える）
+- `tests/reach.test.js`：丶 の行き先（KJ-077。行き先だけの字・レベルごとの出番〔勺は出番なし〕・くっつける・割る・面で落とす・語・ストック）
 - `tests/proper_names.test.js`：地名・名字（KJ-032。一覧の数・手に持てるときだけ語に入る・印と読み・点数は普通と同じ・下の名前は通らない）と、全レベルで外す語（買春・売春）
 - `tests/kana.test.js`：かなに読む部品（KJ-053。天の川 3字9点・見る 2字3点・かなだけは放てない・ひらがなで残る・CPU とヒント・外す語）
 - `tests/g1help.test.js`：小1 の手当て（KJ-067。`data/rules.json` の `g1`。基本の10字は山に3枚・N5/N4 は2枚のまま／手札に放てる語があり30秒なにも手をしないと光る・N5/N4 と放てる語なしでは光らない）

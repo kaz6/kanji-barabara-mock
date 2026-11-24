@@ -106,6 +106,14 @@
     }
     T.parts = {};
     for (const k of Object.keys(all)) if (keep.has(k)) T.parts[k] = all[k]; // もとの並びのまま（十口 は 古 が先）
+    // 行き先だけの字（KJ-077・D-095。data/parts.json の reach。氷・丸・刃・凡・勺）：山には入らず、くっつけるでだけ手に入る（割ると部品に戻る）。
+    // 行は、左右の部品が両方「そのレベルで手に入る」ときだけ使う（レベルの字・手に持てる N5 の字・上の割り方の行に出てくる字）。行き先の行どうしでは手に入る字にしない
+    T.REACH = new Set();
+    const reachSeen = new Set(Object.entries(T.parts).flatMap(([k, v]) => [k, ...v]));
+    for (const [k, [a, b]] of Object.entries(D.parts.reach || {})) {
+      const got = (c) => T.CHARS.has(c) || T.N5HELD.has(c) || reachSeen.has(c);
+      if (got(a) && got(b)) { T.parts[k] = [a, b]; T.REACH.add(k); }
+    }
     T.RELAY = new Set([...relayAll].filter((r) => keep.has(r) && !T.CHARS.has(r) && !T.N5HELD.has(r)));
     T.SHAPES = (D.split_shapes && D.split_shapes.shapes) || {};
     T.JOIN = new Map(); // "左右" → [できる字…]（十口 は 古・田 の2つ。R-016）

@@ -461,7 +461,7 @@ test("画面", { skip }, async (t) => {
     await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
     assert.equal(await page.locator("#lvl input:checked").getAttribute("value"), "G1", "端末に覚える");
     await page.check('#lvl input[value="N4"]');
-    assert.match(await page.textContent("#setupInfo"), /^字 284・語 10895（レベル N4/);
+    assert.match(await page.textContent("#setupInfo"), /^字 284・語 10987（レベル N4/);
     assert.deepEqual(errors, []);
     await ctx.close();
   });

@@ -45,7 +45,7 @@ def collect():
 
     parts = load("parts.json")
     relay = set(parts.get("relay", []))
-    for k, v in parts["parts"].items():
+    for k, v in {**parts["parts"], **parts.get("reach", {})}.items():  # reach＝行き先だけの字（KJ-077）
         add(k, "relay" if k in relay else "割る前の字")
         for x in v:
             add(x, "割ってできる部品")
@@ -147,7 +147,8 @@ def main():
     L.append("| 験 | 馬＋佥（U+4F65。中国の簡体字の形で、日本の字体に無い） | 馬＋僉（U+50C9。JIS X 0208 の中。端末で出る） | (a) 割り方を変えた。僉 は 験 の右側（㑒）に近い形。くっつけるは 馬＋僉＝験 になる |\n")
     L.append("## 同梱した字（%d 字）\n" % len(embed))
     L.append("| 字 | コード | どこで使うか | 使う割り方（割る前の字＝部品） | 直し方 |\n|---|---|---|---|---|")
-    parts = load("parts.json")["parts"]
+    pj = load("parts.json")
+    parts = {**pj["parts"], **pj.get("reach", {})}
     for c in embed:
         use = [k + "＝" + "＋".join(v) for k, v in parts.items() if c == k or c in v]
         how = "(b) 字形を重ねて作って同梱" if c in COMPOSED else "(b) 字形を同梱"

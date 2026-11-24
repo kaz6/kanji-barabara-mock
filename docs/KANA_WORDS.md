@@ -6,7 +6,7 @@
 - 入れない語（迷ったら。仮）：かなを2つ以上含む語 17 語・かなで始まる語 1 語（下に一覧）
 - 印：★＝よく使う（CPU が知っている語。ヒントでも先に狙う）・小1＝小1 でも放てる
 
-## の（札 ノ）310 語
+## の（札 ノ）315 語
 
 | 語 | 読み | レベル | 小1 | 意味 |
 |---|---|---|---|---|
@@ -23,6 +23,7 @@
 | 天の川 ★ | あまのがわ | N5 | 小1 | Milky Way; luminous band corresponding to the plane of the galaxy |
 | 女の人 ★ | おんなのひと | N5 | 小1 | woman |
 | 女の子 ★ | おんなのこ | N5 | 小1 | girl; daughter / young woman |
+| 日の丸 ★ | ひのまる | N5 | 小1 | outline of the Sun (esp. represented as a red circle) / the Japanese flag |
 | 日の出 ★ | ひので | N5 | 小1 | sunrise |
 | 日の目 ★ | ひのめ | N5 | 小1 | sunlight |
 | 男の人 ★ | おとこのひと | N5 | 小1 | man |
@@ -31,6 +32,7 @@
 | 茶の間 ★ | ちゃのま | N4 |  | living room (Japanese-style) |
 | 一の糸 | いちのいと | N4 | 小1 | first string (of a shamisen, etc.) |
 | 一の酉 | いちのとり | N5 |  | first day of the cock in the eleventh month |
+| 三の丸 | さんのまる | N5 | 小1 | outermost region of the castle |
 | 三の糸 | さんのいと | N4 | 小1 | third string (of a shamisen, etc.) |
 | 上の人 | うえのひと | N5 | 小1 | superior; boss / them (as opposed to "us") |
 | 上の子 | うえのこ | N5 | 小1 | the older child |
@@ -44,6 +46,7 @@
 | 中の人 | なかのひと | N5 | 小1 | person inside a cartoon body suit; voice actor / insider |
 | 中の兄 | なかのあに | N4 |  | middle brother |
 | 主の日 | しゅのひ | N4 |  | the Sabbath; the Lord's Day |
+| 二の丸 | にのまる | N5 | 小1 | outer citadel |
 | 二の町 | にのまち | N4 | 小1 | inferior; second-rate |
 | 二の矢 | にのや | N4 |  | second arrow / second move; second step |
 | 二の糸 | にのいと | N4 | 小1 | second string (of a shamisen, etc.) |
@@ -162,6 +165,7 @@
 | 気の病 | きのやまい | N4 |  | nervous breakdown; neurosis |
 | 水の花 | みずのはな | N5 | 小1 | algal bloom; water bloom / lotus flower |
 | 水の道 | みずのみち | N5 |  | water way |
+| 氷の刃 | こおりのやいば | N5 | 小1 | gleaming sword |
 | 海の家 | うみのいえ | N4 |  | beach hut; beachside clubhouse |
 | 海の日 | うみのひ | N4 |  | Marine Day (national holiday; 3rd Monday of July) |
 | 火の元 | ひのもと | N4 |  | place where fire is likely to break out; possible cause of a fire |
@@ -202,6 +206,7 @@
 | 薬の力 | くすりのちから | N4 |  | effectiveness of a drug; efficacy of a drug |
 | 虫の声 | むしのこえ | N4 |  | singing of insects (esp. in autumn); sound of insects |
 | 虫の音 | むしのね | N4 | 小1 | calls and sounds made by insects |
+| 西の丸 | にしのまる | N5 | 小1 | western citadel; west wing of the Edo castle (where the heir apparent or retired shogun would live) |
 | 親の代 | おやのだい | N4 |  | one's parents' generation |
 | 話の先 | はなしのさき | N5 | 小1 | sequel of a story |
 | 辰の日 | たつのひ | N5 |  | day of the Dragon |
@@ -321,7 +326,7 @@
 | 黒牛の舌 | くろうしのした | N4 |  | black cow-tongue (species of tonguefish, Paraplagusia japonica) |
 | 黒豆の木 | くろまめのき | N4 |  | bog bilberry (Vaccinium uliginosum); northern bilberry |
 
-## る（札 儿）123 語
+## る（札 儿）124 語
 
 | 語 | 読み | レベル | 小1 | 意味 |
 |---|---|---|---|---|
@@ -373,6 +378,7 @@
 | 早る | はやる | N4 | 小1 | to be impatient; to be eager / to be excited; to be in high spirits |
 | 明る | あかる | N4 |  | to become bright; to become clear |
 | 止る | とまる | N5 | 小1 | to stop (moving); to come to a stop / to stop (doing, working, being supplied); to come to a halt |
+| 氷る | こおる | N5 | 小1 | to freeze; to be frozen over |
 | 終る | おわる | N4 |  | to end; to come to an end |
 | 行る | やる | N5 | 小1 | to do; to undertake / to send; to dispatch |
 | 起る | おこる | N4 |  | to occur; to happen |
