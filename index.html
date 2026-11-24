@@ -431,7 +431,7 @@ let level=null;     // レベル（"G1"〔小1〕／"N5"／"N4"）。はじめ�
 let row=[];         // 選んだ札の id（選んだ順。台にはその写しを左から並べる）
 let lastTried="";
 const OPP_KEY="kj-opponent",TIME_KEY="kj-time";
-let opponent=null;  // 相手のキー（solo・weak・fair・normal・room）。端末に覚える（KJ-007）。画面では「遊び方」と「強さ」の2段で選ぶ（KJ-045）
+let opponent=null;  // 相手のキー（weak・fair・normal・room。solo は画面から外した〔KJ-056〕）。端末に覚える（KJ-007）。画面では「遊び方」と「強さ」の2段で選ぶ（KJ-045）
 let cpuPower="weak"; // 「CPU と」のときの強さ。遊び方を行き来しても覚えている
 let timeLimit=null; // 制限時間（秒）。端末に覚える（KJ-007）
 const $=id=>document.getElementById(id);

@@ -320,7 +320,7 @@ test("画面", { skip }, async (t) => {
     assert.equal(await page.locator("#pow input:checked").getAttribute("value"), "normal");
     assert.equal(await page.evaluate(() => localStorage.getItem("kj-opponent")), "normal");
     assert.equal(await page.evaluate(() => document.getElementById("setSlot").contains(document.getElementById("lvl"))), true);
-    // 375×700 で、はじめる前の画面が横にはみ出さない（3つの遊び方・3つの強さが折り返して収まる）
+    // 375×700 で、はじめる前の画面が横にはみ出さない（2つの遊び方・3つの強さが折り返して収まる）
     for (const m of ["cpu", "room"]) {
       await page.check(`#opp input[value="${m}"]`);
       const w = await page.evaluate(() => ({ sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth }));
@@ -341,6 +341,11 @@ test("画面", { skip }, async (t) => {
       assert.equal(await page.locator("#opp input:checked").getAttribute("value"), mode, `${stored} → 遊び方 ${mode}`);
       if (power) assert.equal(await page.locator("#pow input:checked").getAttribute("value"), power, `${stored} → 強さ ${power}`);
       assert.equal(await page.isVisible("#pow"), mode === "cpu");
+      if (stored === "solo") { // 端末に solo を覚えた人は、そのまま「はじめる」と CPU と＋とても弱い で始まる（KJ-056）
+        await page.click("#start");
+        if (await page.locator("#tut:not([hidden])").count()) await page.click("#tutSkip");
+        assert.deepEqual(await page.evaluate(() => [__KJ.game.opponent, __KJ.game.solo]), ["weak", false]);
+      }
       await ctx.close();
     }
     // ログの「相手」は、つよい（画面の呼び名）でも「いまの強さ」のまま
@@ -373,17 +378,17 @@ test("画面", { skip }, async (t) => {
     await page.click("#bSetup");
     await page.check('#lvl input[value="N5"]');
     await page.check('#tim input[value="300"]');
-    await pickOpp(page, "solo");
+    await pickOpp(page, "weak");
     await page.click("#start");
     assert.equal(await page.isVisible("#setup"), false);
     for (const id of ["opp", "lvl", "tim"]) assert.equal(await page.isVisible("#" + id), false, `${id} は遊んでいる途中では変えられない`);
     assert.equal(await page.locator("#layNow").count(), 0, "並べ方の切り替えはなくした（KJ-030）");
     // 終わらせて もう一度
     await page.evaluate(() => { __KJ.game.endsAt = __KJ.game.now() - 1; });
-    await page.waitForFunction(() => document.getElementById("msg").textContent.startsWith("ひとりで "));
+    await page.waitForFunction(() => /^(勝ち|負け|引き分け)/.test(document.getElementById("msg").textContent));
     await page.click("#again");
     const g = await page.evaluate(() => ({ lv: __KJ.game.level, t: __KJ.game.timeLimit, o: __KJ.game.opponent, over: __KJ.game.over, picking: __KJ.game.picking }));
-    assert.deepEqual(g, { lv: "N5", t: 300, o: "solo", over: false, picking: undefined }, "同じ設定で新しく始まる");
+    assert.deepEqual(g, { lv: "N5", t: 300, o: "weak", over: false, picking: undefined }, "同じ設定で新しく始まる");
     assert.equal(await page.isVisible("#setup"), false);
     assert.equal(await page.textContent("#msg"), "", "はじめの1枚はない。始めてすぐ遊べる");
     assert.deepEqual(errors, []);
@@ -437,7 +442,7 @@ test("画面", { skip }, async (t) => {
     assert.match(await page.textContent("#setupInfo"), /^字 80・語 \d+（レベル 小1/);
     assert.equal(await page.evaluate(() => localStorage.getItem("kj-level")), "G1");
     if (process.env.KJ_SHOT) await page.screenshot({ path: "docs/img/kj-044-setup-375.png" });
-    await pickOpp(page, "solo");
+    await pickOpp(page, "weak");
     await clickStart(page);
     assert.equal(await page.evaluate(() => __KJ.game.level), "G1");
     const G1 = [..."日一人年大十二本中出三見月生五上四金九入立手力学円子目田八六下気小七山正女百先名川文千水男村口町校空土木車石足早白字音天火花赤青竹右森左休林王玉夕雨草犬耳虫糸貝"];
@@ -467,7 +472,7 @@ test("画面", { skip }, async (t) => {
     await page.goto(url);
     await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
     await page.check('#lvl input[value="G1"]');
-    await pickOpp(page, "solo");
+    await pickOpp(page, "weak");
     await clickStart(page);
     assert.equal(await page.evaluate(() => __KJ.game.level), "G1");
     await page.evaluate(() => { __KJ.game.me.cards = [..."五山川日月木火水"].map((c, i) => ({ id: 9900 + i, c, t: 0, fresh: false })); __KJ.render(); });
@@ -1034,7 +1039,7 @@ test("画面", { skip }, async (t) => {
   });
 
   await t.test("ヒント（KJ-037）：続けて3回はじかれると札が光り「ヒント」の札が出る（2回では出ない）。言葉は文字で出ない。10秒か手札を動かすまで。375×700 に収まる", async () => {
-    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 }, "solo");
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 }, "weak");
     const setHand = (chars) => page.evaluate((cs) => { const G = __KJ.game; G.me.cards = [...cs].map((c, i) => ({ id: 7000 + i, c, t: 0, fresh: false })); __KJ.row.length = 0; __KJ.render(); }, chars);
     const tryPair = async (a, b) => { // 2枚を選んで外す＝並べたのに放てない・くっつかない（ためした）
       await page.locator("#meHand .tile:not(.sel)", { hasText: a }).first().click();
@@ -1122,7 +1127,7 @@ test("画面", { skip }, async (t) => {
   });
 
   await t.test("ヒント（KJ-065）：ほかの手をしても10秒は残る。光る札は持ち上がり、地の色が薄い金。動きを減らす設定では動かさない。375px", async () => {
-    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 }, "solo", null, true); // 既定は「動きを減らす」。動きを見るので motion: true
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 }, "weak", null, true); // 既定は「動きを減らす」。動きを見るので motion: true
     await page.evaluate(() => { const G = __KJ.game; G.me.cards = [..."休日山川火水"].map((c, i) => ({ id: 7000 + i, c, t: 0, fresh: false })); __KJ.row.length = 0; for (let i = 0; i < 3; i++) G.tried(G.me, ["火", "水"], "辞書にない"); __KJ.render(); });
     const lit = () => page.evaluate(() => [...document.querySelectorAll("#meHand .hint")].map((e) => +e.dataset.id));
     const hintId = await page.evaluate(() => __KJ.game.hintActive().ids);
@@ -1848,7 +1853,7 @@ test("画面", { skip }, async (t) => {
   });
   // KJ-069：押せない見た目のボタンを押すと理由が画面に出る・Same reading の一覧は、もう一度 Same reading で閉じる
   await t.test("KJ-069：押せない見た目のボタンを押すと、はじかれた理由が画面に出る。Same reading の一覧はもう一度押すと閉じる（待ち時間なし・ログなし）", async () => {
-    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 }, "solo");
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 }, "weak");
     const msg = () => page.textContent("#msg");
     const hand = () => page.locator("#meHand .tile").evaluateAll((els) => els.map((e) => e.title).join(""));
     const pick = async (c) => { await page.locator("#meHand .tile:not(.sel)", { hasText: c }).first().click(); };
@@ -1888,7 +1893,7 @@ test("画面", { skip }, async (t) => {
   });
   // KJ-041：押した操作がはじかれたら「ためした」に残る。ボタンは押せない見た目のまま（disabled でなく aria-disabled）で、押しても手札は動かない
   await t.test("はじかれた操作もログに残す（KJ-041）：割れない Split・待ち時間の Flip・巡りの無い Cycle・読みの無い Same reading・待っている Redraw・取れない取る・光っていない面。続けて押すと1行。手札は動かない・ヒントは数えない", async () => {
-    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 }, "solo");
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 }, "weak");
     const setHand = (chars) => page.evaluate((cs) => { const G = __KJ.game; G.me.cards = [...cs].map((c, i) => ({ id: 8000 + i + Math.floor(Math.random() * 1e5) * 10, c, t: 0, fresh: false })); __KJ.row.length = 0; __KJ.render(); }, chars);
     const tried = () => page.evaluate(() => __KJ.game.log.filter((e) => e.op === "ためした").map((e) => ({ from: e.from.join(""), note: e.note })));
     const hand = () => page.locator("#meHand .tile").evaluateAll((els) => els.map((e) => e.title).join(""));
@@ -1935,7 +1940,7 @@ test("画面", { skip }, async (t) => {
   });
 
   await t.test("はじかれた操作もログに残す（KJ-041）：光っていない面に落とすと「ためした」（くっつく面つき）のあと「入れ替え」。くっつく面の無い札との入れ替えは残さない", async () => {
-    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 }, "solo");
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 }, "weak");
     await page.evaluate(() => { __KJ.game.me.cards = [..."十口休日"].map((c, i) => ({ id: 9300 + i, c, t: 0, fresh: false })); __KJ.row.length = 0; __KJ.render(); });
     const drag = async (from, to, rx, ry) => {
       await page.locator("#meHand").scrollIntoViewIfNeeded();
