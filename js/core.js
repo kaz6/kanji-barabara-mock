@@ -233,8 +233,8 @@
     if (key === ROOM_OPPONENT.key) return `${ROOM_OPPONENT.label}（相手は人。CPU なし。場の札・言葉・勝ちの点は先に入れた方。相手の手は、こちらから見えたものだけ書く）`;
     if (key === "solo") return `ひとりで（CPU なし。場の取り合いなし。50点では終わらず、${limit / 60}分たったら終わって点を出す。CPU の列は 0）`;
     const [a, b] = cpuInterval(D, key);
-    if (key === "fair") return `ふつう（CPU は ${a}〜${b}秒に1回動く）`;
-    return key === "weak" ? `とても弱い（CPU は ${a}〜${b}秒に1回動く。動き方はいまの CPU のまま）` : `いまの強さ（CPU は ${a}〜${b}秒に1回動く）`;
+    if (key === "fair") return `ふつう（CPU は ${a}〜${b}秒に1回動く。1手先は反転・巡りだけ）`;
+    return key === "weak" ? `とても弱い（CPU は ${a}〜${b}秒に1回動く。1手先は使わない）` : `いまの強さ（CPU は ${a}〜${b}秒に1回動く）`;
   }
   function rulesLabel(D, key, level, limit) {
     const R = D.rules, S = R.score;
@@ -970,7 +970,7 @@
       return changed;
     };
 
-    // ---------- CPU（1段階。8〜12秒に1回。速さで強くしない） ----------
+    // ---------- CPU（強さ3つ。動く間隔と1手先の使い方が違う。KJ-058） ----------
     g.cpuDelay = () => { const [a, b] = cpuInterval(D, g.opponent); return a + rand() * (b - a); };
     const pick = (a) => a[Math.floor(rand() * a.length)];
     function pickIds(p, text) {
@@ -984,7 +984,9 @@
       }
     }
     // 札を1枚だけ反転・巡り・同音で替えたとき、CPU が探せる語（よく使う語で、まだ使っていない）で放てるようになる手。ready は、いま押せるもの
+    // 強さごとに使える手が違う（KJ-058。rules.cpu.ahead。とても弱い＝なし・ふつう＝反転と巡り・つよい＝反転・巡り・同音）
     function cpuAhead(p) {
+      const allowed = (D.rules.cpu.ahead || {})[g.opponent] || [];
       const words = T.COMMON_WORDS.filter((w) => !g.used.has(w.w));
       const covers = (have, word) => {
         const left = have.slice();
@@ -992,6 +994,7 @@
       };
       const found = [];
       for (const [k, outsOf] of [["cycle", (c) => (T.NEXT.has(c) ? [T.NEXT.get(c)] : [])], ["invert", (c) => (T.INV.has(c) ? [T.INV.get(c)] : [])], ["homophone", (c) => homoChars(T, c)]]) {
+        if (!allowed.includes(k)) continue;
         for (const x of p.cards) for (const to of outsOf(x.c)) {
           const after = p.cards.filter((y) => y !== x).map((y) => y.c).concat(to).map((c) => kanaOf(T, c));
           if (words.some((w) => covers(after, w.w))) found.push({ k, x, to, isReady: g.ready(p, k) });
@@ -1025,7 +1028,7 @@
       if (inv.length && g.ready(p, "invert") && rand() < 0.3) return g.invert(p, [pick(inv).id]);
       // CPU が知っている語で放てるものがない＝動けない（KJ-015）。画面の「動けない」（語の表の全部で見る）とは別。
       // 知らない語が手札にあるだけで引き直さずに止まっていた（N4 で語の表が増えて目立った）
-      // 引き直す前に：1手先（反転・巡り・同音）で、自分が探せる語を放てるようになるなら、引き直さずにその手を使う。待ち時間中なら待つ（KJ-049）
+      // 引き直す前に：1手先（強さごとに使える手だけ。KJ-058）で、自分が探せる語を放てるようになるなら、引き直さずにその手を使う。待ち時間中なら待つ（KJ-049）
       const ahead = cpuAhead(p);
       if (ahead) {
         if (!ahead.ready.length) return null;
