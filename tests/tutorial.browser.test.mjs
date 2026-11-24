@@ -61,6 +61,10 @@ const lineText = (page) => page.textContent("#tutLine");
 async function takeTwo(page) {
   for (let i = 0; i < 2; i++) await page.locator("#field .tile").first().click();
 }
+// 放ったあと（段3 以降）は場から自動で取る（KJ-055）。取りきって（取る枚数が 0・自動取りが止まる）、案内が次に替わるまで待つ
+async function autoTaken(page) {
+  await page.waitForFunction(() => __KJ.game.me.takes === 0 && !document.querySelector('body > .tile[style*="position: fixed"]'), null, { timeout: 5000 });
+}
 async function dragTo(page, from, to, rx, ry) {
   const f = await tile(page, from).boundingBox(), tb = await tile(page, to).boundingBox();
   const x1 = f.x + f.width / 2, y1 = f.y + f.height / 2, x2 = tb.x + tb.width * rx, y2 = tb.y + tb.height * ry;
@@ -98,8 +102,8 @@ async function playThrough(page, onStep) {
     // 割ってできた札は、最初から選ばれている（選んだ順に 女・子）。そのまま Play
     await want(["bRelease"]);
     await page.click("#bRelease");
-    assert.match(await lineText(page), /場から取る（あと 2 枚/, "放ったあと、段の外でも取る案内");
-    await takeTwo(page);
+    assert.match(await lineText(page), /場から自動で取る（あと 2 枚）/, "放ったあと、段3 以降は自動で取る案内");
+    await autoTaken(page);
   });
   await step(4, "くっつける", "join", async () => {
     await want([], "引きずる手なのでボタンは全部押せない");
@@ -107,7 +111,7 @@ async function playThrough(page, onStep) {
     assert.match(await lineText(page), /古 → 本 の順に選んで/);
     await tile(page, "古").click(); await tile(page, "本").click();
     await page.click("#bRelease");
-    await takeTwo(page);
+    await autoTaken(page);
   });
   await step(5, "反転", "bInvert", async () => {
     await tile(page, "下").click();
@@ -116,7 +120,7 @@ async function playThrough(page, onStep) {
     await tile(page, "手").click(); // 上 は反転でできて、最初から選ばれている
     assert.equal(await page.evaluate(() => __KJ.row.length), 2);
     await page.click("#bRelease");
-    await takeTwo(page);
+    await autoTaken(page);
   });
   await step(6, "巡り", "bCycle", async () => {
     await tile(page, "月").click();
@@ -124,7 +128,7 @@ async function playThrough(page, onStep) {
     await page.click("#bCycle");
     await tile(page, "山").click();
     await page.click("#bRelease");
-    await takeTwo(page);
+    await autoTaken(page);
   });
   await step(7, "同音", "bHomo", async () => {
     await tile(page, "木").click();
@@ -136,9 +140,10 @@ async function playThrough(page, onStep) {
     await page.click("#bRelease");
     // 取りきるまでは「8 / 8 おわり」に進まない（KJ-046）：段7 のまま、案内は取る
     assert.match(await stepText(page), /^7 \/ 8　同音$/, "気分 のあと取りきるまでは段7");
-    assert.match(await lineText(page), /放った字数と同じ枚数を、場から取る/);
+    assert.match(await lineText(page), /場から自動で取る/);
     assert.equal(await page.isVisible("#tutGo"), false);
-    await takeTwo(page);
+    await autoTaken(page);
+    await page.waitForFunction(() => !document.getElementById("tutGo").hidden, null, { timeout: 5000 }); // 取りきったら「本番へ」
   });
 }
 
@@ -310,7 +315,7 @@ test("チュートリアルの画面", { skip }, async (t) => {
     await page.click("#start");
     await tile(page, "大").click(); await tile(page, "雨").click(); await page.click("#bRelease"); await takeTwo(page);
     await tile(page, "好").click(); await page.click("#bSplit");
-    await page.click("#bRelease"); await takeTwo(page);
+    await page.click("#bRelease"); await autoTaken(page);
     const hand = async () => page.evaluate(() => __KJ.game.me.cards.map((x) => x.c).join(""));
     const h0 = await hand();
     await dragTo(page, "十", "口", 0.5, 0.5); // 中央（田になる面）
@@ -324,6 +329,67 @@ test("チュートリアルの画面", { skip }, async (t) => {
     await dragTo(page, "十", "口", 0.5, 0.12);
     assert.match(await hand(), /古/);
     assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+
+  await t.test("段3 以降の放ったあと：場の左から自動で取る（人はタップしない）。取るあいだ場をタップしても取らない。取る札が飛ぶ。ログにメモ。段2 は人が取る", async () => {
+    const { ctx, page, errors } = await fresh(browser, url);
+    await page.click("#start");
+    await tile(page, "大").click(); await tile(page, "雨").click(); await page.click("#bRelease");
+    await page.waitForTimeout(700); // 段2：人が取るので、待っても取られない
+    assert.equal(await page.evaluate(() => __KJ.game.me.takes), 2, "段2 は自動で取らない");
+    assert.match(await lineText(page), /場の札を2枚タップして取る/);
+    await takeTwo(page);
+    await tile(page, "好").click(); await page.click("#bSplit"); await page.click("#bRelease");
+    // 放った直後：自動で取る案内。場をタップしても取らない
+    assert.match(await lineText(page), /場から自動で取る（あと 2 枚）/);
+    const first = await page.evaluate(() => __KJ.game.field[0].c);
+    await page.locator("#field .tile").nth(2).click({ force: true });
+    assert.equal(await page.evaluate(() => __KJ.game.me.takes), 2, "自動のあいだは人のタップでは取らない");
+    assert.equal(await page.evaluate(() => document.getElementById("field").classList.contains("can")), false, "自動のあいだは場を「タップして取る」見た目にしない");
+    assert.equal(await page.textContent("#takes"), "", "「タップ」の案内も出さない");
+    // 取る札が場から手札へ飛ぶ（飛んでいる写しが body に出る）
+    await page.waitForSelector('body > .tile[style*="position: fixed"]', { timeout: 3000 });
+    await autoTaken(page);
+    const takeLog = await page.evaluate(() => __KJ.game.log.filter((e) => e.op === "取る").map((e) => `${e.from.join("")}｜${e.note}`));
+    assert.equal(takeLog.length, 4, "段2 の2枚と 女子 のあとの2枚");
+    assert.equal(takeLog[2].split("｜")[0], first, "場の左の札から取る");
+    assert.doesNotMatch(takeLog[0], /チュートリアルで自動/, "段2 の人の取りにはメモなし");
+    assert.match(takeLog[2], /チュートリアルで自動/);
+    assert.match(takeLog[3], /チュートリアルで自動/);
+    assert.match(await lineText(page), /十 を指で引きずって/, "取りきったら次の案内");
+    assert.equal(await page.evaluate(() => document.querySelectorAll('body > .tile').length), 0, "飛んだ写しは消える");
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+
+  await t.test("自動で取っている途中でとばしても壊れない（以後は取らない）。本番では自動で取らない", async () => {
+    const { ctx, page, errors } = await fresh(browser, url);
+    await page.click("#start");
+    await tile(page, "大").click(); await tile(page, "雨").click(); await page.click("#bRelease");
+    await takeTwo(page);
+    await tile(page, "好").click(); await page.click("#bSplit"); await page.click("#bRelease");
+    await page.click("#tutSkip"); // 自動で取る前（250ms の間）にとばす
+    await page.waitForTimeout(900);
+    assert.equal(await page.isVisible("#tut"), false);
+    assert.equal(await page.evaluate(() => document.querySelectorAll('body > .tile').length), 0);
+    assert.deepEqual(errors, []);
+    // とばしたあとの本番：放ったら、人が場をタップして取る。自動では取らない
+    const g0 = await page.evaluate(() => __KJ.game.opponent);
+    assert.notEqual(g0, "tutorial");
+    const hand = await page.evaluate(() => __KJ.game.me.cards.map((x) => x.c));
+    const word = await page.evaluate(() => {
+      const g = __KJ.game, T = __KJ.tables, K = window.KJ;
+      const cs = g.me.cards;
+      for (const a of cs) for (const b of cs) { if (a.id === b.id) continue; const r = g.canRelease(g.me, [a.id, b.id]); if (r.ok) return [a.c, b.c]; }
+      return null;
+    });
+    if (word) {
+      for (const ch of word) await tile(page, ch).click();
+      await page.click("#bRelease");
+      await page.waitForTimeout(900);
+      assert.equal(await page.evaluate(() => __KJ.game.me.takes), 2, "本番は人が取るまで取らない");
+    } else t.diagnostic(`本番の手札で2字の言葉が見つからず、本番の確かめは省いた（${hand.join("")}）`);
     await ctx.close();
   });
 

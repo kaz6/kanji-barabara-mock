@@ -423,6 +423,7 @@ for(const id of Object.keys(STR.BUTTONS)){const b=document.getElementById(id);if
 $title.textContent=STR.TEXT.title; // 題（KJ-042。文は仮。js/strings.js の1か所で直せる）
 const D={};
 let T=null, G=null; // 表・ゲームの状態
+let autoTok=null;  // チュートリアルの自動取りが走っているあいだの印（下の autoTakeRun）
 let TUT=null;       // チュートリアルの進み（KJ.createTutorial。チュートリアルのあいだだけ。G は TUT.g）
 const TABLES={};    // レベルごとの表（KJ-006）
 const LVL_KEY="kj-level";
@@ -507,8 +508,37 @@ const TUTORIAL_KEY="kj-tutorial";
 let tutSeenMem=false; // localStorage が書けない端末でも、同じページのあいだは出し直さない
 const tutorialSeen=()=>tutSeenMem||lsGet(TUTORIAL_KEY)==="1";
 function markTutorial(){tutSeenMem=true;lsSet(TUTORIAL_KEY,1)}
-function leaveTutorial(){TUT=null;document.body.classList.remove("tutorial");$("tut").hidden=true}
+function leaveTutorial(){TUT=null;autoTok=null;document.body.classList.remove("tutorial");$("tut").hidden=true}
+// 段2（取る）のあと、放ったあとは場の左から自動で取る（KJ-055）。1枚ずつ、取る札が場から手札へ飛ぶ（AUTO_TAKE_MS）。取りきったら次の案内へ（TUT.line が替わる）。
+// autoTok は走っているあいだの印。チュートリアルを出る・やり直すと null になり、止まる。本番・合言葉の部屋では動かない（TUT のときだけ）
+const AUTO_TAKE_LEAD_MS=250,AUTO_TAKE_MS=300,AUTO_TAKE_GAP_MS=60;
+function autoTakeKick(){if(TUT&&!autoTok&&TUT.autoPending())autoTakeRun()}
+function autoTakeRun(){
+  const tok=autoTok={},tut=TUT,g=G;
+  const alive=()=>autoTok===tok&&TUT===tut&&G===g&&!g.over;
+  const finish=()=>{if(autoTok===tok)autoTok=null;drain();render();refreshLogPanel()}; // 取れなかったときに afterChange（＝もう一度 kick）へ戻らない
+  const step=()=>{
+    if(!alive()){if(autoTok===tok)autoTok=null;return}
+    if(!tut.autoPending()){finish();return}
+    const fx=document.querySelector(`#field [data-cid="${g.field[0].id}"]`),from=fx&&fx.getBoundingClientRect();
+    const r=tut.autoTake();
+    if(!r.ok){finish();return}
+    render();refreshLogPanel();
+    const dest=r.card&&document.querySelector(`#meHand [data-cid="${r.card.id}"],#meTray [data-cid="${r.card.id}"]`);
+    if(from&&dest){
+      const to=dest.getBoundingClientRect(),fl=dest.cloneNode(true);
+      dest.style.visibility="hidden";
+      fl.removeAttribute("id");fl.style.cssText=`position:fixed;left:${from.left}px;top:${from.top}px;width:${from.width}px;height:${from.height}px;margin:0;z-index:60;pointer-events:none`;
+      document.body.appendChild(fl);
+      if(fl.animate)fl.animate([{transform:"none"},{transform:`translate(${to.left-from.left}px,${to.top-from.top}px)`}],{duration:AUTO_TAKE_MS,easing:"ease-out",fill:"forwards"});
+      setTimeout(()=>{fl.remove();dest.style.visibility=""},AUTO_TAKE_MS);
+    }
+    setTimeout(step,AUTO_TAKE_MS+AUTO_TAKE_GAP_MS);
+  };
+  render();setTimeout(step,AUTO_TAKE_LEAD_MS);
+}
 function startTutorial(){
+  autoTok=null; // 前の自動取りの印を残さない（KJ-055）
   clearTimeout(cpuTimer);sendAbandoned();leaveRoom();
   T=tablesFor(D.tutorial.level); // 好 などが割れるよう、N4 の表（段の中身は data/tutorial.json）
   TUT=K.createTutorial(D,T,{now:clock});G=TUT.g;
@@ -652,7 +682,7 @@ function showEnd(winner){
   if(!items.length)ES.timers.push(setTimeout(esDone,END_PACE.first));
 }
 $("endShow").onclick=()=>{if(!ES)return;if(ES.done)closeEnd();else esAll()};
-function afterChange(){drain();render();refreshLogPanel()}
+function afterChange(){drain();render();refreshLogPanel();autoTakeKick()}
 
 // ---------- 合言葉の部屋（KJ-033 後半・D-049）：つなぎと、部屋を作る／入る ----------
 // 表 kj_claims（Supabase kanji-barabara）。入れる（REST の POST）・読む（REST の GET）だけ。鍵は play_logs と同じ publishable。
@@ -888,6 +918,7 @@ function attachDrag(b,id){
 function tapRow(id){if(G.over||G.locked(G.me))return;noteTried();row=row.filter(x=>x!==id);hideChoices();afterChange()}
 function tapField(id){
   if(!G||G.over)return;
+  if(TUT&&autoTok)return; // チュートリアルの自動取りのあいだは、人は取らない（KJ-055）
   if(MC){const mc=MC;mc.take(id).then(r=>{if(stale(mc))return;if(!r.ok){showWhy(r.why);triedTake(id,r.why,r.c)}afterChange()});afterChange();return} // 合言葉の部屋：先に入れた方だけ取れる
   const r=G.take(G.me,id);if(!r.ok){showWhy(r.why);triedTake(id,r.why,r.c)}else if(TUT)TUT.advance("take");afterChange()
 }
@@ -972,6 +1003,7 @@ function tileEl(x,{onClick,shown,ord}={}){
   if(ord){b.classList.add("sel");const s=document.createElement("span");s.className="ord";s.textContent=ord;b.appendChild(s)}
   if(onClick)b.onclick=onClick;
   b.title=x.c;
+  b.dataset.cid=x.id; // 札の動きを見せるとき（自動取り）に、取った札を見つける印（見た目には出ない）
   return b;
 }
 // 手札は上限の数だけマスを置く。選んだ札はそのマスに残り、色が変わって選んだ順の数字が付く（KJ-030。台には写しを並べる）。
@@ -990,12 +1022,12 @@ function renderHand(el,p,interactive,tray){
   for(let i=cards.length;i<max;i++){const s=document.createElement("div");s.className="slot"+(interactive?" free":"");el.appendChild(s)}
 }
 function renderField(){
-  const el=$("field"),can=!G.over&&G.me.takes>0&&G.canTakeMore(G.me);
+  const el=$("field"),can=!G.over&&G.me.takes>0&&G.canTakeMore(G.me)&&!(TUT&&autoTok); // 自動取りのあいだは「タップ」の案内を出さない
   el.className="field"+(can?" can glow":"");el.innerHTML="";
   $("fieldSide").classList.toggle("take",can); // 取る番：場の見出しも金（KJ-046）
   el.style.gridTemplateColumns=`repeat(${D.rules.field_size},1fr)`;
   for(const x of G.field)el.appendChild(tileEl(x,{onClick:()=>tapField(x.id)}));
-  $("takes").textContent=!G.over&&G.me.takes>0?`場から あと ${G.me.takes} 枚 取る（タップ）`:"";
+  $("takes").textContent=!G.over&&G.me.takes>0&&!(TUT&&autoTok)?`場から あと ${G.me.takes} 枚 取る（タップ）`:"";
 }
 // ゲージ（KJ-034）：待っている間は class cd と --g（0〜1）。待ちが明けたら外して、小さく光らせる（full）
 function gauge(b,waiting,f){

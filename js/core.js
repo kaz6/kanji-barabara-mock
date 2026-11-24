@@ -818,14 +818,15 @@
         return true;
       };
     }
-    g.take = (p, fieldId) => {
+    // memo：ログのメモの終わりに足す一言（チュートリアルの自動取りが「チュートリアルで自動」を付ける。KJ-055）
+    g.take = (p, fieldId, memo) => {
       if (M) return fail("合言葉の部屋では先着を確かめて取る");
       const pre = g.canTake(p, fieldId);
       if (!pre.ok) return pre;
       const r = fromField(p, fieldId);
       if (!r) return fail("場にない");
       p.takes -= 1;
-      addLog(p.name, "取る", [r.x.c], [r.x.c], 0, `場に ${r.nc.c} が出た。残り${p.takes}枚取れる`);
+      addLog(p.name, "取る", [r.x.c], [r.x.c], 0, `場に ${r.nc.c} が出た。残り${p.takes}枚取れる${memo ? `（${memo}）` : ""}`);
       return { ok: true, card: r.got, c: r.x.c };
     };
     // 場の札で、手札と合わせて語になるものを先に取る。なければ無作為（CPU の取り方）
@@ -1064,7 +1065,8 @@
   // 決まった手札・ストック・場（data/tutorial.json）で、操作を1つずつ見せる。時間なし・CPU なし・自動のヒントなし。
   // 段の中身と文は D.tutorial の1か所。この関数は DOM に触らない。画面は、操作の前に blocked() で通してよいか聞き、通ったら advance() で進める。
   // 段は steps[i]、段の中の1手は actions[j]（op は release／take／split／join〔引きずる〕／invert／cycle／homophone／end）。
-  // 放ったあと場から取りきるまでは、ほかの手は何もできない（KJ-039）ので、取る手は段2 のほか、放つたびに（段の外で）要る
+  // 放ったあと場から取りきるまでは、ほかの手は何もできない（KJ-039）ので、取る手は段2 のほか、放つたびに（段の外で）要る。
+  // 段2（取る）は人が場の札をタップして取る。そのあと（段3 以降）の放ったあとは、場の左から順に自動で取る（KJ-055。autoPending／autoTake。画面が札の動きを見せながら1枚ずつ呼ぶ）
   function createTutorial(D, T, env) {
     const TD = D.tutorial;
     const g = createGame(D, T, { ...(env || {}), tutorial: TD, startStock: false });
@@ -1089,8 +1091,15 @@
       // いま画面に出す1行。放ったあと場から取りきるまでは、取る案内
       line() {
         if (info.finished) return "";
-        if (lockedNow() && act().op !== "take") return fmt(ui.take, { n: g.me.takes });
+        if (lockedNow() && act().op !== "take") return fmt(ui.autoTake, { n: g.me.takes });
         return act().line;
+      },
+      // 自動で取る番か（放ったあとで取る枚数が残っていて、いまの手が段2 の「取る」ではない）。取る枚数のぶん手札・ストックに空きがあるときだけ
+      autoPending: () => !info.finished && !g.over && lockedNow() && act().op !== "take" && g.canTakeMore(g.me) && g.field.length > 0,
+      // 場の左から1枚を取る（ログのメモに ui.autoNote）。取れたら { ok, card, c }（card は手札に入った札）。取れない回は { ok: false }
+      autoTake() {
+        if (!tut.autoPending()) return { ok: false, why: "自動で取る番ではない" };
+        return g.take(g.me, g.field[0].id, ui.autoNote);
       },
       atEnd: () => !info.finished && act().op === "end" && !lockedNow(),
       // 光らせるもの：札（字）・ボタン（id）・同音の選びの字
