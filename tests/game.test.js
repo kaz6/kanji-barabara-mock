@@ -1456,11 +1456,14 @@ test("文言（KJ-024・KJ-048）：js/strings.js のボタンは8つで英語�
   for (const id of Object.keys(S.BUTTONS)) assert.match(html, new RegExp(`<button class="op[^"]*" id="${id}"><span class="lb"></span>`), `${id} の文字は strings.js から入れる（直書きしない）`);
   const ops = html.slice(html.indexOf('<div class="ops">'), html.indexOf('<div class="choices"'));
   assert.doesNotMatch(ops.replace(/<!--[\s\S]*?-->/g, ""), /[぀-ヿ㐀-鿿]/, "ボタンの並びに日本語を直書きしていない");
-  assert.equal(K.marks(T, "上", { invert: "F", cycle: "C", homophone: "S" }), "FS", "core.marks は渡された印の字で並べる（画面は SVG を使う）");
-  assert.equal(K.marks(T, "上"), "反音", "icons を渡さなければ 反・巡・音");
+  assert.equal(K.marks(T, "上", { invert: "F", cycle: "C", homophone: "S" }), "F", "core.marks は渡された印の字で並べる（画面は SVG を使う）。同音の S は出さない（KJ-057）");
+  assert.equal(K.marks(T, "上"), "反", "icons を渡さなければ 反・巡");
   assert.equal(K.marks(T, "国", { invert: "F", cycle: "C", homophone: "S" }), "", "印の無い字");
-  assert.deepEqual(K.markKinds(T, "上"), ["invert", "homophone"], "印の種類（KJ-040）：反転・巡り・同音の順");
-  assert.deepEqual(K.markKinds(T, "十"), ["cycle", "homophone"]);
+  assert.deepEqual(K.markKinds(T, "上"), ["invert"], "印の種類（KJ-040）：反転・巡りの順。同音の印は出さない（KJ-057）");
+  assert.deepEqual(K.markKinds(T, "十"), ["cycle"]);
+  assert.deepEqual(K.markKinds(T, "口"), [], "同音しかない字には角の印が無い（KJ-057）");
+  assert.ok(T.HOMO.has("休"), "同音の決まりそのものは今まで通り（KJ-057）");
+  for (const c of T.HOMO.keys()) assert.ok(!K.markKinds(T, c).includes("homophone"), `${c} に同音の印を出さない`);
   assert.deepEqual(K.markKinds(T, "国"), []);
 });
 

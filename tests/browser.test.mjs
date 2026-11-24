@@ -1024,9 +1024,8 @@ test("画面", { skip }, async (t) => {
     const sel = await page.evaluate(() => { const t = document.querySelector("#meHand .tile.sel"); const m = t && t.querySelector('.mi[data-k="invert"]'); return { has: !!t, op: m ? parseFloat(getComputedStyle(m).opacity) : null }; });
     assert.equal(sel.has, true, "選んだ札がある");
     assert.equal(sel.op, 0.3, "選んだ札（赤地・白い印）の反転の印も薄い");
-    assert.equal(await op("#meHand", "休", "homophone"), 1, "待っていない同音の印は濃いまま");
+    assert.equal(await page.locator('.tile .mi[data-k="homophone"]').count(), 0, "同音の印は札の角に出ない（KJ-057）");
     assert.equal(await op("#field", "上", "invert"), 0.3, "場の札の反転の印も薄い");
-    assert.equal(await op("#field", "上", "homophone"), 1, "場の札の同音の印は濃いまま");
     assert.equal(await op("#meTray", "月", "cycle"), 1, "巡りは待っていないのでストックの印は濃い");
     await page.evaluate(() => { const G = __KJ.game; G.me.cd.cycle = G.now() + 5; __KJ.render(); });
     assert.equal(await op("#meTray", "月", "cycle"), 0.3, "ストックの札の巡りの印が薄い");
@@ -1648,14 +1647,15 @@ test("画面", { skip }, async (t) => {
       for (const t of await page.locator(".ops button .lb").allTextContents()) assert.doesNotMatch(t, jp, `ボタンに日本語が無い（${t}）`);
       // 角の印：上＝反転と同音 → Flip・Same reading の SVG、十＝巡りと同音 → Cycle・Same reading、口＝同音だけ。文字（⇄・↻・♪・反・巡・音）は出ない
       const mk = (ch) => page.evaluate((c) => { const e = [...document.querySelectorAll("#meHand .tile")].find((x) => x.title === c).querySelector(".mk"); return e ? { kinds: [...e.querySelectorAll(".mi svg")].map((v) => v.getAttribute("class").replace("ic ic-", "")), text: e.textContent } : { kinds: [], text: "" }; }, ch);
-      assert.deepEqual(await mk("上"), { kinds: ["invert", "homophone"], text: "" });
-      assert.deepEqual(await mk("十"), { kinds: ["cycle", "homophone"], text: "" });
-      assert.deepEqual(await mk("口"), { kinds: ["homophone"], text: "" });
-      assert.deepEqual(await mk("休"), { kinds: ["homophone"], text: "" });
+      assert.deepEqual(await mk("上"), { kinds: ["invert"], text: "" });
+      assert.deepEqual(await mk("十"), { kinds: ["cycle"], text: "" });
+      assert.deepEqual(await mk("口"), { kinds: [], text: "" }, "同音の S は札の角に出ない（KJ-057）");
+      assert.deepEqual(await mk("休"), { kinds: [], text: "" });
+      assert.equal(await page.locator("#meHand .tile svg.ic-homophone, #field .tile svg.ic-homophone, #meTray .tile svg.ic-homophone").count(), 0, "手札・ストック・場に S の SVG が無い");
       assert.equal(await page.evaluate(() => [...document.querySelectorAll(".tile .mk")].filter((e) => /[反巡音]/.test(e.textContent)).length), 0, "角の印に 反・巡・音 の字が無い");
       // 札の角の印とボタンの印が同じ形（path が同じ）
       const pathsOf = (sel) => page.evaluate((q) => [...document.querySelector(q).querySelectorAll("path")].map((p) => p.getAttribute("d")).join("|"), sel);
-      for (const [id, k] of [["bInvert", "invert"], ["bCycle", "cycle"], ["bHomo", "homophone"]]) {
+      for (const [id, k] of [["bInvert", "invert"], ["bCycle", "cycle"]]) { // 同音の印は札の角に出さない（KJ-057）。ボタンの S はそのまま
         const btn = await pathsOf(`#${id} svg`);
         const corner = await page.evaluate(([kk]) => { const e = document.querySelector(`#meHand .tile .mi[data-k="${kk}"] svg`); return e ? [...e.querySelectorAll("path")].map((p) => p.getAttribute("d")).join("|") : ""; }, [k]);
         assert.ok(btn.length > 0 && btn === corner, `${id} の印と札の角の印が同じ形`);
@@ -1665,11 +1665,11 @@ test("画面", { skip }, async (t) => {
       const c = await page.evaluate(() => { const t = [...document.querySelectorAll("#meHand .tile.sel")].find((x) => x.title === "上"); return { bg: getComputedStyle(t).backgroundColor, mk: getComputedStyle(t.querySelector(".mk")).color }; });
       assert.notEqual(c.mk, c.bg, `選んだ札の印（${c.mk}）が地（${c.bg}）と違う色`);
       // 台の写しにも同じ印
-      assert.equal(await page.evaluate(() => [...document.querySelectorAll("#row .tile .mk .mi")].map((e) => e.dataset.k).join(",")), "invert,homophone");
+      assert.equal(await page.evaluate(() => [...document.querySelectorAll("#row .tile .mk .mi")].map((e) => e.dataset.k).join(",")), "invert");
       // ほかの画面の文言は日本語のまま
       assert.equal(await page.textContent("#meSide .side-head b"), "あなた");
       assert.match(await page.textContent("#trayHead"), /^ストック/);
-      assert.equal(await page.locator("#howto svg.ic-invert").count() + await page.locator("#howto svg.ic-cycle").count() + await page.locator("#howto svg.ic-homophone").count(), 3, "しくみの印の説明も同じ SVG");
+      assert.equal(await page.locator("#howto svg.ic-invert").count() + await page.locator("#howto svg.ic-cycle").count() + await page.locator("#howto svg.ic-homophone").count(), 2, "しくみの印の説明：反転・巡りは同じ SVG。同音の S は出さない（KJ-057）");
       // ログの手の名前は日本語のまま
       await page.click("#bBack");
       await page.locator("#meHand .tile", { hasText: "休" }).click();
