@@ -209,6 +209,8 @@ body.tutorial #clock,body.tutorial #again,body.tutorial #bLog,body.tutorial #bCo
 /* 上の帯・ログ */
 .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
 .clock{margin-left:auto;font-variant-numeric:tabular-nums;font-size:12px;color:var(--sub)}
+/* 上の3ボタン（もう一度・設定を変える・ログ）は Back・Redraw と同じ文字だけ（KJ-066。D-084。D-056 の3段目）。枠は透明にして、押せる大きさは変えない */
+#again,#bSetup,#bLog{border-color:transparent;background:transparent;color:var(--ink)}
 .msgline{height:24px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px}
 .msg{font-weight:700}
 .msg.win,.msg.lose{color:var(--ink)} /* 赤は選んだ札と Play だけ（KJ-042）。勝ち負けは文字で分かる */
@@ -662,7 +664,7 @@ function end(winner,solo){
 // 試合が終わったときの表示（KJ-018・D-036／D-039）：最初に「勝ち！」「負け…」「引き分け」（ひとりでは「おわり」）と両方の点を大きく、
 // そのあと自分が放った言葉を放った順に1つずつ（長いほど派手）。タップで全部いっぺんに出す。出し終わって少したつか、もう一度タップで閉じて、いまの終わりの画面を見せる。
 // 時間の長さは表示のためのもの（遊びの数値ではないので rules.json には置かない。仮決め）
-const END_PACE={first:350,gap:175,hold:1800};
+const END_PACE={first:350,gap:175,hold:4000}; // hold＝言葉を出し終わってから閉じるまで（KJ-066。D-086。1.8秒→4秒。仮置き）
 let ES=null; // {items:[li], timers:[], done:bool}
 function esClear(){if(ES){for(const t of ES.timers)clearTimeout(t)}}
 let esWait=null;
