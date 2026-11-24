@@ -582,7 +582,7 @@
         const ids = pickFrom(cards, w);
         if (ids) return { tier: 1, ids, button: null, op: "放つ", word: w };
       }
-      // 段2：1手（割る・反転・巡り・同音）で放てる言葉になる。その試合でまだ使っていない操作を先に。同じなら、よく使う語を先に
+      // 段2：1手（割る・反転・巡り・同音）で放てる言葉になる。字数（多い順）→ よく使う語 → まだ使っていない操作 → 語の順（KJ-061）
       const usedOps = new Set(g.log.filter((e) => e.who === p.name).map((e) => e.op));
       const commonSet = new Set(T.COMMON_WORDS.map((x) => x.w));
       let best = null;
