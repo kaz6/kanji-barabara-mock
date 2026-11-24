@@ -122,14 +122,14 @@ test("動けない・ヒントも、ノ・儿・ナ の札をかなとして数�
   assert.equal(h.tier, 1);
   assert.equal(h.word, "天の川");
   assert.deepEqual([...h.ids].sort(), [...ids].sort());
-  // 段2：割って 儿 が出れば 見る（見見 → 見 目 儿）
+  // 段2：割って 儿 が出れば 見る・見る目（見見 → 見 目 儿）。3字の 見る目 を先に狙う（KJ-061）
   const g2 = newGame(1, "weak", "N5");
   setHand(g2, g2.me, "見見");
   tryN(g2, 3);
   const h2 = g2.hintActive();
   assert.equal(h2.tier, 2);
   assert.equal(h2.op, "割る");
-  assert.equal(h2.word, "見る");
+  assert.equal(h2.word, "見る目");
 });
 
 test("外す語の一覧も効く（かなの語でも、一覧にあれば語の表から外れる）", () => {
