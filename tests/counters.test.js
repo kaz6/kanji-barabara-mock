@@ -152,3 +152,11 @@ test("レベル（N4・小1）でも同じ決まり", () => {
     assert.equal(K.releasable(TT, new Set(["十円"]), "五円").why, "〇円は一度きり");
   }
 });
+
+test("ヒント：手札が 十・円 だけなら、辞書に無い 十円 を狙う", () => {
+  const g = newGame(1, "solo");
+  setHand(g, g.me, "十円");
+  for (let i = 0; i < 3; i++) g.tried(g.me, ["天", "口"], "辞書にない");
+  assert.ok(g.hint, "ヒントが出る");
+  assert.equal(g.hint.word, "十円");
+});

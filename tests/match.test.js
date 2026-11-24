@@ -544,3 +544,16 @@ test("KJ-039 合言葉の部屋でも：取りきるまで次の手ができな�
   assert.equal(A.g.locked(A.g.me), false, "取りきったら動ける");
   void B;
 });
+
+test("合言葉の部屋（KJ-022）：二人がほぼ同時に同じ助数詞の別の言葉（十円・五円）を放ったら、両方通る。点と表示が食い違わない", async () => {
+  const { A, B } = pair("m-counter-1");
+  const ia = setHand(A.g, A.g.me, "十円山"), ib = setHand(B.g, B.g.me, "五円川");
+  const pa = A.c.release(ia.slice(0, 2)), pb = B.c.release(ib.slice(0, 2)); // 返事を待たずに続けて押す
+  const [ra, rb] = await Promise.all([pa, pb]);
+  assert.equal(ra.ok, true, JSON.stringify(ra));
+  assert.equal(rb.ok, true, JSON.stringify(rb));
+  assert.equal(A.g.me.score, 3); assert.equal(B.g.me.score, 3);
+  assert.equal(A.g.cpu.score, 3, "A から見た相手の点"); assert.equal(B.g.cpu.score, 3, "B から見た相手の点");
+  // そのあとは、二人とも 円 をもう使えない
+  assert.equal(A.g.canRelease(A.g.me, setHand(A.g, A.g.me, "百円")).ok, false);
+});

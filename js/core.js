@@ -247,13 +247,13 @@
   };
   const SINGLE_WHY = "1字では放てない（2字以上の言葉）";
   const KANA_ONLY_WHY = "かなだけでは放てない（漢字の札が1枚以上いる）";
-  function releasable(T, used, text) {
+  function releasable(T, used, text, opts) {
     if (!text) return { ok: false, why: "" };
     text = kanaText(T, text);
     if ([...text].length === 1) return { ok: false, why: SINGLE_WHY };
     if ([...text].every((c) => isKanaChar(T, c))) return { ok: false, why: KANA_ONLY_WHY };
     if (used.has(text)) return { ok: false, why: "放った言葉" };
-    const cb = counterBlocked(T, used, text); // 数＋助数詞は、助数詞ごとに一度きり（辞書にある語も。KJ-022）
+    const cb = opts && opts.skipCounter ? null : counterBlocked(T, used, text); // 数＋助数詞は、助数詞ごとに一度きり（辞書にある語も。KJ-022）
     if (cb) return { ok: false, why: counterWhy(cb), counter: cb };
     if (T.WORDS.has(text)) return { ok: true };
     if (counterParts(T, text)) return { ok: true, numCounter: true }; // 辞書に無くても、数＋助数詞は言葉として通す
@@ -648,6 +648,7 @@
       const seen = new Set(), out = [];
       for (const w of T.COMMON_WORDS) { if (!seen.has(w.w)) { seen.add(w.w); out.push(w.w); } }
       for (const w of T.WORDS.values()) { if (!seen.has(w.w)) { seen.add(w.w); out.push(w.w); } }
+      for (const n of T.COUNTER_NUMS) for (const c of T.COUNTERS) { if (!seen.has(n + c)) { seen.add(n + c); out.push(n + c); } } // 辞書に無い 数＋助数詞（KJ-022）も狙える
       // KJ-061（D-078）：字数の多い語を先に（4字＞3字＞2字）。同じ字数の中ではよく使う語（上で先に並べた順）のまま（安定ソート）
       return out.filter((w) => [...w].length >= 2 && !g.isUsed(w)).sort((a, b) => [...b].length - [...a].length);
     };
@@ -808,7 +809,7 @@
       if (live() && locked(p)) return fail(LOCK_WHY);
       if (!live() || !cs) return fail("札がない");
       const text = kanaText(T, cs.map((x) => x.c)); // 言葉の書き方（天ノ川 → 天の川。KJ-053）。放った言葉・ログ・先着の鍵はこの書き方
-      const r = releasable(T, g.used, text);
+      const r = releasable(T, g.used, text, { skipCounter: releasing }); // 部屋：言葉の先着に勝ったあとは、助数詞の縛りを見直さない（相手の行が先に届いていても、勝った言葉は通す。二人の点・表示を食い違わせない。R-102）
       if (!r.ok) return fail(r.why);
       return { ok: true, text, pts: scoreOf(D, T, text).pts };
     };

@@ -963,7 +963,7 @@ $("bRelease").onclick=()=>{
   if(TUT){const why=TUT.blocked("release",{text:s.text});if(why){G.triedOp(G.me,"放つ",s.rc.map(x=>x.c),why);showWhy(why);buzz("reject");afterChange();return}}
   // 1字は放てない（KJ-008）：はじいて理由を出し、ログに「ためした」で残す。札は台（選び）に残る
   if(isTry(s)){
-    const why=s.rl.why;G.tried(G.me,[...s.text],why);
+    const why=s.rl.why;lastTried=s.text+"|"+why;G.tried(G.me,[...s.text],why); // noteTried（Back で戻るとき）と二重に残さない
     showWhy(why);buzz("reject");hideChoices();afterChange();return;
   }
   if(MC){const mc=MC;mc.release([...row]).then(r=>{if(stale(mc))return;if(!r.ok&&r.why){showWhy(r.why);buzz("reject")};afterOp(r)});afterChange();return} // 合言葉の部屋：言葉は先に放った方だけ

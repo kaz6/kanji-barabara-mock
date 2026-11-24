@@ -82,10 +82,12 @@ test("数＋助数詞と 🚫", { skip }, async (t) => {
     assert.ok(Math.abs(n.cx - n.vw / 2) < 2, `横の真ん中（${n.cx} / ${n.vw}）`);
     assert.ok(n.cy > n.vh * 0.25 && n.cy < n.vh * 0.6, "縦も画面の真ん中あたり");
     assert.ok(n.w <= n.vw - 24, "375px からはみ出さない");
-    await page.screenshot({ path: path.join(ROOT, "docs", "shots", "kj-022-nope-375.png") });
+    if (process.env.KJ_SHOT) await page.screenshot({ path: path.join(ROOT, "docs", "shots", "kj-022-nope-375.png") }); // 画像を撮り直すときだけ（KJ_SHOT=1）
     const st = await page.evaluate(() => ({ score: __KJ.game.me.score, cards: __KJ.game.me.cards.length, log: __KJ.game.log.filter((e) => e.op === "ためした").map((e) => e.note) }));
     assert.equal(st.score, 0); assert.equal(st.cards, 4);
     assert.deepEqual(st.log, ["〇円は一度きり"], "ログに「ためした」で理由つき");
+    await page.click("#bBack");
+    assert.equal(await page.evaluate(() => __KJ.game.log.filter((e) => e.op === "ためした").length), 1, "Back で戻っても「ためした」は1行のまま");
     await page.waitForFunction(() => !document.getElementById("nope").classList.contains("on"), null, { timeout: 4000 });
     assert.deepEqual(errors, []);
     await ctx.close();
