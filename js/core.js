@@ -514,6 +514,8 @@
       const cs = ids.map((id) => g.byId(p, id));
       return cs.every(Boolean) ? cs : null;
     }
+    // 1枚に効く操作のあとの選び（KJ-054・D-070）：最後に選んだ札の位置に、できた札がそのまま入る。前に選んでいた札の選びと順番は残る
+    const selAfter = (ids, nc) => ids.slice(0, -1).concat(nc.map((x) => x.id));
     function replaceCards(p, ids, chars) { // ids の位置に chars を入れる
       const pos = p.cards.findIndex((x) => x.id === ids[0]);
       p.cards = p.cards.filter((x) => !ids.includes(x.id));
@@ -627,15 +629,16 @@
     g.split = (p, ids) => {
       const cs = cardsOf(p, ids);
       if (live() && locked(p)) return fail(LOCK_WHY);
-      if (!live() || !cs || cs.length !== 1) return fail("1枚だけ");
-      const c = cs[0].c;
+      if (!live() || !cs) return fail("1枚だけ");
+      const t = cs[cs.length - 1]; // 2枚以上選んでいるときは、最後に選んだ札を割る（KJ-054・D-070）
+      const c = t.c;
       if (!canSplit(T, c)) return fail("割れない");
       const parts = splitOnce(T, c);
-      if (!fits(p, cs, parts.length)) return fail("手札もストックもいっぱい");
-      const nc = replaceCards(p, ids, parts);
+      if (!fits(p, [t], parts.length)) return fail("手札もストックもいっぱい");
+      const nc = replaceCards(p, [t.id], parts);
       addLog(p.name, "割る", [c], nc.map((x) => x.c));
       solved(p);
-      return { ok: true, cards: nc };
+      return { ok: true, cards: nc, sel: selAfter(ids, nc) };
     };
     g.join = (p, ids, choice) => {
       const cs = cardsOf(p, ids);
@@ -672,16 +675,17 @@
       return (p, ids) => {
         const cs = cardsOf(p, ids);
         if (live() && locked(p)) return fail(LOCK_WHY);
-        if (!live() || !cs || cs.length !== 1) return fail("1枚だけ");
-        const c = cs[0].c;
+        if (!live() || !cs) return fail("1枚だけ");
+        const t = cs[cs.length - 1]; // 2枚以上選んでいるときは、最後に選んだ札に効く（KJ-054。仮決め）
+        const c = t.c;
         if (!map.has(c)) return fail("できない字");
         if (!g.ready(p, k)) return fail("待ち時間");
-        if (!fits(p, cs, 1)) return fail("手札もストックもいっぱい");
+        if (!fits(p, [t], 1)) return fail("手札もストックもいっぱい");
         useCd(p, k);
-        const nc = replaceCards(p, ids, [map.get(c)]);
+        const nc = replaceCards(p, [t.id], [map.get(c)]);
         addLog(p.name, op, [c], [nc[0].c]);
         solved(p);
-        return { ok: true, cards: nc };
+        return { ok: true, cards: nc, sel: selAfter(ids, nc) };
       };
     }
     g.invert = oneStep("反転", "invert", T.INV);
@@ -689,17 +693,18 @@
     g.homophone = (p, ids, to) => {
       const cs = cardsOf(p, ids);
       if (live() && locked(p)) return fail(LOCK_WHY);
-      if (!live() || !cs || cs.length !== 1) return fail("1枚だけ");
-      const c = cs[0].c;
+      if (!live() || !cs) return fail("1枚だけ");
+      const t = cs[cs.length - 1]; // 2枚以上選んでいるときは、最後に選んだ札に効く（KJ-054。仮決め）
+      const c = t.c;
       const homo = homoChars(T, c);
       if (!homo.includes(to)) return fail(homo.length ? "同じ読みではない" : "同じ読みの字がない"); // 同じ読みの字が1つも無いときは「ない」（KJ-069）。行き先が違うときは「ではない」
       if (!g.ready(p, "homophone")) return fail("待ち時間");
-      if (!fits(p, cs, 1)) return fail("手札もストックもいっぱい");
+      if (!fits(p, [t], 1)) return fail("手札もストックもいっぱい");
       useCd(p, "homophone");
-      const nc = replaceCards(p, ids, [to]);
+      const nc = replaceCards(p, [t.id], [to]);
       addLog(p.name, "同音", [c], [to]);
       solved(p);
-      return { ok: true, cards: nc };
+      return { ok: true, cards: nc, sel: selAfter(ids, nc) };
     };
 
     // ---------- 放つ（D-017） ----------
@@ -898,22 +903,22 @@
         if (!rs.length) return joinReversed(T, cs[0].c, cs[1].c) ? "並べる順が逆" : "くっつかない";
         return fits(p, cs, 1) ? null : "手札もストックもいっぱい";
       }
-      if (!cs || cs.length !== 1) return "1枚だけ";
-      const c = cs[0].c;
+      if (!cs) return "1枚だけ";
+      const t = [cs[cs.length - 1]], c = t[0].c; // 1枚に効く操作は、最後に選んだ札を見る（KJ-054）
       if (op === "split") {
         if (!canSplit(T, c)) return "割れない";
-        return fits(p, cs, splitOnce(T, c).length) ? null : "手札もストックもいっぱい";
+        return fits(p, t, splitOnce(T, c).length) ? null : "手札もストックもいっぱい";
       }
       if (op === "homophone") {
         if (!homoChars(T, c).length) return "同じ読みの字がない"; // KJ-069
         if (!g.ready(p, "homophone")) return "待ち時間";
-        return fits(p, cs, 1) ? null : "手札もストックもいっぱい";
+        return fits(p, t, 1) ? null : "手札もストックもいっぱい";
       }
       const map = op === "invert" ? T.INV : op === "cycle" ? T.NEXT : null;
       if (!map) return null;
       if (!map.has(c)) return "できない字";
       if (!g.ready(p, op)) return "待ち時間";
-      return fits(p, cs, 1) ? null : "手札もストックもいっぱい";
+      return fits(p, t, 1) ? null : "手札もストックもいっぱい";
     };
     // 人が押した操作・取るがはじかれたら、「ためした」で残す（KJ-041・D-055）。使った札の欄に札、メモに「操作名：理由」。
     // 同じ札・同じ理由が続けて（間に別の行が入らずに）押されたら1行にまとめ、メモの終わりに「×回数」。

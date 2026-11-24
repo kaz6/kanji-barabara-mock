@@ -2047,3 +2047,72 @@ test("相手の選び（KJ-045）：遊び方は3つ・強さは3つ。前の形
   // 画面の初期値は rules.opponent_default（いまの数値ファイルで CPU と＋とても弱い）
   assert.deepEqual(K.readOpponent(D, null), { key: "weak", mode: "cpu", power: "weak" });
 });
+
+// ---------- KJ-054（D-070）：2枚以上選んでいるとき、1枚に効く操作は最後に選んだ札に効く ----------
+test("KJ-054：2枚選んで Split → 最後に選んだ札が割れる。前の札の選び（順番）は残り、できた札は最後の位置に入って選ばれたまま", () => {
+  const g = newGame();
+  const [a, b] = setHand(g, g.me, "上休");
+  const r = g.split(g.me, [a, b]);
+  assert.ok(r.ok);
+  assert.equal(chars(g.me.cards), "上人木", "上 は割れずに残り、休 が 人木 に");
+  assert.equal(chars(r.cards), "人木");
+  assert.deepEqual(r.sel, [a, ...r.cards.map((x) => x.id)], "選び：上 のあとに 人 木");
+  const last = g.log[g.log.length - 1];
+  assert.equal(last.op, "割る");
+  assert.deepEqual(last.from, ["休"]);
+  // 3枚：前の2枚の順番もそのまま
+  const [x, y, z] = setHand(g, g.me, "木上休");
+  const r3 = g.split(g.me, [y, x, z]);
+  assert.ok(r3.ok);
+  assert.deepEqual(r3.sel, [y, x, ...r3.cards.map((c) => c.id)]);
+});
+
+test("KJ-054：最後に選んだ札が割れないなら今まで通りはじく（理由は「割れない」）。前に選んだ札が割れても割らない", () => {
+  const g = newGame();
+  const [a, b] = setHand(g, g.me, "休一");
+  const r = g.split(g.me, [a, b]);
+  assert.equal(r.ok, false);
+  assert.equal(r.why, "割れない");
+  assert.equal(chars(g.me.cards), "休一", "何も変わらない");
+  assert.equal(g.whyNot(g.me, "split", [a, b]), "割れない", "whyNot も同じ理由");
+  assert.equal(g.whyNot(g.me, "split", [b, a]), null, "順を逆に選べば 休 を割れる");
+});
+
+test("KJ-054：1枚のときは今まで通り（割る・選びはできた札だけ）。0枚は「1枚だけ」", () => {
+  const g = newGame();
+  const [a] = setHand(g, g.me, "休");
+  const r = g.split(g.me, [a]);
+  assert.ok(r.ok);
+  assert.deepEqual(r.sel, r.cards.map((x) => x.id));
+  assert.equal(g.split(g.me, []).why, "1枚だけ");
+  assert.equal(g.whyNot(g.me, "split", []), "1枚だけ");
+  assert.equal(g.invert(g.me, []).why, "1枚だけ");
+});
+
+test("KJ-054（仮決め）：Flip・Cycle・Same reading も最後に選んだ札に効く。前の札の選びは残る", () => {
+  const g = newGame();
+  let [a, b] = setHand(g, g.me, "休上");
+  let r = g.invert(g.me, [a, b]);
+  assert.ok(r.ok);
+  assert.equal(chars(g.me.cards), "休下");
+  assert.deepEqual(r.sel, [a, r.cards[0].id]);
+
+  [a, b] = setHand(g, g.me, "休十");
+  r = g.cycle(g.me, [a, b]);
+  assert.ok(r.ok);
+  assert.equal(chars(g.me.cards), "休一");
+  assert.deepEqual(r.sel, [a, r.cards[0].id]);
+
+  [a, b] = setHand(g, g.me, "休言");
+  r = g.homophone(g.me, [a, b], "出");
+  assert.ok(r.ok);
+  assert.equal(chars(g.me.cards), "休出");
+  assert.deepEqual(r.sel, [a, r.cards[0].id]);
+
+  // 最後の札にできないなら、前の札にできてもはじく（whyNot と同じ理由）
+  g.clock.t += 60;
+  [a, b] = setHand(g, g.me, "上休");
+  assert.equal(g.invert(g.me, [a, b]).why, "できない字");
+  assert.equal(g.whyNot(g.me, "invert", [a, b]), "できない字");
+  assert.equal(chars(g.me.cards), "上休");
+});

@@ -737,6 +737,32 @@ test("画面", { skip }, async (t) => {
       await ctx.close();
     });
 
+    await t.test(`${vp.name}：2枚選んで Split は最後に選んだ札を割る。前の札の選びは残り、できた札は選ばれたまま台の最後に並ぶ（KJ-054）。Flip も最後の札`, async () => {
+      const { ctx, page, errors } = await open(browser, url, vp, null);
+      const tile = (ch) => page.locator("#meHand .tile, #meTray .tile", { hasText: ch }).first();
+      const rowText = async () => (await page.locator("#row .tile").allTextContents()).map((x) => x.trim()[0]).join("");
+      await tile("日").click(); await tile("休").click();
+      assert.equal(await page.getAttribute("#bSplit", "aria-disabled"), "false", "2枚でも、最後の札（休）が割れるなら押せる見た目");
+      await page.click("#bSplit");
+      assert.equal(await rowText(), "日人木", "日 の選びは残り、休 の位置に 人 木");
+      assert.equal(await tile("日").locator(".ord").textContent(), "1");
+      assert.equal(await tile("人").locator(".ord").textContent(), "2");
+      assert.equal(await tile("木").locator(".ord").textContent(), "3");
+      // 最後の札（木）は割れない：押せない見た目。押すと「割れない」
+      assert.equal(await page.getAttribute("#bSplit", "aria-disabled"), "true");
+      await page.evaluate(() => document.getElementById("bSplit").click()); // 押せない見た目（aria-disabled）でも押せる
+      assert.equal(await page.textContent("#msg"), "割れない");
+      assert.equal(await rowText(), "日人木", "はじかれても選びはそのまま");
+      // Flip：日 上 の順に選ぶと 上 が 下 になる。日 の選びは残る
+      await page.click("#bBack");
+      await tile("日").click(); await tile("上").click();
+      assert.equal(await page.getAttribute("#bInvert", "aria-disabled"), "false");
+      await page.click("#bInvert");
+      assert.equal(await rowText(), "日下");
+      assert.deepEqual(errors, []);
+      await ctx.close();
+    });
+
     await t.test(`${vp.name}：入れ替え。札を引きずって別の札の上で離すと位置が替わる（指一本）。ただのタップは選ぶだけ`, async () => {
       const { ctx, page, errors } = await open(browser, url, vp, null);
       const order = () => page.locator("#meHand > *").evaluateAll((els) => els.map((e) => e.classList.contains("tile") ? e.title : "_").join(""));
