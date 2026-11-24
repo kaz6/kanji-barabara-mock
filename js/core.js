@@ -314,7 +314,7 @@
     const [a, b] = cpuInterval(D, key);
     if (key === TUTORIAL_OPPONENT.key) return ["チュートリアル（KJ-043）：手札・ストック・場は data/tutorial.json の決まったもの。段ごとに、その手だけ押せる（ほかのボタンは押せない見た目）。時間なし・CPU なし・ヒントなし"];
     return [
-      `場=${R.field_size}枚 最初の手札=${R.start_hand}枚 手札の上限=${R.hand_max}枚＋ストック${R.split_extra}枚（全部で${R.hand_max + R.split_extra}マス。場から取るのは上の段・ストックを合わせて${R.hand_max + R.split_extra}マスが埋まるまで（上の段が埋まっていればストックへ）。割る・くっつけるでできた札は、字も部品も、手札が埋まっていればストックへ。手札とストックの間は自分で動かせる）山=${levelShort(level)} の字を${R.same_char_in_deck}枚ずつ（尽きたら足す）`,
+      `場=${R.field_size}枚 最初の手札=${R.start_hand}枚 手札の上限=${R.hand_max}枚＋ストック${R.split_extra}枚（全部で${R.hand_max + R.split_extra}マス。場から取るのは上の段・ストックを合わせて${R.hand_max + R.split_extra}マスが埋まるまで（上の段が埋まっていればストックへ）。割る・くっつけるでできた札は、字も部品も、手札が埋まっていればストックへ。手札とストックの間は自分で動かせる）山=${levelShort(level)} の字を${R.same_char_in_deck}枚ずつ${level === "G1" && R.g1 && R.g1.extra_chars ? `（小1 の基本の字 ${R.g1.extra_chars.join("")} は${R.g1.extra_count}枚）` : ""}（尽きたら足す）`,
       `点数 ${Object.entries(S.by_length).map(([n, p]) => `${n}字${p}`).join("・")} 四字熟語×${S.yoji_mult} 特別な語×${S.special_mult}（1字は放てない）`,
       `はじまり：最初の手札${R.start_hand}枚で、すぐ時間が動く。ストックに使いやすい部品を${R.start_stock_parts}枚入れて始める（部品表で行き先が多い字でない部品の上位${R.start_stock_top}個から無作為）`,
       `台（机）は並べて見る場所。台に出した札は出す前の段にいるままで、上の段・下の段の枚数に数える`,
@@ -439,7 +439,15 @@
       for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
       return a;
     }
-    const fullSet = () => { const out = []; for (let i = 0; i < R.same_char_in_deck; i++) out.push(...T.CHARS); return out; };
+    // 山（と、合言葉の部屋の場の列）の字の数：どの字も same_char_in_deck 枚。小1 のときだけ、基本の字（R.g1.extra_chars。くっつける相手の多い字。KJ-067・D-085）は R.g1.extra_count 枚
+    const extraSet = T.level === "G1" && R.g1 && R.g1.extra_chars ? new Set(R.g1.extra_chars) : null;
+    // N5・N4 は今のまま（並びも変えない）。小1 は、基本の字を extra_count 枚になるまで足す
+    const fullSet = () => {
+      const out = [];
+      for (let i = 0; i < R.same_char_in_deck; i++) out.push(...T.CHARS);
+      if (extraSet) for (const c of extraSet) if (T.CHARS.has(c)) for (let i = R.same_char_in_deck; i < (R.g1.extra_count || 0); i++) out.push(c);
+      return out;
+    };
     g.deck = shuffle(fullSet());
     function draw(n) {
       const out = [];
@@ -533,7 +541,11 @@
     const useCd = (p, k) => { p.cd[k] = now() + R.cooldown_sec[k]; };
 
     const QUIET = new Set(["はじまり", "ためした", "ヒント", "終わり", "動けない", "動ける", "入れ替え", "移す", "段", "とばす"]);
+    // 小1 の見逃しの光り（KJ-067）：人が最後に手をした時刻。ヒント・動けない・終わりなど、手でないログは数えない
+    const NOT_MOVE = new Set(["はじめ", "はじまり", "ヒント", "終わり", "動けない", "動ける"]);
+    let idleFrom = t0;
     function addLog(who, op, from, to, pts, note) {
+      if (who === g.me.name && !NOT_MOVE.has(op)) idleFrom = now();
       g.log.push({ t: logT(), who, op, from: from || [], to: to || [], pts: pts || 0,
         meScore: g.me.score, cpuScore: g.cpu.score, me: nCards(g.me), cpu: nCards(g.cpu), note: note || "" });
       if (!QUIET.has(op)) checkStuck();
@@ -718,6 +730,22 @@
       g.hintCount++;
       const lit = h.ids.map((id) => g.byId(p, id)).filter(Boolean).map((x) => x.c);
       addLog(p.name, "ヒント", lit, [], 0, `段${h.tier}：${h.op}${h.word ? `。狙った言葉：${h.word}（${[...h.word].length}字）` : ""}`);
+    };
+
+    // 小1 の見逃しの光り（KJ-067・D-085）：手札に放てる言葉があるのに、人が g1.idle_hint_sec（30秒）なにも手をしなかったら、その言葉の札を光らせる。
+    // 光り方・消え方・狙う語の選び方は、はじかれ続けたときのヒント（段1）と同じ。小1 のときだけ。光らせたら（光らせなくても）数え直す。続けてはじかれたヒントは今のまま
+    g.idleHint = () => {
+      const sec = R.g1 && R.g1.idle_hint_sec;
+      if (!sec || g.level !== "G1" || g.tutorial || !live() || locked(g.me) || now() - idleFrom < sec) return false;
+      idleFrom = now();
+      if (g.hintActive()) return false;
+      const h = makeHint(g.me);
+      if (h.tier !== 1) return false; // 手札で放てる言葉があるときだけ（1手で放てる段2・引き直しの段3は、見逃しでは光らせない）
+      g.hint = { ...h, until: now() + HR.glow_sec, redraws: g.me.redraws };
+      g.hintCount++;
+      const lit = h.ids.map((id) => g.byId(g.me, id)).filter(Boolean).map((x) => x.c);
+      addLog(g.me.name, "ヒント", lit, [], 0, `見逃し${sec}秒。段1：放つ。狙った言葉：${h.word}（${[...h.word].length}字）`);
+      return true;
     };
 
     g.split = (p, ids) => {
@@ -1052,6 +1080,7 @@
     g.tick = () => {
       if (!live() || g.tutorial) return false; // チュートリアルに時間はない
       let changed = false;
+      if (now() < g.endsAt && g.idleHint()) changed = true; // 小1：見逃しの光り（KJ-067）
       if (M) return changed; // 合言葉の部屋の時間切れは createMatchClient が二人の点をそろえてから終える
       if (now() >= g.endsAt && g.solo) {
         finish(null, `${g.timeLimit / 60}分`);
