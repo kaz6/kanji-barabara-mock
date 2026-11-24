@@ -111,7 +111,7 @@ test("小1：ゲームを作る。山も手札も場も80字の外が出ない�
   const g = newGame(7, "normal", "G1");
   assert.equal(g.level, "G1");
   const cards = [...g.deck, ...g.me.cards.map((x) => x.c), ...g.cpu.cards.map((x) => x.c), ...g.field.map((x) => x.c)];
-  assert.equal(cards.length, 80 * D.rules.same_char_in_deck, "80字を2枚ずつ");
+  assert.equal(cards.length, 80 * D.rules.same_char_in_deck + D.rules.g1.extra_chars.length * (D.rules.g1.extra_count - D.rules.same_char_in_deck), "80字を2枚ずつ（基本の10字は3枚。KJ-067）");
   for (const c of cards) assert.ok(G1.includes(c), `${c} は80字の外`);
   const head = g.logText().split("\n").filter((l) => l.startsWith("#")).join("\n");
   assert.match(head, /# レベル 小1（小学1年の漢字80字）/);
