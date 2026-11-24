@@ -1392,12 +1392,44 @@ test("画面", { skip }, async (t) => {
     assert.deepEqual(await shown(), ["大雨", "日本人", "天上天下", "休日"]);
     if (process.env.KJ_SHOT) await page.screenshot({ path: "docs/img/kj-018-end-375.png" });
     // 出し終わって少したつと、いまの終わりの画面（#msg・ボタン）が見える
-    await page.waitForFunction(() => !document.getElementById("endShow").classList.contains("on"), null, { timeout: 5000 });
+    await page.waitForFunction(() => !document.getElementById("endShow").classList.contains("on"), null, { timeout: 8000 });
     assert.match(await page.textContent("#msg"), /勝ち（51 対 0）/);
     assert.equal(await page.isVisible("#bCopyEnd"), true);
     // もう一度（同じ設定）：表示は閉じて、新しい試合になる
     await page.click("#again");
     assert.equal(await page.evaluate(() => document.getElementById("endShow").classList.contains("on")), false);
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+
+  await t.test("KJ-066 上の3ボタン（もう一度・設定を変える・ログ）は文字だけ（囲み線・地なし・大きさは前のまま・文字と地の明暗差 4.5 以上）。終わりの画面は言葉を出し終わってから 4秒で閉じる", async () => {
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 });
+    const lum = (c) => { const v = c.match(/[\d.]+/g).slice(0, 3).map(Number).map((n) => { n /= 255; return n <= 0.03928 ? n / 12.92 : ((n + 0.055) / 1.055) ** 2.4; }); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
+    const ratio = (a, b) => { const [p, q] = [lum(a), lum(b)].sort((m, n) => n - m); return (p + 0.05) / (q + 0.05); };
+    const look = () => page.evaluate(() => ["again", "bSetup", "bLog"].map((id) => { const b = document.getElementById(id), cs = getComputedStyle(b), r = b.getBoundingClientRect(); return { id, bg: cs.backgroundColor, bw: ["Top", "Right", "Bottom", "Left"].map((k) => cs["border" + k + "Color"]), color: cs.color, w: Math.round(r.width), h: Math.round(r.height) }; }));
+    const rows = await look();
+    for (const r of rows) {
+      assert.equal(r.bg, "rgba(0, 0, 0, 0)", `${r.id} は地がない`);
+      assert.ok(r.bw.every((c) => c === "rgba(0, 0, 0, 0)"), `${r.id} は囲み線が見えない（${r.bw}）`);
+      assert.ok(ratio(r.color, await page.evaluate(() => getComputedStyle(document.body).backgroundColor)) >= 4.5, `${r.id} 文字と地の明暗差 4.5 以上（${r.color}）`);
+      assert.ok(r.h >= 24 && r.w >= 40, `${r.id} 押せる大きさが残っている（${r.w}×${r.h}）`);
+    }
+    // 囲み線をやめても大きさは変わらない（枠は透明で残してある）：Back・Redraw と同じ文字だけ。ログをコピー（出ているとき）は今のまま
+    assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById("bCopyEnd")).borderTopWidth), "1px", "ほかのボタンは変えない");
+    assert.equal(await page.evaluate(() => END_PACE.hold), 4000, "終わりの画面：出し終わってから閉じるまで 4秒");
+    // 押せる（もう一度・ログ・設定を変える）
+    await page.click("#bLog");
+    assert.equal(await page.evaluate(() => document.getElementById("logPanel") ? document.getElementById("logPanel").classList.contains("on") : true), true);
+    await page.click("#bLog");
+    if (process.env.KJ_SHOT) { // 画像（KJ_SHOT のときだけ撮る）：上の帯と、終わりの画面
+      await page.screenshot({ path: process.env.KJ_SHOT.replace(/\.png$/, "-bar.png"), clip: { x: 0, y: 0, width: 375, height: 80 } });
+      await page.evaluate(() => { const G = __KJ.game; G.me.score = 49; G.cpu.score = 0; G.log.push({ t: 1, who: G.me.name, op: "放つ", from: [..."大雨"], to: [], pts: 4, note: "" }); });
+      await page.locator("#meHand .tile", { hasText: "休" }).click();
+      await page.locator("#meHand .tile", { hasText: "日" }).click();
+      await page.click("#bRelease");
+      await page.waitForSelector("#endShow[data-done='1']", { timeout: 5000 });
+      await page.screenshot({ path: process.env.KJ_SHOT.replace(/\.png$/, "-end.png") });
+    }
     assert.deepEqual(errors, []);
     await ctx.close();
   });
@@ -1418,7 +1450,7 @@ test("画面", { skip }, async (t) => {
     await page.waitForSelector("#endShow.on");
     assert.equal(await page.textContent("#esLabel"), "引き分け");
     assert.equal(await page.locator("#esWords .esw").count(), 0);
-    await page.waitForFunction(() => !document.getElementById("endShow").classList.contains("on"), null, { timeout: 5000 });
+    await page.waitForFunction(() => !document.getElementById("endShow").classList.contains("on"), null, { timeout: 8000 });
     assert.match(await page.textContent("#msg"), /引き分け/);
     assert.deepEqual(errors, []);
     await ctx.close();
