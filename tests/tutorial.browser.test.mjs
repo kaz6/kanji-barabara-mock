@@ -33,7 +33,7 @@ const until = async (fn, ms = 3000) => { const t0 = Date.now(); while (!fn() && 
 // 印の無い（はじめての）端末のページ。ログは送る処理を見られるよう force し、通信は偽物で受ける（本物の送り先には出さない）
 // 相手を選ぶ（KJ-045）：中のキー（solo・weak・fair・normal・room）から、画面の2段（遊び方→強さ）を押す
 async function pickOpp(page, key) {
-  if (key === "solo" || key === "room") return page.check(`#opp input[value="${key}"]`);
+  if (key === "room") return page.check(`#opp input[value="${key}"]`);
   await page.check('#opp input[value="cpu"]');
   await page.check(`#pow input[value="${key}"]`);
 }

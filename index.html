@@ -431,7 +431,7 @@ let level=null;     // レベル（"G1"〔小1〕／"N5"／"N4"）。はじめ�
 let row=[];         // 選んだ札の id（選んだ順。台にはその写しを左から並べる）
 let lastTried="";
 const OPP_KEY="kj-opponent",TIME_KEY="kj-time";
-let opponent=null;  // 相手のキー（solo・weak・fair・normal・room）。端末に覚える（KJ-007）。画面では「遊び方」と「強さ」の2段で選ぶ（KJ-045）
+let opponent=null;  // 相手のキー（weak・fair・normal・room。solo は画面から外した〔KJ-056〕）。端末に覚える（KJ-007）。画面では「遊び方」と「強さ」の2段で選ぶ（KJ-045）
 let cpuPower="weak"; // 「CPU と」のときの強さ。遊び方を行き来しても覚えている
 let timeLimit=null; // 制限時間（秒）。端末に覚える（KJ-007）
 const $=id=>document.getElementById(id);
@@ -478,7 +478,7 @@ function buildPickers(){
   radios($("lvl"),"lvl",K.LEVELS.map(o=>({value:o.key,label:o.short,title:o.label})),level,v=>{level=v;lsSet(LVL_KEY,v);T=tablesFor(level);showCounts()});
   radios($("tim"),"tim",K.timeChoices(D).map(sec=>({value:sec,label:K.timeLabel(sec)})),timeLimit,v=>{timeLimit=+v;lsSet(TIME_KEY,v);buildHowto()});
 }
-const playMode=()=>K.readOpponent(D,opponent).mode; // solo／cpu／room
+const playMode=()=>K.readOpponent(D,opponent).mode; // cpu／room
 function tablesFor(lv){return TABLES[lv]||(TABLES[lv]=K.makeTables(D,lv))}
 function showCounts(){$("setupInfo").textContent=`字 ${T.CHARS.size}・語 ${T.WORDS.size}（レベル ${K.levelLabel(T.level)}）`}
 // 画面は2つ：はじめる前の画面と、遊ぶ画面。「もう一度」は同じ設定ですぐ始まる。「設定を変える」で前の画面へ戻る
@@ -575,15 +575,6 @@ function drain(){
     if(e.type==="over")end(e.winner,e.solo);
   }
 }
-// ひとりでの自己ベスト（その端末だけ。読めない・書けないときは出さない）
-const BEST_KEY="kj-solo-best";
-function soloBest(score){
-  let prev=null;
-  try{const v=localStorage.getItem(BEST_KEY);if(v!==null&&v!==""&&!isNaN(+v))prev=+v}catch(e){return null}
-  const best=prev===null||score>prev?score:prev;
-  try{localStorage.setItem(BEST_KEY,String(best))}catch(e){return null}
-  return {best,isNew:prev===null||score>prev};
-}
 // ---------- ログの自動送信（KJ-020）----------
 // 試合が終わったとき（途中で捨てたときも、1手以上動いていれば）、ログ全文を作者の表（play_logs）に1行送る。画面には何も出さない。
 // 送る先は書き込みだけの公開鍵（publishable）。手元（localhost）とテスト（webdriver）では送らない
@@ -625,8 +616,7 @@ function end(winner,solo){
   if(MC){MC.stop();MC=null;LINK.closeAll();ROOM=null}
   const m=$("msg"),sc=`${G.me.score} 対 ${G.cpu.score}`;
   if(solo){
-    const b=soloBest(G.me.score);
-    m.textContent=`ひとりで ${G.me.score} 点`+(b?(b.isNew?`（自己ベスト更新）`:`（自己ベスト ${b.best} 点）`):"");
+    m.textContent=`ひとりで ${G.me.score} 点`;
     m.className="msg";
     $("bCopyEnd").hidden=false;
     showEndAfterFx(winner);
@@ -1241,7 +1231,7 @@ function buildHowto(){
     `<b>はじまり</b>：はじめの手札は ${R.start_hand} 枚。はじめたらすぐ時間が動く。ストックには、使いやすい部品が ${R.start_stock_parts} 枚、最初から入っている。`,
     `<b>台</b>は並べて見る場所：選んだ札は手札・ストックのマスにいるまま、台にはその写しが出る（枚数は変わらない）。`,
     `<b>レベル</b>：はじめる前に選ぶ（小1／N5／N4。小1 は小学1年の漢字80字、N4 は N5＋N4 の字）。山に入る字・語・割り方・対義・巡り・同音がレベルで変わる。いまは ${K.levelLabel(T.level)}（字 ${T.CHARS.size}・語 ${T.WORDS.size}）。`,
-    `<b>遊び方・強さ</b>：はじめる前に選ぶ。ひとりで（CPU なし。50 点では終わらず、${(TL||R.win.time_limit_sec)/60} 分たったら点を出す。この端末の自己ベストを覚える）／CPU と：とても弱い（CPU は ${R.cpu.weak_interval_sec[0]}〜${R.cpu.weak_interval_sec[1]} 秒に1回）／ふつう（${R.cpu.fair_interval_sec[0]}〜${R.cpu.fair_interval_sec[1]} 秒に1回）／つよい（${R.cpu.interval_sec[0]}〜${R.cpu.interval_sec[1]} 秒に1回）。`,
+    `<b>遊び方・強さ</b>：はじめる前に選ぶ。CPU と：とても弱い（CPU は ${R.cpu.weak_interval_sec[0]}〜${R.cpu.weak_interval_sec[1]} 秒に1回）／ふつう（${R.cpu.fair_interval_sec[0]}〜${R.cpu.fair_interval_sec[1]} 秒に1回）／つよい（${R.cpu.interval_sec[0]}〜${R.cpu.interval_sec[1]} 秒に1回）。`,
     `<b>割る</b>：台の1枚を部品表で一段だけ割る。<b>くっつける</b>：台の2枚を、左→右の順でくっつける。逆に並べたときは「並べる順が逆」と出る。十・口（古・田）や 大・丶（太・犬）のように2通りの字になるときは選ぶ。`,
     `<b>反転</b>（印：${STR.iconSvg("invert")}）対義の字に。${R.cooldown_sec.invert} 秒待ち。<b>巡り</b>（印：${STR.iconSvg("cycle")}）${T.CYCLES.map(c=>c.name).join("・")}を1つ先へ。${R.cooldown_sec.cycle} 秒待ち。<b>同音</b>（印：${STR.iconSvg("homophone")}）同じ読みの字から選ぶ。${R.cooldown_sec.homophone} 秒待ち。待ち時間は操作ごとで、二人は別々。`,
     `<b>引き直し</b>：手札を全部入れ替える（${R.start_hand} 枚）。値段は、その試合で何回目かで上がる（${R.redraw.costs.map(c=>c+" 点").join("→")}）。${R.redraw.costs.length} 回まで。点が足りなくても払える（マイナスになってよい）。`,
