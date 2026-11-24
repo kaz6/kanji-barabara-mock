@@ -129,6 +129,7 @@ button.op.cutopen .sp-a{animation:kjSpA .3s ease-in-out}button.op.cutopen .sp-b{
 .row .empty{color:var(--on-table-sub);font-size:13px}
 .info{height:46px;margin:6px 0 8px;color:var(--on-table);font-size:14px;line-height:23px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .info .w{font-family:var(--kanji);font-size:18px}
+.info .rad{display:block;font-weight:700} /* 部品の札の意味（KJ-021）。1行目に出す */
 .info .no{color:var(--on-table-sub)}
 .info .rev{color:var(--on-table);font-weight:700}
 .info .pts{color:var(--on-table);font-weight:700}
@@ -1176,6 +1177,9 @@ function render(){
   else if(s.rl.ok&&D.readings.readings[s.text]){const r=D.readings.readings[s.text];info.innerHTML=`<span class="w">${s.text}</span>${pts} ${[...r.on,...r.kun].slice(0,6).join("・")}`}
   else if(s.joins.length)info.innerHTML=`くっつけると ${s.joins.join(" か ")}`;
   else info.innerHTML=s.rl.ok?`<span class="w">${s.text}</span>${pts}`:`<span class="no">${s.rl.why}</span>`;
+  // 台の部品の札が何と同じ意味か（KJ-021）：台に並んだ部品の札のうち、最後に選んだ1枚の意味を1行目に出す。字の札・表にない札は出さない
+  const pc=[...s.rc].reverse().find(x=>!K.isChar(T,x.c)),rad=pc&&K.radicalNote(D,T,pc.c);
+  if(rad)info.innerHTML=`<span class="rad" data-c="${pc.c}">${rad}</span>`+info.innerHTML;
   renderReleased();
   renderOps();
 }

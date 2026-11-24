@@ -41,7 +41,7 @@
   const timeLabel = (sec) => `${sec / 60}分`;
   const cpuInterval = (D, key) => (key === "weak" ? D.rules.cpu.weak_interval_sec : key === "fair" ? D.rules.cpu.fair_interval_sec : D.rules.cpu.interval_sec);
 
-  const FILES = ["kanji", "words", "readings", "parts", "antonyms", "cycles", "radical_forms", "special", "rules", "split_shapes", "tutorial", "blocked_words_g1"];
+  const FILES = ["kanji", "words", "readings", "parts", "antonyms", "cycles", "radical_forms", "special", "rules", "split_shapes", "tutorial", "blocked_words_g1", "radical_meanings"];
 
   // ---------- 表を引く ----------
   // level を省くと rules.json の level_default（なければ N4）
@@ -150,6 +150,14 @@
   const isN5 = isLevelChar; // 古い名前（いまは「遊ぶレベルの字」）
   // 画面で「字」として見せるか（レベルの字か常用漢字）。部品の見た目にしない
   const isChar = (T, c) => T.CHARS.has(c) || T.JOUYOU.has(c) || T.OUTSIDE.has(c) || T.N5HELD.has(c);
+  // 部品の札が何と同じ意味か（KJ-021・D-039。data/radical_meanings.json）。台の行に出す一行。字の札・表にない札は null
+  // 同じ意味の字があれば 亻（にんべん）＝人 の形、無ければ 艹（くさかんむり）草のこと の形。呼び名の無い部品は（）を省く
+  const radicalNote = (D, T, c) => {
+    const R = D.radical_meanings && D.radical_meanings.parts;
+    if (!R || isChar(T, c) || !R[c]) return null;
+    const e = R[c];
+    return c + (e.name ? `（${e.name}）` : "") + (e.same ? `＝${e.same}` : (e.name ? "" : " ") + (e.mean || ""));
+  };
   const splitOnce = (T, c) => T.parts[c] || [c];
   const canSplit = (T, c) => !!T.parts[c];
   // 部品にバラして届く形（D-003・D-004）。KJ-003 の遊びでは使わない（消すかは作者が決める）
@@ -1520,7 +1528,7 @@
   }
 
   return {
-    FILES, OPPONENTS, PLAY_MODES, CPU_POWERS, readOpponent, opponentKey, LEVELS, timeChoices, normTime, vibratePattern, timeLabel, levelLabel, levelShort, makeTables, isN5, isLevelChar, isChar, splitOnce, canSplit, delivered, joinResults, joinReversed,
+    FILES, OPPONENTS, PLAY_MODES, CPU_POWERS, readOpponent, opponentKey, LEVELS, timeChoices, normTime, vibratePattern, timeLabel, levelLabel, levelShort, makeTables, isN5, isLevelChar, isChar, radicalNote, splitOnce, canSplit, delivered, joinResults, joinReversed,
     releasable, scoreOf, kanaOf, kanaText, wordCharOk, KANA_ONLY_WHY, homoChars, marks, markKinds, cutSpec, FACES, FACE_LABEL, faceJoins, faceResults, rulesLabel, opponentLabel, createGame, createTutorial, TUTORIAL_OPPONENT, playLogRow, endShow, END_LABELS, logSendAllowed, playLogResult, PLAY_LOG_LIMITS,
     strSeed, seededRand, matchRand, ROLES, ROOM_OPPONENT, MATCH_END_GRACE_SEC, MATCH_INSERT_TIMEOUT_SEC, MATCH_PING_SEC, MATCH_GONE_SEC, ROOM_LOBBY_TTL_SEC,
     createMatchClient, memoryClaims, newMatchId, newRoomCode, roomLobbyId, findRoom, hostRoom, joinRoom, startRoom, roomStartAt, roomWaiter,
