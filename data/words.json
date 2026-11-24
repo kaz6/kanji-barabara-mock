@@ -1,6 +1,6 @@
 {
- "version": "2026-11-23.4",
- "source": "JMdict（jamdict-data, jmdict 1.08）。2〜4字の語は「手に持てる字」（レベルの字＋割る・くっつけるで出る字）だけで書けるもの（KJ-011・D-029）。1字の語はレベルの字だけ。地名・名字は data/proper_names.json と JMnedict（KJ-032）。data/blocked_words.json の語は外す（D-048）",
+ "version": "2026-11-24.1",
+ "source": "JMdict（jamdict-data, jmdict 1.08）。2〜4字の語は「手に持てる字」（レベルの字＋割る・くっつけるで出る字）だけで書けるもの（KJ-011・D-029）。1字の語はレベルの字だけ。地名・名字は data/proper_names.json と JMnedict（KJ-032）。data/blocked_words.json の語は外す（D-048）。かなを1つ含む語（の・る・な。部品 ノ・儿・ナ の札をかなに読む。KJ-053・D-069）",
  "fields": {
   "w": "語",
   "lv": "レベル（その語の字がすべて手に持てる、いちばん低い N5／N4。小1 だけで放てる語は null）",
@@ -10,7 +10,8 @@
   "common": "よく使う（news1/ichi1/spec1/spec2/gai1）",
   "yoji": "四字熟語",
   "pn": "地名・名字の印（KJ-032。台の行に〔地名〕〔名字〕。data/proper_names.json から。点数は普通の言葉と同じ）",
-  "pn_kana": "地名・名字の読み（kana と違うときだけ。台の行に kana／pn_kana と並べる）"
+  "pn_kana": "地名・名字の読み（kana と違うときだけ。台の行に kana／pn_kana と並べる）",
+  "kana_at": "かなの位置（0 から。かなを含む語だけ。KJ-053。かなは data/parts.json の kana_parts の部品の札で並べる）"
  },
  "stats": {
   "hold_by_level": {
@@ -20,53 +21,77 @@
   },
   "by_level": {
    "N5": {
-    "total": 2465,
+    "total": 2614,
     "by_length": {
      "1": 97,
-     "2": 1750,
-     "3": 467,
-     "4": 151
-    },
-    "common": 729,
-    "yoji": 43,
-    "pn": 16
-   },
-   "N4": {
-    "total": 10458,
-    "by_length": {
-     "1": 253,
-     "2": 6543,
-     "3": 2562,
-     "4": 1100
-    },
-    "common": 2418,
-    "yoji": 202,
-    "pn": 56
-   },
-   "G1": {
-    "total": 2612,
-    "by_length": {
-     "1": 78,
-     "2": 1846,
-     "3": 517,
+     "2": 1773,
+     "3": 573,
      "4": 171
     },
-    "common": 725,
+    "common": 751,
+    "yoji": 43,
+    "pn": 16,
+    "kana": {
+     "な": 1,
+     "の": 114,
+     "る": 34
+    }
+   },
+   "N4": {
+    "total": 10897,
+    "by_length": {
+     "1": 253,
+     "2": 6605,
+     "3": 2837,
+     "4": 1202
+    },
+    "common": 2475,
+    "yoji": 202,
+    "pn": 56,
+    "kana": {
+     "な": 4,
+     "の": 311,
+     "る": 124
+    }
+   },
+   "G1": {
+    "total": 2749,
+    "by_length": {
+     "1": 78,
+     "2": 1870,
+     "3": 610,
+     "4": 191
+    },
+    "common": 747,
     "yoji": 47,
-    "pn": 28
+    "pn": 28,
+    "kana": {
+     "な": 1,
+     "の": 102,
+     "る": 34
+    }
    }
   },
-  "total": 10504,
+  "total": 10943,
   "by_length": {
    "1": 261,
-   "2": 6564,
-   "3": 2574,
-   "4": 1105
+   "2": 6626,
+   "3": 2849,
+   "4": 1207
   },
-  "common": 2430,
+  "common": 2487,
   "yoji": 204,
   "pn": 56,
-  "pn_added": 24
+  "pn_added": 24,
+  "kana": {
+   "な": 4,
+   "の": 311,
+   "る": 124
+  },
+  "kana_skipped": {
+   "かなが2つ以上": 17,
+   "かなで始まる": 1
+  }
  },
  "words": [
   {
@@ -3610,6 +3635,18 @@
    "common": true
   },
   {
+   "w": "上る",
+   "lv": "N5",
+   "kana": "のぼる",
+   "en": [
+    "to ascend; to go up",
+    "to ascend (as a natural process, e.g. the Sun); to rise"
+   ],
+   "kana_at": 1,
+   "g1": true,
+   "common": true
+  },
+  {
    "w": "上下",
    "lv": "N5",
    "kana": "うえした",
@@ -3746,6 +3783,18 @@
    "en": [
     "upper house; upper legislative chamber"
    ],
+   "common": true
+  },
+  {
+   "w": "下る",
+   "lv": "N5",
+   "kana": "くだる",
+   "en": [
+    "to descend; to go down",
+    "to be handed down (of an order, judgment, etc.)"
+   ],
+   "kana_at": 1,
+   "g1": true,
    "common": true
   },
   {
@@ -4360,6 +4409,17 @@
    "en": [
     "staple food"
    ],
+   "common": true
+  },
+  {
+   "w": "乗る",
+   "lv": "N4",
+   "kana": "のる",
+   "en": [
+    "to get on (train, plane, bus, ship, etc.); to get in",
+    "to get on (e.g. a footstool); to step on"
+   ],
+   "kana_at": 1,
    "common": true
   },
   {
@@ -5572,6 +5632,17 @@
    "common": true
   },
   {
+   "w": "何の",
+   "lv": "N5",
+   "kana": "どの",
+   "en": [
+    "which; what (way)"
+   ],
+   "kana_at": 1,
+   "g1": true,
+   "common": true
+  },
+  {
    "w": "何事",
    "lv": "N4",
    "kana": "なにごと",
@@ -5704,6 +5775,16 @@
    "common": true
   },
   {
+   "w": "余る",
+   "lv": "N4",
+   "kana": "あまる",
+   "en": [
+    "to remain; to be left over"
+   ],
+   "kana_at": 1,
+   "common": true
+  },
+  {
    "w": "余人",
    "lv": "N4",
    "kana": "よじん",
@@ -5757,6 +5838,17 @@
     "too many; too much",
     "unnecessary; needless"
    ],
+   "common": true
+  },
+  {
+   "w": "作る",
+   "lv": "N4",
+   "kana": "つくる",
+   "en": [
+    "to make; to produce",
+    "to prepare (food); to brew (alcohol)"
+   ],
+   "kana_at": 1,
    "common": true
   },
   {
@@ -6161,6 +6253,16 @@
    "common": true
   },
   {
+   "w": "光る",
+   "lv": "N4",
+   "kana": "ひかる",
+   "en": [
+    "to shine; to glitter"
+   ],
+   "kana_at": 1,
+   "common": true
+  },
+  {
    "w": "光学",
    "lv": "N4",
    "kana": "こうがく",
@@ -6186,6 +6288,17 @@
     "bright light",
     "hope; bright future"
    ],
+   "common": true
+  },
+  {
+   "w": "入る",
+   "lv": "N5",
+   "kana": "いる",
+   "en": [
+    "to get in; to go in"
+   ],
+   "kana_at": 1,
+   "g1": true,
    "common": true
   },
   {
@@ -6449,6 +6562,16 @@
    "common": true
   },
   {
+   "w": "写る",
+   "lv": "N4",
+   "kana": "うつる",
+   "en": [
+    "to be photographed; to be projected"
+   ],
+   "kana_at": 1,
+   "common": true
+  },
+  {
    "w": "写生",
    "lv": "N4",
    "kana": "しゃせい",
@@ -6492,6 +6615,18 @@
    "en": [
     "winter solstice"
    ],
+   "common": true
+  },
+  {
+   "w": "出る",
+   "lv": "N5",
+   "kana": "でる",
+   "en": [
+    "to leave; to exit",
+    "to leave (on a journey); to depart"
+   ],
+   "kana_at": 1,
+   "g1": true,
    "common": true
   },
   {
@@ -6856,6 +6991,17 @@
     "minutes (period of)"
    ],
    "g1": true,
+   "common": true
+  },
+  {
+   "w": "切る",
+   "lv": "N4",
+   "kana": "きる",
+   "en": [
+    "to cut; to cut through",
+    "to sever (connections, ties)"
+   ],
+   "kana_at": 1,
    "common": true
   },
   {
@@ -7716,6 +7862,17 @@
    "common": true
   },
   {
+   "w": "去る",
+   "lv": "N4",
+   "kana": "さる",
+   "en": [
+    "to leave; to go away",
+    "to pass; to elapse"
+   ],
+   "kana_at": 1,
+   "common": true
+  },
+  {
    "w": "去年",
    "lv": "N4",
    "kana": "きょねん",
@@ -7750,6 +7907,17 @@
    "en": [
     "friendship"
    ],
+   "common": true
+  },
+  {
+   "w": "反る",
+   "lv": "N4",
+   "kana": "そる",
+   "en": [
+    "to warp; to curve",
+    "to bend backward (body or body part, e.g. fingers)"
+   ],
+   "kana_at": 1,
    "common": true
   },
   {
@@ -8750,6 +8918,17 @@
    "common": true
   },
   {
+   "w": "回る",
+   "lv": "N4",
+   "kana": "まわる",
+   "en": [
+    "to turn; to revolve",
+    "to visit several places"
+   ],
+   "kana_at": 1,
+   "common": true
+  },
+  {
    "w": "回帰",
    "lv": "N4",
    "kana": "かいき",
@@ -8804,6 +8983,17 @@
     "forwarding; sending on",
     "deadheading (e.g. train)"
    ],
+   "common": true
+  },
+  {
+   "w": "図る",
+   "lv": "N4",
+   "kana": "はかる",
+   "en": [
+    "to plan; to attempt",
+    "to plot; to conspire"
+   ],
+   "kana_at": 1,
    "common": true
   },
   {
@@ -9373,6 +9563,17 @@
    "en": [
     "loud (of a voice)"
    ],
+   "common": true
+  },
+  {
+   "w": "売る",
+   "lv": "N5",
+   "kana": "うる",
+   "en": [
+    "to sell"
+   ],
+   "kana_at": 1,
+   "g1": true,
    "common": true
   },
   {
@@ -10259,6 +10460,16 @@
    "en": [
     "natural laws; rule of heaven"
    ],
+   "common": true
+  },
+  {
+   "w": "太る",
+   "lv": "N4",
+   "kana": "ふとる",
+   "en": [
+    "to put on weight; to gain weight"
+   ],
+   "kana_at": 1,
    "common": true
   },
   {
@@ -11548,6 +11759,17 @@
    "common": true
   },
   {
+   "w": "帰る",
+   "lv": "N4",
+   "kana": "かえる",
+   "en": [
+    "to return; to come home",
+    "to leave"
+   ],
+   "kana_at": 1,
+   "common": true
+  },
+  {
    "w": "帰京",
    "lv": "N4",
    "kana": "ききょう",
@@ -11951,6 +12173,17 @@
    "en": [
     "pupil; disciple"
    ],
+   "common": true
+  },
+  {
+   "w": "弱る",
+   "lv": "N4",
+   "kana": "よわる",
+   "en": [
+    "to weaken; to grow weak",
+    "to be downcast; to be dejected"
+   ],
+   "kana_at": 1,
    "common": true
   },
   {
@@ -13371,6 +13604,16 @@
    "common": true
   },
   {
+   "w": "映る",
+   "lv": "N4",
+   "kana": "うつる",
+   "en": [
+    "to be reflected; to harmonize with (harmonise)"
+   ],
+   "kana_at": 1,
+   "common": true
+  },
+  {
    "w": "映画",
    "lv": "N4",
    "kana": "えいが",
@@ -13740,6 +13983,17 @@
    "common": true
   },
   {
+   "w": "有る",
+   "lv": "N4",
+   "kana": "ある",
+   "en": [
+    "to be; to exist",
+    "to have"
+   ],
+   "kana_at": 1,
+   "common": true
+  },
+  {
    "w": "有事",
    "lv": "N4",
    "kana": "ゆうじ",
@@ -13935,6 +14189,17 @@
     "uncivilized; uncivilised",
     "undeveloped (land); unexplored (territory, field, etc.)"
    ],
+   "common": true
+  },
+  {
+   "w": "本の",
+   "lv": "N5",
+   "kana": "ほんの",
+   "en": [
+    "mere; only"
+   ],
+   "kana_at": 1,
+   "g1": true,
    "common": true
   },
   {
@@ -14252,6 +14517,18 @@
    "en": [
     "village headman; village mayor"
    ],
+   "g1": true,
+   "common": true
+  },
+  {
+   "w": "来る",
+   "lv": "N5",
+   "kana": "くる",
+   "en": [
+    "to come (spatially or temporally); to approach",
+    "to come back; to do ... and come back"
+   ],
+   "kana_at": 1,
    "g1": true,
    "common": true
   },
@@ -15962,6 +16239,17 @@
    "common": true
   },
   {
+   "w": "生る",
+   "lv": "N5",
+   "kana": "なる",
+   "en": [
+    "to bear fruit"
+   ],
+   "kana_at": 1,
+   "g1": true,
+   "common": true
+  },
+  {
    "w": "生体",
    "lv": "N4",
    "kana": "せいたい",
@@ -16843,6 +17131,16 @@
    "common": true
   },
   {
+   "w": "真の",
+   "lv": "N4",
+   "kana": "しんの",
+   "en": [
+    "true; real"
+   ],
+   "kana_at": 1,
+   "common": true
+  },
+  {
    "w": "真上",
    "lv": "N4",
    "kana": "まうえ",
@@ -16912,6 +17210,17 @@
    "en": [
     "serious look (on one's face); straight face"
    ],
+   "common": true
+  },
+  {
+   "w": "着る",
+   "lv": "N4",
+   "kana": "きる",
+   "en": [
+    "to wear (in modern Japanese, from the shoulders down); to put on",
+    "to bear (guilt, etc.)"
+   ],
+   "kana_at": 1,
    "common": true
   },
   {
@@ -16997,6 +17306,17 @@
     "arrowhead",
     "target of a flying arrow; brunt (of an attack)"
    ],
+   "common": true
+  },
+  {
+   "w": "知る",
+   "lv": "N4",
+   "kana": "しる",
+   "en": [
+    "to be aware of; to know",
+    "to notice; to feel"
+   ],
+   "kana_at": 1,
    "common": true
   },
   {
@@ -17875,6 +18195,17 @@
    "common": true
   },
   {
+   "w": "至る",
+   "lv": "N4",
+   "kana": "いたる",
+   "en": [
+    "to arrive at (e.g. a decision); to reach (a stage)",
+    "to lead to (a place); to get to"
+   ],
+   "kana_at": 1,
+   "common": true
+  },
+  {
    "w": "至上",
    "lv": "N4",
    "kana": "しじょう",
@@ -18280,6 +18611,18 @@
    "common": true
   },
   {
+   "w": "見る",
+   "lv": "N5",
+   "kana": "みる",
+   "en": [
+    "to see; to look",
+    "to examine; to look over"
+   ],
+   "kana_at": 1,
+   "g1": true,
+   "common": true
+  },
+  {
    "w": "見事",
    "lv": "N4",
    "kana": "みごと",
@@ -18489,6 +18832,17 @@
    "common": true
   },
   {
+   "w": "計る",
+   "lv": "N4",
+   "kana": "はかる",
+   "en": [
+    "to measure; to weigh",
+    "to conjecture; to infer"
+   ],
+   "kana_at": 1,
+   "common": true
+  },
+  {
    "w": "計上",
    "lv": "N4",
    "kana": "けいじょう",
@@ -18596,6 +18950,18 @@
    "en": [
     "topic; subject"
    ],
+   "common": true
+  },
+  {
+   "w": "語る",
+   "lv": "N5",
+   "kana": "かたる",
+   "en": [
+    "to talk about; to speak of",
+    "to recite; to chant"
+   ],
+   "kana_at": 1,
+   "g1": true,
    "common": true
   },
   {
@@ -18808,6 +19174,17 @@
    "common": true
   },
   {
+   "w": "走る",
+   "lv": "N4",
+   "kana": "はしる",
+   "en": [
+    "to run",
+    "to run (of a vehicle); to drive"
+   ],
+   "kana_at": 1,
+   "common": true
+  },
+  {
    "w": "走者",
    "lv": "N4",
    "kana": "そうしゃ",
@@ -18861,6 +19238,18 @@
    "en": [
     "standing up"
    ],
+   "common": true
+  },
+  {
+   "w": "足る",
+   "lv": "N5",
+   "kana": "たる",
+   "en": [
+    "to be sufficient; to be enough",
+    "to be worth doing; to be worthy of"
+   ],
+   "kana_at": 1,
+   "g1": true,
    "common": true
   },
   {
@@ -19127,6 +19516,17 @@
    "common": true
   },
   {
+   "w": "送る",
+   "lv": "N4",
+   "kana": "おくる",
+   "en": [
+    "to send (a thing); to dispatch",
+    "to take or escort (a person somewhere); to see off (a person)"
+   ],
+   "kana_at": 1,
+   "common": true
+  },
+  {
    "w": "送別",
    "lv": "N4",
    "kana": "そうべつ",
@@ -19160,6 +19560,17 @@
    "en": [
     "transmission of electricity; electricity supply"
    ],
+   "common": true
+  },
+  {
+   "w": "通る",
+   "lv": "N4",
+   "kana": "とおる",
+   "en": [
+    "to go by; to go past",
+    "to run (between; of a rail service, bus route, etc.); to operate (between)"
+   ],
+   "kana_at": 1,
    "common": true
   },
   {
@@ -19497,6 +19908,17 @@
     "foster parent; foster parents",
     "(pet) caretaker"
    ],
+   "common": true
+  },
+  {
+   "w": "重る",
+   "lv": "N4",
+   "kana": "おもる",
+   "en": [
+    "to get heavy",
+    "to worsen (of illness); to grow serious"
+   ],
+   "kana_at": 1,
    "common": true
   },
   {
@@ -20043,6 +20465,17 @@
    "en": [
     "director"
    ],
+   "common": true
+  },
+  {
+   "w": "集る",
+   "lv": "N4",
+   "kana": "たかる",
+   "en": [
+    "to gather; to crowd round",
+    "to sponge (off someone); to scrounge"
+   ],
+   "kana_at": 1,
    "common": true
   },
   {
@@ -23501,6 +23934,16 @@
    ]
   },
   {
+   "w": "与る",
+   "lv": "N4",
+   "kana": "あずかる",
+   "en": [
+    "to participate in; to take part in",
+    "to receive; to be given"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "与力",
    "lv": "N4",
    "kana": "よりき",
@@ -23661,6 +24104,17 @@
    "en": [
     "Fire Dragon (53rd year of the sexagenary cycle, e.g. 1916, 1976, 2036)"
    ]
+  },
+  {
+   "w": "中る",
+   "lv": "N5",
+   "kana": "あたる",
+   "en": [
+    "to be hit; to strike",
+    "to touch; to be in contact"
+   ],
+   "kana_at": 1,
+   "g1": true
   },
   {
    "w": "中一",
@@ -24173,6 +24627,15 @@
    "en": [
     "middle dot; centred period"
    ]
+  },
+  {
+   "w": "主な",
+   "lv": "N4",
+   "kana": "おもな",
+   "en": [
+    "chief; main"
+   ],
+   "kana_at": 1
   },
   {
    "w": "主上",
@@ -25224,6 +25687,17 @@
    ]
   },
   {
+   "w": "交る",
+   "lv": "N5",
+   "kana": "まじる",
+   "en": [
+    "to be mixed; to be blended with",
+    "to associate with; to mingle with"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
    "w": "交交",
    "lv": "N5",
    "kana": "こもごも",
@@ -25777,6 +26251,15 @@
    ]
   },
   {
+   "w": "仕る",
+   "lv": "N4",
+   "kana": "つかまつる",
+   "en": [
+    "to serve; to do"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "仕丁",
    "lv": "N4",
    "kana": "しちょう",
@@ -25883,6 +26366,16 @@
    "en": [
     "tailoring; dressmaking"
    ]
+  },
+  {
+   "w": "代る",
+   "lv": "N4",
+   "kana": "かわる",
+   "en": [
+    "to succeed; to relieve",
+    "to take the place of; to substitute for"
+   ],
+   "kana_at": 1
   },
   {
    "w": "代休",
@@ -26742,6 +27235,15 @@
    ]
   },
   {
+   "w": "便る",
+   "lv": "N4",
+   "kana": "たよる",
+   "en": [
+    "to rely on; to depend on"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "便便",
    "lv": "N4",
    "kana": "べんべん",
@@ -26798,6 +27300,16 @@
    "en": [
     "bowel movement"
    ]
+  },
+  {
+   "w": "借る",
+   "lv": "N4",
+   "kana": "かる",
+   "en": [
+    "to borrow; to have a loan",
+    "to rent; to hire"
+   ],
+   "kana_at": 1
   },
   {
    "w": "借主",
@@ -27406,6 +27918,15 @@
    "en": [
     "bald-headed"
    ]
+  },
+  {
+   "w": "免る",
+   "lv": "N4",
+   "kana": "まのがる",
+   "en": [
+    "to escape from harm; to be spared"
+   ],
+   "kana_at": 1
   },
   {
    "w": "免官",
@@ -28457,6 +28978,27 @@
    "en": [
     "sword bean (Canavalia gladiata)"
    ]
+  },
+  {
+   "w": "分の",
+   "lv": "N5",
+   "kana": "ぶんの",
+   "en": [
+    "-th (e.g. one fifth)"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "分る",
+   "lv": "N5",
+   "kana": "わかる",
+   "en": [
+    "to understand; to comprehend",
+    "to become clear; to be known"
+   ],
+   "kana_at": 1,
+   "g1": true
   },
   {
    "w": "分与",
@@ -31103,6 +31645,16 @@
    "g1": true
   },
   {
+   "w": "古る",
+   "lv": "N5",
+   "kana": "ふる",
+   "en": [
+    "to age; to get old"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
    "w": "古事",
    "lv": "N4",
    "kana": "こじ",
@@ -32331,6 +32883,15 @@
    "en": [
     "perimeter; circumference"
    ]
+  },
+  {
+   "w": "味な",
+   "lv": "N4",
+   "kana": "あじな",
+   "en": [
+    "smart; clever"
+   ],
+   "kana_at": 1
   },
   {
    "w": "味玉",
@@ -34746,6 +35307,17 @@
    ]
   },
   {
+   "w": "大の",
+   "lv": "N5",
+   "kana": "だいの",
+   "en": [
+    "large; big",
+    "grown (man, etc.)"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
    "w": "大乗",
    "lv": "N4",
    "kana": "だいじょう",
@@ -35291,6 +35863,16 @@
     "god of wealth",
     "monk's wife"
    ]
+  },
+  {
+   "w": "天の",
+   "lv": "N5",
+   "kana": "あめの",
+   "en": [
+    "heavenly; celestial"
+   ],
+   "kana_at": 1,
+   "g1": true
   },
   {
    "w": "天一",
@@ -41236,6 +41818,16 @@
    ]
   },
   {
+   "w": "料る",
+   "lv": "N4",
+   "kana": "りょうる",
+   "en": [
+    "to cook (food)",
+    "to manage well; to handle well"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "料地",
    "lv": "N4",
    "kana": "りょうち",
@@ -41896,6 +42488,17 @@
    ]
   },
   {
+   "w": "早る",
+   "lv": "N4",
+   "kana": "はやる",
+   "en": [
+    "to be impatient; to be eager",
+    "to be excited; to be in high spirits"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
    "w": "早世",
    "lv": "N4",
    "kana": "そうせい",
@@ -42061,6 +42664,15 @@
    "en": [
     "fast horse"
    ]
+  },
+  {
+   "w": "明る",
+   "lv": "N4",
+   "kana": "あかる",
+   "en": [
+    "to become bright; to become clear"
+   ],
+   "kana_at": 1
   },
   {
    "w": "明主",
@@ -42529,6 +43141,17 @@
    "en": [
     "Japanese bindweed (Calystegia japonica)"
    ]
+  },
+  {
+   "w": "時の",
+   "lv": "N5",
+   "kana": "ときの",
+   "en": [
+    "of the time; at the time",
+    "of the hour; in vogue"
+   ],
+   "kana_at": 1,
+   "g1": true
   },
   {
    "w": "時下",
@@ -44978,6 +45601,17 @@
    ]
   },
   {
+   "w": "止る",
+   "lv": "N5",
+   "kana": "とまる",
+   "en": [
+    "to stop (moving); to come to a stop",
+    "to stop (doing, working, being supplied); to come to a halt"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
    "w": "止木",
    "lv": "N5",
    "kana": "とまりぎ",
@@ -47306,6 +47940,15 @@
    "en": [
     "horses and cattle"
    ]
+  },
+  {
+   "w": "物の",
+   "lv": "N4",
+   "kana": "ものの",
+   "en": [
+    "only ...; no more than ..."
+   ],
+   "kana_at": 1
   },
   {
    "w": "物前",
@@ -52043,6 +52686,15 @@
    ]
   },
   {
+   "w": "終る",
+   "lv": "N4",
+   "kana": "おわる",
+   "en": [
+    "to end; to come to an end"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "終世",
    "lv": "N4",
    "kana": "しゅうせい",
@@ -53630,6 +54282,17 @@
    ]
   },
   {
+   "w": "行る",
+   "lv": "N5",
+   "kana": "やる",
+   "en": [
+    "to do; to undertake",
+    "to send; to dispatch"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
    "w": "行中",
    "lv": "N5",
    "kana": "ぎょうちゅう",
@@ -55077,6 +55740,15 @@
    "en": [
     "travel time (esp. of waves, earthquake shocks, etc.)"
    ]
+  },
+  {
+   "w": "起る",
+   "lv": "N4",
+   "kana": "おこる",
+   "en": [
+    "to occur; to happen"
+   ],
+   "kana_at": 1
   },
   {
    "w": "起始",
@@ -57467,6 +58139,16 @@
    "en": [
     "silver thread"
    ]
+  },
+  {
+   "w": "長の",
+   "lv": "N5",
+   "kana": "ながの",
+   "en": [
+    "long; eternal"
+   ],
+   "kana_at": 1,
+   "g1": true
   },
   {
    "w": "長上",
@@ -60669,6 +61351,16 @@
    "common": true
   },
   {
+   "w": "上回る",
+   "lv": "N4",
+   "kana": "うわまわる",
+   "en": [
+    "to exceed (esp. figures: profits, unemployment rate, etc.); to surpass"
+   ],
+   "kana_at": 2,
+   "common": true
+  },
+  {
    "w": "下水道",
    "lv": "N5",
    "kana": "げすいどう",
@@ -60794,6 +61486,16 @@
     "inconvenient; inexpedient",
     "wrong; improper"
    ],
+   "common": true
+  },
+  {
+   "w": "世の中",
+   "lv": "N4",
+   "kana": "よのなか",
+   "en": [
+    "society; the world"
+   ],
+   "kana_at": 1,
    "common": true
   },
   {
@@ -61163,6 +61865,18 @@
    "common": true
   },
   {
+   "w": "出来る",
+   "lv": "N5",
+   "kana": "できる",
+   "en": [
+    "to be able (in a position) to do; to be up to the task",
+    "to be ready; to be completed"
+   ],
+   "kana_at": 2,
+   "g1": true,
+   "common": true
+  },
+  {
    "w": "出来事",
    "lv": "N4",
    "kana": "できごと",
@@ -61238,6 +61952,17 @@
    "pn": [
     "地名"
    ]
+  },
+  {
+   "w": "区切る",
+   "lv": "N4",
+   "kana": "くぎる",
+   "en": [
+    "to demarcate; to delimit",
+    "to punctuate; to put an end to (e.g. a sentence)"
+   ],
+   "kana_at": 2,
+   "common": true
   },
   {
    "w": "医薬品",
@@ -61380,6 +62105,17 @@
    "common": true
   },
   {
+   "w": "千切る",
+   "lv": "N4",
+   "kana": "ちぎる",
+   "en": [
+    "to tear to pieces; to tear to shreds",
+    "to pick (e.g. fruit); to pluck"
+   ],
+   "kana_at": 2,
+   "common": true
+  },
+  {
    "w": "千秋楽",
    "lv": "N4",
    "kana": "せんしゅうらく",
@@ -61406,6 +62142,16 @@
    "en": [
     "reaction"
    ],
+   "common": true
+  },
+  {
+   "w": "口走る",
+   "lv": "N4",
+   "kana": "くちばしる",
+   "en": [
+    "to blurt out; to let slip"
+   ],
+   "kana_at": 2,
    "common": true
   },
   {
@@ -61454,6 +62200,17 @@
    "en": [
     "the same age; same period"
    ],
+   "common": true
+  },
+  {
+   "w": "名乗る",
+   "lv": "N4",
+   "kana": "なのる",
+   "en": [
+    "to give one's name (as); to introduce oneself (as)",
+    "to claim to be; to call oneself"
+   ],
+   "kana_at": 2,
    "common": true
   },
   {
@@ -61751,6 +62508,17 @@
    "common": true
   },
   {
+   "w": "天の川",
+   "lv": "N5",
+   "kana": "あまのがわ",
+   "en": [
+    "Milky Way; luminous band corresponding to the plane of the galaxy"
+   ],
+   "kana_at": 1,
+   "g1": true,
+   "common": true
+  },
+  {
    "w": "天文台",
    "lv": "N4",
    "kana": "てんもんだい",
@@ -61766,6 +62534,29 @@
    "en": [
     "astronomy"
    ],
+   "g1": true,
+   "common": true
+  },
+  {
+   "w": "女の人",
+   "lv": "N5",
+   "kana": "おんなのひと",
+   "en": [
+    "woman"
+   ],
+   "kana_at": 1,
+   "g1": true,
+   "common": true
+  },
+  {
+   "w": "女の子",
+   "lv": "N5",
+   "kana": "おんなのこ",
+   "en": [
+    "girl; daughter",
+    "young woman"
+   ],
+   "kana_at": 1,
    "g1": true,
    "common": true
   },
@@ -62113,6 +62904,28 @@
    "common": true
   },
   {
+   "w": "日の出",
+   "lv": "N5",
+   "kana": "ひので",
+   "en": [
+    "sunrise"
+   ],
+   "kana_at": 1,
+   "g1": true,
+   "common": true
+  },
+  {
+   "w": "日の目",
+   "lv": "N5",
+   "kana": "ひのめ",
+   "en": [
+    "sunlight"
+   ],
+   "kana_at": 1,
+   "g1": true,
+   "common": true
+  },
+  {
    "w": "日曜日",
    "lv": "N4",
    "kana": "にちようび",
@@ -62406,6 +63219,16 @@
    "common": true
   },
   {
+   "w": "物語る",
+   "lv": "N4",
+   "kana": "ものがたる",
+   "en": [
+    "to tell; to indicate"
+   ],
+   "kana_at": 2,
+   "common": true
+  },
+  {
    "w": "特別区",
    "lv": "N4",
    "kana": "とくべつく",
@@ -62481,6 +63304,29 @@
    "common": true
   },
   {
+   "w": "男の人",
+   "lv": "N5",
+   "kana": "おとこのひと",
+   "en": [
+    "man"
+   ],
+   "kana_at": 1,
+   "g1": true,
+   "common": true
+  },
+  {
+   "w": "男の子",
+   "lv": "N5",
+   "kana": "おとこのこ",
+   "en": [
+    "boy; son",
+    "young man"
+   ],
+   "kana_at": 1,
+   "g1": true,
+   "common": true
+  },
+  {
    "w": "画用紙",
    "lv": "N4",
    "kana": "がようし",
@@ -62505,6 +63351,18 @@
    "en": [
     "power plant; power station"
    ],
+   "common": true
+  },
+  {
+   "w": "目の前",
+   "lv": "N5",
+   "kana": "めのまえ",
+   "en": [
+    "before one's eyes; in front of one",
+    "immediate; imminent"
+   ],
+   "kana_at": 1,
+   "g1": true,
    "common": true
   },
   {
@@ -62673,6 +63531,16 @@
    "common": true
   },
   {
+   "w": "至る所",
+   "lv": "N4",
+   "kana": "いたるところ",
+   "en": [
+    "everywhere; all over"
+   ],
+   "kana_at": 1,
+   "common": true
+  },
+  {
    "w": "英会話",
    "lv": "N4",
    "kana": "えいかいわ",
@@ -62690,6 +63558,16 @@
     "English(-language) literature",
     "British literature"
    ],
+   "common": true
+  },
+  {
+   "w": "茶の間",
+   "lv": "N4",
+   "kana": "ちゃのま",
+   "en": [
+    "living room (Japanese-style)"
+   ],
+   "kana_at": 1,
    "common": true
   },
   {
@@ -62721,6 +63599,17 @@
    "common": true
   },
   {
+   "w": "見入る",
+   "lv": "N5",
+   "kana": "みいる",
+   "en": [
+    "to gaze at; to fix one's eyes upon"
+   ],
+   "kana_at": 2,
+   "g1": true,
+   "common": true
+  },
+  {
    "w": "見本市",
    "lv": "N4",
    "kana": "みほんいち",
@@ -62736,6 +63625,17 @@
    "en": [
     "spectator; sightseer"
    ],
+   "common": true
+  },
+  {
+   "w": "見送る",
+   "lv": "N4",
+   "kana": "みおくる",
+   "en": [
+    "to see someone off (at a station, an airport, etc.); to escort (e.g. home)",
+    "to follow something with one's eyes until it is out of sight"
+   ],
+   "kana_at": 2,
    "common": true
   },
   {
@@ -63081,6 +63981,25 @@
     "fish market"
    ],
    "common": true
+  },
+  {
+   "w": "一の糸",
+   "lv": "N4",
+   "kana": "いちのいと",
+   "en": [
+    "first string (of a shamisen, etc.)"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "一の酉",
+   "lv": "N5",
+   "kana": "いちのとり",
+   "en": [
+    "first day of the cock in the eleventh month"
+   ],
+   "kana_at": 1
   },
   {
    "w": "一一月",
@@ -63687,6 +64606,16 @@
    ]
   },
   {
+   "w": "三の糸",
+   "lv": "N4",
+   "kana": "さんのいと",
+   "en": [
+    "third string (of a shamisen, etc.)"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
    "w": "三七日",
    "lv": "N5",
    "kana": "みなぬか",
@@ -63871,6 +64800,37 @@
    ]
   },
   {
+   "w": "上の人",
+   "lv": "N5",
+   "kana": "うえのひと",
+   "en": [
+    "superior; boss",
+    "them (as opposed to \"us\")"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "上の子",
+   "lv": "N5",
+   "kana": "うえのこ",
+   "en": [
+    "the older child"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "上の空",
+   "lv": "N5",
+   "kana": "うわのそら",
+   "en": [
+    "inattention; absent-mindedness"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
    "w": "上下動",
    "lv": "N4",
    "kana": "じょうげどう",
@@ -64006,6 +64966,37 @@
    ]
   },
   {
+   "w": "下の下",
+   "lv": "N5",
+   "kana": "げのげ",
+   "en": [
+    "the lowest (of its kind); the poorest"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "下の人",
+   "lv": "N5",
+   "kana": "したのひと",
+   "en": [
+    "downstairs neighbour (neighbor)",
+    "subordinate"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "下の子",
+   "lv": "N5",
+   "kana": "したのこ",
+   "en": [
+    "younger child"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
    "w": "下世話",
    "lv": "N4",
    "kana": "げせわ",
@@ -64037,6 +65028,15 @@
    "en": [
     "servants' kitchen"
    ]
+  },
+  {
+   "w": "下回る",
+   "lv": "N4",
+   "kana": "したまわる",
+   "en": [
+    "to fall below (esp. figures: profits, unemployment rate, etc.); to be less than"
+   ],
+   "kana_at": 2
   },
   {
    "w": "下士官",
@@ -64202,6 +65202,15 @@
    ]
   },
   {
+   "w": "不味る",
+   "lv": "N4",
+   "kana": "まずる",
+   "en": [
+    "to bungle; to make things awkward"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "不品行",
    "lv": "N4",
    "kana": "ふひんこう",
@@ -64363,6 +65372,24 @@
    ]
   },
   {
+   "w": "与の重",
+   "lv": "N4",
+   "kana": "よのじゅう",
+   "en": [
+    "fourth jūbako tray; fourth stacked box"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "与太る",
+   "lv": "N4",
+   "kana": "よたる",
+   "en": [
+    "to live a wicked life"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "与太者",
    "lv": "N4",
    "kana": "よたもの",
@@ -64377,6 +65404,15 @@
    "en": [
     "idle gossip; foolish talk"
    ]
+  },
+  {
+   "w": "丑の日",
+   "lv": "N5",
+   "kana": "うしのひ",
+   "en": [
+    "day of the Ox (esp. in midsummer or midwinter)"
+   ],
+   "kana_at": 1
   },
   {
    "w": "世代間",
@@ -64450,6 +65486,36 @@
    "en": [
     "small talk; chat"
    ]
+  },
+  {
+   "w": "中の下",
+   "lv": "N5",
+   "kana": "ちゅうのげ",
+   "en": [
+    "lower-middle (e.g. in class rank)"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "中の人",
+   "lv": "N5",
+   "kana": "なかのひと",
+   "en": [
+    "person inside a cartoon body suit; voice actor",
+    "insider"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "中の兄",
+   "lv": "N4",
+   "kana": "なかのあに",
+   "en": [
+    "middle brother"
+   ],
+   "kana_at": 1
   },
   {
    "w": "中世語",
@@ -64795,6 +65861,15 @@
    "g1": true
   },
   {
+   "w": "主の日",
+   "lv": "N4",
+   "kana": "しゅのひ",
+   "en": [
+    "the Sabbath; the Lord's Day"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "主人顔",
    "lv": "N4",
    "kana": "しゅじんがお",
@@ -64972,6 +66047,56 @@
    "en": [
     "(the thing) itself"
    ]
+  },
+  {
+   "w": "事足る",
+   "lv": "N4",
+   "kana": "ことたる",
+   "en": [
+    "to suffice; to serve the purpose"
+   ],
+   "kana_at": 2
+  },
+  {
+   "w": "二の町",
+   "lv": "N4",
+   "kana": "にのまち",
+   "en": [
+    "inferior; second-rate"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "二の矢",
+   "lv": "N4",
+   "kana": "にのや",
+   "en": [
+    "second arrow",
+    "second move; second step"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "二の糸",
+   "lv": "N4",
+   "kana": "にのいと",
+   "en": [
+    "second string (of a shamisen, etc.)"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "二の足",
+   "lv": "N5",
+   "kana": "にのあし",
+   "en": [
+    "second step",
+    "hesitation"
+   ],
+   "kana_at": 1,
+   "g1": true
   },
   {
    "w": "二三日",
@@ -65394,12 +66519,89 @@
    "g1": true
   },
   {
+   "w": "亥の子",
+   "lv": "N5",
+   "kana": "いのこ",
+   "en": [
+    "day of the Boar in the month of the Boar (the 10th month in the lunar calendar)"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "亥の日",
+   "lv": "N5",
+   "kana": "いのひ",
+   "en": [
+    "day of the Boar"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "京の水",
+   "lv": "N4",
+   "kana": "きょうのみず",
+   "en": [
+    "water from the capital (Kyoto), rumored to have a whitening effect",
+    "type of washing lotion from the end of the Edo period"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "京の都",
+   "lv": "N4",
+   "kana": "きょうのみやこ",
+   "en": [
+    "Kyoto"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "京野菜",
    "lv": "N4",
    "kana": "きょうやさい",
    "en": [
     "Kyoto vegetables; vegetables traditionally grown in and around Kyoto"
    ]
+  },
+  {
+   "w": "人の口",
+   "lv": "N5",
+   "kana": "ひとのくち",
+   "en": [
+    "what people say; rumours"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "人の子",
+   "lv": "N5",
+   "kana": "ひとのこ",
+   "en": [
+    "(somebody's) child; person with parents",
+    "other people's children"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "人の道",
+   "lv": "N5",
+   "kana": "ひとのみち",
+   "en": [
+    "moral way of life; correct path"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "人の金",
+   "lv": "N5",
+   "kana": "ひとのかね",
+   "en": [
+    "other people's money"
+   ],
+   "kana_at": 1,
+   "g1": true
   },
   {
    "w": "人体学",
@@ -65630,6 +66832,15 @@
    ]
   },
   {
+   "w": "今の所",
+   "lv": "N4",
+   "kana": "いまのところ",
+   "en": [
+    "at present; currently"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "今一度",
    "lv": "N4",
    "kana": "いまいちど",
@@ -65724,6 +66935,15 @@
    ]
   },
   {
+   "w": "仕上る",
+   "lv": "N4",
+   "kana": "しあがる",
+   "en": [
+    "to be finished; to be completed"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "仕上工",
    "lv": "N4",
    "kana": "しあげこう",
@@ -65810,6 +67030,16 @@
    "en": [
     "quantity or value of goods laid in"
    ]
+  },
+  {
+   "w": "仕切る",
+   "lv": "N4",
+   "kana": "しきる",
+   "en": [
+    "to partition; to divide",
+    "to direct; to manage"
+   ],
+   "kana_at": 2
   },
   {
    "w": "仕切書",
@@ -66164,6 +67394,15 @@
    ]
   },
   {
+   "w": "何の道",
+   "lv": "N5",
+   "kana": "どのみち",
+   "en": [
+    "anyway; anyhow"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "何万年",
    "lv": "N5",
    "kana": "なんまんねん",
@@ -66446,6 +67685,15 @@
    ]
   },
   {
+   "w": "借切る",
+   "lv": "N4",
+   "kana": "かりきる",
+   "en": [
+    "to hire for exclusive use; to reserve"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "借地料",
    "lv": "N4",
    "kana": "しゃくちりょう",
@@ -66532,6 +67780,45 @@
    "en": [
     "older brother"
    ]
+  },
+  {
+   "w": "先の世",
+   "lv": "N4",
+   "kana": "さきのよ",
+   "en": [
+    "previous existence"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "先の先",
+   "lv": "N5",
+   "kana": "せんのせん",
+   "en": [
+    "striking just before one's opponent makes a move"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "先の日",
+   "lv": "N5",
+   "kana": "さきのひ",
+   "en": [
+    "the other day; a few days ago"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "先の話",
+   "lv": "N5",
+   "kana": "さきのはなし",
+   "en": [
+    "a long way off; matter for the future"
+   ],
+   "kana_at": 1,
+   "g1": true
   },
   {
    "w": "先住民",
@@ -66630,6 +67917,15 @@
    "en": [
     "seer"
    ]
+  },
+  {
+   "w": "先走る",
+   "lv": "N4",
+   "kana": "さきばしる",
+   "en": [
+    "to be forward; to be impertinent"
+   ],
+   "kana_at": 2
   },
   {
    "w": "光化学",
@@ -66890,6 +68186,17 @@
    ]
   },
   {
+   "w": "八の字",
+   "lv": "N4",
+   "kana": "はちのじ",
+   "en": [
+    "figure eight; figure of eight",
+    "shape of \"hachi\", the kanji for eight"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
    "w": "八九分",
    "lv": "N5",
    "kana": "はっくぶ",
@@ -67141,6 +68448,16 @@
    ]
   },
   {
+   "w": "出る前",
+   "lv": "N5",
+   "kana": "でるまえ",
+   "en": [
+    "before going out"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
    "w": "出世作",
    "lv": "N4",
    "kana": "しゅっせさく",
@@ -67207,6 +68524,15 @@
    "g1": true
   },
   {
+   "w": "出切る",
+   "lv": "N4",
+   "kana": "できる",
+   "en": [
+    "to be out of; to have no more at hand"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "出前持",
    "lv": "N4",
    "kana": "でまえもち",
@@ -67253,6 +68579,16 @@
    "en": [
     "seller; exhibitor"
    ]
+  },
+  {
+   "w": "出回る",
+   "lv": "N4",
+   "kana": "でまわる",
+   "en": [
+    "to appear on the market; to be in season (e.g. fruit)",
+    "to circulate widely; to make the rounds"
+   ],
+   "kana_at": 2
   },
   {
    "w": "出土品",
@@ -67419,6 +68755,16 @@
    ]
   },
   {
+   "w": "分の一",
+   "lv": "N5",
+   "kana": "ぶんのいち",
+   "en": [
+    "one Nth part (e.g. one fifth, one tenth); one out of N"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
    "w": "分光学",
    "lv": "N4",
    "kana": "ぶんこうがく",
@@ -67559,6 +68905,24 @@
    ]
   },
   {
+   "w": "前の世",
+   "lv": "N4",
+   "kana": "まえのよ",
+   "en": [
+    "previous existence"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "前の週",
+   "lv": "N5",
+   "kana": "まえのしゅう",
+   "en": [
+    "previous week"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "前世界",
    "lv": "N4",
    "kana": "ぜんせかい",
@@ -67658,6 +69022,15 @@
    "en": [
     "driving power"
    ]
+  },
+  {
+   "w": "力の場",
+   "lv": "N4",
+   "kana": "ちからのば",
+   "en": [
+    "field of force"
+   ],
+   "kana_at": 1
   },
   {
    "w": "力不足",
@@ -67862,6 +69235,16 @@
     "fossil water; paleowater"
    ],
    "g1": true
+  },
+  {
+   "w": "北の方",
+   "lv": "N4",
+   "kana": "きたのかた",
+   "en": [
+    "northward; facing the north",
+    "nobleman's true wife"
+   ],
+   "kana_at": 1
   },
   {
    "w": "北京語",
@@ -68260,6 +69643,16 @@
    ]
   },
   {
+   "w": "午の日",
+   "lv": "N5",
+   "kana": "うまのひ",
+   "en": [
+    "day of the Horse"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
    "w": "午後一",
    "lv": "N5",
    "kana": "ごごいち",
@@ -68547,12 +69940,51 @@
    ]
   },
   {
+   "w": "卯の日",
+   "lv": "N5",
+   "kana": "うのひ",
+   "en": [
+    "day of the Hare"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "卯の花",
+   "lv": "N5",
+   "kana": "うのはな",
+   "en": [
+    "bean curd lees; soybean pulp",
+    "deutzia; Deutzia crenata"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "卯月鳥",
    "lv": "N4",
    "kana": "うづきどり",
    "en": [
     "lesser cuckoo (Cuculus poliocephalus)"
    ]
+  },
+  {
+   "w": "又の名",
+   "lv": "N5",
+   "kana": "またのな",
+   "en": [
+    "alias; another name"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "又の日",
+   "lv": "N5",
+   "kana": "またのひ",
+   "en": [
+    "another day; the next day"
+   ],
+   "kana_at": 1,
+   "g1": true
   },
   {
    "w": "又家来",
@@ -68585,6 +70017,16 @@
    "en": [
     "see you next week"
    ]
+  },
+  {
+   "w": "友の会",
+   "lv": "N5",
+   "kana": "とものかい",
+   "en": [
+    "association; club"
+   ],
+   "kana_at": 1,
+   "g1": true
   },
   {
    "w": "友人間",
@@ -68970,6 +70412,16 @@
    ]
   },
   {
+   "w": "台の物",
+   "lv": "N4",
+   "kana": "だいのもの",
+   "en": [
+    "food set out on a stand; gift placed on a stand",
+    "food brought on a large stand to a brothel by a red-light district caterer"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "右万字",
    "lv": "N4",
    "kana": "みぎまんじ",
@@ -68993,6 +70445,26 @@
    "en": [
     "right ventricle"
    ]
+  },
+  {
+   "w": "合の子",
+   "lv": "N4",
+   "kana": "あいのこ",
+   "en": [
+    "person of mixed parentage; crossbreed",
+    "hybrid; crossbreed"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "合の手",
+   "lv": "N4",
+   "kana": "あいのて",
+   "en": [
+    "interlude (in traditional Japanese music)",
+    "chanting or clapping along (during a song or dance)"
+   ],
+   "kana_at": 1
   },
   {
    "w": "合体字",
@@ -69286,6 +70758,16 @@
    "g1": true
   },
   {
+   "w": "名立る",
+   "lv": "N5",
+   "kana": "なだたる",
+   "en": [
+    "famous; notorious"
+   ],
+   "kana_at": 2,
+   "g1": true
+  },
+  {
    "w": "名言集",
    "lv": "N4",
    "kana": "めいげんしゅう",
@@ -69382,6 +70864,17 @@
    "en": [
     "question collection; problem collection"
    ]
+  },
+  {
+   "w": "四の二",
+   "lv": "N5",
+   "kana": "しのに",
+   "en": [
+    "rolling a two and four (with two dice)",
+    "six"
+   ],
+   "kana_at": 1,
+   "g1": true
   },
   {
    "w": "四七日",
@@ -69807,6 +71300,15 @@
    "g1": true
   },
   {
+   "w": "地の文",
+   "lv": "N4",
+   "kana": "じのぶん",
+   "en": [
+    "descriptive (narrative) part"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "地上駅",
    "lv": "N4",
    "kana": "ちじょうえき",
@@ -70056,6 +71558,15 @@
    ]
   },
   {
+   "w": "売切る",
+   "lv": "N4",
+   "kana": "うりきる",
+   "en": [
+    "to sell out; to sell off"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "売買高",
    "lv": "N5",
    "kana": "ばいばいだか",
@@ -70063,6 +71574,15 @@
     "sales amount; sales volume"
    ],
    "g1": true
+  },
+  {
+   "w": "夏の月",
+   "lv": "N4",
+   "kana": "なつのつき",
+   "en": [
+    "the (cool) summer moon"
+   ],
+   "kana_at": 1
   },
   {
    "w": "夏木立",
@@ -70328,6 +71848,34 @@
    "g1": true
   },
   {
+   "w": "夜の女",
+   "lv": "N4",
+   "kana": "よるのおんな",
+   "en": [
+    "street prostitute; streetwalker"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "夜の目",
+   "lv": "N4",
+   "kana": "よのめ",
+   "en": [
+    "eyes of the night",
+    "eyes asleep; at night"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "夜の秋",
+   "lv": "N4",
+   "kana": "よるのあき",
+   "en": [
+    "cool, late summer night"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "夜仕事",
    "lv": "N4",
    "kana": "よしごと",
@@ -70398,6 +71946,45 @@
    "en": [
     "night stall; night shop"
    ]
+  },
+  {
+   "w": "大の字",
+   "lv": "N4",
+   "kana": "だいのじ",
+   "en": [
+    "shape of the \"dai\" kanji (esp. person with arms and legs outstretched); sprawling"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "大の方",
+   "lv": "N4",
+   "kana": "だいのほう",
+   "en": [
+    "feces; excrement"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "大の月",
+   "lv": "N5",
+   "kana": "だいのつき",
+   "en": [
+    "long month (i.e. having 31 days)"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "大の男",
+   "lv": "N5",
+   "kana": "だいのおとこ",
+   "en": [
+    "adult man"
+   ],
+   "kana_at": 1,
+   "g1": true
   },
   {
    "w": "大三元",
@@ -71029,6 +72616,26 @@
    ]
   },
   {
+   "w": "天の下",
+   "lv": "N5",
+   "kana": "あめのした",
+   "en": [
+    "the whole country; the public"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "天の声",
+   "lv": "N4",
+   "kana": "てんのこえ",
+   "en": [
+    "heavenly voice",
+    "off the record instructions; influential person's opinion"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "天上川",
    "lv": "N5",
    "kana": "てんじょうがわ",
@@ -71044,6 +72651,16 @@
    "en": [
     "celestial world; heaven"
    ]
+  },
+  {
+   "w": "天下る",
+   "lv": "N5",
+   "kana": "あまくだる",
+   "en": [
+    "to descend from heaven"
+   ],
+   "kana_at": 2,
+   "g1": true
   },
   {
    "w": "天下一",
@@ -71299,6 +72916,17 @@
    "en": [
     "draper's shop"
    ]
+  },
+  {
+   "w": "女の手",
+   "lv": "N5",
+   "kana": "おんなのて",
+   "en": [
+    "feminine handwriting",
+    "woman's hand"
+   ],
+   "kana_at": 1,
+   "g1": true
   },
   {
    "w": "女主人",
@@ -71649,6 +73277,27 @@
    ]
   },
   {
+   "w": "子の日",
+   "lv": "N5",
+   "kana": "ねのひ",
+   "en": [
+    "day of the Rat (esp. the first day of the Rat in the New Year)",
+    "collecting herbs and pulling out young pine trees by the roots"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "子の時",
+   "lv": "N5",
+   "kana": "ねのとき",
+   "en": [
+    "midnight"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
    "w": "子安貝",
    "lv": "N5",
    "kana": "こやすがい",
@@ -71823,6 +73472,33 @@
    ]
   },
   {
+   "w": "家の人",
+   "lv": "N4",
+   "kana": "いえのひと",
+   "en": [
+    "one's family; family member"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "家の外",
+   "lv": "N4",
+   "kana": "いえのそと",
+   "en": [
+    "outside the house"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "家の風",
+   "lv": "N4",
+   "kana": "いえのかぜ",
+   "en": [
+    "family tradition"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "家出人",
    "lv": "N4",
    "kana": "いえでにん",
@@ -71864,6 +73540,15 @@
    ]
   },
   {
+   "w": "寅の日",
+   "lv": "N5",
+   "kana": "とらのひ",
+   "en": [
+    "day of the Tiger"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "寒水石",
    "lv": "N4",
    "kana": "かんすいせき",
@@ -71886,6 +73571,16 @@
    "en": [
     "temple elementary school (during the Edo period)"
    ]
+  },
+  {
+   "w": "小の月",
+   "lv": "N5",
+   "kana": "しょうのつき",
+   "en": [
+    "short month (i.e. having fewer than 31 days)"
+   ],
+   "kana_at": 1,
+   "g1": true
   },
   {
    "w": "小三元",
@@ -72293,6 +73988,16 @@
    ]
   },
   {
+   "w": "少な目",
+   "lv": "N5",
+   "kana": "すくなめ",
+   "en": [
+    "somewhat below; slightly below"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
    "w": "少国民",
    "lv": "N4",
    "kana": "しょうこくみん",
@@ -72352,12 +74057,52 @@
    ]
   },
   {
+   "w": "尚の事",
+   "lv": "N4",
+   "kana": "なおのこと",
+   "en": [
+    "all the more; still more"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "屋台店",
    "lv": "N4",
    "kana": "やたいみせ",
    "en": [
     "stall; stand"
    ]
+  },
+  {
+   "w": "山の手",
+   "lv": "N5",
+   "kana": "やまのて",
+   "en": [
+    "hilly section of a city (usu. residential)",
+    "Yamanote (hilly residential section of western Tokyo, incl. Yotsuya, Aoyama, Koishikawa, Hongo, Ichigaya, Akasaka, Azabu and surrounds)"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "山の日",
+   "lv": "N5",
+   "kana": "やまのひ",
+   "en": [
+    "Mountain Day (national holiday; August 11)"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "山の気",
+   "lv": "N5",
+   "kana": "やまのき",
+   "en": [
+    "mountain air"
+   ],
+   "kana_at": 1,
+   "g1": true
   },
   {
    "w": "山口県",
@@ -72451,6 +74196,16 @@
    "en": [
     "woolly lespedeza (Lespedeza tomentosa) (species of flower)"
    ]
+  },
+  {
+   "w": "川の字",
+   "lv": "N4",
+   "kana": "かわのじ",
+   "en": [
+    "(formation of) three people sleeping side by side (esp. a child between two parents); \"river\" character"
+   ],
+   "kana_at": 1,
+   "g1": true
   },
   {
    "w": "川八目",
@@ -72628,6 +74383,15 @@
    ]
   },
   {
+   "w": "巳の日",
+   "lv": "N5",
+   "kana": "みのひ",
+   "en": [
+    "day of the Snake"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "市吏員",
    "lv": "N4",
    "kana": "しりいん",
@@ -72682,6 +74446,33 @@
    "en": [
     "returnee; homecomer"
    ]
+  },
+  {
+   "w": "年の市",
+   "lv": "N4",
+   "kana": "としのいち",
+   "en": [
+    "year-end fair; year-end market"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "年の朝",
+   "lv": "N4",
+   "kana": "としのあした",
+   "en": [
+    "morning of the New Year"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "年の豆",
+   "lv": "N4",
+   "kana": "としのまめ",
+   "en": [
+    "beans of the bean-scattering ceremony"
+   ],
+   "kana_at": 1
   },
   {
    "w": "年代物",
@@ -72756,12 +74547,41 @@
    ]
   },
   {
+   "w": "引下る",
+   "lv": "N4",
+   "kana": "ひきさがる",
+   "en": [
+    "to withdraw; to leave",
+    "to back down; to give up"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "引出物",
    "lv": "N4",
    "kana": "ひきでもの",
    "en": [
     "gift; souvenir"
    ]
+  },
+  {
+   "w": "引切る",
+   "lv": "N4",
+   "kana": "ひききる",
+   "en": [
+    "to saw off",
+    "to interrupt; to suspend"
+   ],
+   "kana_at": 2
+  },
+  {
+   "w": "引去る",
+   "lv": "N4",
+   "kana": "ひきさる",
+   "en": [
+    "to retreat; to withdraw"
+   ],
+   "kana_at": 2
   },
   {
    "w": "引用元",
@@ -72836,6 +74656,15 @@
    ]
   },
   {
+   "w": "強の者",
+   "lv": "N4",
+   "kana": "ごうのもの",
+   "en": [
+    "very strong person; brave warrior"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "強化米",
    "lv": "N4",
    "kana": "きょうかまい",
@@ -72861,6 +74690,15 @@
    ]
   },
   {
+   "w": "待の先",
+   "lv": "N4",
+   "kana": "たいのせん",
+   "en": [
+    "seizing the initiative by counterattacking"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "待合所",
    "lv": "N4",
    "kana": "まちあいじょ",
@@ -72868,6 +74706,53 @@
     "shelter (for buses); waiting area",
     "waiting room"
    ]
+  },
+  {
+   "w": "後の世",
+   "lv": "N4",
+   "kana": "のちのよ",
+   "en": [
+    "after ages; posterity"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "後の先",
+   "lv": "N5",
+   "kana": "ごのせん",
+   "en": [
+    "counterattack; striking one's opponent immediately after defending an incoming attack"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "後の方",
+   "lv": "N4",
+   "kana": "あとのほう",
+   "en": [
+    "later"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "後の月",
+   "lv": "N5",
+   "kana": "あとのつき",
+   "en": [
+    "last month"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "後の朝",
+   "lv": "N4",
+   "kana": "のちのあした",
+   "en": [
+    "the morning after (having slept together)"
+   ],
+   "kana_at": 1
   },
   {
    "w": "後一歩",
@@ -72930,12 +74815,76 @@
    ]
   },
   {
+   "w": "心の中",
+   "lv": "N4",
+   "kana": "こころのうち",
+   "en": [
+    "one's heart; one's feelings"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "心の友",
+   "lv": "N4",
+   "kana": "こころのとも",
+   "en": [
+    "one's bosom friend; kindred-spirit"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "心の声",
+   "lv": "N4",
+   "kana": "こころのこえ",
+   "en": [
+    "(one's) inner voice; voice of one's heart"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "心の病",
+   "lv": "N4",
+   "kana": "こころのやまい",
+   "en": [
+    "mental illness; emotional disorder"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "心の色",
+   "lv": "N4",
+   "kana": "こころのいろ",
+   "en": [
+    "one's emotional state; one's mood",
+    "human interest; kindness"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "心字池",
    "lv": "N4",
    "kana": "しんじいけ",
    "en": [
     "lake shaped like the kanji \"heart\" character (traditional Japanese gardens)"
    ]
+  },
+  {
+   "w": "心有る",
+   "lv": "N4",
+   "kana": "こころある",
+   "en": [
+    "thoughtful; considerate"
+   ],
+   "kana_at": 2
+  },
+  {
+   "w": "心見る",
+   "lv": "N4",
+   "kana": "こころみる",
+   "en": [
+    "to try; to attempt"
+   ],
+   "kana_at": 2
   },
   {
    "w": "心電図",
@@ -73034,6 +74983,15 @@
    ]
   },
   {
+   "w": "戌の日",
+   "lv": "N5",
+   "kana": "いぬのひ",
+   "en": [
+    "day of the Dog"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "所作事",
    "lv": "N4",
    "kana": "しょさごと",
@@ -73088,6 +75046,25 @@
    "en": [
     "property; possession"
    ]
+  },
+  {
+   "w": "手の物",
+   "lv": "N4",
+   "kana": "てのもの",
+   "en": [
+    "one's own thing; thing held in one's hand(s)",
+    "one's speciality; one's forte"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "手の者",
+   "lv": "N4",
+   "kana": "てのもの",
+   "en": [
+    "one's subordinate"
+   ],
+   "kana_at": 1
   },
   {
    "w": "手不足",
@@ -73229,6 +75206,16 @@
    ]
   },
   {
+   "w": "持上る",
+   "lv": "N4",
+   "kana": "もちあがる",
+   "en": [
+    "to be lifted; to be raised",
+    "to happen suddenly; to occur"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "持国天",
    "lv": "N4",
    "kana": "じこくてん",
@@ -73243,6 +75230,15 @@
    "en": [
     "small playhouse"
    ]
+  },
+  {
+   "w": "持帰る",
+   "lv": "N4",
+   "kana": "もちかえる",
+   "en": [
+    "to bring back; to carry home"
+   ],
+   "kana_at": 2
   },
   {
    "w": "教会員",
@@ -73432,6 +75428,16 @@
     "text written in literary style"
    ],
    "g1": true
+  },
+  {
+   "w": "料理る",
+   "lv": "N4",
+   "kana": "りょうる",
+   "en": [
+    "to cook (food)",
+    "to manage well; to handle well"
+   ],
+   "kana_at": 2
   },
   {
    "w": "料理店",
@@ -73641,6 +75647,16 @@
    "g1": true
   },
   {
+   "w": "新玉の",
+   "lv": "N5",
+   "kana": "あらたまの",
+   "en": [
+    "welcome (new year, new spring, etc.)"
+   ],
+   "kana_at": 2,
+   "g1": true
+  },
+  {
    "w": "新生代",
    "lv": "N4",
    "kana": "しんせいだい",
@@ -73740,6 +75756,33 @@
    ]
   },
   {
+   "w": "旅の人",
+   "lv": "N4",
+   "kana": "たびのひと",
+   "en": [
+    "traveler; traveller"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "旅の空",
+   "lv": "N4",
+   "kana": "たびのそら",
+   "en": [
+    "away from home; while travelling"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "旅の者",
+   "lv": "N4",
+   "kana": "たびのもの",
+   "en": [
+    "traveler; traveller"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "旅人木",
    "lv": "N4",
    "kana": "りょじんぼく",
@@ -73786,6 +75829,16 @@
    "en": [
     "the hotel business"
    ]
+  },
+  {
+   "w": "日の本",
+   "lv": "N5",
+   "kana": "ひのもと",
+   "en": [
+    "Japan"
+   ],
+   "kana_at": 1,
+   "g1": true
   },
   {
    "w": "日不見",
@@ -74159,6 +76212,115 @@
    ]
   },
   {
+   "w": "春の使",
+   "lv": "N4",
+   "kana": "はるのつかい",
+   "en": [
+    "Japanese bush warbler; messenger of spring"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "春の土",
+   "lv": "N4",
+   "kana": "はるのつち",
+   "en": [
+    "bare ground revealed by melting snow"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "春の夕",
+   "lv": "N4",
+   "kana": "はるのゆう",
+   "en": [
+    "spring evening"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "春の夜",
+   "lv": "N4",
+   "kana": "はるのよ",
+   "en": [
+    "short spring night"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "春の山",
+   "lv": "N4",
+   "kana": "はるのやま",
+   "en": [
+    "misty mountain in spring with buds and flowers emerging"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "春の川",
+   "lv": "N4",
+   "kana": "はるのかわ",
+   "en": [
+    "river in springtime"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "春の日",
+   "lv": "N4",
+   "kana": "はるのひ",
+   "en": [
+    "day of spring",
+    "spring sun"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "春の月",
+   "lv": "N4",
+   "kana": "はるのつき",
+   "en": [
+    "spring moon; misty moon"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "春の水",
+   "lv": "N4",
+   "kana": "はるのみず",
+   "en": [
+    "lakes and torrents of spring (overflowing with water)"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "春の海",
+   "lv": "N4",
+   "kana": "はるのうみ",
+   "en": [
+    "calm sea of spring"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "春の色",
+   "lv": "N4",
+   "kana": "はるのいろ",
+   "en": [
+    "spring scene"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "春の野",
+   "lv": "N4",
+   "kana": "はるのの",
+   "en": [
+    "calm fields of spring"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "春待月",
    "lv": "N4",
    "kana": "はるまちづき",
@@ -74239,6 +76401,44 @@
    ]
   },
   {
+   "w": "時の人",
+   "lv": "N5",
+   "kana": "ときのひと",
+   "en": [
+    "man of the hour; woman of the hour"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "時の気",
+   "lv": "N5",
+   "kana": "ときのけ",
+   "en": [
+    "infectious disease; plague"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "時の運",
+   "lv": "N4",
+   "kana": "ときのうん",
+   "en": [
+    "(a matter of) chance; fortune (of a given time)"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "時の鳥",
+   "lv": "N4",
+   "kana": "ときのとり",
+   "en": [
+    "lesser cuckoo (Cuculus poliocephalus)"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "時代物",
    "lv": "N4",
    "kana": "じだいもの",
@@ -74262,6 +76462,17 @@
    "en": [
     "mealtime"
    ],
+   "g1": true
+  },
+  {
+   "w": "時化る",
+   "lv": "N5",
+   "kana": "しける",
+   "en": [
+    "to be stormy or choppy (sea)",
+    "to go through hard times; to be broke"
+   ],
+   "kana_at": 2,
    "g1": true
   },
   {
@@ -74396,12 +76607,58 @@
    ]
   },
   {
+   "w": "書送る",
+   "lv": "N4",
+   "kana": "かきおくる",
+   "en": [
+    "to write (to someone)"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "書道家",
    "lv": "N4",
    "kana": "しょどうか",
    "en": [
     "calligrapher"
    ]
+  },
+  {
+   "w": "月の出",
+   "lv": "N5",
+   "kana": "つきので",
+   "en": [
+    "moonrise; rise of the Moon"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "月の海",
+   "lv": "N4",
+   "kana": "つきのうみ",
+   "en": [
+    "lunar mare; lunar sea"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "月の物",
+   "lv": "N4",
+   "kana": "つきのもの",
+   "en": [
+    "menstruation"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "月の秋",
+   "lv": "N4",
+   "kana": "つきのあき",
+   "en": [
+    "autumn when the moon is beautiful"
+   ],
+   "kana_at": 1
   },
   {
    "w": "月世界",
@@ -74473,6 +76730,15 @@
    "en": [
     "something material; tangible object"
    ]
+  },
+  {
+   "w": "有余る",
+   "lv": "N4",
+   "kana": "ありあまる",
+   "en": [
+    "to be superfluous; to be in excess"
+   ],
+   "kana_at": 2
   },
   {
    "w": "有力紙",
@@ -74595,6 +76861,15 @@
    ]
   },
   {
+   "w": "朝日る",
+   "lv": "N4",
+   "kana": "あさひる",
+   "en": [
+    "to fabricate (stories); to make up"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "朝自習",
    "lv": "N4",
    "kana": "あさじしゅう",
@@ -74626,6 +76901,46 @@
     "very easy; piece of cake",
     "before breakfast"
    ]
+  },
+  {
+   "w": "木の下",
+   "lv": "N5",
+   "kana": "このもと",
+   "en": [
+    "under a tree"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "木の子",
+   "lv": "N5",
+   "kana": "きのこ",
+   "en": [
+    "kinoko; mountain-dwelling demon resembling a child"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "木の暗",
+   "lv": "N4",
+   "kana": "このくれ",
+   "en": [
+    "shade under a tree in full leaf",
+    "summer"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "木の間",
+   "lv": "N5",
+   "kana": "このま",
+   "en": [
+    "in the trees"
+   ],
+   "kana_at": 1,
+   "g1": true
   },
   {
    "w": "木下石",
@@ -74711,6 +77026,15 @@
     "gribble (Limnoria lignorum)"
    ],
    "g1": true
+  },
+  {
+   "w": "未の日",
+   "lv": "N5",
+   "kana": "ひつじのひ",
+   "en": [
+    "day of the Sheep"
+   ],
+   "kana_at": 1
   },
   {
    "w": "未丁年",
@@ -74850,6 +77174,27 @@
    ]
   },
   {
+   "w": "本の虫",
+   "lv": "N4",
+   "kana": "ほんのむし",
+   "en": [
+    "bookworm; bibliophile"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "本の間",
+   "lv": "N5",
+   "kana": "ほんのあいだ",
+   "en": [
+    "between the pages of a book",
+    "between two books"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
    "w": "本切羽",
    "lv": "N4",
    "kana": "ほんせっぱ",
@@ -74965,6 +77310,26 @@
    "en": [
     "autumn shower; fall shower"
    ],
+   "g1": true
+  },
+  {
+   "w": "来る年",
+   "lv": "N5",
+   "kana": "くるとし",
+   "en": [
+    "the coming year"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "来る日",
+   "lv": "N5",
+   "kana": "くるひ",
+   "en": [
+    "the coming days"
+   ],
+   "kana_at": 1,
    "g1": true
   },
   {
@@ -75216,6 +77581,15 @@
    ]
   },
   {
+   "w": "森の都",
+   "lv": "N4",
+   "kana": "もりのみやこ",
+   "en": [
+    "tree-clad town"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "森林地",
    "lv": "N4",
    "kana": "しんりんち",
@@ -75273,6 +77647,24 @@
    ]
   },
   {
+   "w": "歌の心",
+   "lv": "N4",
+   "kana": "うたのこころ",
+   "en": [
+    "spirit of a poem; true meaning of a poem"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "歌の道",
+   "lv": "N4",
+   "kana": "うたのみち",
+   "en": [
+    "art of tanka poetry"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "歌会始",
    "lv": "N4",
    "kana": "うたかいはじめ",
@@ -75287,6 +77679,16 @@
    "en": [
     "collection of short Heian period tales in the form of poems"
    ]
+  },
+  {
+   "w": "正の字",
+   "lv": "N4",
+   "kana": "せいのじ",
+   "en": [
+    "unit of five (in tallies, etc.)"
+   ],
+   "kana_at": 1,
+   "g1": true
   },
   {
    "w": "正会員",
@@ -75380,6 +77782,15 @@
    ]
   },
   {
+   "w": "死の病",
+   "lv": "N4",
+   "kana": "しのやまい",
+   "en": [
+    "deadly disease; fatal disease"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "死火山",
    "lv": "N4",
    "kana": "しかざん",
@@ -75394,6 +77805,15 @@
    "en": [
     "thanatology"
    ]
+  },
+  {
+   "w": "母の日",
+   "lv": "N5",
+   "kana": "ははのひ",
+   "en": [
+    "Mother's Day (2nd Sunday of May)"
+   ],
+   "kana_at": 1
   },
   {
    "w": "母刀自",
@@ -75443,6 +77863,15 @@
    "en": [
     "every hour on the hour"
    ]
+  },
+  {
+   "w": "氏の上",
+   "lv": "N4",
+   "kana": "うじのかみ",
+   "en": [
+    "head of a clan"
+   ],
+   "kana_at": 1
   },
   {
    "w": "民主化",
@@ -75533,6 +77962,15 @@
    ]
   },
   {
+   "w": "気の病",
+   "lv": "N4",
+   "kana": "きのやまい",
+   "en": [
+    "nervous breakdown; neurosis"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "気分屋",
    "lv": "N4",
    "kana": "きぶんや",
@@ -75547,6 +77985,26 @@
    "en": [
     "railcar powered by a diesel or gasoline engine; rail motor"
    ]
+  },
+  {
+   "w": "水の花",
+   "lv": "N5",
+   "kana": "みずのはな",
+   "en": [
+    "algal bloom; water bloom",
+    "lotus flower"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "水の道",
+   "lv": "N5",
+   "kana": "みずのみち",
+   "en": [
+    "water way"
+   ],
+   "kana_at": 1
   },
   {
    "w": "水上下",
@@ -75879,6 +78337,24 @@
    ]
   },
   {
+   "w": "海の家",
+   "lv": "N4",
+   "kana": "うみのいえ",
+   "en": [
+    "beach hut; beachside clubhouse"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "海の日",
+   "lv": "N4",
+   "kana": "うみのひ",
+   "en": [
+    "Marine Day (national holiday; 3rd Monday of July)"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "海外県",
    "lv": "N4",
    "kana": "かいがいけん",
@@ -75999,6 +78475,87 @@
    ]
   },
   {
+   "w": "火の元",
+   "lv": "N4",
+   "kana": "ひのもと",
+   "en": [
+    "place where fire is likely to break out; possible cause of a fire"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "火の手",
+   "lv": "N5",
+   "kana": "ひのて",
+   "en": [
+    "flame; blaze",
+    "attack; aggression"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "火の気",
+   "lv": "N5",
+   "kana": "ひのけ",
+   "en": [
+    "source of fire; sign of fire",
+    "warmth of fire; heat"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "火の海",
+   "lv": "N4",
+   "kana": "ひのうみ",
+   "en": [
+    "sea of fire; sea of flame"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "火の玉",
+   "lv": "N5",
+   "kana": "ひのたま",
+   "en": [
+    "fireball; ball of fire",
+    "will-o'-the-wisp; jack-o'-lantern"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "火の見",
+   "lv": "N5",
+   "kana": "ひのみ",
+   "en": [
+    "fire tower"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "火の車",
+   "lv": "N5",
+   "kana": "ひのくるま",
+   "en": [
+    "fiery chariot (which carries the souls of sinners into hell)",
+    "desperate financial situation; dire straits"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "火の鳥",
+   "lv": "N4",
+   "kana": "ひのとり",
+   "en": [
+    "phoenix (esp. fenghuang, the Chinese phoenix)"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "火事場",
    "lv": "N4",
    "kana": "かじば",
@@ -76067,12 +78624,31 @@
    ]
   },
   {
+   "w": "火病る",
+   "lv": "N4",
+   "kana": "ファビョる",
+   "en": [
+    "to get one's knickers in a twist"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "火食鳥",
    "lv": "N4",
    "kana": "ひくいどり",
    "en": [
     "cassowary (Casuarius spp.)"
    ]
+  },
+  {
+   "w": "父の日",
+   "lv": "N5",
+   "kana": "ちちのひ",
+   "en": [
+    "Father's Day (3rd Sunday of June)"
+   ],
+   "kana_at": 1,
+   "g1": true
   },
   {
    "w": "父兄会",
@@ -76108,12 +78684,31 @@
    ]
   },
   {
+   "w": "牛の舌",
+   "lv": "N4",
+   "kana": "うしのした",
+   "en": [
+    "cow's tongue",
+    "sole (any fish of the families Cynoglossidae and Soleidae)"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "牛小屋",
    "lv": "N4",
    "kana": "うしごや",
    "en": [
     "cow shed; cattle barn"
    ]
+  },
+  {
+   "w": "牛耳る",
+   "lv": "N4",
+   "kana": "ぎゅうじる",
+   "en": [
+    "to control; to take the lead in"
+   ],
+   "kana_at": 2
   },
   {
    "w": "牛肉屋",
@@ -76132,6 +78727,35 @@
     "cow's tongue",
     "sole (any fish of the families Cynoglossidae and Soleidae)"
    ]
+  },
+  {
+   "w": "物の名",
+   "lv": "N4",
+   "kana": "もののな",
+   "en": [
+    "name of a thing",
+    "acrostic poem in which consecutive morae form the disguised name of an animal, plant, place, etc."
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "物の本",
+   "lv": "N4",
+   "kana": "もののほん",
+   "en": [
+    "some book; book about that subject",
+    "books"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "物の気",
+   "lv": "N4",
+   "kana": "もののけ",
+   "en": [
+    "(vengeful) ghost; specter"
+   ],
+   "kana_at": 1
   },
   {
    "w": "物名歌",
@@ -76286,6 +78910,17 @@
    ]
   },
   {
+   "w": "犬の子",
+   "lv": "N4",
+   "kana": "いんのこ",
+   "en": [
+    "puppy; whelp",
+    "magic word said to comfort a frightened child and put him to sleep"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
    "w": "犬四手",
    "lv": "N4",
    "kana": "いぬしで",
@@ -76357,6 +78992,15 @@
    "en": [
     "Bachelor of Science; BSc"
    ]
+  },
+  {
+   "w": "生の声",
+   "lv": "N4",
+   "kana": "なまのこえ",
+   "en": [
+    "unedited remarks; frank opinions"
+   ],
+   "kana_at": 1
   },
   {
    "w": "生一本",
@@ -76498,6 +79142,15 @@
    ]
   },
   {
+   "w": "産の飯",
+   "lv": "N4",
+   "kana": "さんのめし",
+   "en": [
+    "thanksgiving rice dish after childbirth"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "産出高",
    "lv": "N4",
    "kana": "さんしゅつだか",
@@ -76577,6 +79230,15 @@
    "en": [
     "lesser cuckoo (Cuculus poliocephalus)"
    ]
+  },
+  {
+   "w": "申の日",
+   "lv": "N5",
+   "kana": "さるのひ",
+   "en": [
+    "day of the Monkey"
+   ],
+   "kana_at": 1
   },
   {
    "w": "申立人",
@@ -77254,6 +79916,25 @@
    ]
   },
   {
+   "w": "目の玉",
+   "lv": "N5",
+   "kana": "めのたま",
+   "en": [
+    "eyeball"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "目の色",
+   "lv": "N4",
+   "kana": "めのいろ",
+   "en": [
+    "eye color; eye colour"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "目八分",
    "lv": "N5",
    "kana": "めはちぶん",
@@ -77310,6 +79991,15 @@
    "en": [
     "prefectural hospital"
    ]
+  },
+  {
+   "w": "真の友",
+   "lv": "N4",
+   "kana": "しんのとも",
+   "en": [
+    "true friend"
+   ],
+   "kana_at": 1
   },
   {
    "w": "真人間",
@@ -77416,6 +80106,15 @@
    ]
   },
   {
+   "w": "着る物",
+   "lv": "N4",
+   "kana": "きるもの",
+   "en": [
+    "something to wear; clothes"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "着尺地",
    "lv": "N4",
    "kana": "きじゃくじ",
@@ -77486,6 +80185,16 @@
    "en": [
     "prostitute in a brothel disguised as an archery range"
    ]
+  },
+  {
+   "w": "知る人",
+   "lv": "N4",
+   "kana": "しるひと",
+   "en": [
+    "acquaintance; friend",
+    "lover"
+   ],
+   "kana_at": 1
   },
   {
    "w": "知名度",
@@ -77841,6 +80550,34 @@
    ]
   },
   {
+   "w": "秋の日",
+   "lv": "N4",
+   "kana": "あきのひ",
+   "en": [
+    "autumn day",
+    "autumn sun"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "秋の空",
+   "lv": "N4",
+   "kana": "あきのそら",
+   "en": [
+    "clear autumn sky"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "秋の色",
+   "lv": "N4",
+   "kana": "あきのいろ",
+   "en": [
+    "autumnal tints; fall tints"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "秋入学",
    "lv": "N4",
    "kana": "あきにゅうがく",
@@ -77930,6 +80667,24 @@
    "en": [
     "(Western) physics"
    ]
+  },
+  {
+   "w": "空の便",
+   "lv": "N4",
+   "kana": "そらのびん",
+   "en": [
+    "flight (plane)"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "空の旅",
+   "lv": "N4",
+   "kana": "そらのたび",
+   "en": [
+    "air travel; air trip"
+   ],
+   "kana_at": 1
   },
   {
    "w": "空下手",
@@ -78058,6 +80813,16 @@
    "g1": true
   },
   {
+   "w": "立上る",
+   "lv": "N5",
+   "kana": "たちのぼる",
+   "en": [
+    "to rise up (e.g. pillar of smoke); to go up"
+   ],
+   "kana_at": 2,
+   "g1": true
+  },
+  {
    "w": "立会人",
    "lv": "N5",
    "kana": "たちあいにん",
@@ -78065,6 +80830,36 @@
     "witness; observer"
    ],
    "g1": true
+  },
+  {
+   "w": "立入る",
+   "lv": "N5",
+   "kana": "たちいる",
+   "en": [
+    "to enter; to trespass",
+    "to interfere; to meddle"
+   ],
+   "kana_at": 2,
+   "g1": true
+  },
+  {
+   "w": "立去る",
+   "lv": "N4",
+   "kana": "たちさる",
+   "en": [
+    "to leave; to depart"
+   ],
+   "kana_at": 2
+  },
+  {
+   "w": "立回る",
+   "lv": "N4",
+   "kana": "たちまわる",
+   "en": [
+    "to walk about; to walk around",
+    "to conduct oneself"
+   ],
+   "kana_at": 2
   },
   {
    "w": "立太子",
@@ -78091,12 +80886,51 @@
    ]
   },
   {
+   "w": "立止る",
+   "lv": "N5",
+   "kana": "たちどまる",
+   "en": [
+    "to stop (in one's tracks); to come to a stop"
+   ],
+   "kana_at": 2,
+   "g1": true
+  },
+  {
+   "w": "立至る",
+   "lv": "N4",
+   "kana": "たちいたる",
+   "en": [
+    "to come to (a serious state); to reach"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "立飲屋",
    "lv": "N4",
    "kana": "たちのみや",
    "en": [
     "drinking establishment where one drinks while standing"
    ]
+  },
+  {
+   "w": "竹の子",
+   "lv": "N4",
+   "kana": "たけのこ",
+   "en": [
+    "bamboo shoot",
+    "inexperienced doctor; quack"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "竹の春",
+   "lv": "N4",
+   "kana": "たけのはる",
+   "en": [
+    "eighth lunar month"
+   ],
+   "kana_at": 1
   },
   {
    "w": "竹小豆",
@@ -78121,6 +80955,16 @@
    "en": [
     "a report (of one's findings)"
    ]
+  },
+  {
+   "w": "米の飯",
+   "lv": "N4",
+   "kana": "こめのめし",
+   "en": [
+    "cooked rice",
+    "something one never grows tired of"
+   ],
+   "kana_at": 1
   },
   {
    "w": "米上院",
@@ -78269,6 +81113,16 @@
    ]
   },
   {
+   "w": "耳の日",
+   "lv": "N5",
+   "kana": "みみのひ",
+   "en": [
+    "World Hearing Day (March 3)"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
    "w": "耳学問",
    "lv": "N4",
    "kana": "みみがくもん",
@@ -78284,6 +81138,25 @@
     "being a good listener; good listener"
    ],
    "g1": true
+  },
+  {
+   "w": "聞入る",
+   "lv": "N5",
+   "kana": "ききいる",
+   "en": [
+    "to listen attentively to; to be lost in"
+   ],
+   "kana_at": 2,
+   "g1": true
+  },
+  {
+   "w": "聞知る",
+   "lv": "N4",
+   "kana": "ききしる",
+   "en": [
+    "to learn something through hearing"
+   ],
+   "kana_at": 2
   },
   {
    "w": "肉料理",
@@ -78503,6 +81376,36 @@
    ]
   },
   {
+   "w": "花の木",
+   "lv": "N5",
+   "kana": "はなのき",
+   "en": [
+    "flowering tree",
+    "Japanese red maple (Acer pycnanthum)"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "花の雨",
+   "lv": "N5",
+   "kana": "はなのあめ",
+   "en": [
+    "rain falling on cherry blossoms; rain at the time of the blossoming of cherry trees"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "花の顔",
+   "lv": "N4",
+   "kana": "はなのかんばせ",
+   "en": [
+    "lovely face"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "花式図",
    "lv": "N4",
    "kana": "かしきず",
@@ -78677,12 +81580,40 @@
    ]
   },
   {
+   "w": "茶の子",
+   "lv": "N4",
+   "kana": "ちゃのこ",
+   "en": [
+    "cake served with tea; snack",
+    "offering or gift given at Buddhist services"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "茶の木",
+   "lv": "N4",
+   "kana": "ちゃのき",
+   "en": [
+    "tea plant (Camellia sinensis)"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "茶屋女",
    "lv": "N4",
    "kana": "ちゃやおんな",
    "en": [
     "woman employed in a restaurant, teahouse or teahouse offering sexual services"
    ]
+  },
+  {
+   "w": "茶目る",
+   "lv": "N4",
+   "kana": "ちゃめる",
+   "en": [
+    "to play pranks"
+   ],
+   "kana_at": 2
   },
   {
    "w": "茶立虫",
@@ -78717,6 +81648,24 @@
    ]
   },
   {
+   "w": "菜の花",
+   "lv": "N4",
+   "kana": "なのはな",
+   "en": [
+    "rape blossoms; rapeseed flowers"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "薬の力",
+   "lv": "N4",
+   "kana": "くすりのちから",
+   "en": [
+    "effectiveness of a drug; efficacy of a drug"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "薬学者",
    "lv": "N4",
    "kana": "やくがくしゃ",
@@ -78747,6 +81696,25 @@
    "en": [
     "pharmacology"
    ]
+  },
+  {
+   "w": "虫の声",
+   "lv": "N4",
+   "kana": "むしのこえ",
+   "en": [
+    "singing of insects (esp. in autumn); sound of insects"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "虫の音",
+   "lv": "N4",
+   "kana": "むしのね",
+   "en": [
+    "calls and sounds made by insects"
+   ],
+   "kana_at": 1,
+   "g1": true
   },
   {
    "w": "行動力",
@@ -78896,12 +81864,42 @@
    ]
   },
   {
+   "w": "見る目",
+   "lv": "N5",
+   "kana": "みるめ",
+   "en": [
+    "public opinion; public eye",
+    "discerning eye; an eye (for sth)"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
    "w": "見世物",
    "lv": "N4",
    "kana": "みせもの",
    "en": [
     "show; exhibition"
    ]
+  },
+  {
+   "w": "見切る",
+   "lv": "N4",
+   "kana": "みきる",
+   "en": [
+    "to see everything; to see all",
+    "to abandon; to give up"
+   ],
+   "kana_at": 2
+  },
+  {
+   "w": "見回る",
+   "lv": "N4",
+   "kana": "みまわる",
+   "en": [
+    "to make one's rounds; to patrol"
+   ],
+   "kana_at": 2
   },
   {
    "w": "見学会",
@@ -78929,6 +81927,15 @@
    ]
   },
   {
+   "w": "見知る",
+   "lv": "N4",
+   "kana": "みしる",
+   "en": [
+    "to recognise; to recognize"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "見習工",
    "lv": "N4",
    "kana": "みならいこう",
@@ -78943,6 +81950,15 @@
    "en": [
     "someone who has come to say farewell; those who have come to say farewell"
    ]
+  },
+  {
+   "w": "親の代",
+   "lv": "N4",
+   "kana": "おやのだい",
+   "en": [
+    "one's parents' generation"
+   ],
+   "kana_at": 1
   },
   {
    "w": "親不知",
@@ -79027,6 +82043,16 @@
    ]
   },
   {
+   "w": "言切る",
+   "lv": "N4",
+   "kana": "いいきる",
+   "en": [
+    "to declare; to assert",
+    "to finish saying; to say it all"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "言語化",
    "lv": "N5",
    "kana": "げんごか",
@@ -79069,6 +82095,15 @@
     "speech sound"
    ],
    "g1": true
+  },
+  {
+   "w": "言送る",
+   "lv": "N4",
+   "kana": "いいおくる",
+   "en": [
+    "to send a message; to write to"
+   ],
+   "kana_at": 2
   },
   {
    "w": "計理士",
@@ -79213,6 +82248,16 @@
    "en": [
     "experimental drug"
    ]
+  },
+  {
+   "w": "話の先",
+   "lv": "N5",
+   "kana": "はなしのさき",
+   "en": [
+    "sequel of a story"
+   ],
+   "kana_at": 1,
+   "g1": true
   },
   {
    "w": "話上手",
@@ -79383,12 +82428,32 @@
    ]
   },
   {
+   "w": "買切る",
+   "lv": "N4",
+   "kana": "かいきる",
+   "en": [
+    "to buy up; to buy everything available",
+    "to hire for exclusive use; to reserve"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "貸出金",
    "lv": "N4",
    "kana": "かしだしきん",
    "en": [
     "money given as loan"
    ]
+  },
+  {
+   "w": "貸切る",
+   "lv": "N4",
+   "kana": "かしきる",
+   "en": [
+    "to reserve (for exclusive use); to charter",
+    "to lend out completely; to lend out all of (something)"
+   ],
+   "kana_at": 2
   },
   {
    "w": "貸本屋",
@@ -79539,6 +82604,15 @@
    "en": [
     "track meet (non-competitive driving on a race course); track day"
    ]
+  },
+  {
+   "w": "起上る",
+   "lv": "N4",
+   "kana": "おきあがる",
+   "en": [
+    "to rise; to erect"
+   ],
+   "kana_at": 2
   },
   {
    "w": "起動力",
@@ -79840,6 +82914,15 @@
    "en": [
     "light alloy"
    ]
+  },
+  {
+   "w": "辰の日",
+   "lv": "N5",
+   "kana": "たつのひ",
+   "en": [
+    "day of the Dragon"
+   ],
+   "kana_at": 1
   },
   {
    "w": "近世語",
@@ -80335,6 +83418,51 @@
    ]
   },
   {
+   "w": "道の中",
+   "lv": "N5",
+   "kana": "みちのなか",
+   "en": [
+    "the part of a province midway from the capital"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "道の口",
+   "lv": "N5",
+   "kana": "みちのくち",
+   "en": [
+    "the part of a province closest to the capital"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "道の後",
+   "lv": "N5",
+   "kana": "みちのしり",
+   "en": [
+    "the part of a province furthest from the capital"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "道の駅",
+   "lv": "N5",
+   "kana": "みちのえき",
+   "en": [
+    "roadside station (government-designated rest area found along roads and highways)"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "道化る",
+   "lv": "N5",
+   "kana": "どうける",
+   "en": [
+    "to jest; to clown (around)"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "道化方",
    "lv": "N4",
    "kana": "どうけがた",
@@ -80465,6 +83593,52 @@
    ]
   },
   {
+   "w": "酉の市",
+   "lv": "N4",
+   "kana": "とりのいち",
+   "en": [
+    "tori-no-ichi (held at Ōtori Shrine on each day of the Rooster in November)"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "酉の待",
+   "lv": "N4",
+   "kana": "とりのまち",
+   "en": [
+    "tori-no-machi (held at Ōtori Shrine on each day of the Rooster in November)"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "酉の日",
+   "lv": "N5",
+   "kana": "とりのひ",
+   "en": [
+    "day of the Rooster; day of the Cock"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "酉の町",
+   "lv": "N4",
+   "kana": "とりのまち",
+   "en": [
+    "tori-no-machi (held at Ōtori Shrine on each day of the Rooster in November)"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "采の目",
+   "lv": "N4",
+   "kana": "さいのめ",
+   "en": [
+    "pip (spot on a die)",
+    "small cube (esp. of food); die"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "采女正",
    "lv": "N4",
    "kana": "うねめのかみ",
@@ -80576,6 +83750,15 @@
    "en": [
     "muddy track (in horse racing); dead track"
    ]
+  },
+  {
+   "w": "野の花",
+   "lv": "N4",
+   "kana": "ののはな",
+   "en": [
+    "wild flowers"
+   ],
+   "kana_at": 1
   },
   {
    "w": "野太刀",
@@ -81051,6 +84234,56 @@
    ]
   },
   {
+   "w": "間の子",
+   "lv": "N5",
+   "kana": "あいのこ",
+   "en": [
+    "person of mixed parentage; crossbreed",
+    "hybrid; crossbreed"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "間の戸",
+   "lv": "N4",
+   "kana": "あいのと",
+   "en": [
+    "door between the rooms"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "間の手",
+   "lv": "N5",
+   "kana": "あいのて",
+   "en": [
+    "interlude (in traditional Japanese music)",
+    "chanting or clapping along (during a song or dance)"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "間の間",
+   "lv": "N5",
+   "kana": "あいのま",
+   "en": [
+    "room connecting the two main rooms of a building; intermediate room"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "間切る",
+   "lv": "N4",
+   "kana": "まぎる",
+   "en": [
+    "to plow through (a wave) (plough); to tack (against the wind)"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "間知石",
    "lv": "N4",
    "kana": "けんちいし",
@@ -81510,6 +84743,15 @@
    ]
   },
   {
+   "w": "頭来る",
+   "lv": "N4",
+   "kana": "あたまくる",
+   "en": [
+    "to get mad; to be highly offended"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "頭首工",
    "lv": "N4",
    "kana": "とうしゅこう",
@@ -81541,6 +84783,33 @@
     "making one's debut; making one's first appearance",
     "(just) showing one's face; showing up"
    ]
+  },
+  {
+   "w": "風の子",
+   "lv": "N4",
+   "kana": "かぜのこ",
+   "en": [
+    "outdoor creatures"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "風の音",
+   "lv": "N4",
+   "kana": "かぜのおと",
+   "en": [
+    "sound of the wind; voice of the wind"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "風光る",
+   "lv": "N4",
+   "kana": "かぜひかる",
+   "en": [
+    "springlike; like wind blowing through the spring sunshine"
+   ],
+   "kana_at": 2
   },
   {
    "w": "風切羽",
@@ -81607,6 +84876,17 @@
    ]
   },
   {
+   "w": "食下る",
+   "lv": "N5",
+   "kana": "くいさがる",
+   "en": [
+    "to hang on to; to hang from",
+    "to hound; to keep after (someone)"
+   ],
+   "kana_at": 2,
+   "g1": true
+  },
+  {
    "w": "食事代",
    "lv": "N4",
    "kana": "しょくじだい",
@@ -81646,6 +84926,26 @@
    "en": [
     "phagocytosis"
    ]
+  },
+  {
+   "w": "食入る",
+   "lv": "N5",
+   "kana": "くいいる",
+   "en": [
+    "to eat into"
+   ],
+   "kana_at": 2,
+   "g1": true
+  },
+  {
+   "w": "食切る",
+   "lv": "N4",
+   "kana": "くいきる",
+   "en": [
+    "to bite through",
+    "to eat up; to consume entirely"
+   ],
+   "kana_at": 2
   },
   {
    "w": "食品店",
@@ -81729,6 +85029,16 @@
    ]
   },
   {
+   "w": "首切る",
+   "lv": "N4",
+   "kana": "くびきる",
+   "en": [
+    "to behead; to decapitate",
+    "to fire; to dismiss"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "首長国",
    "lv": "N5",
    "kana": "しゅちょうこく",
@@ -81743,6 +85053,15 @@
    "en": [
     "Kayan people"
    ]
+  },
+  {
+   "w": "馬の足",
+   "lv": "N5",
+   "kana": "うまのあし",
+   "en": [
+    "minor or untalented actor (relegated to roles such as the legs of a stage horse)"
+   ],
+   "kana_at": 1
   },
   {
    "w": "馬刀貝",
@@ -81935,6 +85254,15 @@
    ]
   },
   {
+   "w": "魚の目",
+   "lv": "N5",
+   "kana": "うおのめ",
+   "en": [
+    "corn (on one's foot)"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "魚問屋",
    "lv": "N4",
    "kana": "うおどんや",
@@ -81949,6 +85277,16 @@
    "en": [
     "fish-based cooking; fish dish"
    ]
+  },
+  {
+   "w": "鳥の子",
+   "lv": "N4",
+   "kana": "とりのこ",
+   "en": [
+    "bird's egg (esp. a chicken egg)",
+    "chick; baby bird (esp. a baby chicken)"
+   ],
+   "kana_at": 1
   },
   {
    "w": "鳥小屋",
@@ -82637,6 +85975,15 @@
    "yoji": true
   },
   {
+   "w": "一口乗る",
+   "lv": "N4",
+   "kana": "ひとくちのる",
+   "en": [
+    "to join in; to have a share in"
+   ],
+   "kana_at": 3
+  },
+  {
    "w": "一口同音",
    "lv": "N4",
    "kana": "いっくどうおん",
@@ -82719,6 +86066,24 @@
    "yoji": true
   },
   {
+   "w": "一家の主",
+   "lv": "N4",
+   "kana": "いっかのあるじ",
+   "en": [
+    "master of the household"
+   ],
+   "kana_at": 2
+  },
+  {
+   "w": "一家の長",
+   "lv": "N4",
+   "kana": "いっかのちょう",
+   "en": [
+    "head of a family"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "一家心中",
    "lv": "N4",
    "kana": "いっかしんじゅう",
@@ -82779,6 +86144,17 @@
    "en": [
     "one-way traffic"
    ]
+  },
+  {
+   "w": "一日の長",
+   "lv": "N5",
+   "kana": "いちじつのちょう",
+   "en": [
+    "slight superiority (in knowledge, experience, ability, etc.)",
+    "being slightly older"
+   ],
+   "kana_at": 2,
+   "g1": true
   },
   {
    "w": "一日一夜",
@@ -82959,6 +86335,16 @@
    "g1": true
   },
   {
+   "w": "一目見る",
+   "lv": "N5",
+   "kana": "ひとめみる",
+   "en": [
+    "to give a glance (at); to take one look at"
+   ],
+   "kana_at": 3,
+   "g1": true
+  },
+  {
    "w": "一石三鳥",
    "lv": "N4",
    "kana": "いっせきさんちょう",
@@ -83060,6 +86446,15 @@
    ]
   },
   {
+   "w": "万分の一",
+   "lv": "N5",
+   "kana": "まんぶんのいち",
+   "en": [
+    "one ten-thousandth"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "万年青年",
    "lv": "N4",
    "kana": "まんねんせいねん",
@@ -83084,6 +86479,24 @@
     "advancing in the face of death; having a narrow escape from the jaw of death"
    ],
    "yoji": true
+  },
+  {
+   "w": "万病の元",
+   "lv": "N4",
+   "kana": "まんびょうのもと",
+   "en": [
+    "source of all kinds of diseases"
+   ],
+   "kana_at": 2
+  },
+  {
+   "w": "万軍の主",
+   "lv": "N4",
+   "kana": "ばんぐんのしゅ",
+   "en": [
+    "Lord of hosts"
+   ],
+   "kana_at": 2
   },
   {
    "w": "三三九度",
@@ -83119,6 +86532,26 @@
    "en": [
     "the three-body problem"
    ]
+  },
+  {
+   "w": "三分の一",
+   "lv": "N5",
+   "kana": "さんぶんのいち",
+   "en": [
+    "one third; a third part"
+   ],
+   "kana_at": 2,
+   "g1": true
+  },
+  {
+   "w": "三分の二",
+   "lv": "N5",
+   "kana": "さんぶんのに",
+   "en": [
+    "two thirds"
+   ],
+   "kana_at": 2,
+   "g1": true
   },
   {
    "w": "三十三所",
@@ -83171,6 +86604,16 @@
    "en": [
     "the three most important cities (esp. in ref. to Tokyo, Osaka, Nagoya)"
    ]
+  },
+  {
+   "w": "三寸の舌",
+   "lv": "N5",
+   "kana": "さんずんのした",
+   "en": [
+    "eloquent tongue"
+   ],
+   "kana_at": 2,
+   "g1": true
   },
   {
    "w": "三店方式",
@@ -83310,6 +86753,25 @@
    "en": [
     "Shanghai cuisine"
    ]
+  },
+  {
+   "w": "下の世話",
+   "lv": "N4",
+   "kana": "しものせわ",
+   "en": [
+    "care for patients with bedpans, urinary bottles, etc."
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "下の名前",
+   "lv": "N5",
+   "kana": "したのなまえ",
+   "en": [
+    "first name; given name"
+   ],
+   "kana_at": 1,
+   "g1": true
   },
   {
    "w": "下前頭回",
@@ -83528,6 +86990,24 @@
    "yoji": true
   },
   {
+   "w": "世間の口",
+   "lv": "N4",
+   "kana": "せけんのくち",
+   "en": [
+    "what people say; gossip"
+   ],
+   "kana_at": 2
+  },
+  {
+   "w": "世間の目",
+   "lv": "N4",
+   "kana": "せけんのめ",
+   "en": [
+    "spotlight; public eye"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "世間周知",
    "lv": "N4",
    "kana": "せけんしゅうち",
@@ -83633,6 +87113,15 @@
    "en": [
     "centriole"
    ]
+  },
+  {
+   "w": "中止の体",
+   "lv": "N4",
+   "kana": "ちゅうしのてい",
+   "en": [
+    "state of standstill"
+   ],
+   "kana_at": 2
   },
   {
    "w": "中生動物",
@@ -83747,6 +87236,15 @@
    "yoji": true
   },
   {
+   "w": "九重の天",
+   "lv": "N4",
+   "kana": "きゅうちょうのてん",
+   "en": [
+    "the palace"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "事事物物",
    "lv": "N4",
    "kana": "じじぶつぶつ",
@@ -83838,6 +87336,16 @@
    ],
    "g1": true,
    "yoji": true
+  },
+  {
+   "w": "二分の一",
+   "lv": "N5",
+   "kana": "にぶんのいち",
+   "en": [
+    "a half; 50%"
+   ],
+   "kana_at": 2,
+   "g1": true
   },
   {
    "w": "二十三夜",
@@ -83996,6 +87504,16 @@
    ]
   },
   {
+   "w": "五分の一",
+   "lv": "N5",
+   "kana": "ごぶんのいち",
+   "en": [
+    "one fifth part"
+   ],
+   "kana_at": 2,
+   "g1": true
+  },
+  {
    "w": "五分五分",
    "lv": "N5",
    "kana": "ごぶごぶ",
@@ -84106,6 +87624,15 @@
    ]
   },
   {
+   "w": "交通の便",
+   "lv": "N4",
+   "kana": "こうつうのべん",
+   "en": [
+    "convenience for transportation; convenience of access (by road or rail)"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "交通問題",
    "lv": "N4",
    "kana": "こうつうもんだい",
@@ -84121,6 +87648,15 @@
     "vulnerable road users",
     "mobility-impaired people"
    ]
+  },
+  {
+   "w": "京都の産",
+   "lv": "N4",
+   "kana": "きょうとのさん",
+   "en": [
+    "native of Kyoto"
+   ],
+   "kana_at": 2
   },
   {
    "w": "京都五山",
@@ -84207,6 +87743,24 @@
    "yoji": true
   },
   {
+   "w": "人生の春",
+   "lv": "N4",
+   "kana": "じんせいのはる",
+   "en": [
+    "the flower (prime) of youth; the spring of life"
+   ],
+   "kana_at": 2
+  },
+  {
+   "w": "人間の肉",
+   "lv": "N4",
+   "kana": "にんげんのにく",
+   "en": [
+    "human flesh"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "人間以前",
    "lv": "N4",
    "kana": "にんげんいぜん",
@@ -84258,6 +87812,15 @@
    "yoji": true
   },
   {
+   "w": "今の時代",
+   "lv": "N4",
+   "kana": "いまのじだい",
+   "en": [
+    "modern times; the modern age"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "今日明日",
    "lv": "N4",
    "kana": "きょうあす",
@@ -84265,6 +87828,15 @@
     "today and tomorrow; today or tomorrow"
    ],
    "yoji": true
+  },
+  {
+   "w": "仕事の虫",
+   "lv": "N4",
+   "kana": "しごとのむし",
+   "en": [
+    "workaholic; person who is totally devoted to his work"
+   ],
+   "kana_at": 2
   },
   {
    "w": "仕事人間",
@@ -84316,12 +87888,39 @@
    ]
   },
   {
+   "w": "会心の作",
+   "lv": "N4",
+   "kana": "かいしんのさく",
+   "en": [
+    "work after one's heart"
+   ],
+   "kana_at": 2
+  },
+  {
+   "w": "会心の友",
+   "lv": "N4",
+   "kana": "かいしんのとも",
+   "en": [
+    "kindred soul; congenial friend"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "会意文字",
    "lv": "N4",
    "kana": "かいいもじ",
    "en": [
     "compound ideograph (one of the six kanji classifications); kanji made up of meaningful parts (e.g. \"mountain pass\" is up + down + mountain)"
    ]
+  },
+  {
+   "w": "会社の主",
+   "lv": "N4",
+   "kana": "かいしゃのぬし",
+   "en": [
+    "great old-timer of the firm"
+   ],
+   "kana_at": 2
   },
   {
    "w": "会社人間",
@@ -84401,12 +88000,30 @@
    "g1": true
   },
   {
+   "w": "余所の人",
+   "lv": "N4",
+   "kana": "よそのひと",
+   "en": [
+    "stranger; outsider"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "作中人物",
    "lv": "N4",
    "kana": "さくちゅうじんぶつ",
    "en": [
     "characters (in a novel, movie, etc.)"
    ]
+  },
+  {
+   "w": "作文の題",
+   "lv": "N4",
+   "kana": "さくぶんのだい",
+   "en": [
+    "subject of a composition"
+   ],
+   "kana_at": 2
   },
   {
    "w": "作業時間",
@@ -84489,6 +88106,15 @@
    "en": [
     "prior research; previous work"
    ]
+  },
+  {
+   "w": "先見の明",
+   "lv": "N4",
+   "kana": "せんけんのめい",
+   "en": [
+    "foresight; prescience"
+   ],
+   "kana_at": 2
   },
   {
    "w": "光学文字",
@@ -84661,12 +88287,33 @@
    ]
   },
   {
+   "w": "出来上る",
+   "lv": "N5",
+   "kana": "できあがる",
+   "en": [
+    "to be completed; to be finished",
+    "to be very drunk"
+   ],
+   "kana_at": 3,
+   "g1": true
+  },
+  {
    "w": "出発時間",
    "lv": "N4",
    "kana": "しゅっぱつじかん",
    "en": [
     "starting (departure) time"
    ]
+  },
+  {
+   "w": "刀の手前",
+   "lv": "N5",
+   "kana": "かたなのてまえ",
+   "en": [
+    "samurai's face"
+   ],
+   "kana_at": 1,
+   "g1": true
   },
   {
    "w": "分別書方",
@@ -84762,6 +88409,16 @@
    ]
   },
   {
+   "w": "力の外交",
+   "lv": "N5",
+   "kana": "ちからのがいこう",
+   "en": [
+    "power diplomacy"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
    "w": "勉強不足",
    "lv": "N4",
    "kana": "べんきょうぶそく",
@@ -84808,6 +88465,15 @@
    "en": [
     "animal society"
    ]
+  },
+  {
+   "w": "化外の地",
+   "lv": "N4",
+   "kana": "けがいのち",
+   "en": [
+    "lands outside civilization"
+   ],
+   "kana_at": 2
   },
   {
    "w": "化学作用",
@@ -85015,6 +88681,16 @@
    "yoji": true
   },
   {
+   "w": "十分の一",
+   "lv": "N5",
+   "kana": "じゅうぶんのいち",
+   "en": [
+    "tenth; tithe"
+   ],
+   "kana_at": 2,
+   "g1": true
+  },
+  {
    "w": "十大弟子",
    "lv": "N4",
    "kana": "じゅうだいでし",
@@ -85168,6 +88844,15 @@
    "yoji": true
   },
   {
+   "w": "千鳥の木",
+   "lv": "N4",
+   "kana": "ちどりのき",
+   "en": [
+    "hornbeam maple (Acer carpinifolium)"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "半死半生",
    "lv": "N4",
    "kana": "はんしはんしょう",
@@ -85183,6 +88868,15 @@
    "en": [
     "firecracker"
    ]
+  },
+  {
+   "w": "卯の花月",
+   "lv": "N5",
+   "kana": "うのはなづき",
+   "en": [
+    "fourth month of the lunar calendar"
+   ],
+   "kana_at": 1
   },
   {
    "w": "友好都市",
@@ -85224,6 +88918,16 @@
    "en": [
     "oral examination; interview"
    ]
+  },
+  {
+   "w": "口耳の学",
+   "lv": "N5",
+   "kana": "こうじのがく",
+   "en": [
+    "shallow learning"
+   ],
+   "kana_at": 2,
+   "g1": true
   },
   {
    "w": "口語英語",
@@ -85358,6 +89062,15 @@
    ]
   },
   {
+   "w": "台風の目",
+   "lv": "N4",
+   "kana": "たいふうのめ",
+   "en": [
+    "eye of a typhoon"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "合同事業",
    "lv": "N4",
    "kana": "ごうどうじぎょう",
@@ -85388,6 +89101,15 @@
    "en": [
     "unlimited company; unlimited partnership"
    ]
+  },
+  {
+   "w": "合意の上",
+   "lv": "N4",
+   "kana": "ごういのうえ",
+   "en": [
+    "by mutual agreement; by mutual consent"
+   ],
+   "kana_at": 2
   },
   {
    "w": "合意心中",
@@ -85429,6 +89151,15 @@
    "en": [
     "assimilation; metabolism"
    ]
+  },
+  {
+   "w": "同好の士",
+   "lv": "N4",
+   "kana": "どうこうのし",
+   "en": [
+    "people who share an interest; people of similar tastes"
+   ],
+   "kana_at": 2
   },
   {
    "w": "同族会社",
@@ -85517,6 +89248,15 @@
     "prestigious university"
    ],
    "g1": true
+  },
+  {
+   "w": "味気有る",
+   "lv": "N4",
+   "kana": "あじきある",
+   "en": [
+    "interesting; meaningful"
+   ],
+   "kana_at": 3
   },
   {
    "w": "品行方正",
@@ -85622,6 +89362,16 @@
    "en": [
     "Szechuan cuisine; Sichuan cuisine"
    ]
+  },
+  {
+   "w": "四手の木",
+   "lv": "N5",
+   "kana": "しでのき",
+   "en": [
+    "loose-flowered hornbeam (Carpinus laxiflora)"
+   ],
+   "kana_at": 2,
+   "g1": true
   },
   {
    "w": "四文字語",
@@ -85836,6 +89586,15 @@
    "en": [
     "national bank"
    ]
+  },
+  {
+   "w": "土地の人",
+   "lv": "N4",
+   "kana": "とちのひと",
+   "en": [
+    "locals; natives"
+   ],
+   "kana_at": 2
   },
   {
    "w": "土地土地",
@@ -86225,6 +89984,15 @@
    ]
   },
   {
+   "w": "夜見の国",
+   "lv": "N4",
+   "kana": "よみのくに",
+   "en": [
+    "hades; realm of the dead"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "夜間中学",
    "lv": "N4",
    "kana": "やかんちゅうがく",
@@ -86257,12 +90025,31 @@
    ]
   },
   {
+   "w": "大の大人",
+   "lv": "N5",
+   "kana": "だいのおとな",
+   "en": [
+    "grown man; grown woman"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
    "w": "大作映画",
    "lv": "N4",
    "kana": "たいさくえいが",
    "en": [
     "epic film; big-budget movie"
    ]
+  },
+  {
+   "w": "大切な人",
+   "lv": "N4",
+   "kana": "たいせつなひと",
+   "en": [
+    "special someone; special person"
+   ],
+   "kana_at": 2
   },
   {
    "w": "大化前代",
@@ -86362,6 +90149,15 @@
    "en": [
     "big athletic meet (esp. at school); sports day"
    ]
+  },
+  {
+   "w": "天の赤道",
+   "lv": "N4",
+   "kana": "てんのせきどう",
+   "en": [
+    "celestial equator"
+   ],
+   "kana_at": 1
   },
   {
    "w": "天一天上",
@@ -86970,6 +90766,15 @@
    ]
   },
   {
+   "w": "左方の楽",
+   "lv": "N4",
+   "kana": "さほうのがく",
+   "en": [
+    "style of gagaku based on Tang-era Chinese music and ancient Indian song and dance"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "左見右見",
    "lv": "N5",
    "kana": "とみこうみ",
@@ -87118,6 +90923,15 @@
    ]
   },
   {
+   "w": "建国の父",
+   "lv": "N4",
+   "kana": "けんこくのちち",
+   "en": [
+    "founding father"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "引手茶屋",
    "lv": "N4",
    "kana": "ひきてぢゃや",
@@ -87173,6 +90987,16 @@
    "en": [
     "meeting place for assignations, drinking, etc."
    ]
+  },
+  {
+   "w": "後の月見",
+   "lv": "N5",
+   "kana": "のちのつきみ",
+   "en": [
+    "moon-viewing on the 13th day of the 9th lunar month"
+   ],
+   "kana_at": 1,
+   "g1": true
   },
   {
    "w": "後半国会",
@@ -87244,6 +91068,15 @@
    ]
   },
   {
+   "w": "心の病気",
+   "lv": "N4",
+   "kana": "こころのびょうき",
+   "en": [
+    "mental illness; emotional disorder"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "心外千万",
    "lv": "N4",
    "kana": "しんがいせんばん",
@@ -87311,6 +91144,15 @@
    ]
   },
   {
+   "w": "意中の人",
+   "lv": "N4",
+   "kana": "いちゅうのひと",
+   "en": [
+    "sweetheart; person in one's thoughts (heart)"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "所所方方",
    "lv": "N4",
    "kana": "しょしょほうぼう",
@@ -87318,6 +91160,15 @@
     "everywhere"
    ],
    "yoji": true
+  },
+  {
+   "w": "手前の方",
+   "lv": "N4",
+   "kana": "てまえのほう",
+   "en": [
+    "this side; in the forefront"
+   ],
+   "kana_at": 2
   },
   {
    "w": "手話言語",
@@ -87370,6 +91221,16 @@
    ]
   },
   {
+   "w": "文化の日",
+   "lv": "N4",
+   "kana": "ぶんかのひ",
+   "en": [
+    "Culture Day (national holiday; November 3)"
+   ],
+   "kana_at": 2,
+   "g1": true
+  },
+  {
    "w": "文化国家",
    "lv": "N4",
    "kana": "ぶんかこっか",
@@ -87418,6 +91279,15 @@
    "en": [
     "character set"
    ]
+  },
+  {
+   "w": "文学の味",
+   "lv": "N4",
+   "kana": "ぶんがくのあじ",
+   "en": [
+    "the pleasures of literature"
+   ],
+   "kana_at": 2
   },
   {
    "w": "文学作品",
@@ -87607,6 +91477,15 @@
    "en": [
     "dialectal kanji; kanji only used in a specific region"
    ]
+  },
+  {
+   "w": "旅人の木",
+   "lv": "N4",
+   "kana": "たびびとのき",
+   "en": [
+    "traveller's tree (Ravenala madagascariensis); traveller's palm"
+   ],
+   "kana_at": 2
   },
   {
    "w": "旅行文書",
@@ -87804,6 +91683,15 @@
    "yoji": true
   },
   {
+   "w": "早朝の着",
+   "lv": "N4",
+   "kana": "そうちょうのちゃく",
+   "en": [
+    "early-morning arrival"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "明明後日",
    "lv": "N4",
    "kana": "しあさって",
@@ -87859,6 +91747,24 @@
    "en": [
     "film music"
    ]
+  },
+  {
+   "w": "春分の日",
+   "lv": "N4",
+   "kana": "しゅんぶんのひ",
+   "en": [
+    "Vernal Equinox Day (national holiday; March 20 or 21); Spring Equinox Day"
+   ],
+   "kana_at": 2
+  },
+  {
+   "w": "春夏の交",
+   "lv": "N4",
+   "kana": "しゅんかのこう",
+   "en": [
+    "change from spring to summer"
+   ],
+   "kana_at": 2
   },
   {
    "w": "春秋時代",
@@ -87941,6 +91847,16 @@
    "en": [
     "time travel"
    ]
+  },
+  {
+   "w": "時雨の化",
+   "lv": "N5",
+   "kana": "じうのか",
+   "en": [
+    "benevolent rule of a gracious sovereign"
+   ],
+   "kana_at": 2,
+   "g1": true
   },
   {
    "w": "暗黒時代",
@@ -88040,6 +91956,15 @@
    "en": [
     "craniate"
    ]
+  },
+  {
+   "w": "朝夕の行",
+   "lv": "N4",
+   "kana": "あさゆうのぎょう",
+   "en": [
+    "morning and evening services"
+   ],
+   "kana_at": 2
   },
   {
    "w": "朝日文字",
@@ -88278,6 +92203,33 @@
    ]
   },
   {
+   "w": "死の行進",
+   "lv": "N4",
+   "kana": "しのこうしん",
+   "en": [
+    "death march"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "死出の山",
+   "lv": "N4",
+   "kana": "しでのやま",
+   "en": [
+    "mountain of death; steep mountain which the dead must cross to reach the afterlife"
+   ],
+   "kana_at": 2
+  },
+  {
+   "w": "死出の旅",
+   "lv": "N4",
+   "kana": "しでのたび",
+   "en": [
+    "one's last journey; the journey to the other world"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "死出田長",
    "lv": "N4",
    "kana": "しでたおさ",
@@ -88309,6 +92261,15 @@
     "daredevil; reckless"
    ],
    "yoji": true
+  },
+  {
+   "w": "死者の書",
+   "lv": "N4",
+   "kana": "ししゃのしょ",
+   "en": [
+    "Book of the Dead (ancient Egypt)"
+   ],
+   "kana_at": 2
   },
   {
    "w": "母子年金",
@@ -88350,6 +92311,15 @@
    "en": [
     "day after day; day by day"
    ]
+  },
+  {
+   "w": "氏の意見",
+   "lv": "N4",
+   "kana": "しのいけん",
+   "en": [
+    "his opinion"
+   ],
+   "kana_at": 1
   },
   {
    "w": "民主国家",
@@ -88497,6 +92467,15 @@
    "en": [
     "water mill"
    ]
+  },
+  {
+   "w": "水道の水",
+   "lv": "N5",
+   "kana": "すいどうのみず",
+   "en": [
+    "tap water"
+   ],
+   "kana_at": 2
   },
   {
    "w": "水道工事",
@@ -88716,6 +92695,15 @@
    ]
   },
   {
+   "w": "火の用心",
+   "lv": "N4",
+   "kana": "ひのようじん",
+   "en": [
+    "be careful about fire; watch out for fire"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "火力発電",
    "lv": "N4",
    "kana": "かりょくはつでん",
@@ -88765,6 +92753,24 @@
     "heavy eating and drinking; gorging and swilling"
    ],
    "yoji": true
+  },
+  {
+   "w": "物の見方",
+   "lv": "N4",
+   "kana": "もののみかた",
+   "en": [
+    "mindset; outlook"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "物の道理",
+   "lv": "N4",
+   "kana": "もののどうり",
+   "en": [
+    "the principle of the thing"
+   ],
+   "kana_at": 1
   },
   {
    "w": "物理化学",
@@ -88897,6 +92903,15 @@
    "yoji": true
   },
   {
+   "w": "理外の理",
+   "lv": "N4",
+   "kana": "りがいのり",
+   "en": [
+    "transcendental reason"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "生体力学",
    "lv": "N4",
    "kana": "せいたいりきがく",
@@ -89008,6 +93023,15 @@
    "en": [
     "before and after childbirth"
    ]
+  },
+  {
+   "w": "産業の米",
+   "lv": "N4",
+   "kana": "さんぎょうのこめ",
+   "en": [
+    "staple product of an industry; core product"
+   ],
+   "kana_at": 2
   },
   {
    "w": "産業動物",
@@ -89162,6 +93186,15 @@
    "yoji": true
   },
   {
+   "w": "白鳥の歌",
+   "lv": "N4",
+   "kana": "はくちょうのうた",
+   "en": [
+    "swan song"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "百万都市",
    "lv": "N4",
    "kana": "ひゃくまんとし",
@@ -89187,6 +93220,15 @@
    ]
   },
   {
+   "w": "百合の木",
+   "lv": "N4",
+   "kana": "ゆりのき",
+   "en": [
+    "tulip tree (Liriodendron tulipifera); tuliptree"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "百日天下",
    "lv": "N5",
    "kana": "ひゃくにちてんか",
@@ -89206,12 +93248,40 @@
    "yoji": true
   },
   {
+   "w": "百薬の長",
+   "lv": "N4",
+   "kana": "ひゃくやくのちょう",
+   "en": [
+    "the best medicine (i.e. sake)"
+   ],
+   "kana_at": 2
+  },
+  {
+   "w": "目の正月",
+   "lv": "N4",
+   "kana": "めのしょうがつ",
+   "en": [
+    "feast for one's eyes; sight as pleasing as the New Year"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
    "w": "目大千鳥",
    "lv": "N4",
    "kana": "めだいちどり",
    "en": [
     "lesser sand plover (Charadrius mongolus)"
    ]
+  },
+  {
+   "w": "目薬の木",
+   "lv": "N4",
+   "kana": "めぐすりのき",
+   "en": [
+    "Nikko maple (Acer maximowiczianum)"
+   ],
+   "kana_at": 2
   },
   {
    "w": "県民会館",
@@ -89294,6 +93364,15 @@
    "en": [
     "date shell (Lithophaga curta); date mussel"
    ]
+  },
+  {
+   "w": "研究の料",
+   "lv": "N4",
+   "kana": "けんきゅうのりょう",
+   "en": [
+    "research materials"
+   ],
+   "kana_at": 2
   },
   {
    "w": "研究分野",
@@ -89467,6 +93546,24 @@
    ]
   },
   {
+   "w": "秋分の日",
+   "lv": "N4",
+   "kana": "しゅうぶんのひ",
+   "en": [
+    "Autumnal Equinox Day (national holiday; September 22, 23 or 24)"
+   ],
+   "kana_at": 2
+  },
+  {
+   "w": "秋風の月",
+   "lv": "N4",
+   "kana": "あきかぜのつき",
+   "en": [
+    "eighth lunar month"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "空中写真",
    "lv": "N4",
    "kana": "くうちゅうしゃしん",
@@ -89560,6 +93657,33 @@
    ]
   },
   {
+   "w": "竹の子族",
+   "lv": "N4",
+   "kana": "たけのこぞく",
+   "en": [
+    "people who partied flamboyantly in Harajuku, etc. in the 70s and 80s"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "竹馬の友",
+   "lv": "N4",
+   "kana": "ちくばのとも",
+   "en": [
+    "childhood friend; old playmate"
+   ],
+   "kana_at": 2
+  },
+  {
+   "w": "米の介入",
+   "lv": "N4",
+   "kana": "べいのかいにゅう",
+   "en": [
+    "intervention of America"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "紙上計画",
    "lv": "N4",
    "kana": "しじょうけいかく",
@@ -89647,6 +93771,24 @@
    "en": [
     "henceforth; henceforward"
    ]
+  },
+  {
+   "w": "自分の分",
+   "lv": "N4",
+   "kana": "じぶんのぶん",
+   "en": [
+    "one's share (own)"
+   ],
+   "kana_at": 2
+  },
+  {
+   "w": "自分の力",
+   "lv": "N4",
+   "kana": "じぶんのちから",
+   "en": [
+    "one's own strength or effort; (by) oneself"
+   ],
+   "kana_at": 2
   },
   {
    "w": "自分一人",
@@ -89820,6 +93962,15 @@
    "en": [
     "self-assembly"
    ]
+  },
+  {
+   "w": "自明の理",
+   "lv": "N4",
+   "kana": "じめいのり",
+   "en": [
+    "self-evident truth; obvious fact"
+   ],
+   "kana_at": 2
   },
   {
    "w": "自校方式",
@@ -90045,6 +94196,15 @@
    ]
   },
   {
+   "w": "行の先頭",
+   "lv": "N4",
+   "kana": "ぎょうのせんとう",
+   "en": [
+    "beginning of line"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "行動計画",
    "lv": "N4",
    "kana": "こうどうけいかく",
@@ -90141,6 +94301,15 @@
    "en": [
     "field trip; observation tour"
    ]
+  },
+  {
+   "w": "親の七光",
+   "lv": "N4",
+   "kana": "おやのななひかり",
+   "en": [
+    "benefiting from the fame or influence of a parent; riding a parent's coat-tails"
+   ],
+   "kana_at": 1
   },
   {
    "w": "親分子分",
@@ -90271,6 +94440,15 @@
    ]
   },
   {
+   "w": "語の意味",
+   "lv": "N4",
+   "kana": "ごのいみ",
+   "en": [
+    "meaning of a word"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "語学学習",
    "lv": "N4",
    "kana": "ごがくがくしゅう",
@@ -90285,6 +94463,15 @@
    "en": [
     "legendary literature; narrative literature"
    ]
+  },
+  {
+   "w": "読書の秋",
+   "lv": "N4",
+   "kana": "どくしょのあき",
+   "en": [
+    "autumn, the best season for reading"
+   ],
+   "kana_at": 2
   },
   {
    "w": "読書三余",
@@ -90303,6 +94490,15 @@
     "by reading books you can count the wise philosophers of the past as friends"
    ],
    "yoji": true
+  },
+  {
+   "w": "読者の声",
+   "lv": "N4",
+   "kana": "どくしゃのこえ",
+   "en": [
+    "readers voice"
+   ],
+   "kana_at": 2
   },
   {
    "w": "買物上手",
@@ -90352,6 +94548,16 @@
    "en": [
     "Red Crescent Society"
    ],
+   "g1": true
+  },
+  {
+   "w": "赤玉の木",
+   "lv": "N4",
+   "kana": "あかだまのき",
+   "en": [
+    "spearflower (Ardisia japonica)"
+   ],
+   "kana_at": 2,
    "g1": true
   },
   {
@@ -90743,6 +94949,15 @@
    "yoji": true
   },
   {
+   "w": "金目の物",
+   "lv": "N4",
+   "kana": "かねめのもの",
+   "en": [
+    "valuable article; valuables"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "金目銀目",
    "lv": "N4",
    "kana": "きんめぎんめ",
@@ -91061,6 +95276,15 @@
    "yoji": true
   },
   {
+   "w": "青年の家",
+   "lv": "N4",
+   "kana": "せいねんのいえ",
+   "en": [
+    "training and accommodation institution for young men"
+   ],
+   "kana_at": 2
+  },
+  {
    "w": "青年時代",
    "lv": "N4",
    "kana": "せいねんじだい",
@@ -91176,6 +95400,15 @@
    ]
   },
   {
+   "w": "頭の回転",
+   "lv": "N4",
+   "kana": "あたまのかいてん",
+   "en": [
+    "thoughts; thinking"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "頭文字語",
    "lv": "N4",
    "kana": "かしらもじご",
@@ -91223,6 +95456,15 @@
    "en": [
     "windmill"
    ]
+  },
+  {
+   "w": "食千切る",
+   "lv": "N4",
+   "kana": "くいちぎる",
+   "en": [
+    "to bite off"
+   ],
+   "kana_at": 3
   },
   {
    "w": "食品会社",
@@ -91324,6 +95566,24 @@
    ]
   },
   {
+   "w": "鳥の子紙",
+   "lv": "N4",
+   "kana": "とりのこがみ",
+   "en": [
+    "eggshell-colored traditional Japanese paper made primarily of Diplomorpha sikokiana fibres (high-quality, glossy)"
+   ],
+   "kana_at": 1
+  },
+  {
+   "w": "鳥の子色",
+   "lv": "N4",
+   "kana": "とりのこいろ",
+   "en": [
+    "eggshell (colour)"
+   ],
+   "kana_at": 1
+  },
+  {
    "w": "黒人大学",
    "lv": "N4",
    "kana": "こくじんだいがく",
@@ -91338,6 +95598,15 @@
    "en": [
     "African American Vernacular English; AAVE"
    ]
+  },
+  {
+   "w": "黒牛の舌",
+   "lv": "N4",
+   "kana": "くろうしのした",
+   "en": [
+    "black cow-tongue (species of tonguefish, Paraplagusia japonica)"
+   ],
+   "kana_at": 2
   },
   {
    "w": "黒牛舌魚",
@@ -91372,6 +95641,15 @@
    "en": [
     "black powder; gunpowder"
    ]
+  },
+  {
+   "w": "黒豆の木",
+   "lv": "N4",
+   "kana": "くろまめのき",
+   "en": [
+    "bog bilberry (Vaccinium uliginosum); northern bilberry"
+   ],
+   "kana_at": 2
   },
   {
    "w": "黒風白雨",

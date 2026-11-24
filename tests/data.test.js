@@ -208,16 +208,18 @@ test("語：1〜4字。2字以上は字がすべて手に持てる字で、lv �
       assert.equal(w.lv, LV[w.w] === "G1" ? null : LV[w.w], w.w);
       assert.equal(!!w.g1, !!G1_OF[w.w], `${w.w} の g1`);
     } else {
-      assert.ok(cs.every((c) => TT.N4.HOLD.has(c)) || cs.every((c) => TT.G1.HOLD.has(c)), `${w.w} に手に持てない字`);
-      assert.equal(w.lv, cs.every((c) => TT.N5.HOLD.has(c)) ? "N5" : cs.every((c) => TT.N4.HOLD.has(c)) ? "N4" : null, w.w);
-      assert.equal(!!w.g1, cs.every((c) => TT.G1.HOLD.has(c)), `${w.w} の g1`);
+      // かな（の・る・な）は、そのレベルで部品 ノ・儿・ナ が手に入るときだけ使える（KJ-053。K.wordCharOk）
+      const ok = (L) => cs.every((c) => K.wordCharOk(L, c));
+      assert.ok(ok(TT.N4) || ok(TT.G1), `${w.w} に手に持てない字`);
+      assert.equal(w.lv, ok(TT.N5) ? "N5" : ok(TT.N4) ? "N4" : null, w.w);
+      assert.equal(!!w.g1, ok(TT.G1), `${w.w} の g1`);
     }
     assert.ok(w.lv || w.g1, `${w.w} はどのレベルでも放てない`);
     assert.ok(!seen.has(w.w), w.w);
     seen.add(w.w);
   }
   for (const lv of ["G1", "N5", "N4"]) {
-    for (const w of TT[lv].WORDS.values()) for (const c of w.w) assert.ok(TT[lv].HOLD.has(c), `${lv} の ${w.w} の ${c}`);
+    for (const w of TT[lv].WORDS.values()) for (const c of w.w) assert.ok(K.wordCharOk(TT[lv], c), `${lv} の ${w.w} の ${c}`);
   }
 });
 

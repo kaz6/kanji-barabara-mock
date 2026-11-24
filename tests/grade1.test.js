@@ -35,21 +35,22 @@ test("小1：山に入る字はちょうど80字で、80字の外は入らない
 });
 
 test("小1：N5・N4 は小1 を足したことでは動かない（N4 の数は小1 を足す前のまま。N5 は P-047 で 玉＝王＋丶 を足して 王・止 が手に持てる字になり、語が38語 N4→N5）", () => {
-  // 語の数は KJ-032（地名・名字を足す・買春 売春 を外す）で N5 2458→2466・N4 10438→10460。KJ-068（D-087）で 売女・売色 も全レベルで外し N5 2465・N4 10458。字と手に持てる字は動かない
-  assert.deepEqual([T.CHARS.size, T.WORDS.size, T.HOLD.size], [103, 2465, 140]);
-  assert.deepEqual([T4.CHARS.size, T4.WORDS.size, T4.HOLD.size], [284, 10458, 353]);
+  // 語の数は KJ-032（地名・名字を足す・買春 売春 を外す）で N5 2458→2466・N4 10438→10460。KJ-068（D-087）で 売女・売色 も全レベルで外し N5 2465・N4 10458。
+  // KJ-053（D-069）で、かな（の・る・な。部品 ノ・儿・ナ の札）を1つ含む語を足し N5 2465→2614・N4 10458→10897。字と手に持てる字は動かない
+  assert.deepEqual([T.CHARS.size, T.WORDS.size, T.HOLD.size], [103, 2614, 140]);
+  assert.deepEqual([T4.CHARS.size, T4.WORDS.size, T4.HOLD.size], [284, 10897, 353]);
   for (const w of T4.WORDS.values()) assert.ok(w.lv === "N5" || w.lv === "N4", w.w);
   for (const w of D.words.words.filter((x) => x.lv === null)) assert.ok(w.g1 && !T4.WORDS.has(w.w) && !T.WORDS.has(w.w), `${w.w} は小1 だけの語`);
 });
 
 test("小1：放てる言葉は、80字と、割る・くっつけるなどで手に持てる字だけで書ける語。1字から四字熟語まで", () => {
   const ws = [...TG1.WORDS.values()];
-  assert.ok(ws.length > 2000 && ws.length < 2800, `語 ${ws.length}`); // KJ-070（D-089）：同音で N5 の字が手に持てるようになり 1376→2316。KJ-071：その字の割り方・対義の行を使い 2316→2610
+  assert.ok(ws.length > 2000 && ws.length < 2900, `語 ${ws.length}`); // KJ-070（D-089）：同音で N5 の字が手に持てるようになり 1376→2316。KJ-071：その字の割り方・対義の行を使い 2316→2610。KJ-053：かなの語で 2610→2747
   // 小1 だけ外す語（data/blocked_words_g1.json）のうち、小1 の字で書ける語（KJ-068：工口・花町）の分だけ、統計より少ない
   const g1Writable = D.blocked_words_g1.words.filter((x) => D.words.words.some((w) => w.w === x && w.g1)).length;
   assert.equal(ws.length, D.words.stats.by_level.G1.total - g1Writable);
   assert.equal(TG1.HOLD.size, D.words.stats.hold_by_level.G1);
-  for (const w of ws) for (const c of w.w) assert.ok(TG1.HOLD.has(c), `${w.w} の ${c}`);
+  for (const w of ws) for (const c of w.w) assert.ok(K.wordCharOk(TG1, c), `${w.w} の ${c}`); // かな（の・る・な）は部品の札で並べる（KJ-053）
   for (const n of [1, 2, 3, 4]) assert.ok(ws.some((w) => [...w.w].length === n), `${n}字の語がある`);
   assert.ok(ws.some((w) => w.yoji), "四字熟語");
   for (const w of ["山", "山川", "日本", "石", "草", "森林", "大人"]) assert.ok(TG1.WORDS.has(w) || !D.words.words.some((x) => x.w === w), w);
@@ -103,7 +104,7 @@ test("小1：部品表の輪がない。割った字・部品は全部札の字�
   const glyphs = new Set([...GL.all]);
   for (const c of G1) assert.ok(glyphs.has(c), `${c} が字形の一覧にない`);
   for (const k of Object.keys(TG1.parts)) for (const c of [k, ...TG1.parts[k]]) assert.ok(glyphs.has(c), `${c} が字形の一覧にない`);
-  for (const w of [...TG1.WORDS.values()]) for (const c of w.w) assert.ok(glyphs.has(c), `${w.w} の ${c}`);
+  for (const w of [...TG1.WORDS.values()]) for (const c of w.w) assert.ok(glyphs.has(c) || TG1.KANA_OK.has(c), `${w.w} の ${c}`); // かな（の・る・な）は札にならない（札は ノ・儿・ナ。KJ-053）
 });
 
 test("小1：ゲームを作る。山も手札も場も80字の外が出ない。ログの頭に「小1」が出る", () => {
@@ -223,7 +224,7 @@ test("小1・同音：同じ読みの字が無い字は 20→13（80字のうち
   // 手に持てる字が増えたぶん、語が増える。手に持てる字だけで書ける語
   assert.equal(TG1.HOLD.size, D.words.stats.hold_by_level.G1);
   assert.ok(TG1.WORDS.has("午後"), "午後（午・後 は同音でだけ出会える）");
-  for (const w of TG1.WORDS.values()) for (const c of w.w) assert.ok(TG1.HOLD.has(c), `${w.w} の ${c}`);
+  for (const w of TG1.WORDS.values()) for (const c of w.w) assert.ok(K.wordCharOk(TG1, c), `${w.w} の ${c}`);
   // 手に持った N5 の字で、語は放てる
   const g = newGame(5, "solo", "G1");
   setHand(g, g.me, "午後");
@@ -234,8 +235,8 @@ test("小1・同音：N5・N4 は今まで通り（N5 は N5 の字の中、N4 �
   assert.equal(T.HOMO_ONLY.size, 0);
   assert.equal(T4.HOMO_ONLY.size, 0);
   for (const L of [T, T4]) for (const [, groups] of L.HOMO) for (const g of groups) for (const c of g.chars) assert.ok(L.CHARS.has(c) || L.OUTSIDE.has(c), `${L.level}：${c}`);
-  assert.deepEqual([T.CHARS.size, T.WORDS.size, T.HOLD.size], [103, 2465, 140]);
-  assert.deepEqual([T4.CHARS.size, T4.WORDS.size, T4.HOLD.size], [284, 10458, 353]);
+  assert.deepEqual([T.CHARS.size, T.WORDS.size, T.HOLD.size], [103, 2614, 140]);
+  assert.deepEqual([T4.CHARS.size, T4.WORDS.size, T4.HOLD.size], [284, 10897, 353]);
 });
 
 
@@ -287,12 +288,12 @@ test("小1・同音（KJ-071）：同音で手に入れた 後 を割る・く�
 });
 
 test("小1・同音（KJ-071）：N5・N4 は動かない。語は 小1 の山の字と手に持てる字だけで書けて、N5 の字だけの語は出ない", () => {
-  assert.deepEqual([T.CHARS.size, T.WORDS.size, T.HOLD.size], [103, 2465, 140]);
-  assert.deepEqual([T4.CHARS.size, T4.WORDS.size, T4.HOLD.size], [284, 10458, 353]);
+  assert.deepEqual([T.CHARS.size, T.WORDS.size, T.HOLD.size], [103, 2614, 140]);
+  assert.deepEqual([T4.CHARS.size, T4.WORDS.size, T4.HOLD.size], [284, 10897, 353]);
   assert.equal(T.N5HELD.size, 0);
   assert.equal(T4.N5HELD.size, 0);
   assert.equal(TG1.HOLD.size, 137, "手に持てる字 121→137");
   assert.equal(D.words.stats.hold_by_level.G1, 137);
-  assert.equal(TG1.WORDS.size, 2610, "放てる語 2316→2610");
-  for (const w of TG1.WORDS.values()) for (const c of w.w) assert.ok(TG1.HOLD.has(c), `${w.w} の ${c}`);
+  assert.equal(TG1.WORDS.size, 2747, "放てる語 2316→2610（KJ-071）→2747（KJ-053：かなの語）");
+  for (const w of TG1.WORDS.values()) for (const c of w.w) assert.ok(K.wordCharOk(TG1, c), `${w.w} の ${c}`);
 });

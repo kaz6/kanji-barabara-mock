@@ -172,6 +172,30 @@ test("画面", { skip }, async (t) => {
     await ctx.close();
   });
 
+  await t.test("かなに読む部品（KJ-053）：ノ・儿・ナ の札を台に並べると、言葉はひらがなで出る（天の川・見る）。かなだけは放てない。放った言葉もひらがな", async () => {
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 });
+    await page.evaluate(() => { __KJ.game.me.cards = [..."天ノ川見儿休日ナ"].map((c, i) => ({ id: 9400 + i, c, t: 0, fresh: false })); __KJ.render(); });
+    const tap = async (ch) => page.locator("#meHand .tile:not(.sel)", { hasText: ch }).first().click();
+    assert.equal(await page.locator("#meHand .tile", { hasText: "ノ" }).count(), 1, "札は部品の ノ のまま");
+    await tap("儿"); await tap("ナ");
+    assert.match(await page.textContent("#info"), /かなだけでは放てない/);
+    assert.ok(await page.locator("#bRelease").isDisabled(), "Play は押せない");
+    await page.click("#bBack");
+    await tap("見"); await tap("儿");
+    assert.match(await page.textContent("#info"), /^見る 3点 みる/);
+    await page.click("#bBack");
+    await tap("天"); await tap("ノ"); await tap("川");
+    assert.match(await page.textContent("#info"), /^天の川 6点 あまのがわ/);
+    assert.doesNotMatch(await page.textContent("#info"), /ノ/);
+    if (process.env.KJ_SHOT_KANA) await page.screenshot({ path: process.env.KJ_SHOT_KANA }); // 報告の画像（KJ-053）
+    await page.click("#bRelease");
+    assert.equal(await page.evaluate(() => __KJ.game.me.score), 6);
+    assert.match(await page.textContent("#released"), /天の川 あまのがわ \+6点/);
+    assert.ok(await page.evaluate(() => __KJ.game.log.some((e) => e.op === "放つ" && e.from.join("") === "天の川")), "ログの 放つ はひらがな");
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+
   await t.test("相手の選び方（KJ-045）：初期値は CPU と＋とても弱い。遊び方は3つ、強さは CPU とのときだけ3つ", async () => {
     const { ctx, page, errors } = await open(browser, url, { width: 760, height: 1100 });
     const labels = await page.locator("#opp label").allTextContents();
@@ -430,7 +454,7 @@ test("画面", { skip }, async (t) => {
     await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
     assert.equal(await page.locator("#lvl input:checked").getAttribute("value"), "G1", "端末に覚える");
     await page.check('#lvl input[value="N4"]');
-    assert.match(await page.textContent("#setupInfo"), /^字 284・語 10458（レベル N4/);
+    assert.match(await page.textContent("#setupInfo"), /^字 284・語 10897（レベル N4/);
     assert.deepEqual(errors, []);
     await ctx.close();
   });

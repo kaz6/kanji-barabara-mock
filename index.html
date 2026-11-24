@@ -795,7 +795,7 @@ function beginRoom(startRow){
 const rowCards=()=>row.map(id=>G.byId(G.me,id)).filter(Boolean);
 const rowText=()=>rowCards().map(x=>x.c).join("");
 function rowState(){
-  const rc=rowCards(),text=rowText(),rl=K.releasable(T,G.used,text);
+  const rc=rowCards(),text=K.kanaText(T,rowText()),rl=K.releasable(T,G.used,text); // 言葉の書き方：ノ・儿・ナ の札はかな（天ノ川 → 天の川。KJ-053）
   const pair=rc.length===2?[rc[0].c,rc[1].c]:null;
   const joins=pair?K.joinResults(T,...pair):[];
   const reversed=pair?K.joinReversed(T,...pair):false;
