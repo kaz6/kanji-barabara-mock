@@ -625,6 +625,38 @@ test("CPU（KJ-058）：1手先は強さごとに違う。とても弱い＝使�
   assert.deepEqual(busy("normal", "人円"), [null, 0], "つよい：同音の1手先が待ち時間中なら、引き直さずに待つ");
 });
 
+test("CPU（KJ-019）：割るのは つよい だけ。割ると放てる言葉ができるときだけ割り、できないときは割らない・置き場がいっぱいなら割らない。ふつう・とても弱いは割らない", () => {
+  const free = (g) => { g.cpu.cd.homophone = g.cpu.cd.cycle = g.cpu.cd.invert = 0; };
+  const last = (g, b) => g.log.slice(b).map((e) => e.who + e.op + (e.op === "割る" ? e.from.join("") + ">" + e.to.join("") : ""));
+  const turn = (opp, hand) => { const g = newGame(3, opp, "N5"); setHand(g, g.cpu, hand); free(g); const b = g.log.length; g.cpuTurn(); return last(g, b); };
+  // 天（一＋大）を割ると 一大 が放てる。割るのは1回の動き（放つのは次の番）
+  assert.deepEqual(turn("normal", "天万"), ["CPU割る天>一大"], "つよい：割ると放てる言葉（一万）ができるので割る");
+  assert.deepEqual(turn("fair", "天万"), ["CPU引き直し"], "ふつう：割らない（引き直す）");
+  assert.deepEqual(turn("weak", "天万"), ["CPU引き直し"], "とても弱い：割らない（引き直す）");
+  // 割ると放てる言葉ができないとき（本＝木＋一。木・一・本のどれでも言葉にならない）は割らない
+  assert.deepEqual(turn("normal", "本"), ["CPU引き直し"], "割っても言葉ができないときは割らない");
+  // 割ったあと、次の番で放つ（人と同じ決まり）
+  const g = newGame(3, "normal", "N5"); setHand(g, g.cpu, "天万"); free(g);
+  g.cpuTurn(); assert.equal(g.cpu.cards.length, 3);
+  const r = g.cpuTurn(); assert.ok(r.ok && r.op !== "引き直し", "次の番で放つ");
+  assert.equal(g.log.filter((e) => e.who === "CPU" && e.op === "放つ").length, 1);
+  // 手札もストックもいっぱい（天＝1枚→2枚で枠を超える）なら割らない（人と同じ置き場の決まり）
+  const full = newGame(3, "normal", "N5"); setHand(full, full.cpu, "天万" + "天".repeat(D.rules.hand_max + D.rules.split_extra - 2)); free(full);
+  const b = full.log.length; full.cpuTurn();
+  assert.ok(!last(full, b).some((x) => x.includes("割る")), "置き場がいっぱいなら割らない");
+  assert.equal(full.cpu.cards.length <= D.rules.hand_max + D.rules.split_extra, true);
+});
+
+test("CPU（KJ-019）：割るを足しても、動く間隔は変わらない。つよい のログの頭は「つよい」と1手先に割るが出る（ふつう・とても弱いは割るなし）", () => {
+  const g = newGame(1, "normal", "N5");
+  for (let i = 0; i < 50; i++) { const d = g.cpuDelay(); assert.ok(d >= 15 && d <= 20, String(d)); }
+  assert.deepEqual(D.rules.cpu.ahead.normal.includes("split"), true);
+  assert.deepEqual(["weak", "fair"].map((k) => D.rules.cpu.ahead[k].includes("split")), [false, false]);
+  const head = (opp) => newGame(1, opp).logText().split("\n").filter((l) => l.startsWith("# 相手")).join("");
+  assert.doesNotMatch(head("normal"), /いまの強さ/);
+  assert.match(head("fair"), /1手先は反転・巡り）/);
+});
+
 test("CPU（KJ-073）：引き直しは次の値段が 5点以下（1回目 0点・2回目 5点）のときだけ。3回目からは引き直さず何もしない（強さ3つとも）", () => {
   assert.equal(D.rules.cpu.redraw_max_cost, 5);
   for (const opp of ["weak", "fair", "normal"]) {
@@ -742,7 +774,7 @@ test("CPU：決まった乱数で 5分ぶん回しても壊れない（札の数
       g.tick();
       const r = g.cpuTurn();
       if (r && r.ok && r.text) { assert.ok(!released.includes(r.text), r.text); released.push(r.text); }
-      assert.ok(g.cpu.cards.length <= D.rules.hand_max);
+      assert.ok(g.cpu.cards.length <= D.rules.hand_max + D.rules.split_extra, "手札＋ストックの枠を超えない（割ると部品がストックにも入る。KJ-019）");
       assert.equal(g.field.length, D.rules.field_size);
     }
     for (const e of g.log) if (e.who === "CPU") total += e.pts;
@@ -781,7 +813,7 @@ test("ログ：書き出しの頭に仮置きの値を全部書く", () => {
   const text = g.logText();
   const head = text.split("\n").filter((l) => l.startsWith("#")).join("\n");
   assert.match(head, /場=3枚 最初の手札=8枚 手札の上限=8枚＋ストック8枚（全部で16マス。場から取るのは上の段・ストックを合わせて16マスが埋まるまで（上の段が埋まっていればストックへ）。割る・くっつけるでできた札は、字も部品も、手札が埋まっていればストックへ。手札とストックの間は自分で動かせる）/);
-  assert.match(head, /# 相手 いまの強さ（CPU は 15〜20秒に1回動く）/);
+  assert.match(head, /# 相手 つよい（CPU は 15〜20秒に1回動く。1手先は反転・巡り・同音・割る）/);
   assert.match(head, /点数 2字3・3字9・4字12 四字熟語×2 特別な語×2（1字は放てない）/);
   assert.match(head, /放った字数×1枚を場から選んで、取りきるまで、ほかの手は何もできない（取れる枚数はためられない）/);
   assert.match(head, /引き直し 1試合5回まで・0点→5点→10点→15点→20点と回数で上がる・手札を全部入れ替え（8枚）。点はマイナスになってよい（足りなくても払える）/);
@@ -906,7 +938,7 @@ test("ログ：頭に選んだ相手を書く（ひとりで／とても弱い�
   assert.match(head("solo"), /# 相手 ひとりで（CPU なし。場の取り合いなし。50点では終わらず、10分たったら終わって点を出す/);
   assert.match(head("weak"), /# 相手 とても弱い（CPU は 30〜45秒に1回動く。1手先は使わない）/);
   assert.match(head("fair"), /# 相手 ふつう（CPU は 25〜30秒に1回動く。1手先は反転・巡り）/);
-  assert.match(head("normal"), /# 相手 いまの強さ（CPU は 15〜20秒に1回動く）/);
+  assert.match(head("normal"), /# 相手 つよい（CPU は 15〜20秒に1回動く。1手先は反転・巡り・同音・割る）/);
   assert.match(newGame(1, "weak").logText(), /# 仮置き CPU 30〜45秒に1回動く/);
   assert.match(newGame(1, "solo").logText(), /# 仮置き CPU なし/);
 });

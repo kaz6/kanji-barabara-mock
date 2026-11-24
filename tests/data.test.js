@@ -273,7 +273,7 @@ test("決まり：数値がそろっている（KJ-003 の仮置き）", () => {
   assert.equal(r.cpu.redraw_max_cost, 5, "CPU が引き直すのは次の値段が 5点以下（1回目 0点・2回目 5点）のときだけ（KJ-073）");
   assert.deepEqual(r.redraw.costs, [0, 5, 10, 15, 20], "人の引き直しは変えない");
   assert.deepEqual(r.cpu.fair_interval_sec, [25, 30], "ふつう：25〜30秒に1回（KJ-058。KJ-035 では 15〜20）");
-  assert.deepEqual(r.cpu.ahead, { weak: [], fair: ["invert", "cycle"], normal: ["invert", "cycle", "homophone"] }, "1手先の使い方（KJ-058）：とても弱い＝なし・ふつう＝反転と巡り・つよい＝反転・巡り・同音");
+  assert.deepEqual(r.cpu.ahead, { weak: [], fair: ["invert", "cycle"], normal: ["invert", "cycle", "homophone", "split"] }, "1手先の使い方（KJ-058）：とても弱い＝なし・ふつう＝反転と巡り・つよい＝反転・巡り・同音・割る（KJ-019。割るは つよい だけ）");
   assert.ok(r.cpu.weak_interval_sec[0] >= r.cpu.fair_interval_sec[1] && r.cpu.fair_interval_sec[0] >= r.cpu.interval_sec[1], "間隔は とても弱い > ふつう > いまの強さ（重ならない）");
   assert.ok(["solo", "weak", "fair", "normal"].includes(r.opponent_default));
   assert.equal(r.opponent_default, "weak");

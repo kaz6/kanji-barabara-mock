@@ -260,7 +260,7 @@ test("画面", { skip }, async (t) => {
     await page.click("#start");
     await page.click("#bLog");
     const log = await page.inputValue("#logText");
-    assert.match(log, /# レベル N5\n# 相手 いまの強さ（CPU は /);
+    assert.match(log, /# レベル N5\n# 相手 つよい（CPU は /);
     assert.match(log, /# 時間 5分\n# 仮置き /);
     // 3つが端末に残る（並べ方の kj-layout はもう使わない）
     assert.deepEqual(await page.evaluate(() => ["kj-opponent", "kj-level", "kj-time", "kj-layout"].map((k) => localStorage.getItem(k))), ["normal", "N5", "300", null]);
@@ -348,10 +348,10 @@ test("画面", { skip }, async (t) => {
       }
       await ctx.close();
     }
-    // ログの「相手」は、つよい（画面の呼び名）でも「いまの強さ」のまま
+    // ログの「相手」の行も、画面の呼び名の「つよい」で出る（KJ-019 追記2。前は「いまの強さ」だった）
     const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 }, "normal");
     await page.click("#bLog");
-    assert.match(await page.inputValue("#logText"), /# 相手 いまの強さ/);
+    assert.match(await page.inputValue("#logText"), /# 相手 つよい/);
     assert.deepEqual(errors, []);
     await ctx.close();
   });
