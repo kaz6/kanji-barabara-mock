@@ -192,7 +192,7 @@
     if (T.WORDS.has(text)) return { ok: true };
     return { ok: false, why: "辞書にない" };
   }
-  // 役の点数（R-026）。1字1・2字3・3字6・4字12、四字熟語の印つきは倍、特別な語はさらに倍
+  // 役の点数（R-026）。1字1・2字3・3字9・4字12、四字熟語の印つきは倍、特別な語はさらに倍
   function scoreOf(D, T, text) {
     const S = D.rules.score;
     text = kanaText(T, text); // かなは1字に数える（KJ-053。見る＝2字）

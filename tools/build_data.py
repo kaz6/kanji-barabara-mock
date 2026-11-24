@@ -168,7 +168,7 @@ def holdable(level_chars, parts_json, cycles_json, antonyms_json, homo_groups=No
 def write_kana_doc(words, kana_of, skipped):
     """docs/KANA_WORDS.md（KJ-053）：かな（の・る・な）を1つ含む語の一覧。作者が赤を入れる"""
     lines = ["# かなの語（KJ-053・D-069）", "",
-             "部品の札 ノ・儿・ナ を、台に並べたとき かな の・る・な として言葉に入れる。かなは1字に数える（見る＝2字3点、天の川＝3字6点）。"
+             "部品の札 ノ・儿・ナ を、台に並べたとき かな の・る・な として言葉に入れる。かなは1字に数える（見る＝2字3点、天の川＝3字9点）。"
              "部品だけ（かなだけ）の並びは放てない。tools/build_data.py が JMdict から作る（手で直さない。外したい語は data/blocked_words.json か data/blocked_words_g1.json へ。外すのは作者だけ）。", "",
              "- 入れる語：2〜4字。かなが ちょうど1つ（の・る・な）で、先頭でない。ほかの字はそのレベルで手に持てる字。かなの部品がそのレベルの割り方の行に出てくる",
              "- 入れない語（迷ったら。仮）：かなを2つ以上含む語 {} 語・かなで始まる語 {} 語（下に一覧）".format(len(skipped["kana2"]), len(skipped["head"])),

@@ -47,21 +47,21 @@ test("かなの語（words.json）：かなはちょうど1つ・先頭でない
   }
 });
 
-test("天・ノ・川 で 天の川 が3字6点。見・儿 で 見る が2字3点（かなは1字に数える）", () => {
+test("天・ノ・川 で 天の川 が3字9点。見・儿 で 見る が2字3点（かなは1字に数える）", () => {
   const g = newGame(1, "weak", "N5");
   setHand(g, g.me, "天ノ川");
   const pre = g.canRelease(g.me, g.me.cards.map((x) => x.id));
   assert.ok(pre.ok, pre.why);
   assert.equal(pre.text, "天の川", "言葉の書き方はひらがな");
-  assert.equal(K.scoreOf(D, T, "天ノ川").how, "3字6");
+  assert.equal(K.scoreOf(D, T, "天ノ川").how, "3字9");
   const r = g.release(g.me, g.me.cards.map((x) => x.id));
   assert.ok(r.ok);
-  assert.deepEqual([r.text, r.pts, g.me.score, g.me.takes], ["天の川", 6, 6, 3 * D.rules.take_per_char]);
+  assert.deepEqual([r.text, r.pts, g.me.score, g.me.takes], ["天の川", 9, 9, 3 * D.rules.take_per_char]);
   takeAll(g, g.me);
   setHand(g, g.me, "見儿");
   const r2 = g.release(g.me, g.me.cards.map((x) => x.id));
   assert.ok(r2.ok, r2.why);
-  assert.deepEqual([r2.text, r2.pts, g.me.score], ["見る", 3, 9]);
+  assert.deepEqual([r2.text, r2.pts, g.me.score], ["見る", 3, 12]);
   // 並べる順はそのまま（儿・見 は る見 で、辞書にない）
   takeAll(g, g.me);
   setHand(g, g.me, "儿見");
@@ -93,7 +93,7 @@ test("一度放ったかなの語は二人とも使えない。ログ・放っ�
   const e = g.log.find((x) => x.op === "放つ");
   assert.equal(e.from.join(""), "天の川", "ログの 放つ はひらがな");
   const es = K.endShow(g, T, g.me);
-  assert.deepEqual(es.items.map((x) => [x.text, x.kana, x.pts]), [["天の川", "あまのがわ", 6]]);
+  assert.deepEqual(es.items.map((x) => [x.text, x.kana, x.pts]), [["天の川", "あまのがわ", 9]]);
 });
 
 test("CPU もかなの語を放つ（ノ・儿・ナ の札をかなとして使う）", () => {
@@ -102,7 +102,7 @@ test("CPU もかなの語を放つ（ノ・儿・ナ の札をかなとして使
   const r = g.cpuTurn();
   assert.ok(r && r.ok, r && r.why);
   assert.equal(r.text, "天の川");
-  assert.equal(g.cpu.score, 6);
+  assert.equal(g.cpu.score, 9);
   const g2 = newGame(1, "normal", "N5");
   setHand(g2, g2.cpu, "見儿");
   const r2 = g2.cpuTurn();
