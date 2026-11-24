@@ -179,8 +179,9 @@ test("段3 以降の放ったあとの取るは、案内だけ取るに替わり
   PLAY.release(t2, t2.act());
   assert.equal(g2.me.takes, 2);
   assert.equal(t2.stepNo(), 4);
-  assert.match(t2.line(), /放った字数と同じ枚数を、場から取る（あと 2 枚/);
-  assert.equal(t2.glow().chars.length, 0, "取るあいだは札もボタンも光らせない（場の札が光る）");
+  assert.match(t2.line(), /場から自動で取る（あと 2 枚）/);
+  assert.equal(t2.glow().chars.length, 0, "取るあいだは札もボタンも光らせない");
+  assert.equal(t2.autoPending(), true, "段2 のあとは自動で取る番");
   takeAll(t2);
   assert.match(t2.line(), /十 を指で引きずって/);
   assert.equal(tut.atEnd(), true);
@@ -294,10 +295,10 @@ test("段7 の 気分 のあと：取りきるまで段7 のまま、取りき�
   assert.equal(tut.stepNo(), 7, "取りきるまで画面の段は 7");
   assert.equal(tut.title(), "同音");
   assert.equal(tut.atEnd(), false);
-  assert.match(tut.line(), /放った字数と同じ枚数を、場から取る（あと 2 枚/);
-  assert.equal(g.take(g.me, g.field[0].id).ok, true); tut.advance("take");
+  assert.match(tut.line(), /場から自動で取る（あと 2 枚）/);
+  assert.equal(tut.autoTake().ok, true);
   assert.equal(tut.stepNo(), 7, "1枚ではまだ");
-  assert.equal(g.take(g.me, g.field[0].id).ok, true); tut.advance("take");
+  assert.equal(tut.autoTake().ok, true);
   assert.equal(tut.stepNo(), 8);
   assert.equal(tut.title(), "おわり");
   assert.equal(tut.atEnd(), true);
@@ -312,4 +313,58 @@ test("段7 の取りきる前にとばす：ログは 7 同音 でとばした�
   PLAY.release(tut, tut.act());
   assert.equal(tut.finish("skip"), true);
   assert.ok(g.log.some((e) => e.op === "とばす" && /^7 同音でとばした/.test(e.note)), g.log.map((e) => e.note).join("|"));
+});
+
+// KJ-055（D-071）：段2（取る）のあと、放ったあとは場の左から自動で取る。段2 は人が取る。本番の決まりは変えない
+test("自動取り：段2 は人が取る（自動にならない）。段3 以降の放ったあとは自動の番", () => {
+  const tut = newTut(), g = tut.g;
+  PLAY.release(tut, tut.act());
+  assert.equal(g.me.takes, 2);
+  assert.equal(tut.act().op, "take", "段2：取る");
+  assert.equal(tut.autoPending(), false, "段2 は人がタップして取る");
+  assert.equal(tut.autoTake().ok, false, "段2 では自動で取らない");
+  assert.equal(g.me.takes, 2);
+  assert.match(tut.line(), /場の札を2枚タップして取る/);
+  takeAll(tut);
+  PLAY.split(tut, tut.act()); PLAY.release(tut, tut.act());
+  assert.equal(tut.autoPending(), true, "段3 の 女子 のあとは自動");
+});
+
+test("自動取り：場の左の札から1枚ずつ。ログの「取る」に「チュートリアルで自動」。取りきったら次の案内。段8 まで通せる", () => {
+  const tut = newTut(), g = tut.g;
+  let autoTaken = 0, humanTaken = 0;
+  while (!tut.atEnd()) {
+    if (tut.autoPending()) {
+      const first = g.field[0].c, hand0 = g.me.cards.length;
+      const r = tut.autoTake();
+      assert.ok(r.ok, r.why);
+      assert.equal(r.c, first, "場の左の札を取る");
+      assert.equal(g.me.cards.length, hand0 + 1);
+      autoTaken++;
+      continue;
+    }
+    const a = tut.act();
+    if (a.op === "take") { takeAll(tut); humanTaken += 2; continue; }
+    PLAY[a.op](tut, a);
+  }
+  assert.equal(humanTaken, 2, "人が取るのは段2 の2枚だけ");
+  assert.equal(autoTaken, 10, "放った 女子・古本・上手・火山・気分 の10字ぶん");
+  assert.equal(g.me.takes, 0);
+  assert.equal(tut.stepNo(), 8);
+  const takes = g.log.filter((e) => e.op === "取る");
+  assert.equal(takes.length, 12);
+  assert.equal(takes.filter((e) => /チュートリアルで自動/.test(e.note)).length, 10, "自動の行にメモ");
+  assert.equal(takes.filter((e) => !/チュートリアルで自動/.test(e.note)).length, 2, "段2 の人の取りにはメモなし");
+});
+
+test("自動取り：終えた・とばしたあとは取らない。本番（チュートリアルでない試合）の take は今まで通り、メモなし", () => {
+  const tut = newTut(), g = tut.g;
+  PLAY.release(tut, tut.act()); takeAll(tut); PLAY.split(tut, tut.act()); PLAY.release(tut, tut.act());
+  assert.equal(tut.autoPending(), true);
+  assert.equal(tut.finish("skip"), true);
+  assert.equal(tut.autoPending(), false);
+  assert.equal(tut.autoTake().ok, false);
+  const real = K.createGame(D, T, { now: () => 1000 });
+  assert.equal(typeof real.take, "function");
+  assert.equal(real.tutorialInfo, undefined, "本番の試合には自動取りの仕組みがない");
 });
