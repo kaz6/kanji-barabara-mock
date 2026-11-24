@@ -327,6 +327,7 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
       <p class="note" id="roomMsg"></p>
       <button class="op" id="bRoomCancel" hidden>やめる</button>
     </div>
+    <div class="grp" id="grpVib" hidden><p class="gt">振動</p><span class="opp" id="vib" role="radiogroup" aria-label="振動"></span></div>
     <p class="note" id="setupInfo"></p>
     <button class="op main" id="start">はじめる</button>
     <button class="op" id="bTutorial" hidden></button>
@@ -435,7 +436,7 @@ const LVL_KEY="kj-level";
 let level=null;     // レベル（"G1"〔小1〕／"N5"／"N4"）。はじめるときに効く。端末に覚える
 let row=[];         // 選んだ札の id（選んだ順。台にはその写しを左から並べる）
 let lastTried="";
-const OPP_KEY="kj-opponent",TIME_KEY="kj-time";
+const OPP_KEY="kj-opponent",TIME_KEY="kj-time",VIB_KEY="kj-vibe";
 let opponent=null;  // 相手のキー（weak・fair・normal・room。solo は画面から外した〔KJ-056〕）。端末に覚える（KJ-007）。画面では「遊び方」と「強さ」の2段で選ぶ（KJ-045）
 let cpuPower="weak"; // 「CPU と」のときの強さ。遊び方を行き来しても覚えている
 let timeLimit=null; // 制限時間（秒）。端末に覚える（KJ-007）
@@ -466,7 +467,17 @@ function loadSettings(){
   const r=K.readOpponent(D,lsGet(OPP_KEY));opponent=r.key;cpuPower=r.power; // 前の形で覚えた値（weak・room など）も、そのまま新しい形に読み替わる（KJ-045）
   const l=lsGet(LVL_KEY);level=K.LEVELS.some(x=>x.key===l)?l:(D.rules.level_default||"N4");
   timeLimit=K.normTime(D,lsGet(TIME_KEY));
+  vibeOn=lsGet(VIB_KEY)!=="0"; // 振動の入り切り（KJ-074）。覚えていなければ入
 }
+// ---------- 振動（KJ-074。D-092）：自分の手のときだけ。形は rules.vibrate（K.vibratePattern）。navigator.vibrate が無い端末（iOS・パソコン）では何もしない ----------
+let vibeOn=true;
+const canVibe=()=>{try{return typeof navigator!=="undefined"&&typeof navigator.vibrate==="function"}catch(e){return false}};
+function buzz(kind,o){
+  if(!vibeOn||!canVibe()||!D.rules)return;
+  const p=K.vibratePattern(D,kind,o);if(p===null||p===undefined)return;
+  try{navigator.vibrate(p)}catch(e){}
+}
+let vibSpecial=false; // 特別な語（つながる語も）を放ったとき、fx の事象のあとの release で振動の形を選ぶため
 // 選ぶものを並べる：name のラジオ。onPick は選んだ値を受け取る
 function radios(box,name,items,cur,onPick){
   for(const o of items){
@@ -481,6 +492,7 @@ function buildPickers(){
   radios($("opp"),"opp",K.PLAY_MODES.map(o=>({value:o.key,label:o.label})),playMode(),v=>{cancelRoom();opponent=K.opponentKey(v,cpuPower);lsSet(OPP_KEY,opponent);roomUi()});
   radios($("pow"),"pow",K.CPU_POWERS.map(o=>({value:o.key,label:o.label})),cpuPower,v=>{cpuPower=v;opponent=K.opponentKey("cpu",v);lsSet(OPP_KEY,opponent)});
   radios($("lvl"),"lvl",K.LEVELS.map(o=>({value:o.key,label:o.short,title:o.label})),level,v=>{level=v;lsSet(LVL_KEY,v);T=tablesFor(level);showCounts()});
+  if(canVibe()){$("grpVib").hidden=false;radios($("vib"),"vib",[{value:"1",label:"入"},{value:"0",label:"切"}],vibeOn?"1":"0",v=>{vibeOn=v==="1";lsSet(VIB_KEY,v);if(vibeOn)buzz("take")})} // 振動が使えない端末には出さない。入にしたとき、1回だけ試しに震える
   radios($("tim"),"tim",K.timeChoices(D).map(sec=>({value:sec,label:K.timeLabel(sec)})),timeLimit,v=>{timeLimit=+v;lsSet(TIME_KEY,v);buildHowto()});
 }
 const playMode=()=>K.readOpponent(D,opponent).mode; // cpu／room
@@ -575,8 +587,12 @@ function drain(){
   if(!G)return;
   while(G.events.length){
     const e=G.events.shift();
-    if(e.type==="fx")showFx(e.who,e.text);
-    if(e.type==="release")PTS_FX.last={who:e.who,text:e.text,pts:e.pts}; // 点の演出が、どの言葉の点かを知るため（KJ-050）
+    if(e.type==="fx"){showFx(e.who,e.text);if(e.who===G.me.name)vibSpecial=true}
+    if(e.type==="release"){
+      PTS_FX.last={who:e.who,text:e.text,pts:e.pts}; // 点の演出が、どの言葉の点かを知るため（KJ-050）
+      if(e.who===G.me.name){const w=T.WORDS.get(e.text);buzz("release",{len:[...e.text].length,special:vibSpecial||T.SPECIAL.has(e.text),yoji:!!(w&&w.yoji)})} // 振動：自分が放ったときだけ（相手の手では震えない）
+      if(e.who===G.me.name)vibSpecial=false;
+    }
     if(e.type==="over")end(e.winner,e.solo);
   }
 }
@@ -627,8 +643,8 @@ function end(winner,solo){
     showEndAfterFx(winner);
     return;
   }
-  if(winner===G.me){m.textContent=`勝ち（${sc}）`;m.className="msg win"}
-  else if(winner===G.cpu){m.textContent=`負け（${sc}）`;m.className="msg lose"}
+  if(winner===G.me){m.textContent=`勝ち（${sc}）`;m.className="msg win";buzz("win")}
+  else if(winner===G.cpu){m.textContent=`負け（${sc}）`;m.className="msg lose";buzz("lose")}
   else{m.textContent=`引き分け（${sc}）`;m.className="msg"}
   $("bCopyEnd").hidden=false;
   showEndAfterFx(winner);
@@ -914,8 +930,8 @@ function tapRow(id){if(G.over||G.locked(G.me))return;noteTried();row=row.filter(
 function tapField(id){
   if(!G||G.over)return;
   if(TUT&&autoTok)return; // チュートリアルの自動取りのあいだは、人は取らない（KJ-055）
-  if(MC){const mc=MC;mc.take(id).then(r=>{if(stale(mc))return;if(!r.ok){showWhy(r.why);triedTake(id,r.why,r.c)}afterChange()});afterChange();return} // 合言葉の部屋：先に入れた方だけ取れる
-  const r=G.take(G.me,id);if(!r.ok){showWhy(r.why);triedTake(id,r.why,r.c)}else if(TUT)TUT.advance("take");afterChange()
+  if(MC){const mc=MC;mc.take(id).then(r=>{if(stale(mc))return;if(!r.ok){showWhy(r.why);triedTake(id,r.why,r.c);buzz("reject")}else buzz("take");afterChange()});afterChange();return} // 合言葉の部屋：先に入れた方だけ取れる
+  const r=G.take(G.me,id);if(!r.ok){showWhy(r.why);triedTake(id,r.why,r.c);buzz("reject")}else{buzz("take");if(TUT)TUT.advance("take")}afterChange()
 }
 // 取るがはじかれた（KJ-041）：「ためした」に、場の札と理由を残す
 function triedTake(id,why,c){const f=G.field.find(x=>x.id===id);const ch=f?f.c:c;if(ch)G.triedOp(G.me,"取る",[ch],why)} // 先着に負けると場から消えているので、返事の c（取ろうとした字）を使う
@@ -926,40 +942,41 @@ function afterOp(res){if(res&&res.ok){row=res.sel||(res.cards?res.cards.map(x=>x
 const isSingleTry=s=>s.rc.length===1&&!s.rl.ok&&[...s.text].length===1; // 1字は押せるが、はじかれる（KJ-008）
 $("bRelease").onclick=()=>{
   const s=rowState();
-  if(TUT){const why=TUT.blocked("release",{text:s.text});if(why){G.triedOp(G.me,"放つ",s.rc.map(x=>x.c),why);showWhy(why);afterChange();return}}
+  if(TUT){const why=TUT.blocked("release",{text:s.text});if(why){G.triedOp(G.me,"放つ",s.rc.map(x=>x.c),why);showWhy(why);buzz("reject");afterChange();return}}
   // 1字は放てない（KJ-008）：はじいて理由を出し、ログに「ためした」で残す。札は台（選び）に残る
   if(isSingleTry(s)){
     const why=s.rl.why;G.tried(G.me,[s.text],why);
-    const m=$("msg");m.textContent=why;m.className="msg";hideChoices();afterChange();return;
+    const m=$("msg");m.textContent=why;m.className="msg";buzz("reject");hideChoices();afterChange();return;
   }
-  if(MC){const mc=MC;mc.release([...row]).then(r=>{if(stale(mc))return;if(!r.ok&&r.why&&(r.lost||r.why==="つながらない"||r.why==="通信中"))showWhy(r.why);afterOp(r)});afterChange();return} // 合言葉の部屋：言葉は先に放った方だけ
+  if(MC){const mc=MC;mc.release([...row]).then(r=>{if(stale(mc))return;if(!r.ok&&r.why&&(r.lost||r.why==="つながらない"||r.why==="通信中"))showWhy(r.why);if(!r.ok&&r.why)buzz("reject");afterOp(r)});afterChange();return} // 合言葉の部屋：言葉は先に放った方だけ
   const r=G.release(G.me,[...row]);if(TUT&&r&&r.ok)TUT.advance("release");
+  if(r&&r.ok===false)buzz("reject");
   afterOp(r);
 };
 function openCut(){if(reduceMotion())return;const b=$("bSplit");b.classList.remove("cutopen");void b.offsetWidth;b.classList.add("cutopen");setTimeout(()=>b.classList.remove("cutopen"),400)} // 割れたとき、ボタンの割れ目が一瞬開く（KJ-059）。はじかれたときは動かさない
-$("bSplit").onclick=()=>press("bSplit","split","割る",()=>{const r=G.split(G.me,row);afterOp(r);if(r&&r.ok)openCut();return r});
+$("bSplit").onclick=()=>press("bSplit","split","割る",()=>{const r=G.split(G.me,row);afterOp(r);if(r&&r.ok){openCut();buzz("split")}return r});
 $("bJoin").onclick=()=>press("bJoin","join","くっつける",()=>{
   const s=rowState();
-  if(s.joins.length>1){showChoices([{label:"できる字",chars:s.joins,pick:x=>afterOp(G.join(G.me,row,x))}]);return null}
-  const r=G.join(G.me,row);afterOp(r);return r;
+  if(s.joins.length>1){showChoices([{label:"できる字",chars:s.joins,pick:x=>{const r=G.join(G.me,row,x);afterOp(r);if(r&&r.ok)buzz("join")}}]);return null}
+  const r=G.join(G.me,row);afterOp(r);if(r&&r.ok)buzz("join");return r;
 });
 $("bInvert").onclick=()=>press("bInvert","invert","反転",()=>{const r=G.invert(G.me,row);afterOp(r);return r});
 $("bCycle").onclick=()=>press("bCycle","cycle","巡り",()=>{const r=G.cycle(G.me,row);afterOp(r);return r});
 $("bBack").onclick=()=>{noteTried();row=[];hideChoices();afterChange()};
 $("bRedraw").onclick=()=>{
-  if(isOff("bRedraw")){if(!G.over){const why=(TUT&&TUT.blocked("redraw"))||G.whyNot(G.me,"redraw");G.triedOp(G.me,"引き直し",[],why);afterChange();showWhy(why)}return} // 引き直しを使いきったあとに押した（KJ-041）
+  if(isOff("bRedraw")){if(!G.over){const why=(TUT&&TUT.blocked("redraw"))||G.whyNot(G.me,"redraw");G.triedOp(G.me,"引き直し",[],why);buzz("reject");afterChange();showWhy(why)}return} // 引き直しを使いきったあとに押した（KJ-041）
   row=[];hideChoices();if(MC){const mc=MC;mc.redraw().then(()=>{if(!stale(mc))afterChange()});afterChange();return}G.redraw(G.me);afterChange()}; // 部屋：手札はすぐ入れ替わる。点の送りの返事は待たずに描く
 $("bHomo").onclick=()=>{
   if($("choices").dataset.kind==="homo"){hideChoices();return} // 選びの一覧が出ているときにもう一度押すと、閉じて元に戻る。何も変えない・待ち時間もかからない・ログにも残さない（KJ-069）
   const lc=lastCard(); // 最後に選んだ札（KJ-054）
-  if(TUT){const why=TUT.blocked("homophone",{chars:lc?[lc.c]:[]});if(why){G.triedOp(G.me,"同音",rowCards().map(x=>x.c),why);showWhy(why);afterChange();return}}
-  if(isOff("bHomo")){if(!G.over){const why=G.whyNot(G.me,"homophone",[...row]);G.triedOp(G.me,"同音",lc?[lc.c]:[],why);afterChange();showWhy(why)}return} // 押せない見た目：選びの一覧は出さず、理由を残す（KJ-041）
+  if(TUT){const why=TUT.blocked("homophone",{chars:lc?[lc.c]:[]});if(why){G.triedOp(G.me,"同音",rowCards().map(x=>x.c),why);showWhy(why);buzz("reject");afterChange();return}}
+  if(isOff("bHomo")){if(!G.over){const why=G.whyNot(G.me,"homophone",[...row]);G.triedOp(G.me,"同音",lc?[lc.c]:[],why);buzz("reject");afterChange();showWhy(why)}return} // 押せない見た目：選びの一覧は出さず、理由を残す（KJ-041）
   const c=lc.c;
   showChoices((T.HOMO.get(c)||[]).map(g=>({label:`${g.type==="on"?"音":"訓"}：${g.reading}`,chars:g.chars.filter(x=>x!==c),
     pick:x=>{
       const l2=lastCard();if(!l2||l2.c!==c)return;
-      if(TUT){const why=TUT.blocked("homophone",{chars:[c],pick:x});if(why){G.triedOp(G.me,"同音",[c],why);showWhy(why);afterChange();return}}
-      const r=G.homophone(G.me,row,x);if(TUT&&r.ok)TUT.advance("homophone");afterOp(r);if(!r.ok){G.triedOp(G.me,"同音",[c],r.why);afterChange()}}})),"homo");
+      if(TUT){const why=TUT.blocked("homophone",{chars:[c],pick:x});if(why){G.triedOp(G.me,"同音",[c],why);showWhy(why);buzz("reject");afterChange();return}}
+      const r=G.homophone(G.me,row,x);if(TUT&&r.ok)TUT.advance("homophone");afterOp(r);if(!r.ok){G.triedOp(G.me,"同音",[c],r.why);buzz("reject");afterChange()}}})),"homo");
 };
 function showChoices(groups,kind=""){
   const box=$("choices");box.innerHTML="";box.dataset.kind=kind; // kind="homo"：Same reading の一覧（もう一度 Same reading で閉じる。KJ-069）
@@ -1165,10 +1182,10 @@ const isOff=id=>$(id).getAttribute("aria-disabled")==="true";
 function press(id,op,name,run){
   const lc=lastCard(),chars=op==="join"?rowCards().map(x=>x.c):lc?[lc.c]:[]; // 1枚に効く操作は、最後に選んだ札（KJ-054）
   if(G.over)return;
-  if(TUT){const why=TUT.blocked(op,{chars});if(why){G.triedOp(G.me,name,chars,why);showWhy(why);afterChange();return}} // チュートリアル：いまの段の手だけ
-  if(isOff(id)){const why=G.whyNot(G.me,op,[...row]);G.triedOp(G.me,name,chars,why);afterChange();showWhy(why);return} // 押せない見た目でも、はじかれた理由を画面に出す（KJ-069）
+  if(TUT){const why=TUT.blocked(op,{chars});if(why){G.triedOp(G.me,name,chars,why);showWhy(why);buzz("reject");afterChange();return}} // チュートリアル：いまの段の手だけ
+  if(isOff(id)){const why=G.whyNot(G.me,op,[...row]);G.triedOp(G.me,name,chars,why);buzz("reject");afterChange();showWhy(why);return} // 押せない見た目でも、はじかれた理由を画面に出す（KJ-069）
   const r=run();
-  if(r&&r.ok===false){G.triedOp(G.me,name,chars,r.why);afterChange()}
+  if(r&&r.ok===false){G.triedOp(G.me,name,chars,r.why);buzz("reject");afterChange()}
   else if(TUT&&r&&r.ok){TUT.advance(op);afterChange()}
 }
 function renderOps(){
