@@ -245,6 +245,16 @@ test("特別な語：words.json にあり、つながる相手も words.json に
   }
 });
 
+test("演出だけ特別の語（KJ-064）：fx_words の語は words.json にあり、special には無い（点が倍にならない）。出し方の値は決まったものだけ", () => {
+  assert.ok(D.special.fx_words.length > 0);
+  for (const s of D.special.fx_words) {
+    assert.ok(T.WORDS.has(s.w), s.w);
+    assert.ok(!D.special.special.some((x) => x.w === s.w), `${s.w} は special に入れない`);
+    assert.ok(s.tone === undefined || s.tone === "gold", "tone は gold だけ");
+    assert.ok(s.together === undefined || typeof s.together === "boolean");
+  }
+});
+
 test("決まり：数値がそろっている（KJ-003 の仮置き）", () => {
   const r = D.rules;
   for (const k of ["field_size", "start_hand", "hand_max", "same_char_in_deck", "take_per_char"]) assert.ok(r[k] > 0, k);

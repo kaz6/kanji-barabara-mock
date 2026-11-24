@@ -2229,3 +2229,32 @@ test("KJ-054（仮決め）：Flip・Cycle・Same reading も最後に選んだ�
   assert.equal(g.whyNot(g.me, "invert", [a, b]), "できない字");
   assert.equal(chars(g.me.cards), "上休");
 });
+
+test("金玉の演出（KJ-064）：金玉を放つと2字同時の演出の事象が出る。点は2字3点のまま・倍率なし・special には入れない", () => {
+  const g = newGame(1);
+  assert.equal(T.SPECIAL.has("金玉"), false, "special（点が倍になる表）に入れない");
+  assert.deepEqual(D.special.fx_words.map((x) => x.w), ["金玉"]);
+  const ids = setHand(g, g.me, "金玉十口休日天下");
+  const r = g.release(g.me, ids.slice(0, 2));
+  assert.equal(r.ok, true);
+  assert.equal(r.pts, 3, "点は2字3点のまま");
+  const fx = g.events.filter((e) => e.type === "fx");
+  assert.equal(fx.length, 1);
+  assert.deepEqual([fx[0].who, fx[0].text, fx[0].together, fx[0].tone], [g.me.name, "金玉", true, "gold"]);
+  assert.equal(g.me.lastSpecial, null, "特別な語のつながりには入らない");
+});
+
+test("金玉の演出（KJ-064）：天上天下の演出は今まで通り（1字ずつ・together なし）。ふつうの語には演出の事象が出ない", () => {
+  const g = newGame(1);
+  let ids = setHand(g, g.me, "天上天下十口休日");
+  g.release(g.me, ids.slice(0, 4));
+  const fx = g.events.filter((e) => e.type === "fx");
+  assert.equal(fx.length, 1);
+  assert.equal(fx[0].text, "天上天下");
+  assert.equal(fx[0].together, undefined);
+  assert.equal(fx[0].tone, undefined);
+  const g2 = newGame(1);
+  ids = setHand(g2, g2.me, "休日十口天下上一");
+  g2.release(g2.me, ids.slice(0, 2));
+  assert.equal(g2.events.filter((e) => e.type === "fx").length, 0);
+});

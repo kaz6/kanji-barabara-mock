@@ -43,9 +43,9 @@ function woffCodes(buf) {
   return codes;
 }
 
-const SPECIAL_CHARS = [...new Set(D.special.special.flatMap((w) => [...w.w]))];
+const SPECIAL_CHARS = [...new Set([...D.special.special, ...(D.special.fx_words || [])].flatMap((w) => [...w.w]))]; // 特別な語＋演出だけ特別の語（金玉。KJ-064）
 
-test("筆文字：special.json の語の字が、同梱の字体（kj-fx.woff）にぜんぶある", () => {
+test("筆文字：special.json の語（special・fx_words）の字が、同梱の字体（kj-fx.woff）にぜんぶある", () => {
   const codes = woffCodes(read("fonts/kj-fx.woff"));
   assert.ok(SPECIAL_CHARS.length > 0);
   for (const c of SPECIAL_CHARS) assert.ok(codes.has(c.codePointAt(0)), `${c} が kj-fx.woff に無い。python3 tools/build_fx_font.py を回す`);

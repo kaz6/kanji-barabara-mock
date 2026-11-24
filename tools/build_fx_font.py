@@ -5,7 +5,7 @@
   1. npm pack @fontsource/yuji-syuku && tar xzf fontsource-yuji-syuku-*.tgz   （どこか別のフォルダで）
   2. python3 tools/build_fx_font.py <展開したフォルダ>/package/files/yuji-syuku-japanese-400-normal.woff
      （引数を省くと、環境変数 YUJI_SYUKU か /tmp/yj/package/files/… を探す）
-  字＝data/special.json の語に出る字（特別な語を足したら作り直す）。
+  字＝data/special.json の語（special）と演出だけ特別の語（fx_words。KJ-064）に出る字（足したら作り直す）。
 出力：fonts/kj-fx.woff・fonts/kj-fx.css
 Yuji Syuku：Kinuta Font Factory（書家 片岡祐慈の筆跡）。SIL OFL 1.1。ライセンス本文は fonts/OFL-YujiSyuku.txt。
 """
@@ -20,7 +20,7 @@ DEFAULT_SRC = os.environ.get("YUJI_SYUKU", "/tmp/yj/package/files/yuji-syuku-jap
 def fx_chars():
     sp = json.load(open(os.path.join(ROOT, "data", "special.json"), encoding="utf-8"))
     s = []
-    for w in sp["special"]:
+    for w in sp["special"] + sp.get("fx_words", []):
         for c in w["w"]:
             if c not in s:
                 s.append(c)
