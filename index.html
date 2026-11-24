@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>漢字版（仮）モック</title>
 <link rel="stylesheet" href="fonts/kj-glyphs.css">
+<link rel="stylesheet" href="fonts/kj-fx.css">
 <style>
 :root{
   /* 色の役割（KJ-042。値は仮。ここだけ変えれば全体が変わる）
@@ -262,7 +263,7 @@ details ul{padding-left:18px}
 /* 特別な語の演出 */
 #fx{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(246,244,239,.92);z-index:10;pointer-events:none}
 #fx.on{display:flex}
-#fx .c{font-family:var(--kanji);font-size:min(22vw,150px);line-height:1;opacity:0;transform:scale(1.6);transition:opacity .12s,transform .18s}
+#fx .c{font-family:"KJ Fx",var(--kanji);font-size:min(22vw,150px);line-height:1;opacity:0;transform:scale(1.6);transition:opacity .12s,transform .18s}
 #fx .c.in{opacity:1;transform:scale(1)}
 #fx .who{position:absolute;top:18%;font-size:14px;color:var(--sub)}
 /* ストックが空のときは低く薄く（札が入ったら手札と同じ形）。引きずっている間は、落とせるよう元の大きさにする（KJ-010） */
@@ -413,6 +414,7 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
   <details>
     <summary>しくみ</summary>
     <ul id="howto"></ul>
+    <p class="credit">特別な語の演出の字：Yuji Syuku（Kinuta Font Factory。SIL OFL 1.1）。</p>
     <p class="credit">データ：JMdict・KANJIDIC2（© Electronic Dictionary Research and Development Group, EDRDG。CC BY-SA 3.0。<a href="https://www.edrdg.org/edrdg/licence.html">ライセンス</a>）。jamdict-data 経由で取り込み、語・字・読みを抜き出して加工しています。N5 の字は KANJIDIC2 の旧4級（103字）で代用。</p>
   </details>
 </main>
@@ -1233,6 +1235,8 @@ function renderReleased(){
     ul.appendChild(li);
   }
 }
+// KJ-063：特別な語の演出の筆文字は、はじめる前の画面のうちに読んでおく（演出の途中で字が入れ替わらないように）。読めなかったときは今の字で出る
+function preloadFx(){try{if(document.fonts&&document.fonts.load)document.fonts.load('100px "KJ Fx"',(D.special.special||[]).map(w=>w.w).join("")).catch(()=>{})}catch(e){}}
 function showFx(who,text){
   const fx=$("fx"),box=$("fxChars");box.innerHTML="";$("fxWho").textContent=who;
   fx.classList.add("on");
@@ -1285,7 +1289,7 @@ document.addEventListener("visibilitychange",()=>{
 window.__KJ={get game(){return G},get tut(){return TUT},get row(){return row},get tables(){return T},get mc(){return MC},get room(){return ROOM},data:D,render,drain}; // ブラウザのテスト用
 
 Promise.all(K.FILES.map(f=>fetch(`data/${f}.json`).then(r=>r.json()).then(j=>D[f]=j)))
-  .then(()=>{loadSettings();T=tablesFor(level);buildPickers();buildHowto();showCounts();roomUi();$("bTutorial").textContent=D.tutorial.ui.button;$("bTutorial").hidden=false})
+  .then(()=>{preloadFx();loadSettings();T=tablesFor(level);buildPickers();buildHowto();showCounts();roomUi();$("bTutorial").textContent=D.tutorial.ui.button;$("bTutorial").hidden=false})
   .catch(e=>{$("setupInfo").textContent="データを読めませんでした（file:// では開けません。Pages かローカルのサーバーで開いてください）"});
 </script>
 </body>
