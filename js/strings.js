@@ -34,8 +34,10 @@
     bBack: "Back",
     bRedraw: "Redraw",
   });
-  // 印を字に組み込むボタン：[印の前の字, 印, 印のあとの字]（Fl＋印＋p／印＋ycle／印＋ame reading）
+  // 印を字に組み込むボタン：[印の前の字, 印, 印のあとの字]（Fl＋印＋p／印＋ycle／印＋ame reading）。
+  // Split（KJ-059。D-075）だけ印は SVG ではなく「割れ目」（札の割れ目と同じ縦の点線）：Sp｜lit。傾きと色は index.html の .sp-a・.sp-b・.sp-cut
   const LOGO = Object.freeze({
+    bSplit: Object.freeze(["Sp", "cut", "lit"]),
     bInvert: Object.freeze(["Fl", "invert", "p"]),
     bCycle: Object.freeze(["", "cycle", "ycle"]),
     bHomo: Object.freeze(["", "homophone", "ame reading"]),
@@ -43,6 +45,7 @@
   // ボタンの中身の HTML（LOGO のあるボタンは印の SVG 入り。無いボタンは文字だけ）
   function buttonHtml(id) {
     const lg = LOGO[id];
+    if (lg && lg[1] === "cut") return `<span class="sp-a">${lg[0]}</span><span class="sp-cut" aria-hidden="true"></span><span class="sp-b">${lg[2]}</span>`;
     return lg ? `${lg[0]}${iconSvg(lg[1])}${lg[2]}` : BUTTONS[id];
   }
   // 引き直しの添え字（KJ-049）：次の値段と残りの回数（例：Redraw 0pt あと5回・Redraw -10pt あと3回。回数の言い方は仮）。
