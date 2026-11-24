@@ -27,6 +27,17 @@
   // 制限時間（KJ-007）。選べる値は rules.win.time_choices_sec、既定は win.time_limit_sec（D-024）。知らない値は既定
   const timeChoices = (D) => (D.rules.win.time_choices_sec && D.rules.win.time_choices_sec.length ? D.rules.win.time_choices_sec : [D.rules.win.time_limit_sec]);
   const normTime = (D, v) => (timeChoices(D).includes(Number(v)) && v !== null && v !== "" ? Number(v) : D.rules.win.time_limit_sec);
+  // 振動の形（KJ-074。D-092）。rules.vibrate の値（ms の数か配列）を返す。kind＝take／release／reject／split／join／win／lose。
+  // release は o＝{len（字数）, special（特別な語）, yoji（四字熟語）}：特別な語 ＞ 4字以上・四字熟語 ＞ 3字 ＞ 2字。形が無ければ null（何もしない）
+  const vibratePattern = (D, kind, o = {}) => {
+    const V = D.rules.vibrate;
+    if (!V) return null;
+    if (kind === "release") {
+      if (o.special || (o.text && (V.special_words || []).includes(o.text))) return V.special; // 特別な語（special.json）と、振動だけ特別の語（金玉。点は変えない）
+      return o.yoji || o.len >= 4 ? V.release4 : o.len === 3 ? V.release3 : V.release2;
+    }
+    return V[kind] === undefined ? null : V[kind];
+  };
   const timeLabel = (sec) => `${sec / 60}分`;
   const cpuInterval = (D, key) => (key === "weak" ? D.rules.cpu.weak_interval_sec : key === "fair" ? D.rules.cpu.fair_interval_sec : D.rules.cpu.interval_sec);
 
@@ -1507,7 +1518,7 @@
   }
 
   return {
-    FILES, OPPONENTS, PLAY_MODES, CPU_POWERS, readOpponent, opponentKey, LEVELS, timeChoices, normTime, timeLabel, levelLabel, levelShort, makeTables, isN5, isLevelChar, isChar, splitOnce, canSplit, delivered, joinResults, joinReversed,
+    FILES, OPPONENTS, PLAY_MODES, CPU_POWERS, readOpponent, opponentKey, LEVELS, timeChoices, normTime, vibratePattern, timeLabel, levelLabel, levelShort, makeTables, isN5, isLevelChar, isChar, splitOnce, canSplit, delivered, joinResults, joinReversed,
     releasable, scoreOf, kanaOf, kanaText, wordCharOk, KANA_ONLY_WHY, homoChars, marks, markKinds, cutSpec, FACES, FACE_LABEL, faceJoins, faceResults, rulesLabel, opponentLabel, createGame, createTutorial, TUTORIAL_OPPONENT, playLogRow, endShow, END_LABELS, logSendAllowed, playLogResult, PLAY_LOG_LIMITS,
     strSeed, seededRand, matchRand, ROLES, ROOM_OPPONENT, MATCH_END_GRACE_SEC, MATCH_INSERT_TIMEOUT_SEC, MATCH_PING_SEC, MATCH_GONE_SEC, ROOM_LOBBY_TTL_SEC,
     createMatchClient, memoryClaims, newMatchId, newRoomCode, roomLobbyId, findRoom, hostRoom, joinRoom, startRoom, roomStartAt, roomWaiter,
