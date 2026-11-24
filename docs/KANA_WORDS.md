@@ -6,7 +6,7 @@
 - 入れない語（迷ったら。仮）：かなを2つ以上含む語 17 語・かなで始まる語 1 語（下に一覧）
 - 印：★＝よく使う（CPU が知っている語。ヒントでも先に狙う）・小1＝小1 でも放てる
 
-## の（札 ノ）311 語
+## の（札 ノ）310 語
 
 | 語 | 読み | レベル | 小1 | 意味 |
 |---|---|---|---|---|
@@ -80,7 +80,6 @@
 | 四の二 | しのに | N5 | 小1 | rolling a two and four (with two dice) / six |
 | 地の文 | じのぶん | N4 |  | descriptive (narrative) part |
 | 夏の月 | なつのつき | N4 |  | the (cool) summer moon |
-| 夜の女 | よるのおんな | N4 |  | street prostitute; streetwalker |
 | 夜の目 | よのめ | N4 |  | eyes of the night / eyes asleep; at night |
 | 夜の秋 | よるのあき | N4 |  | cool, late summer night |
 | 大の字 | だいのじ | N4 | 小1 | shape of the "dai" kanji (esp. person with arms and legs outstretched); sprawling |
@@ -322,7 +321,7 @@
 | 黒牛の舌 | くろうしのした | N4 |  | black cow-tongue (species of tonguefish, Paraplagusia japonica) |
 | 黒豆の木 | くろまめのき | N4 |  | bog bilberry (Vaccinium uliginosum); northern bilberry |
 
-## る（札 儿）124 語
+## る（札 儿）123 語
 
 | 語 | 読み | レベル | 小1 | 意味 |
 |---|---|---|---|---|
@@ -415,7 +414,6 @@
 | 朝日る | あさひる | N4 |  | to fabricate (stories); to make up |
 | 来る年 | くるとし | N5 | 小1 | the coming year |
 | 来る日 | くるひ | N5 | 小1 | the coming days |
-| 火病る | ファビョる | N4 |  | to get one's knickers in a twist |
 | 牛耳る | ぎゅうじる | N4 |  | to control; to take the lead in |
 | 着る物 | きるもの | N4 |  | something to wear; clothes |
 | 知る人 | しるひと | N4 |  | acquaintance; friend / lover |
