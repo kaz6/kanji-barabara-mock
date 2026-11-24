@@ -641,9 +641,11 @@ test("CPU（KJ-019）：割るのは つよい だけ。割ると放てる言葉
   const r = g.cpuTurn(); assert.ok(r.ok && r.op !== "引き直し", "次の番で放つ");
   assert.equal(g.log.filter((e) => e.who === "CPU" && e.op === "放つ").length, 1);
   // 手札もストックもいっぱい（天＝1枚→2枚で枠を超える）なら割らない（人と同じ置き場の決まり）
-  const full = newGame(3, "normal", "N5"); setHand(full, full.cpu, "天万" + "天".repeat(D.rules.hand_max + D.rules.split_extra - 2)); free(full);
-  const b = full.log.length; full.cpuTurn();
+  const full = newGame(3, "normal", "N5"); setHand(full, full.cpu, "天万" + "天".repeat(D.rules.hand_max + D.rules.split_extra - 2));
+  for (const k of ["homophone", "cycle", "invert"]) full.cpu.cd[k] = full.now() + 20; // 割る以外の1手先は待ち時間中にして、割る候補だけが押せる形にする（割る候補に入っていたら g.split がはじく）
+  const b = full.log.length; const fr = full.cpuTurn();
   assert.ok(!last(full, b).some((x) => x.includes("割る")), "置き場がいっぱいなら割らない");
+  assert.ok(fr === null || fr.ok !== false, "割ろうとして失敗した（g.split が はじいた）動きを返していない＝割る候補に入れていない");
   assert.equal(full.cpu.cards.length <= D.rules.hand_max + D.rules.split_extra, true);
 });
 

@@ -292,7 +292,7 @@
   const CPU_POWERS = [
     { key: "weak", label: "とても弱い" },
     { key: "fair", label: "ふつう" },
-    { key: "normal", label: "つよい" }, // 前の呼び名は「いまの強さ」（ログには今も OPPONENTS の label で出る）
+    { key: "normal", label: "つよい" }, // 前の呼び名は「いまの強さ」（ログの頭の「相手」の行は opponentLabel が画面の呼び名で書く。KJ-019）
   ];
   // 端末に覚えた相手のキー（前の形のまま）を、新しい形（遊び方＋強さ）に読み替える。読めなければ初期値（rules.opponent_default。CPU と＋とても弱い）
   function readOpponent(D, stored) {
