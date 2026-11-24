@@ -469,7 +469,7 @@ function loadSettings(){
   timeLimit=K.normTime(D,lsGet(TIME_KEY));
   vibeOn=lsGet(VIB_KEY)!=="0"; // 振動の入り切り（KJ-074）。覚えていなければ入
 }
-// ---------- 振動（KJ-074。D-092）：自分の手のときだけ。形は rules.vibrate（K.vibratePattern）。navigator.vibrate が無い端末（iOS・パソコン）では何もしない ----------
+// ---------- 振動（KJ-074。D-092）：自分の手のときだけ。形は rules.vibrate（K.vibratePattern）。navigator.vibrate が無い端末（iOS の Safari など）では何もしない ----------
 let vibeOn=true;
 const canVibe=()=>{try{return typeof navigator!=="undefined"&&typeof navigator.vibrate==="function"}catch(e){return false}};
 function buzz(kind,o){
