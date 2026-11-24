@@ -38,6 +38,9 @@ test("vibratePattern：放つは 特別な語 ＞ 4字・四字熟語 ＞ 3字 �
   assert.deepEqual(P({ len: 5 }), V.release4, "5字以上も 4字の形");
   assert.deepEqual(P({ len: 2, special: true }), V.special, "2字でも特別な語なら特別の形");
   assert.deepEqual(P({ len: 4, yoji: true, special: true }), V.special);
+  assert.deepEqual(P({ len: 2, text: "金玉" }), V.special, "special_words の語");
+  assert.equal(P({ len: 2, text: "一人" }), 30);
+  assert.equal(D.special.special.some((s) => s.w === "金玉"), false, "金玉は特別な語の表に入れていない（点・演出は別のカード）");
 });
 
 test("vibratePattern：反転・巡り・同音・引き直しと、知らない手は振動しない（null）", () => {
@@ -49,9 +52,11 @@ test("放つ言葉の長さ・特別・四字熟語から、実際の語で形�
   const T = K.makeTables(D, "N5");
   const shape = (text) => {
     const w = T.WORDS.get(text);
-    return K.vibratePattern(D, "release", { len: [...text].length, special: T.SPECIAL.has(text), yoji: !!(w && w.yoji) });
+    return K.vibratePattern(D, "release", { text, len: [...text].length, special: T.SPECIAL.has(text), yoji: !!(w && w.yoji) });
   };
-  assert.equal(shape("天上天下") !== null, true);
+  assert.deepEqual(shape("天上天下"), V.special, "天上天下");
+  assert.deepEqual(shape("金玉"), V.special, "金玉（special.json には無いが振動は特別の形）");
+  assert.equal(shape("一人"), 30);
   const sp = [...T.SPECIAL.keys()][0];
   assert.deepEqual(shape(sp), V.special, `特別な語 ${sp}`);
 });

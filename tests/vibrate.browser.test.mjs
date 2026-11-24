@@ -28,7 +28,7 @@ function serve() {
   });
 }
 
-// vibrate: true＝呼ばれた形を window.__vib に残す差し替え／false＝navigator.vibrate が無い端末（iOS・パソコン）。pref＝端末に覚えた入り切り
+// vibrate: true＝呼ばれた形を window.__vib に残す差し替え／false＝navigator.vibrate が無い端末（iOS など）。pref＝端末に覚えた入り切り
 async function open(browser, url, { vibrate = true, pref = null } = {}) {
   const ctx = await browser.newContext({ viewport: { width: 375, height: 900 }, reducedMotion: "reduce" });
   await ctx.addInitScript(([v, p]) => {
@@ -95,7 +95,7 @@ test("振動", { skip }, async (t) => {
     await ctx.close();
   });
 
-  await t.test("2字・3字・特別な語・勝ち・負け", async () => {
+  await t.test("2字・3字・特別な語・金玉", async () => {
     const { ctx, page, errors } = await open(browser, url);
     await begin(page);
     const pick = async (text) => {
@@ -111,6 +111,8 @@ test("振動", { skip }, async (t) => {
     assert.deepEqual(await pick("一人"), [30], "2字");
     assert.deepEqual(await pick("一年生"), [[40, 40, 40]], "3字");
     assert.deepEqual(await pick("天上天下"), [[80, 50, 80, 50, 200]], "特別な語（4字だが特別の形）");
+    assert.deepEqual(await pick("金玉"), [[80, 50, 80, 50, 200]], "金玉（点は3のまま）");
+    assert.equal(await page.evaluate(() => __KJ.game.log.filter((e) => e.op === "放つ").pop().pts), 3);
     await ctx.close();
     assert.deepEqual(errors, []);
   });
@@ -170,7 +172,7 @@ test("振動", { skip }, async (t) => {
     assert.deepEqual(errors, []);
   });
 
-  await t.test("navigator.vibrate が無い端末（iOS・パソコン）：入り切りは出ず、遊んでも落ちない", async () => {
+  await t.test("navigator.vibrate が無い端末（iOS など）：入り切りは出ず、遊んでも落ちない", async () => {
     const { ctx, page, errors } = await open(browser, url, { vibrate: false });
     assert.equal(await page.locator("#grpVib").isVisible(), false);
     await begin(page);

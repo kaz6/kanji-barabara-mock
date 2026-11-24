@@ -20,7 +20,7 @@
 - `data/proper_names.json`：言葉として通す地名・名字（KJ-032。都道府県・県庁所在地と政令指定都市・名字上位100）。`tools/build_data.py` が words に入れ、印 `pn`（台の行に〔地名〕〔名字〕）を付ける。一覧は docs/PROPER_NAMES.md
 - `data/blocked_words.json`：全レベルで放てない語（D-048。買春・売春）。`tools/build_data.py` が words から外す
 - `data/blocked_words_g1.json`：小1 のときだけ放てない語の一覧（KJ-044 追記。語の表から外す。N5・N4 には効かない。中身は作者が決める）
-- `data/rules.json` の `vibrate`：スマホの振動の形（KJ-074。ms。手ごとに rules の1か所。選び方は `K.vibratePattern`。振動は index.html の `buzz`。入り切りは localStorage `kj-vibe`。`navigator.vibrate` が無い端末では何もしない）
+- `data/rules.json` の `vibrate`：スマホの振動の形（KJ-074。ms。手ごとに rules の1か所。選び方は `K.vibratePattern`。振動は index.html の `buzz`。入り切りは localStorage `kj-vibe`。`navigator.vibrate` が無い端末では入り切りを出さず何もしない。金玉は special_words で振動だけ特別）
 - `data/rules.json`：数値（場・手札・点数・引き直し・勝ち・待ち時間・CPU）。数値を変えるときはここだけ。変えたら `version` を上げる
 - `tests/`：テスト
 

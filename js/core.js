@@ -33,7 +33,7 @@
     const V = D.rules.vibrate;
     if (!V) return null;
     if (kind === "release") {
-      if (o.special) return V.special;
+      if (o.special || (o.text && (V.special_words || []).includes(o.text))) return V.special; // 特別な語（special.json）と、振動だけ特別の語（金玉。点は変えない）
       return o.yoji || o.len >= 4 ? V.release4 : o.len === 3 ? V.release3 : V.release2;
     }
     return V[kind] === undefined ? null : V[kind];

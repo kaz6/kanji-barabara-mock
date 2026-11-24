@@ -506,7 +506,7 @@ function start(){
   leaveRoom();leaveTutorial();
   T=tablesFor(level);buildHowto();
   G=K.createGame(D,T,{now:clock,opponent,timeLimit});
-  row=[];lastTried="";
+  row=[];lastTried="";vibSpecial=false;
   $("msg").textContent="";$("msg").className="msg";
   $("bCopyEnd").hidden=true;
   hideChoices();
@@ -590,7 +590,7 @@ function drain(){
     if(e.type==="fx"){showFx(e.who,e.text);if(e.who===G.me.name)vibSpecial=true}
     if(e.type==="release"){
       PTS_FX.last={who:e.who,text:e.text,pts:e.pts}; // 点の演出が、どの言葉の点かを知るため（KJ-050）
-      if(e.who===G.me.name){const w=T.WORDS.get(e.text);buzz("release",{len:[...e.text].length,special:vibSpecial||T.SPECIAL.has(e.text),yoji:!!(w&&w.yoji)})} // 振動：自分が放ったときだけ（相手の手では震えない）
+      if(e.who===G.me.name){const w=T.WORDS.get(e.text);buzz("release",{text:e.text,len:[...e.text].length,special:vibSpecial||T.SPECIAL.has(e.text),yoji:!!(w&&w.yoji)})} // 振動：自分が放ったときだけ（相手の手では震えない）
       if(e.who===G.me.name)vibSpecial=false;
     }
     if(e.type==="over")end(e.winner,e.solo);
@@ -957,7 +957,7 @@ function openCut(){if(reduceMotion())return;const b=$("bSplit");b.classList.remo
 $("bSplit").onclick=()=>press("bSplit","split","割る",()=>{const r=G.split(G.me,row);afterOp(r);if(r&&r.ok){openCut();buzz("split")}return r});
 $("bJoin").onclick=()=>press("bJoin","join","くっつける",()=>{
   const s=rowState();
-  if(s.joins.length>1){showChoices([{label:"できる字",chars:s.joins,pick:x=>{const r=G.join(G.me,row,x);afterOp(r);if(r&&r.ok)buzz("join")}}]);return null}
+  if(s.joins.length>1){showChoices([{label:"できる字",chars:s.joins,pick:x=>{const r=G.join(G.me,row,x);afterOp(r);if(r&&r.ok)buzz("join");else if(r&&r.ok===false)buzz("reject")}}]);return null}
   const r=G.join(G.me,row);afterOp(r);if(r&&r.ok)buzz("join");return r;
 });
 $("bInvert").onclick=()=>press("bInvert","invert","反転",()=>{const r=G.invert(G.me,row);afterOp(r);return r});
