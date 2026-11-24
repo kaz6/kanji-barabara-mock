@@ -584,6 +584,7 @@
       }
       // 段2：1手（割る・反転・巡り・同音）で放てる言葉になる。その試合でまだ使っていない操作を先に。同じなら、よく使う語を先に
       const usedOps = new Set(g.log.filter((e) => e.who === p.name).map((e) => e.op));
+      const commonSet = new Set(T.COMMON_WORDS.map((x) => x.w));
       let best = null;
       for (const [opName, k, btn] of HINT_OPS) {
         if (k !== "split" && !g.ready(p, k)) continue;
@@ -607,8 +608,9 @@
               const ids = pickFrom(virtual, w);
               if (!ids) continue;
               const lit = [x.id, ...ids.filter((id) => id >= 0)];
-              const rank = [-[...w].length, usedOps.has(opName) ? 1 : 0, wi]; // 字数の多い語を先に（KJ-061）→ まだ使っていない操作 → よく使う語
-              const better = !best || rank.some((v, i) => i > 0 ? rank.slice(0, i).every((u, j) => u === best.rank[j]) && v < best.rank[i] : v < best.rank[0]);
+              const rank = [-[...w].length, commonSet.has(w) ? 0 : 1, usedOps.has(opName) ? 1 : 0, wi]; // 字数の多い語 → よく使う語（追記 P-061）→ まだ使っていない操作 → 語の順（KJ-061）
+              let better = !best;
+              for (let i = 0; !better && i < rank.length && rank[i] <= best.rank[i]; i++) if (rank[i] < best.rank[i]) better = true; // 辞書順で小さければ入れ替え
               if (better) {
                 best = { tier: 2, ids: lit, button: btn, op: opName, word: w, rank };
               }

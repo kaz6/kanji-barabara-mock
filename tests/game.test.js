@@ -1646,6 +1646,13 @@ test("KJ-061 ヒント：3字以上の語が作れるときは、2字より先�
   setHand(g4, g4.me, "円石休日");
   tryN(g4, 3);
   assert.equal(g4.hint.word, "休日", "common の語を先に（円石は後）");
+  // 段2 でも、同じ字数なら common を先に。割るを使った後でも、七白→七日（common）を同音の 七百（common でない）より先に（追記 P-061）
+  const g5 = newGame(1, "weak", "G1");
+  setHand(g5, g5.me, "七白");
+  g5.log.push({ t: 0, who: g5.me.name, op: "割る", from: ["一"], to: ["二"], pts: 0, meScore: 0, cpuScore: 0, me: 0, cpu: 0, note: "" });
+  tryN(g5, 3);
+  assert.equal(g5.hint.tier, 2);
+  assert.equal(g5.hint.word, "七日", "割るを使ったあとでも common が先");
   // 段2：見見 を割ると 見 目 儿（見る・見る目 が作れる）。3字の 見る目 を先に
   const g3 = newGame(1, "weak", "N5");
   setHand(g3, g3.me, "見見");
@@ -1675,12 +1682,17 @@ test("KJ-037 ヒント：段2 は、その試合でまだ使っていない操�
   setHand(first, first.me, "日年国");
   tryN(first, 3);
   assert.equal(first.hint.op, "巡り", "まだどれも使っていないときは、よく使う語が先（年月）");
+  // 同じ字数・どちらも common の 一人（割る）と 何人（同音）で比べる（common が違うときは common が先。追記 P-061）
+  const f1 = newGame(1, "weak", "N5");
+  setHand(f1, f1.me, "一何");
+  tryN(f1, 3);
+  assert.equal(f1.hint.op, "割る");
   const g = newGame(1, "weak", "N5");
-  setHand(g, g.me, "日年国");
-  g.log.push({ t: 0, who: g.me.name, op: "巡り", from: ["一"], to: ["二"], pts: 0, meScore: 0, cpuScore: 0, me: 0, cpu: 0, note: "" }); // 巡りは使った
+  setHand(g, g.me, "一何");
+  g.log.push({ t: 0, who: g.me.name, op: "割る", from: ["一"], to: ["二"], pts: 0, meScore: 0, cpuScore: 0, me: 0, cpu: 0, note: "" }); // 割るは使った
   tryN(g, 3);
   assert.equal(g.hint.tier, 2);
-  assert.equal(g.hint.op, "同音", "巡りは使ったので、まだ使っていない 同音 を先に");
+  assert.equal(g.hint.op, "同音", "割るは使ったので、まだ使っていない 同音 を先に");
   assert.equal(g.hint.button, "bHomo");
 });
 
