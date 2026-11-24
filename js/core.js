@@ -124,6 +124,11 @@
     for (const c of T.NEXT.keys()) T.HOLD.add(c);
     for (const c of T.INV.keys()) T.HOLD.add(c);
     for (const c of T.HOMO.keys()) T.HOLD.add(c);
+    // かなに読む部品（KJ-053・D-069。data/parts.json の kana_parts）：ノ→の・儿→る・ナ→な。台に並べたとき、この札はかなとして言葉に入る。
+    // KANA_OK＝このレベルの割り方の行に部品が出てくる（手に入る）かな。語の表（words.json）はこの決め方で作る（tools/build_data.py）
+    T.KANA = new Map(Object.entries(D.parts.kana_parts || {}));
+    const partsSeen = new Set(Object.entries(T.parts).flatMap(([k, v]) => [k, ...v]));
+    T.KANA_OK = new Set([...T.KANA].filter(([pt]) => partsSeen.has(pt)).map(([, k]) => k));
     T.SPECIAL = new Map(D.special.special.map((s) => [s.w, s]));
     // CPU が知っている語＝よく使う語（このレベルの語の表にあるものだけ。KJ-015：表にない語を知っていると、放てずに止まる）
     T.COMMON_WORDS = D.words.words.filter((w) => w.common && w.w.length >= 2 && T.WORDS.has(w.w));
@@ -168,11 +173,21 @@
   }
   // 逆に並べればくっつく（順番の決まりは変えない。表示だけ）
   const joinReversed = (T, a, b) => joinResults(T, a, b).length === 0 && joinResults(T, b, a).length > 0;
+  // かなに読む部品（KJ-053）：札の字 → 言葉の中の字（ノ→の・儿→る・ナ→な。ほかはそのまま）。kanaText は札の並び（字の配列か文字列）を言葉の書き方にする（天ノ川 → 天の川）
+  const kanaOf = (T, c) => (T.KANA && T.KANA.get(c)) || c;
+  const kanaText = (T, chars) => [...(typeof chars === "string" ? chars : chars.join(""))].map((c) => kanaOf(T, c)).join("");
+  const isKanaChar = (T, c) => !!T.KANA && [...T.KANA.values()].includes(c);
+  // 語の字として使えるか：手に持てる字か、このレベルで手に入るかな（KJ-053）
+  const wordCharOk = (T, c) => T.HOLD.has(c) || (!!T.KANA_OK && T.KANA_OK.has(c));
   // 放てるか：words.json の2〜4字の語。1字は放てない（KJ-008。くっつけて作った字でも例外なし）。一度放った言葉は二人とも使えない（D-005）
+  // text は札の並びのまま渡してよい（ノ・儿・ナ はかなに読む。KJ-053）。部品だけ（かなだけ）の並びは放てない
   const SINGLE_WHY = "1字では放てない（2字以上の言葉）";
+  const KANA_ONLY_WHY = "かなだけでは放てない（漢字の札が1枚以上いる）";
   function releasable(T, used, text) {
     if (!text) return { ok: false, why: "" };
+    text = kanaText(T, text);
     if ([...text].length === 1) return { ok: false, why: SINGLE_WHY };
+    if ([...text].every((c) => isKanaChar(T, c))) return { ok: false, why: KANA_ONLY_WHY };
     if (used.has(text)) return { ok: false, why: "放った言葉" };
     if (T.WORDS.has(text)) return { ok: true };
     return { ok: false, why: "辞書にない" };
@@ -180,6 +195,7 @@
   // 役の点数（R-026）。1字1・2字3・3字6・4字12、四字熟語の印つきは倍、特別な語はさらに倍
   function scoreOf(D, T, text) {
     const S = D.rules.score;
+    text = kanaText(T, text); // かなは1字に数える（KJ-053。見る＝2字）
     const n = [...text].length;
     let pts = S.by_length[String(n)] || 0;
     const parts = [`${n}字${pts}`];
@@ -447,7 +463,7 @@
     // ---------- 動けない（R-023 を KJ-003 に合わせた） ----------
     // 手札をそのまま並べて放てる言葉（辞書の2字以上の語、放っていないもの）が1つも無い状態（KJ-008：1字は数えない）
     g.releasableInHand = (p) => {
-      const cs = p.cards.map((x) => x.c);
+      const cs = p.cards.map((x) => kanaOf(T, x.c)); // ノ・儿・ナ はかなとして数える（KJ-053）
       const have = {};
       for (const c of cs) have[c] = (have[c] || 0) + 1;
       for (const w of T.WORDS.values()) {
@@ -546,13 +562,13 @@
     // 札（pool）から word の字ぶんを順に選ぶ（手札を先に）。選べなければ null
     const pickFrom = (pool, word) => {
       const left = pool.slice(), ids = [];
-      for (const c of word) { const i = left.findIndex((x) => x.c === c); if (i < 0) return null; ids.push(left[i].id); left.splice(i, 1); }
+      for (const c of word) { const i = left.findIndex((x) => kanaOf(T, x.c) === c); if (i < 0) return null; ids.push(left[i].id); left.splice(i, 1); }
       return ids;
     };
     const makeHint = (p) => {
       const cards = p.cards.slice().sort((a, b) => (a.tray ? 1 : 0) - (b.tray ? 1 : 0)); // 手札（上の段）を先に
       const words = hintWords();
-      const have = countOf(cards.map((x) => x.c));
+      const have = countOf(cards.map((x) => kanaOf(T, x.c))); // ノ・儿・ナ はかな（KJ-053）
       // 段1：いま並べれば放てる
       for (const w of words) {
         if (!fitsIn(w, have)) continue;
@@ -575,7 +591,7 @@
           else if (fits(p, [x], 1)) outs = homoChars(T, x.c).map((c) => [c]);
           for (const out of outs) {
             const rest = cards.filter((y) => y !== x);
-            const after = countOf(rest.map((y) => y.c).concat(out));
+            const after = countOf(rest.map((y) => y.c).concat(out).map((c) => kanaOf(T, c)));
             for (let wi = 0; wi < words.length; wi++) {
               const w = words[wi];
               if (!fitsIn(w, after)) continue;
@@ -693,7 +709,7 @@
       const cs = cardsOf(p, ids);
       if (live() && locked(p)) return fail(LOCK_WHY);
       if (!live() || !cs) return fail("札がない");
-      const text = cs.map((x) => x.c).join("");
+      const text = kanaText(T, cs.map((x) => x.c)); // 言葉の書き方（天ノ川 → 天の川。KJ-053）。放った言葉・ログ・先着の鍵はこの書き方
       const r = releasable(T, g.used, text);
       if (!r.ok) return fail(r.why);
       return { ok: true, text, pts: scoreOf(D, T, text).pts };
@@ -809,7 +825,7 @@
     };
     // 場の札で、手札と合わせて語になるものを先に取る。なければ無作為（CPU の取り方）
     function cpuPickField(p) {
-      const hand = p.cards.map((x) => x.c);
+      const hand = p.cards.map((x) => kanaOf(T, x.c));
       const covers = (have, word) => {
         const left = have.slice();
         return [...word].every((ch) => { const i = left.indexOf(ch); if (i < 0) return false; left.splice(i, 1); return true; });
@@ -952,7 +968,7 @@
     const pick = (a) => a[Math.floor(rand() * a.length)];
     function pickIds(p, text) {
       const pool = p.cards.slice(), ids = [];
-      for (const ch of text) { const i = pool.findIndex((x) => x.c === ch); if (i < 0) return null; ids.push(pool[i].id); pool.splice(i, 1); }
+      for (const ch of text) { const i = pool.findIndex((x) => kanaOf(T, x.c) === ch); if (i < 0) return null; ids.push(pool[i].id); pool.splice(i, 1); } // ノ・儿・ナ はかな（KJ-053）
       return ids;
     }
     function cpuTakeAll(p) {
@@ -970,7 +986,7 @@
       const found = [];
       for (const [k, outsOf] of [["cycle", (c) => (T.NEXT.has(c) ? [T.NEXT.get(c)] : [])], ["invert", (c) => (T.INV.has(c) ? [T.INV.get(c)] : [])], ["homophone", (c) => homoChars(T, c)]]) {
         for (const x of p.cards) for (const to of outsOf(x.c)) {
-          const after = p.cards.filter((y) => y !== x).map((y) => y.c).concat(to);
+          const after = p.cards.filter((y) => y !== x).map((y) => y.c).concat(to).map((c) => kanaOf(T, c));
           if (words.some((w) => covers(after, w.w))) found.push({ k, x, to, isReady: g.ready(p, k) });
         }
       }
@@ -1464,7 +1480,7 @@
 
   return {
     FILES, OPPONENTS, PLAY_MODES, CPU_POWERS, readOpponent, opponentKey, LEVELS, timeChoices, normTime, timeLabel, levelLabel, levelShort, makeTables, isN5, isLevelChar, isChar, splitOnce, canSplit, delivered, joinResults, joinReversed,
-    releasable, scoreOf, homoChars, marks, markKinds, cutSpec, FACES, FACE_LABEL, faceJoins, faceResults, rulesLabel, opponentLabel, createGame, createTutorial, TUTORIAL_OPPONENT, playLogRow, endShow, END_LABELS, logSendAllowed, playLogResult, PLAY_LOG_LIMITS,
+    releasable, scoreOf, kanaOf, kanaText, wordCharOk, KANA_ONLY_WHY, homoChars, marks, markKinds, cutSpec, FACES, FACE_LABEL, faceJoins, faceResults, rulesLabel, opponentLabel, createGame, createTutorial, TUTORIAL_OPPONENT, playLogRow, endShow, END_LABELS, logSendAllowed, playLogResult, PLAY_LOG_LIMITS,
     strSeed, seededRand, matchRand, ROLES, ROOM_OPPONENT, MATCH_END_GRACE_SEC, MATCH_INSERT_TIMEOUT_SEC, MATCH_PING_SEC, MATCH_GONE_SEC, ROOM_LOBBY_TTL_SEC,
     createMatchClient, memoryClaims, newMatchId, newRoomCode, roomLobbyId, findRoom, hostRoom, joinRoom, startRoom, roomStartAt, roomWaiter,
   };

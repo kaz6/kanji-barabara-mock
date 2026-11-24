@@ -39,7 +39,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 DATA = os.path.join(ROOT, "data")
 
-VERSION = "2026-11-23.4"
+VERSION = "2026-11-24.1"
 # レベルと KANJIDIC2 の jlpt（旧級）の対応。tanos の表への差し替えはまだ（D-009）
 LEVELS = {"N5": "4", "N4": "3"}
 LEVEL_ORDER = ["N5", "N4"]
@@ -91,7 +91,7 @@ def load_json(name):
         return json.load(f)
 
 
-def holdable(level_chars, parts_json, cycles_json, antonyms_json, homo_groups=None, homo_extra=None):
+def holdable(level_chars, parts_json, cycles_json, antonyms_json, homo_groups=None, homo_extra=None, with_parts=False):
     """手に持てる字（KJ-011）。js/core.js の makeTables の T.HOLD と同じ決め方。
     homo_groups・homo_extra（KJ-070・D-089）：小1 のときだけ渡す。同じ読みの組のうち、レベルの字（か使う巡りの外の字）を1つ以上含む組に入る
     homo_extra の字（N5 の字）は、同音でだけ出会える字として手に持てる。
@@ -159,7 +159,32 @@ def holdable(level_chars, parts_json, cycles_json, antonyms_json, homo_groups=No
         if a in base and b in base:
             hold |= {a, b}
     hold |= held
+    if with_parts:
+        # 使う割り方の行に出てくる字・部品（KJ-053：かなに読む部品 ノ・儿・ナ がそのレベルで手に入るかを見る）
+        return hold, {c for k in keep for c in [k, *allp[k]]}
     return hold
+
+
+def write_kana_doc(words, kana_of, skipped):
+    """docs/KANA_WORDS.md（KJ-053）：かな（の・る・な）を1つ含む語の一覧。作者が赤を入れる"""
+    lines = ["# かなの語（KJ-053・D-069）", "",
+             "部品の札 ノ・儿・ナ を、台に並べたとき かな の・る・な として言葉に入れる。かなは1字に数える（見る＝2字3点、天の川＝3字6点）。"
+             "部品だけ（かなだけ）の並びは放てない。tools/build_data.py が JMdict から作る（手で直さない。外したい語は data/blocked_words.json か data/blocked_words_g1.json へ。外すのは作者だけ）。", "",
+             "- 入れる語：2〜4字。かなが ちょうど1つ（の・る・な）で、先頭でない。ほかの字はそのレベルで手に持てる字。かなの部品がそのレベルの割り方の行に出てくる",
+             "- 入れない語（迷ったら。仮）：かなを2つ以上含む語 {} 語・かなで始まる語 {} 語（下に一覧）".format(len(skipped["kana2"]), len(skipped["head"])),
+             "- 印：★＝よく使う（CPU が知っている語。ヒントでも先に狙う）・小1＝小1 でも放てる", ""]
+    for kana, part in sorted(((k, p) for k, p in kana_of.items()), key=lambda x: "のるな".index(x[0]) if x[0] in "のるな" else 9):
+        ws = [w for w in words if kana in w["w"]]
+        lines += [f"## {kana}（札 {part}）{len(ws)} 語", "", "| 語 | 読み | レベル | 小1 | 意味 |", "|---|---|---|---|---|"]
+        for w in ws:
+            lines.append("| {}{} | {} | {} | {} | {} |".format(w["w"], " ★" if w.get("common") else "", w["kana"], w["lv"] or "—",
+                                                     "小1" if w.get("g1") else "", " / ".join(w["en"]).replace("|", "／")))
+        lines.append("")
+    lines += ["## 入れなかった語（かなを2つ以上・かなで始まる）", "",
+              "- かなを2つ以上：" + "・".join(sorted(skipped["kana2"])),
+              "- かなで始まる：" + "・".join(sorted(skipped["head"])), ""]
+    with open(os.path.join(ROOT, "docs", "KANA_WORDS.md"), "w", encoding="utf-8") as f:
+        f.write("\n".join(lines))
 
 
 def main():
@@ -272,33 +297,54 @@ def main():
 
     # ---- 手に持てる字（KJ-011）----
     parts_json, cycles_json, antonyms_json = load_json("parts.json"), load_json("cycles.json"), load_json("antonyms.json")
-    hold_of = {}
+    hold_of, parts_of = {}, {}
     for i, lv in enumerate(levels):
         lvchars = [c for c in chars if lv_of[c] in LEVEL_ORDER and LEVEL_ORDER.index(lv_of[c]) <= i]
-        hold_of[lv] = holdable(lvchars, parts_json, cycles_json, antonyms_json)
+        hold_of[lv], parts_of[lv] = holdable(lvchars, parts_json, cycles_json, antonyms_json, with_parts=True)
     hold_all = hold_of[levels[-1]]
     # 小1 のときは、同音でだけ N5 の字（kanji.json の lv が N5 で小1 でない字）にも出会える（KJ-070・D-089）
     n5_extra = {c for c in chars if lv_of[c] == "N5" and c not in g1set}
-    hold_g1 = holdable(g1_chars, parts_json, cycles_json, antonyms_json, same, n5_extra)
+    hold_g1, parts_g1 = holdable(g1_chars, parts_json, cycles_json, antonyms_json, same, n5_extra, with_parts=True)
+    # かなに読む部品（KJ-053・D-069。data/parts.json の kana_parts）：部品 → かな。そのレベルの割り方の行に部品が出てくれば、かなを言葉に使える
+    kana_of = {kana: part for part, kana in parts_json.get("kana_parts", {}).items()}
+    kana_by_level = {lv: {k for k, pt in kana_of.items() if pt in parts_of[lv]} for lv in levels}
+    kana_g1 = {k for k, pt in kana_of.items() if pt in parts_g1}
+    kana_all = set().union(kana_g1, *kana_by_level.values())
+
+    def is_kana(c):
+        return "\u3040" <= c <= "\u30ff"
+
+    def kana_word(text, hold, kanas):
+        """かなを1つ含む語（KJ-053）：2〜4字で、かな（の・る・な）がちょうど1つ・先頭でない・ほかのかなを含まない、ほかの字は手に持てる字"""
+        ks = [c for c in text if is_kana(c)]
+        if len(ks) != 1 or ks[0] not in kanas or is_kana(text[0]):
+            return False
+        return all(c in hold for c in text if not is_kana(c))
 
     def word_level(text):
         """N5／N4 のうち、その語がいちばん低く放てるレベル。どちらでも放てない（小1 だけの）語は None"""
         if len(text) == 1:
             return lv_of.get(text) if lv_of.get(text) in levels else None
         for lv in levels:
-            if all(c in hold_of[lv] for c in text):
+            if all(c in hold_of[lv] for c in text) or kana_word(text, hold_of[lv], kana_by_level[lv]):
                 return lv
         return None
 
     def word_g1(text):
-        return text in g1set if len(text) == 1 else all(c in hold_g1 for c in text)
+        return text in g1set if len(text) == 1 else all(c in hold_g1 for c in text) or kana_word(text, hold_g1, kana_g1)
 
     # ---- 語 ----
     rows = db.execute("select k.ID, k.idseq, k.text from Kanji k")
     cand = defaultdict(list)  # text -> [(kid, idseq)]
+    hold_any = hold_all | hold_g1
+    kana_skipped = defaultdict(set)  # KJ-053 の「迷ったら」で入れなかった語（かなが2つ以上／かなで始まる）。数だけ控える
     for kid, idseq, text in rows:
-        if len(text) == 1 and text in charset or 2 <= len(text) <= 4 and (all(c in hold_all for c in text) or all(c in hold_g1 for c in text)):
+        if len(text) == 1 and text in charset or 2 <= len(text) <= 4 and (all(c in hold_all for c in text) or all(c in hold_g1 for c in text)
+                                                                          or kana_word(text, hold_any, kana_all)):
             cand[text].append((kid, idseq))
+        elif 2 <= len(text) <= 4 and any(is_kana(c) for c in text) and all(c in hold_any or c in kana_all for c in text) \
+                and any(not is_kana(c) for c in text):
+            kana_skipped["kana2" if sum(1 for c in text if is_kana(c)) >= 2 else "head"].add(text)
 
     def kanji_info(kid):
         return {t for (t,) in db.execute("select text from KJI where kid = ?", (kid,))}
@@ -349,6 +395,10 @@ def main():
             continue
         misc = entry_misc(idseq)
         w = {"w": text, "lv": word_level(text), "kana": kana, "en": glosses(idseq)}
+        if w["lv"] is None and not word_g1(text) and len(text) >= 2:
+            continue  # かなの語で、どのレベルでも字とかなの部品がそろわないもの（KJ-053）
+        if any(is_kana(c) for c in text):
+            w["kana_at"] = next(i for i, c in enumerate(text) if is_kana(c))
         if word_g1(text):
             w["g1"] = True
         if common:
@@ -413,7 +463,8 @@ def main():
                 "by_length": {str(n): sum(1 for w in ws if len(w["w"]) == n) for n in range(1, 5)},
                 "common": sum(1 for w in ws if w.get("common")),
                 "yoji": sum(1 for w in ws if w.get("yoji")),
-                "pn": sum(1 for w in ws if w.get("pn"))}
+                "pn": sum(1 for w in ws if w.get("pn")),
+                "kana": {k: sum(1 for w in ws if k in w["w"]) for k in sorted(kana_all)}}
     stats = {
         "hold_by_level": {**{lv: len(hold_of[lv]) for lv in levels}, G1_KEY: len(hold_g1)},
         "by_level": {**{lv: stat_of([w for w in words if w["lv"] and LEVEL_ORDER.index(w["lv"]) <= LEVEL_ORDER.index(lv)]) for lv in levels},
@@ -424,17 +475,21 @@ def main():
         "yoji": sum(1 for w in words if w.get("yoji")),
         "pn": sum(1 for w in words if w.get("pn")),
         "pn_added": len(pn_added),
+        "kana": {k: sum(1 for w in words if k in w["w"]) for k in sorted(kana_all)},
+        "kana_skipped": {"かなが2つ以上": len(kana_skipped["kana2"]), "かなで始まる": len(kana_skipped["head"])},
     }
     write("words.json", {
         "version": VERSION,
-        "source": f"JMdict（jamdict-data, jmdict {meta.get('jmdict.version')}）。2〜4字の語は「手に持てる字」（レベルの字＋割る・くっつけるで出る字）だけで書けるもの（KJ-011・D-029）。1字の語はレベルの字だけ。地名・名字は data/proper_names.json と JMnedict（KJ-032）。data/blocked_words.json の語は外す（D-048）",
+        "source": f"JMdict（jamdict-data, jmdict {meta.get('jmdict.version')}）。2〜4字の語は「手に持てる字」（レベルの字＋割る・くっつけるで出る字）だけで書けるもの（KJ-011・D-029）。1字の語はレベルの字だけ。地名・名字は data/proper_names.json と JMnedict（KJ-032）。data/blocked_words.json の語は外す（D-048）。かなを1つ含む語（の・る・な。部品 ノ・儿・ナ の札をかなに読む。KJ-053・D-069）",
         "fields": {"w": "語", "lv": "レベル（その語の字がすべて手に持てる、いちばん低い N5／N4。小1 だけで放てる語は null）", "g1": "小1 で放てる（字がすべて小1 の手に持てる字。KJ-044）", "kana": "かな読み（最初の1つ）", "en": "英語の意味（最初の2つ）",
                    "common": "よく使う（news1/ichi1/spec1/spec2/gai1）", "yoji": "四字熟語",
                    "pn": "地名・名字の印（KJ-032。台の行に〔地名〕〔名字〕。data/proper_names.json から。点数は普通の言葉と同じ）",
-                   "pn_kana": "地名・名字の読み（kana と違うときだけ。台の行に kana／pn_kana と並べる）"},
+                   "pn_kana": "地名・名字の読み（kana と違うときだけ。台の行に kana／pn_kana と並べる）",
+                   "kana_at": "かなの位置（0 から。かなを含む語だけ。KJ-053。かなは data/parts.json の kana_parts の部品の札で並べる）"},
         "stats": stats,
         "words": words,
     })
+    write_kana_doc(words, kana_of, kana_skipped)
     print(json.dumps({"kanji": len(kanji), "g1_chars": len(g1_chars), "same_reading_groups": len(same), **stats}, ensure_ascii=False))
 
 
