@@ -264,13 +264,14 @@ test("決まり：数値がそろっている（KJ-003 の仮置き）", () => {
   assert.deepEqual(r.win.time_choices_sec, [300, 600, 900], "制限時間は 5・10・15分から選ぶ（KJ-007）");
   assert.ok(r.win.time_choices_sec.includes(r.win.time_limit_sec), "既定（10分）は選べる値の中にある");
   const [a, b] = r.cpu.interval_sec;
-  assert.deepEqual([a, b], [8, 12]);
+  assert.deepEqual([a, b], [15, 20], "つよい：15〜20秒（KJ-058。前は 8〜12）");
   // KJ-004：場3・手札の上限8・ストック（KJ-010 で 4→8。もとは部品の置き場）・とても弱い CPU は30〜45秒
   assert.deepEqual([r.field_size, r.hand_max, r.split_extra], [3, 8, 8], "場3・手札8・ストック8（全部で16マス。KJ-010 追記）");
   assert.equal(r.start_hand, 8, "最初の手札は8（KJ-016。作者 2026-11-21 20:14 で、はじめの1枚をやめて8に戻した）");
   assert.equal(r.first_pick, undefined, "はじめの1枚（first_pick）はやめた（KJ-016）");
   assert.deepEqual(r.cpu.weak_interval_sec, [30, 45]);
-  assert.deepEqual(r.cpu.fair_interval_sec, [15, 20], "ふつう（KJ-035）：15〜20秒に1回");
+  assert.deepEqual(r.cpu.fair_interval_sec, [25, 30], "ふつう：25〜30秒に1回（KJ-058。KJ-035 では 15〜20）");
+  assert.deepEqual(r.cpu.ahead, { weak: [], fair: ["invert", "cycle"], normal: ["invert", "cycle", "homophone"] }, "1手先の使い方（KJ-058）：とても弱い＝なし・ふつう＝反転と巡り・つよい＝反転・巡り・同音");
   assert.ok(r.cpu.weak_interval_sec[0] >= r.cpu.fair_interval_sec[1] && r.cpu.fair_interval_sec[0] >= r.cpu.interval_sec[1], "間隔は とても弱い > ふつう > いまの強さ（重ならない）");
   assert.ok(["solo", "weak", "fair", "normal"].includes(r.opponent_default));
   assert.equal(r.opponent_default, "weak");
