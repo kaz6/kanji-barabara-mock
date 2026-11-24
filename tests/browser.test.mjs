@@ -1616,6 +1616,46 @@ test("画面", { skip }, async (t) => {
     await c2.close();
   });
 
+  await t.test("Split のボタンはロゴ（KJ-059）：Sp｜lit の間に札の割れ目と同じ点線・逆ハの字・割れたら割れ目が開く・はじかれたら動かさない・動きを減らす設定では動かさない", async () => {
+    for (const vp of [{ width: 760, height: 1100 }, { width: 375, height: 700 }]) {
+      const { ctx, page, errors } = await open(browser, url, vp, null, null, true);
+      const info = await page.evaluate(() => {
+        const b = document.getElementById("bSplit"), a = b.querySelector(".sp-a"), c = b.querySelector(".sp-cut"), l = b.querySelector(".sp-b");
+        const root = getComputedStyle(document.documentElement).getPropertyValue("--cut").trim();
+        const cs = getComputedStyle(c), tile = document.createElement("div"); tile.className = "tile"; tile.innerHTML = '<i class="cutv"></i>'; document.body.appendChild(tile);
+        const tileLine = getComputedStyle(tile.firstChild); const r = { cutColor: cs.borderLeftColor, cutStyle: cs.borderLeftStyle, cutW: cs.borderLeftWidth, tileColor: tileLine.borderLeftColor, tileStyle: tileLine.borderLeftStyle, root, a: getComputedStyle(a).transform, aOrigin: getComputedStyle(a).transformOrigin, l: getComputedStyle(l).transform, lOrigin: getComputedStyle(l).transformOrigin, text: b.querySelector(".lb").textContent, aria: b.getAttribute("aria-label"), lines: b.querySelector(".lb").getClientRects().length, right: b.getBoundingClientRect().right, parts: [a.textContent, l.textContent] }; tile.remove(); return r;
+      });
+      assert.equal(info.text, "Split"); assert.deepEqual(info.parts, ["Sp", "lit"]); assert.equal(info.aria, "Split", "読み上げは Split のまま");
+      assert.equal(info.cutStyle, "dashed"); assert.ok(parseFloat(info.cutW) >= 1 && parseFloat(info.cutW) <= 1.6, `割れ目の太さ（1.6px を端末の画素に丸めた値。${info.cutW}）`); assert.match(await page.evaluate(() => [...document.styleSheets].flatMap((ss) => [...ss.cssRules]).find((r) => r.selectorText === ".sp-cut").style.borderLeft), /1\.6px dashed var\(--cut\)/, "太さ1.6px・--cut を使う"); assert.equal(info.cutColor, info.tileColor, "札の割れ目と同じ色（--cut）"); assert.equal(info.tileStyle, "dashed");
+      const ang = (m) => { const v = m.match(/matrix\(([^)]+)\)/)[1].split(",").map(Number); return Math.round(Math.atan2(v[1], v[0]) * 180 / Math.PI); };
+      assert.equal(ang(info.a), -9, "Sp は左へ約9度"); assert.equal(ang(info.l), 9, "lit は右へ約9度");
+      assert.equal(info.aOrigin.split(" ")[0] !== "0px", true, "Sp は右下の角が軸"); assert.equal(info.lOrigin.split(" ")[0], "0px", "lit は左下の角が軸");
+      if (vp.width === 375) assert.ok(info.lines === 1 && info.right <= 375, `375px でボタンが1行に収まる（行 ${info.lines}・右端 ${info.right}）`);
+      // 押せば今まで通り割れる。割れたら cutopen が付き、アニメが走る（角度が約9度→16度を通る）
+      const tile = (ch) => page.locator("#meHand .tile", { hasText: ch }).first();
+      await tile("休").click();
+      await page.click("#bSplit");
+      assert.equal(await page.locator("#row .tile").count(), 2, "休 が 人 木 に割れる");
+      assert.equal(await page.evaluate(() => document.getElementById("bSplit").classList.contains("cutopen")), true, "割れたら割れ目が開く");
+      assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector("#bSplit .sp-a")).animationName), "kjSpA");
+      await page.waitForTimeout(600);
+      assert.equal(await page.evaluate(() => document.getElementById("bSplit").classList.contains("cutopen")), false, "開いたあとは戻る");
+      // はじかれたら動かさない（木 は割れない）
+      await page.evaluate(() => document.getElementById("bSplit").click());
+      assert.equal(await page.textContent("#msg"), "割れない");
+      assert.equal(await page.evaluate(() => document.getElementById("bSplit").classList.contains("cutopen")), false, "はじかれたら動かさない");
+      assert.deepEqual(errors, []); await ctx.close();
+    }
+    // 動きを減らす設定：割れても動かさない（既定が reduce）
+    const { ctx, page, errors } = await open(browser, url, { width: 760, height: 1100 }, null, null, false);
+    await page.locator("#meHand .tile", { hasText: "休" }).first().click();
+    await page.click("#bSplit");
+    assert.equal(await page.locator("#row .tile").count(), 2, "reduce でも割れる");
+    assert.equal(await page.evaluate(() => document.getElementById("bSplit").classList.contains("cutopen")), false, "reduce では割れ目を動かさない");
+    assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector("#bSplit .sp-a")).animationName), "none");
+    assert.deepEqual(errors, []); await ctx.close();
+  });
+
   await t.test("ボタンの文字は英語（KJ-024・KJ-048）。印は字に組み込んだ SVG（Flip・Cycle・Same reading）で角の印と同じ形。選んだ札でも印が見える。ほかの文言とログは日本語のまま", async () => {
     for (const vp of [{ width: 760, height: 1100 }, { width: 375, height: 700 }]) {
       const { ctx, page, errors } = await open(browser, url, vp);
@@ -1623,9 +1663,9 @@ test("画面", { skip }, async (t) => {
       // 印の SVG は文字に数えない：Flip＝Fl＋印＋p、Cycle＝印＋ycle、Same reading＝印＋ame reading。読み上げ（aria-label）は Flip・Cycle・Same reading
       const want = { bRelease: "Play", bSplit: "Split", bJoin: "Join", bInvert: "Flp", bCycle: "ycle", bHomo: "ame reading", bBack: "Back", bRedraw: "Redraw" };
       for (const [id, text] of Object.entries(want)) assert.equal(await label(id), text, `${id} の文字`);
-      const aria = { bInvert: "Flip", bCycle: "Cycle", bHomo: "Same reading" };
+      const aria = { bSplit: "Split", bInvert: "Flip", bCycle: "Cycle", bHomo: "Same reading" };
       for (const [id, text] of Object.entries(aria)) assert.equal(await page.getAttribute(`#${id}`, "aria-label"), text, `${id} の読み上げ`);
-      for (const id of ["bRelease", "bSplit", "bJoin", "bBack", "bRedraw"]) assert.equal(await page.getAttribute(`#${id}`, "aria-label"), null, `${id} は印の無いボタン。aria-label を付けない（Redraw の添え字を読み上げから消さない）`);
+      for (const id of ["bRelease", "bJoin", "bBack", "bRedraw"]) assert.equal(await page.getAttribute(`#${id}`, "aria-label"), null, `${id} は印の無いボタン。aria-label を付けない（Redraw の添え字を読み上げから消さない）`);
       if (vp.width === 375) {
         const rows = await page.evaluate(() => ["bSplit", "bJoin", "bInvert", "bCycle", "bHomo"].map((i) => { const b = document.getElementById(i); const lb = b.querySelector(".lb"); return { i, lines: lb.getClientRects().length, right: b.getBoundingClientRect().right }; }));
         for (const r of rows) assert.ok(r.lines === 1 && r.right <= 375, `375×700 でボタンが1行に収まる（${r.i} の行 ${r.lines}・右端 ${r.right}）`);

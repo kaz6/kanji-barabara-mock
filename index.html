@@ -79,6 +79,11 @@ h1{font-size:17px;margin:0 0 2px;font-weight:700}
 .tile.sel .mk{color:#fff} /* 選んだ札（赤地）の上でも角の印が見える（KJ-024。PR #22 のレビューの気づき） */
 /* 待ち時間のあいだ（KJ-040）：待っている操作の印だけ薄くする。ゲージが満ちたら外れて元の濃さ。選んだ札（赤地・白い印）でも薄くなる。薄さは仮 */
 .wait-invert .mi[data-k="invert"],.wait-cycle .mi[data-k="cycle"],.wait-homophone .mi[data-k="homophone"]{opacity:.3}
+.sp-a,.sp-b{display:inline-block}.sp-a{transform-origin:100% 100%;transform:rotate(-9deg)}.sp-b{transform-origin:0% 100%;transform:rotate(9deg)} /* Split のロゴ（KJ-059）：Sp｜lit。下の角を軸に、上が開く逆ハの字 */
+.sp-cut{display:inline-block;width:0;height:1.15em;vertical-align:-.2em;margin:0 1px;border-left:1.6px dashed var(--cut)} /* 札の割れ目と同じ色（--cut）の縦の点線 */
+button.op.cutopen .sp-a{animation:kjSpA .3s ease-in-out}button.op.cutopen .sp-b{animation:kjSpB .3s ease-in-out} /* 割れたとき、割れ目が一瞬開く（9度→16度→9度） */
+@keyframes kjSpA{50%{transform:rotate(-16deg)}}@keyframes kjSpB{50%{transform:rotate(16deg)}}
+@media (prefers-reduced-motion:reduce){button.op.cutopen .sp-a,button.op.cutopen .sp-b{animation:none}}
 .ic{display:inline-block;vertical-align:-.22em;overflow:visible} /* 印の SVG（KJ-048）：字の高さに合わせる。色は文字と同じ（currentColor） */
 .tile .mk .mi{display:inline-block;line-height:1}
 .tile .orig{position:absolute;bottom:1px;left:3px;font:10px/1 system-ui,sans-serif;color:var(--sub)}
@@ -931,7 +936,8 @@ $("bRelease").onclick=()=>{
   const r=G.release(G.me,[...row]);if(TUT&&r&&r.ok)TUT.advance("release");
   afterOp(r);
 };
-$("bSplit").onclick=()=>press("bSplit","split","割る",()=>{const r=G.split(G.me,row);afterOp(r);return r});
+function openCut(){if(reduceMotion())return;const b=$("bSplit");b.classList.remove("cutopen");void b.offsetWidth;b.classList.add("cutopen");setTimeout(()=>b.classList.remove("cutopen"),400)} // 割れたとき、ボタンの割れ目が一瞬開く（KJ-059）。はじかれたときは動かさない
+$("bSplit").onclick=()=>press("bSplit","split","割る",()=>{const r=G.split(G.me,row);afterOp(r);if(r&&r.ok)openCut();return r});
 $("bJoin").onclick=()=>press("bJoin","join","くっつける",()=>{
   const s=rowState();
   if(s.joins.length>1){showChoices([{label:"できる字",chars:s.joins,pick:x=>afterOp(G.join(G.me,row,x))}]);return null}
