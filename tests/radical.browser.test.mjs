@@ -86,4 +86,33 @@ test("部品の札の意味", { skip }, async (t) => {
     assert.ok(r.sh <= r.h + 1, `情報の欄からはみ出さない（${r.sh} / ${r.h}）`);
     await ctx.close();
   });
+
+  await t.test("人＋木 を台に置くと、1枚目が 亻 の形のあいだ、亻（にんべん）＝人 が出る", async () => {
+    const { ctx, page, errors } = await begin(browser, url, "人木日水");
+    await tap(page, "人");
+    assert.deepEqual(await rad(page), [], "1枚だけのときは左の形にならない");
+    await tap(page, "木");
+    assert.deepEqual(await rad(page), ["亻（にんべん）＝人"]);
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+
+  for (const width of [375, 320]) {
+    await t.test(`${width}px：全部品の意味の一行が1行に収まる（言葉の行を押し出さない）`, async () => {
+      const { ctx, page } = await begin(browser, url, "日");
+      await page.setViewportSize({ width, height: 900 });
+      const bad = await page.evaluate(() => {
+        const D = __KJ.data, T = __KJ.tables, K = window.KJ, out = [];
+        const info = document.getElementById("info");
+        for (const c of Object.keys(D.radical_meanings.parts)) {
+          info.innerHTML = `<span class="rad">${K.radicalNote(D, T, c)}</span>`;
+          const r = info.querySelector(".rad");
+          if (r.scrollWidth > r.clientWidth + 1) out.push(c);
+        }
+        return out;
+      });
+      assert.deepEqual(bad, [], "1行に収まらない部品");
+      await ctx.close();
+    });
+  }
 });

@@ -55,6 +55,12 @@ test("台の行の一行の形", () => {
   assert.equal(K.radicalNote(D, T, "？"), null, "表にない札には出さない");
 });
 
+test("左の形の一行（亻（にんべん）＝人）", () => {
+  assert.equal(K.radicalFormNote(D, "人"), "亻（にんべん）＝人");
+  assert.equal(K.radicalFormNote(D, "水"), "氵（さんずい）＝水");
+  assert.equal(K.radicalFormNote(D, "日"), null, "左の形の無い字は null");
+});
+
 test("一覧（docs/RADICAL_MEANINGS.md）に部品が全部ある", () => {
   const md = fs.readFileSync(path.join(__dirname, "..", "docs", "RADICAL_MEANINGS.md"), "utf8");
   for (const c of Object.keys(R.parts)) assert.ok(md.includes(`| ${c} |`), `${c} が一覧に無い`);

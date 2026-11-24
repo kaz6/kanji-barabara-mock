@@ -158,6 +158,12 @@
     const e = R[c];
     return c + (e.name ? `（${e.name}）` : "") + (e.same ? `＝${e.same}` : (e.name ? "" : " ") + (e.mean || ""));
   };
+  // 台で札の字が左の形（亻・氵 など。radical_forms.json）に変わっているとき、その形の一行（亻（にんべん）＝人）。base＝札の字（人）。無ければ null
+  const radicalFormNote = (D, base) => {
+    const form = D.radical_forms && D.radical_forms.left && D.radical_forms.left[base];
+    const e = form && D.radical_meanings && D.radical_meanings.forms && D.radical_meanings.forms[form];
+    return e ? `${form}（${e.name}）＝${e.same}` : null;
+  };
   const splitOnce = (T, c) => T.parts[c] || [c];
   const canSplit = (T, c) => !!T.parts[c];
   // 部品にバラして届く形（D-003・D-004）。KJ-003 の遊びでは使わない（消すかは作者が決める）
@@ -1528,7 +1534,7 @@
   }
 
   return {
-    FILES, OPPONENTS, PLAY_MODES, CPU_POWERS, readOpponent, opponentKey, LEVELS, timeChoices, normTime, vibratePattern, timeLabel, levelLabel, levelShort, makeTables, isN5, isLevelChar, isChar, radicalNote, splitOnce, canSplit, delivered, joinResults, joinReversed,
+    FILES, OPPONENTS, PLAY_MODES, CPU_POWERS, readOpponent, opponentKey, LEVELS, timeChoices, normTime, vibratePattern, timeLabel, levelLabel, levelShort, makeTables, isN5, isLevelChar, isChar, radicalNote, radicalFormNote, splitOnce, canSplit, delivered, joinResults, joinReversed,
     releasable, scoreOf, kanaOf, kanaText, wordCharOk, KANA_ONLY_WHY, homoChars, marks, markKinds, cutSpec, FACES, FACE_LABEL, faceJoins, faceResults, rulesLabel, opponentLabel, createGame, createTutorial, TUTORIAL_OPPONENT, playLogRow, endShow, END_LABELS, logSendAllowed, playLogResult, PLAY_LOG_LIMITS,
     strSeed, seededRand, matchRand, ROLES, ROOM_OPPONENT, MATCH_END_GRACE_SEC, MATCH_INSERT_TIMEOUT_SEC, MATCH_PING_SEC, MATCH_GONE_SEC, ROOM_LOBBY_TTL_SEC,
     createMatchClient, memoryClaims, newMatchId, newRoomCode, roomLobbyId, findRoom, hostRoom, joinRoom, startRoom, roomStartAt, roomWaiter,
