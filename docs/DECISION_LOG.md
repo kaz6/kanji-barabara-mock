@@ -997,7 +997,7 @@ R-025〜R-027 はカードに書いてあった仮置き、R-028〜R-031 は係�
 ### R-093 Split のボタンをロゴにする：Sp｜lit（KJ-059。受け箱 P-059。作者 2026-11-23 18:06。D-075）
 - 作者の言葉：「splitも絵的に分かりやすくしたいので、縦線引いて、Sp | lit にして、互いを逆ハの字に傾けるような形にしたいのだが、できる??」「Bいいですね」「広げ案素晴らしい。やりましょう」
 - 決めたこと（カード）：「Sp」と「lit」の間に札の割れ目と同じ色（`--cut`）の縦の点線（約1.6px）。Sp は右下の角を軸に左へ約9度、lit は左下の角を軸に右へ約9度。割れたとき、割れ目が一瞬開いて戻る（9度→16度→9度）。はじかれたときと、動きを減らす設定では動かさない。aria-label は Split。ロゴの形は `js/strings.js`
-- 作り：`js/strings.js` の `LOGO.bSplit = ["Sp","cut","lit"]`（`buttonHtml` が `.sp-a`・`.sp-cut`・`.sp-b` の3つを出す）。見た目と動きは index.html の `.sp-a`・`.sp-b`・`.sp-cut`・`@keyframes kjSpA/kjSpB`。割れたら `openCut()` がボタンに `cutopen` を0.3秒付ける
+- 作り：`js/strings.js` の `LOGO.bSplit = ["Sp","cut","lit"]`（`buttonHtml` が `.sp-a`・`.sp-cut`・`.sp-b` の3つを出す）。見た目と動きは index.html の `.sp-a`・`.sp-b`・`.sp-cut`・`@keyframes kjSpA/kjSpB`。割れたら `openCut()` がボタンに `cutopen` を付け（動きは0.3秒。クラスは400ms 後に外す）
 - 係の仮決め：角度と時間はカードの値のまま（9度・16度・0.3秒）。375px で1行に収まったので、角度は6度に下げていない。aria-label は LOGO のあるボタンと同じ仕組みで付く（これまで Split は付いていなかった）
 - 触っていない：ほかのボタンのロゴ・色・並び、札の割れ目の線、割るの決まり
 - 戻し方：この PR の merge コミットを revert（データ・端末に残るものは無い）
