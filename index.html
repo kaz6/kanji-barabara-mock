@@ -538,6 +538,7 @@ function autoTakeRun(){
   render();setTimeout(step,AUTO_TAKE_LEAD_MS);
 }
 function startTutorial(){
+  autoTok=null; // 前の自動取りの印を残さない（KJ-055）
   clearTimeout(cpuTimer);sendAbandoned();leaveRoom();
   T=tablesFor(D.tutorial.level); // 好 などが割れるよう、N4 の表（段の中身は data/tutorial.json）
   TUT=K.createTutorial(D,T,{now:clock});G=TUT.g;

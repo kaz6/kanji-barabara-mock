@@ -367,4 +367,24 @@ test("自動取り：終えた・とばしたあとは取らない。本番（�
   const real = K.createGame(D, T, { now: () => 1000 });
   assert.equal(typeof real.take, "function");
   assert.equal(real.tutorialInfo, undefined, "本番の試合には自動取りの仕組みがない");
+  assert.equal(real.autoPending, undefined);
+  assert.equal(real.autoTake, undefined);
+  // 本番で実際に放って取る：取るのは人の呼び出しだけで、ログのメモに「チュートリアルで自動」は付かない
+  let done = false;
+  for (let seed = 1; seed <= 200 && !done; seed++) {
+    let x = seed;
+    const g = K.createGame(D, T, { now: () => 1000, rand: () => ((x = (x * 16807) % 2147483647) / 2147483647) });
+    const cs = g.me.cards;
+    for (const a of cs) for (const b of cs) {
+      if (done || a.id === b.id || !g.canRelease(g.me, [a.id, b.id]).ok) continue;
+      assert.equal(g.release(g.me, [a.id, b.id]).ok, true);
+      assert.equal(g.me.takes, 2, "放っただけでは取らない（自動で取らない）");
+      assert.equal(g.take(g.me, g.field[0].id).ok, true);
+      const e = g.log.filter((l) => l.op === "取る");
+      assert.equal(e.length, 1);
+      assert.doesNotMatch(e[0].note, /チュートリアルで自動/);
+      done = true;
+    }
+  }
+  assert.equal(done, true, "2字の言葉が放てる手札が見つかる");
 });
