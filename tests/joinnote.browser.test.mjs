@@ -1,4 +1,4 @@
-// 部品の札の意味の画面（KJ-021）：部品の札を選ぶと台の行の1行目に意味が出る・字の札では出ない・選びを外すと消える
+// くっつく相手の画面（KJ-083）：部品の札を選んだとき、手札・ストックに相手があれば台の行の1行目に出る・字の札では出ない・選びを外すと消える
 // Playwright の Chromium がないと skip になる。skip は「通った」ではない
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -44,7 +44,7 @@ async function begin(browser, url, hand) {
     const G = __KJ.game; G.cpuTurn = () => null;
     G.me.cards = [...h].map((c, i) => ({ id: 9000 + i, c, t: 0, fresh: false }));
   }, hand);
-  await page.evaluate(() => __KJ.render());
+  await page.evaluate(() => { __KJ.data.rules.join_note = "full"; __KJ.render(); }); // 作者が rules の join_note を変えても落ちないよう、形は full に決める
   return { ctx, page, errors };
 }
 const tap = (page, ch) => page.locator("#meHand .tile:not(.sel)", { hasText: ch }).first().click();
@@ -110,13 +110,14 @@ test("部品の札を選んだとき、くっつく相手を台の行に出す�
   });
 
   for (const width of [375, 320]) {
-    await t.test(`${width}px：1行目が1行のまま、言葉の行を押し出さない`, async () => {
-      const { ctx, page } = await begin(browser, url, "艹花日水");
+    await t.test(`${width}px：くっつく相手が出ても1行目は1行のまま、言葉の行を押し出さない`, async () => {
+      const { ctx, page } = await begin(browser, url, "禾火日水");
       await page.setViewportSize({ width, height: 900 });
-      await tap(page, "艹"); await tap(page, "花");
-      const r = await page.evaluate(() => { const i = document.getElementById("info"), l = i.querySelector(".l1"); return { h: i.getBoundingClientRect().height, sh: i.scrollHeight, l1: l ? l.getBoundingClientRect().height : 0, w: !!i.querySelector(".w") }; });
+      await tap(page, "禾");
+      const r = await page.evaluate(() => { const i = document.getElementById("info"), l = i.querySelector(".l1"); return { h: i.getBoundingClientRect().height, sh: i.scrollHeight, l1: l ? l.getBoundingClientRect().height : 0, jn: !!i.querySelector(".joinnote") }; });
+      assert.equal(r.jn, true, "くっつくの行が出ている");
       assert.ok(r.sh <= r.h + 1, `情報の欄からはみ出さない（${r.sh} / ${r.h}）`);
-      assert.ok(r.l1 <= 24, `1行目は1行（${r.l1}）`);
+      assert.ok(r.l1 > 0 && r.l1 <= 24, `1行目は1行（${r.l1}）`);
       await ctx.close();
     });
   }

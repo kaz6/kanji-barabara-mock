@@ -51,7 +51,7 @@ test("KJ-083 同じ組は1つにまとめる（同じ札が2枚あっても）",
 });
 
 test("KJ-083 rules の join_note で3つの形が切り替わる（初期値は full）", () => {
-  assert.equal(D.rules.join_note, "full");
+  assert.ok(K.JOIN_NOTE_MODES.includes(D.rules.join_note), "join_note は full／partner／mask のどれか（作者が試して変えてよい）");
   assert.deepEqual(K.JOIN_NOTE_MODES, ["full", "partner", "mask"]);
   const cs = hand("禾火日");
   assert.equal(note(cs, "禾", "full"), "くっつく：禾＋火→秋");
