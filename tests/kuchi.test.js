@@ -36,7 +36,7 @@ test("囗＋人 で 人口 が放てる。点は普通と同じ（2字3点）。
   }
 });
 
-test("口の札どうしでも、囗 を混ぜて 口 の語が作れる（一口＝一＋囗）", () => {
+test("囗 を混ぜて 口 の語が作れる（一口＝一＋囗）", () => {
   const g = newGame(1, "weak", "N5");
   setHand(g, g.me, "一囗");
   assert.equal(g.canRelease(g.me, g.me.cards.map((x) => x.id)).text, "一口");
