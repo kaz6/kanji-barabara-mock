@@ -178,6 +178,36 @@
     const e = form && D.radical_meanings && D.radical_meanings.forms && D.radical_meanings.forms[form];
     return e ? `${form}（${e.name}）＝${e.same}` : null;
   };
+  // 部品の札 sel を選んだとき、自分の手札（上の段）・ストックに今あるくっつく相手（KJ-083・D-101）。cards＝自分の札（手札とストック）。
+  // 並べる順どおり（左右・上下の「先に選ぶほう」が前）の組 {a, b, to}。手元に無い相手は入れない。字の札・表にない札は空
+  const joinPartners = (T, cards, sel) => {
+    if (!sel || isChar(T, sel.c)) return [];
+    const seen = new Set(), out = [];
+    for (const x of cards) {
+      if (x.id === sel.id) continue;
+      for (const [a, b] of [[sel.c, x.c], [x.c, sel.c]]) {
+        const to = joinResults(T, a, b);
+        if (!to.length || seen.has(a + b)) continue;
+        seen.add(a + b);
+        out.push({ a, b, to: to.slice() });
+      }
+    }
+    return out;
+  };
+  // 台の行に出す「くっつく：…」の一行。形は data/rules.json の join_note（full＝禾＋火→秋／partner＝禾＋火／mask＝禾＋？）。3組まで・あとは「ほか N組」。無ければ null
+  const JOIN_NOTE_MODES = ["full", "partner", "mask"];
+  const joinNote = (D, T, cards, sel) => {
+    const mode = (D.rules && D.rules.join_note) || "full";
+    const ps = joinPartners(T, cards, sel);
+    if (!ps.length) return null;
+    const show = (p) => {
+      if (mode === "mask") return p.a === sel.c && p.b !== sel.c ? `${p.a}＋？` : p.b === sel.c && p.a !== sel.c ? `？＋${p.b}` : `${p.a}＋？`;
+      return mode === "partner" ? `${p.a}＋${p.b}` : `${p.a}＋${p.b}→${p.to.join("・")}`;
+    };
+    const items = [...new Set(ps.map(show))];
+    const head = items.slice(0, 3).join("　");
+    return "くっつく：" + head + (items.length > 3 ? `　ほか${items.length - 3}組` : "");
+  };
   const splitOnce = (T, c) => T.parts[c] || [c];
   const canSplit = (T, c) => !!T.parts[c];
   // 部品にバラして届く形（D-003・D-004）。KJ-003 の遊びでは使わない（消すかは作者が決める）
@@ -1746,7 +1776,7 @@
   }
 
   return {
-    FILES, OPPONENTS, PLAY_MODES, CPU_POWERS, readOpponent, opponentKey, LEVELS, timeChoices, normTime, vibratePattern, timeLabel, levelLabel, levelShort, makeTables, isN5, isLevelChar, isChar, radicalNote, radicalFormNote, splitOnce, canSplit, delivered, joinResults, joinReversed,
+    FILES, OPPONENTS, PLAY_MODES, CPU_POWERS, readOpponent, opponentKey, LEVELS, timeChoices, normTime, vibratePattern, timeLabel, levelLabel, levelShort, makeTables, isN5, isLevelChar, isChar, radicalNote, radicalFormNote, joinPartners, joinNote, JOIN_NOTE_MODES, splitOnce, canSplit, delivered, joinResults, joinReversed,
     releasable, effectText, counterParts, usedCounters, counterBlocked, counterReading, rejectText, scoreOf, kanaOf, kanaText, wordCharOk, KANA_ONLY_WHY, homoChars, marks, markKinds, cutSpec, FACES, FACE_LABEL, faceJoins, faceResults, rulesLabel, opponentLabel, createGame, createTutorial, TUTORIAL_OPPONENT, playLogRow, endShow, END_LABELS, logSendAllowed, playLogResult, PLAY_LOG_LIMITS,
     strSeed, seededRand, matchRand, ROLES, ROOM_OPPONENT, MATCH_END_GRACE_SEC, MATCH_INSERT_TIMEOUT_SEC, MATCH_PING_SEC, MATCH_GONE_SEC, ROOM_LOBBY_TTL_SEC,
     createMatchClient, memoryClaims, newMatchId, newRoomCode, roomLobbyId, findRoom, hostRoom, joinRoom, startRoom, roomStartAt, roomWaiter,
