@@ -24,7 +24,7 @@
 - `data/blocked_words_g1.json`：小1 のときだけ放てない語の一覧（KJ-044 追記。語の表から外す。N5・N4 には効かない。中身は作者が決める）
 - `data/radical_meanings.json`：部品の札（字として見せない札。全レベルの合計78）が何と同じ意味かの表（KJ-021。name 呼び名・same 同じ意味の字・mean 短い意味・q ？・forms は radical_forms の左の形）。台の行の1行目に出す（`K.radicalNote`。index.html の render）。一覧は docs/RADICAL_MEANINGS.md（手で合わせる。tests/radical.test.js が部品の漏れを見る）
 - `data/counters.json`：数＋助数詞（KJ-022。十円・二十日 など。数＝一〜十・百・千・万と 二十〜九十・十一〜十九、助数詞＝円・人・本・日・月・年・時・分・回・台・週・度）。辞書に無くても放てる。一度放った言葉に使った助数詞は、その試合ではもう 数＋助数詞 に使えない（`releasable`・`g.isUsed`）。作り直しは `python3 tools/build_counters.py`（docs/COUNTERS.md も書く）。はじかれたときの 🚫 と理由は `K.rejectText`・index.html の `showWhy`。言い方の一覧は docs/REJECT_MESSAGES.md
-- `data/special.json` の `effects`：放つと効く語（KJ-079。語→効き方の名前。自刃＝split_own_random：放った本人の上の段の割れる札を、場から取り終えたあとに1枚無作為に割る）。点・演出・振動は special・fx_words と別で変えない。core.js の `T.EFFECTS`・`runPendingFx`・`K.effectText`。画面の文は index.html の `drain`。テストは tests/effects.test.js・tests/effects.browser.test.mjs
+- `data/special.json` の `effects`：放つと効く語（KJ-079・KJ-080。語→`{op, target, n}`。op＝split・cycle・invert・join・homophone／target＝self〔自刃：放った本人の上の段の割れる札を、場から取り終えたあとに1枚無作為に割る〕・opp〔切る・回転・反転・合体・同音 など：放った瞬間に、相手の上の段の効く札へ。大回転＝2枚・大集合＝`"max"`〔できるだけ多くの組〕〕。点・演出・振動は special・fx_words と別で変えない。core.js の `T.EFFECTS`・`hitOpponent`・`runPendingFx`・`K.effectText`。画面の文は index.html の `drain`。テストは tests/effects.test.js・tests/attack.test.js・tests/effects.browser.test.mjs
 - `data/rules.json` の `vibrate`：スマホの振動の形（KJ-074。ms。手ごとに rules の1か所。選び方は `K.vibratePattern`。振動は index.html の `buzz`。入り切りは localStorage `kj-vibe`。`navigator.vibrate` が無い端末では入り切りを出さず何もしない。金玉は special_words で振動だけ特別）
 - `data/rules.json`：数値（場・手札・点数・引き直し・勝ち・待ち時間・CPU）。数値を変えるときはここだけ。変えたら `version` を上げる
 - `tests/`：テスト
@@ -47,6 +47,7 @@ npm test
 - `tests/proper_names.test.js`：地名・名字（KJ-032。一覧の数・手に持てるときだけ語に入る・印と読み・点数は普通と同じ・下の名前は通らない）と、全レベルで外す語（買春・売春）
 - `tests/kana.test.js`：かなに読む部品（KJ-053。天の川 3字9点・見る 2字3点・かなだけは放てない・ひらがなで残る・CPU とヒント・外す語）
 - `tests/g1help.test.js`：小1 の手当て（KJ-067。`data/rules.json` の `g1`。基本の10字は山に3枚・N5/N4 は2枚のまま／手札に放てる語があり30秒なにも手をしないと光る・N5/N4 と放てる語なしでは光らない）
+- `tests/attack.test.js`：特別攻撃ワード（KJ-080。語ごとの効く操作と枚数・大回転は2枚・大集合は最大の組数・空振り・ストックには効かない・CPU が放っても人に効く・自刃は自分のまま・ログ・ヒントが消える）
 - `tests/tutorial.test.js`・`tests/tutorial.browser.test.mjs`：チュートリアル（8段を通せる・その手だけ通す・時間なし CPU なし・ログ／画面で通し・とばす・ボタンから・合言葉では出ない）
 - `tests/layout.browser.test.mjs`：試合の画面の置き場（KJ-078。Back は台の右端・Play は幅いっぱい・Redraw は卓の外／Redraw の1回タップ・長押し・途中で離す）
 - `tests/browser.test.mjs`：画面（合言葉の部屋を2つのページで1試合〔kj_claims は page.route で偽物に回し、Realtime は差し替え〕・台に札を置いても手札と場が動かない・並べる順が逆・放つ→取る・引き直し・ログをコピー・選ぶと札はマスに残り台に写しが並ぶ・入れ替え）。Playwright の Chromium がないと skip になる。skip は「通った」ではない

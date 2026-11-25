@@ -631,7 +631,7 @@ function drain(){
       if(e.who===G.me.name){const w=T.WORDS.get(e.text);buzz("release",{text:e.text,len:[...e.text].length,special:vibSpecial||T.SPECIAL.has(e.text),yoji:!!(w&&w.yoji)})} // 振動：自分が放ったときだけ（相手の手では震えない）
       if(e.who===G.me.name)vibSpecial=false;
     }
-    if(e.type==="effect"&&e.who===G.me.name)showMsg(K.effectText(e)); // 放つと効く語（KJ-079。自刃）：自分の手だけ短く出す
+    if(e.type==="effect"&&(e.who===G.me.name||e.victim===G.me.name))showMsg(K.effectText(e)); // 放つと効く語（KJ-079 自刃・KJ-080 相手の札に効く語）：自分が放った手と、自分の札が食らった手だけ短く出す（CPU の自刃は出さない）
     if(e.type==="over")end(e.winner,e.solo);
   }
 }

@@ -11,15 +11,31 @@ function plainField(g) {
 }
 const idsOf = (p, text) => [...text].map((ch) => p.cards.find((x) => x.c === ch).id);
 
-test("データ：effects は 自刃 → split_own_random。語は words.json にある（N4）。special・fx_words には入れない（点・演出・振動は普通のまま）", () => {
-  assert.deepEqual(D.special.effects, { 自刃: "split_own_random" });
-  for (const w of Object.keys(D.special.effects)) {
+test("データ：effects は 語→{op, target, n}。自刃＝自分に split・ほかは相手に効く（KJ-080）。語は N4 の語の表にある。special・fx_words には入れない（点・演出・振動は普通のまま）", () => {
+  const E = D.special.effects;
+  assert.deepEqual(E["自刃"], { op: "split", target: "self", n: 1 });
+  const want = {
+    split: ["切る", "千切る", "区切る", "二分"],
+    cycle: ["回転", "回る", "一周", "大回転"],
+    invert: ["反転", "一転", "反る"],
+    join: ["合体", "集合", "大集合"],
+    homophone: ["同音", "同名"],
+  };
+  const opp = Object.keys(E).filter((w) => w !== "自刃").sort();
+  assert.deepEqual(opp, Object.values(want).flat().sort());
+  for (const [op, ws] of Object.entries(want)) for (const w of ws) assert.equal(E[w].op, op, w);
+  for (const [w, e] of Object.entries(E)) {
+    assert.ok(["self", "opp"].includes(e.target), w);
+    assert.ok(Number.isInteger(e.n) || e.n === "max", w);
     assert.ok(T4.WORDS.has(w), `${w} は N4 の語`);
     assert.ok(!D.special.special.some((x) => x.w === w) && !D.special.fx_words.some((x) => x.w === w));
-    assert.ok(!(D.rules.vibrate.special_words || []).includes(w), "振動は普通の2字のまま");
+    assert.ok(!(D.rules.vibrate.special_words || []).includes(w), "振動は普通のまま");
   }
-  assert.equal(T4.EFFECTS.get("自刃"), "split_own_random");
-  assert.equal(TG1.EFFECTS.has("自刃") && TG1.WORDS.has("自刃"), false, "自刃 は小1 の語ではない");
+  assert.equal(E["大回転"].n, 2, "大回転だけ2枚");
+  assert.equal(E["大集合"].n, "max");
+  for (const w of Object.keys(E)) if (w !== "大回転" && w !== "大集合" && w !== "自刃") assert.equal(E[w].n, 1, w);
+  assert.deepEqual(T4.EFFECTS.get("自刃"), { op: "split", target: "self", n: 1 });
+  assert.equal(TG1.EFFECTS.has("自刃"), false, "自刃 は小1 の語ではない");
 });
 
 test("自刃：放てる（語は外れていない）。点は2字3点のまま。取り終わるまで札は切れず、取り終わると割れる札が1枚割れる", () => {
