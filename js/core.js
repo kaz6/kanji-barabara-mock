@@ -1812,6 +1812,50 @@
     return `${year}年${kansuji(dt.getMonth() + 1)}月${kansuji(dt.getDate())}日`;
   }
 
+  // ---------- 戦況の文（KJ-094。新聞紙風の見た目。DOM に触らない）----------
+  // 放った言葉を、漢字カタカナ交じりの文にして新しい順に返す。「アナタ、空白（クウハク）ヲ放ツ。二字ニテ三点。場ヨリ新・話ヲ取ル。」
+  // 文の型は js/strings.js の SENKYO（tpl。仮）。ひらがなに当たる所（助詞・名前・読み）はカタカナ。放った言葉そのものは漢字のまま（何が使用済みか読めるように）
+  // o：{ me＝自分の名前, tpl＝文の型, kana＝(言葉)→ひらがなの読み（無ければ ""）}。返す：[{ who, mine, word, pts, takes[], text, segs:[{k:"who"|"word"|"p", t}] }]（新しい順）
+  const toKatakana = (s) => String(s).replace(/[\u3041-\u3096]/g, (c) => String.fromCharCode(c.charCodeAt(0) + 0x60));
+  const kansujiN = (n) => (n === 0 ? "〇" : kansuji(n));
+  function fillSegs(str, vals) { // "{who}、{word}…" を、値の入る所だけ印を付けて分ける（who・word 以外は p）
+    const out = [];
+    let last = 0, m;
+    const re = /\{(\w+)\}/g;
+    const push = (k, t) => { if (t === "") return; const q = out[out.length - 1]; if (q && q.k === k && k === "p") q.t += t; else out.push({ k, t }); };
+    while ((m = re.exec(str))) {
+      push("p", str.slice(last, m.index));
+      push(m[1] === "who" || m[1] === "word" ? m[1] : "p", String(vals[m[1]] === undefined ? "" : vals[m[1]]));
+      last = m.index + m[0].length;
+    }
+    push("p", str.slice(last));
+    return out;
+  }
+  const SENKYO_STOP_QUIET = new Set(["はじまり", "ためした", "ヒント", "終わり", "動けない", "動ける", "入れ替え", "移す", "段", "とばす"]);
+  function senkyoLines(log, o) {
+    const tpl = o.tpl, out = [];
+    const L = Array.isArray(log) ? log : [];
+    for (let i = 0; i < L.length; i++) {
+      const e = L[i];
+      if (!e || e.op !== "放つ") continue;
+      const takes = [];
+      for (let j = i + 1; j < L.length; j++) { // 同じ人のこの放ちのあとの 取る（次の放ち・取る以外の手まで）
+        const f = L[j];
+        if (!f || f.who !== e.who) continue;
+        if (f.op === "取る") takes.push((f.from || []).join(""));
+        else if (f.op === "放つ" || !SENKYO_STOP_QUIET.has(f.op)) break;
+      }
+      const word = (e.from || []).join(""), yomi = o.kana ? o.kana(word) : "";
+      const mine = e.who === o.me, n = [...word].length, pts = e.pts || 0;
+      const vals = { who: toKatakana(e.who), word, n: kansujiN(n), pts: kansujiN(pts) };
+      vals.yomi = yomi ? fillSegs(tpl.yomi, { kana: toKatakana(yomi) }).map((s) => s.t).join("") : "";
+      let segs = fillSegs(tpl.release, vals).concat(fillSegs(tpl.score, vals));
+      if (takes.length) segs = segs.concat(fillSegs(tpl.take, { cards: takes.join(tpl.sep) }));
+      out.push({ who: e.who, mine, word, pts, takes, text: segs.map((s) => s.t).join(""), segs });
+    }
+    return out.reverse();
+  }
+
   // play_logs に1行送る中身。1手も動いていなければ null（送らない）
   function playLogRow(g, deviceId) {
     if (!g || !(playedAny(g) || (g.tutorialInfo && g.tutorialInfo.finished === "skip"))) return null; // チュートリアルは、1手も動かずにとばしたことも送る
@@ -1834,7 +1878,7 @@
   }
 
   return {
-    kansuji, issueLabel, kansujiDate,
+    kansuji, issueLabel, kansujiDate, toKatakana, senkyoLines,
     FILES, OPPONENTS, PLAY_MODES, CPU_POWERS, readOpponent, opponentKey, LEVELS, timeChoices, normTime, vibratePattern, timeLabel, levelLabel, levelShort, makeTables, isN5, isLevelChar, isChar, radicalNote, radicalFormNote, joinPartners, joinNote, JOIN_NOTE_MODES, splitOnce, canSplit, delivered, joinResults, joinReversed,
     releasable, effectText, counterParts, usedCounters, counterBlocked, counterReading, rejectText, scoreOf, kanaOf, kanaText, wordCharOk, KANA_ONLY_WHY, homoChars, marks, markKinds, cutSpec, FACES, FACE_LABEL, faceJoins, faceResults, rulesLabel, opponentLabel, createGame, createTutorial, TUTORIAL_OPPONENT, playLogRow, endShow, END_LABELS, logSendAllowed, playLogResult, PLAY_LOG_LIMITS,
     strSeed, seededRand, matchRand, ROLES, ROOM_OPPONENT, MATCH_END_GRACE_SEC, MATCH_INSERT_TIMEOUT_SEC, MATCH_PING_SEC, MATCH_GONE_SEC, ROOM_LOBBY_TTL_SEC,
