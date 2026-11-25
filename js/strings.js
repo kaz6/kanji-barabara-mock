@@ -67,7 +67,23 @@
     faceLabel: "札の字", // 設定：札の字体（KJ-093。初期は大正風）
     faceTaisho: "大正風", // Kaisei Tokumin
     faceMincho: "明朝", // Shippori Mincho
+    newsLabel: "背景の記事", // 設定：背景の記事の入り切り（KJ-094。初期は入）
+    newsOn: "入",
+    newsOff: "切",
     redrawHold: "長押しで引き直し", // Redraw を1回タップしたときに小さく出す（KJ-078。引き直しは長押し。🚫 ではない）
   });
-  return Object.freeze({ ICON_SHAPES, iconSvg, BUTTONS, LOGO, buttonHtml, redrawNote, TEXT });
+  // 戦況の欄（KJ-094。P-094。作者「戦況は読まないけど賑やかしにいいので好きです」「戦況で使われるひらがなに相当する箇所はカタカナにしたい。読めたらすごいよってことで」）
+  // 放った言葉を、漢字カタカナ交じりの文にする。文の型はここ1か所（仮）。{who}＝あなた→アナタ・CPU はそのまま／{word}＝放った言葉（漢字のまま）／{yomi}＝読み（カタカナ。語の表に無ければ出さない）／
+  // {n}・{pts}＝字数・点（漢数字）／{cards}＝場から取った字（取ったぶんだけ。まだ取っていなければ文ごと出さない）。字は js/core.js の K.senkyoLines が組む
+  const SENKYO = Object.freeze({
+    head: "戦況", // 欄の左の縦書きの見出し
+    release: "{who}、{word}{yomi}ヲ放ツ。",
+    yomi: "（{kana}）",
+    score: "{n}字ニテ{pts}点。",
+    take: "場ヨリ{cards}ヲ取ル。",
+    sep: "・",
+  });
+  // 背景の記事（KJ-094。見本「新聞21」の文。遊びの決まりを新聞の文体にしたもの。文は仮）。画面の背景いっぱいに繰り返す。点は決まり（data/rules.json）と同じ：三字九点・四字十二点・四字熟語は倍・引き直しは五度まで
+  const NEWS = "本紙特報。漢字ヲ割リ、回シ、裏返シ、合セテ別ノ字ト為シ、言葉ヲ放ツ遊戯、市中ニ大流行ス。相手ノ放チタル言葉ハ其ノ儘返ス能ハズ、必ズ一工夫ヲ要ス。場ニ出デタル札ハ早キ者ノ物ナリ。三字ノ言葉ハ九点、四字ハ十二点、四字熟語ハ其ノ倍ナリ。引直シハ五度マデ、回ヲ重ヌル毎ニ値上ル。記者曰ク、待ツモ一手、攻ムルモ一手、勝敗ハ十分ニシテ決ス。";
+  return Object.freeze({ ICON_SHAPES, iconSvg, BUTTONS, LOGO, buttonHtml, redrawNote, TEXT, SENKYO, NEWS });
 });

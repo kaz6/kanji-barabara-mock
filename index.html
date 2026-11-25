@@ -17,6 +17,7 @@
   --edge:#7d7366; --slot:#dccf9e; --accent:#9c3b2e; --accent-edge:#6e2a21; --ok:#2f6b4f; --dim:#625a50; --join:#2f6fd6;
   --table:#e8dbb4; --table-2:#ddd0a4; --on-table:#2a2622; --on-table-sub:#625a50;
   --btn:transparent; --btn-edge:#2a2622; --btn-off:#dccf9e; --btn-off-ink:#574f45; /* 押せないボタン：一段濃い紙の地に濃い字（文字は読める明暗差 4.5 以上） */ --play-off:#7a3a2f; --play-off-ink:#f4ddd7;
+  --slot-fill:rgba(232,219,180,.9); /* 空きマス（点線）の中：紙の色を濃く敷いて、背景の記事が透けて邪魔にならないようにする（KJ-094。ざらつきは薄く残る） */
   --hint:#d99a00; /* ヒントの光り（KJ-037。仮決め。青＝くっつけられる・赤＝選んだ札とは別の色） */
   --win:#2f6b4f; --lose:#625a50; /* 終わりの「勝ち！」「負け…」の色（KJ-018。仮決め。弁柄は選んだ札と Play だけなので使わない） */
   --shine:#f3d98a; /* 長い言葉の「キラッ」の色（KJ-018。仮決め） */
@@ -27,8 +28,15 @@
 }
 :root[data-face="mincho"]{--kanji:"KJ Shippori","KJ Kaisei","KJ Glyphs","Hiragino Mincho ProN","Yu Mincho","Noto Serif CJK JP","Noto Serif JP","Source Han Serif JP",serif}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 var(--ui)}
+/* 紙のざらつき（KJ-094。見本「新聞21」の feTurbulence の粒と繊維）：SVG の小さな敷き紙を body の背景に繰り返す（タイルは1回だけ描いて使い回す。stitchTiles で継ぎ目なし。動かない・画面全体を毎回描き直さない） */
+body{margin:0;background:
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.27 0 0 0 0 0.1 0 0 0 0.24 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E") 0 0/160px 160px,
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 0.09' numOctaves='2' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.55 0 0 0 0 0.42 0 0 0 0 0.15 0 0 0 0.14 0'/%3E%3C/filter%3E%3Crect width='320' height='320' filter='url(%23f)'/%3E%3C/svg%3E") 0 0/320px 320px,
+  var(--bg);color:var(--ink);font:15px/1.6 var(--ui)}
 main{max-width:760px;margin:0 auto;padding:16px 14px 48px}
+/* 背景の記事（KJ-094）：画面の背景いっぱいに、縦書き 10px・墨の不透明度 20% で遊びの決まりを新聞の文体にした文を繰り返す（js/strings.js の NEWS。仮）。札・ボタンの下に隠れる（z-index:-1 の層。main に z-index は付けない＝点の演出 #fxPts が #fx の上に出る決まりを守る）・押せない・読み上げない。設定「背景の記事」が切のときは <html data-news="off"> で消える（ざらつきは残る） */
+#bgnews{position:fixed;inset:0;z-index:-1;pointer-events:none;user-select:none;-webkit-user-select:none;overflow:hidden;contain:strict;transform:translateZ(0);writing-mode:vertical-rl;font-size:10px;line-height:1.55;color:rgba(42,38,34,.2);text-align:justify;padding:6px;overflow-wrap:anywhere}
+html[data-news="off"] #bgnews{display:none}
 h1{font-size:17px;margin:0 0 2px;font-weight:700}
 .lead{color:var(--sub);font-size:13px;margin:0 0 14px}
 .side{margin:14px 0}
@@ -55,11 +63,11 @@ h1{font-size:17px;margin:0 0 2px;font-weight:700}
 .cds{margin-left:auto;font-size:12px;color:var(--sub);font-variant-numeric:tabular-nums}
 .hand{display:grid;grid-template-columns:repeat(8,1fr);gap:4px}
 .trayhead{font-size:11px;color:var(--sub);margin:8px 0 3px}
-.tray .slot{background:transparent}
+.tray .slot{background:var(--slot-fill)}
 .opp{display:inline-flex;gap:10px;align-items:center;font-size:14px;flex-wrap:wrap}
 .opp label{cursor:pointer;white-space:nowrap}
-.slot{aspect-ratio:1;background:transparent;border:1px dotted var(--line);border-radius:0}
-.table .slot{background:transparent}
+.slot{aspect-ratio:1;background:var(--slot-fill);border:1px dotted var(--line);border-radius:0}
+.table .slot{background:var(--slot-fill)}
 .tile{aspect-ratio:1;position:relative;background:var(--tile);border:1px solid var(--edge);border-radius:0;
   display:flex;align-items:center;justify-content:center;font-family:var(--kanji);font-size:clamp(20px,4.6vw,30px);
   cursor:pointer;user-select:none;padding:0;color:var(--ink);width:100%}
@@ -138,7 +146,7 @@ body.playing .mast{display:none}
 @media (max-width:374px){.mast-line{font-size:12px}}
 /* 台（高さを固定する） */
 /* 卓（KJ-042）：場と台が乗る真ん中を墨色の単色の面に。囲み線はやめ、色の面で分ける */
-.table{position:relative;background:var(--table);color:var(--on-table);border-radius:0;border-top:3px solid var(--ink);border-bottom:3px solid var(--ink);padding:10px 0 12px 28px;margin:10px 0}
+.table{position:relative;background:transparent;color:var(--on-table);border-radius:0;border-top:3px solid var(--ink);border-bottom:3px solid var(--ink);padding:10px 0 12px 28px;margin:10px 0}
 /* 卓の左の縦書きの見出し「卓　場と台」（KJ-093。新聞の囲み記事の見出し。字は飾りなので読み上げには出ない・押せない） */
 .table::before{content:"卓　場と台";position:absolute;left:0;top:0;bottom:0;width:20px;writing-mode:vertical-rl;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;letter-spacing:.35em;border-right:1px solid var(--ink);pointer-events:none}
 .table .side{margin:0 0 8px}
@@ -316,11 +324,17 @@ body.esOn details>summary .bar{position:fixed;top:6px;left:10px;right:10px;z-ind
 @keyframes kjFlash{from{background-color:var(--shine)}to{background-color:transparent}}
 @keyframes kjShine{from{background-position:120% 0}to{background-position:-20% 0}}
 @media (prefers-reduced-motion:reduce){.esw.fresh.t1,.esw.fresh.t2,.esw.fresh.t3,.esw.fresh.t2 .w,.esw.fresh.t3 .w{animation:none}}
-/* 放った言葉 */
-.log{font-size:13px;margin:0;padding:0;list-style:none;max-height:180px;overflow:auto}
-.log li{padding:3px 0;color:var(--sub)}
-.log li .w{font-family:var(--kanji);font-size:16px;color:var(--ink)}
-.log li.me .who{color:var(--ink)}
+/* 戦況（KJ-094。P-094。見本「新聞21」）：左に墨の地の縦書きの見出し「戦況」、中は縦書きで、放った言葉を新しい順（右が新しい）に漢字カタカナ交じりの文で。入りきらない古いほうは欄の左の外へ流れる。あなたの行は弁柄の太字。放った言葉そのものは漢字のまま（札の字） */
+.senkyo{display:flex;height:34px;margin:6px 0;border-top:2px solid var(--ink);border-bottom:1px solid var(--ink)} /* 空のあいだは低く（「放った言葉」の見出しと同じ 34px。375×700 に収める決まり＝KJ-010 を守る）。1つ放ったら --sk-h の高さに */
+.senkyo.has{height:var(--sk-h,150px)}
+.sk-head{flex:none;margin:0;writing-mode:vertical-rl;font-size:12px;font-weight:700;letter-spacing:2px;line-height:1.2;padding:3px 5px;background:var(--ink);color:var(--bg);overflow:hidden}
+.senkyo.has .sk-head{font-size:15px;letter-spacing:4px;line-height:1.3;padding:6px 5px}
+.log{flex:1;min-width:0;writing-mode:vertical-rl;font-size:11px;line-height:1.75;margin:0;padding:6px 6px;list-style:none;overflow:hidden;color:#3a342d}
+.log li{padding:0 3px;border-left:1px solid var(--line)}
+.log li:first-child{border-left:0}
+.log li .w{font-family:var(--kanji);font-size:13px;color:var(--ink)}
+.log li.me{font-weight:700;color:var(--accent)}
+.log li.me .w{color:var(--accent)}
 details{margin-top:22px;border-top:1px solid var(--line);padding-top:10px}
 summary{cursor:pointer;font-weight:700}
 details p,details li{font-size:13px;color:#3d3a34}
@@ -389,6 +403,7 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
 </style>
 </head>
 <body>
+<div id="bgnews" aria-hidden="true"></div>
 <main>
   <header class="mast" id="mast">
     <div class="mast-title" id="mastTitle"></div>
@@ -417,6 +432,7 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
     </div>
     <div class="grp" id="grpVib" hidden><p class="gt">振動</p><span class="opp" id="vib" role="radiogroup" aria-label="振動"></span></div>
     <div class="grp" id="grpFace"><p class="gt" id="faceLabel"></p><span class="opp" id="face" role="radiogroup" aria-label="札の字"></span></div>
+    <div class="grp" id="grpNews"><p class="gt" id="newsLabel"></p><span class="opp" id="news" role="radiogroup" aria-label="背景の記事"></span></div>
     <p class="note" id="setupInfo"></p>
     <button class="op main" id="start">はじめる</button>
     <button class="op" id="bTutorial" hidden></button>
@@ -484,8 +500,8 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
     <div class="hand tray" id="meTray"></div>
   </section>
 
-  <section class="side">
-    <div class="side-head"><b>放った言葉</b><span class="count">（二人とも二度と使えない）</span></div>
+  <section class="senkyo" id="senkyo">
+    <h2 class="sk-head" id="skHead"></h2>
     <ul class="log" id="released"></ul>
   </section>
 
@@ -521,6 +537,7 @@ const $title=document.getElementById("title");
 const STR=window.KJ_STR; // 画面の文言（ボタンの文字・角の印。KJ-024）
 for(const id of Object.keys(STR.BUTTONS)){const b=document.getElementById(id);if(STR.LOGO[id])b.setAttribute("aria-label",STR.BUTTONS[id]);b.querySelector(".lb").innerHTML=STR.buttonHtml(id)} // 印を字に組み込んだボタン（Fl＋印＋p など）は SVG 入り。読み上げは aria-label（KJ-048）
 document.getElementById("mastTitle").textContent=STR.TEXT.masthead;document.getElementById("faceLabel").textContent=STR.TEXT.faceLabel; // 表紙の題字・設定の見出し（KJ-093）
+document.getElementById("newsLabel").textContent=STR.TEXT.newsLabel;document.getElementById("skHead").textContent=STR.SENKYO.head; // 設定の見出し・戦況の見出し（KJ-094）
 $title.textContent=STR.TEXT.title; // 題（KJ-042。文は仮。js/strings.js の1か所で直せる）
 const D={};
 let T=null, G=null; // 表・ゲームの状態
@@ -531,7 +548,7 @@ const LVL_KEY="kj-level";
 let level=null;     // レベル（"G1"〔小1〕／"N5"／"N4"）。はじめるときに効く。端末に覚える
 let row=[];         // 選んだ札の id（選んだ順。台にはその写しを左から並べる）
 let lastTried="";
-const OPP_KEY="kj-opponent",TIME_KEY="kj-time",VIB_KEY="kj-vibe",FACE_KEY="kj-face",ISSUE_KEY="kj-issue";
+const OPP_KEY="kj-opponent",TIME_KEY="kj-time",VIB_KEY="kj-vibe",FACE_KEY="kj-face",ISSUE_KEY="kj-issue",NEWS_KEY="kj-news";
 let opponent=null;  // 相手のキー（weak・fair・normal・room。solo は画面から外した〔KJ-056〕）。端末に覚える（KJ-007）。画面では「遊び方」と「強さ」の2段で選ぶ（KJ-045）
 let cpuPower="weak"; // 「CPU と」のときの強さ。遊び方を行き来しても覚えている
 let timeLimit=null; // 制限時間（秒）。端末に覚える（KJ-007）
@@ -564,6 +581,15 @@ function loadSettings(){
   timeLimit=K.normTime(D,lsGet(TIME_KEY));
   vibeOn=lsGet(VIB_KEY)!=="0"; // 振動の入り切り（KJ-074）。覚えていなければ入
   setFace(lsGet(FACE_KEY)==="mincho"?"mincho":"taisho"); // 札の字（KJ-093）。覚えていなければ大正風
+  setNews(lsGet(NEWS_KEY)==="0"?"0":"1"); // 背景の記事（KJ-094）。覚えていなければ入
+}
+// ---------- 背景の記事（KJ-094）：入／切（初期は入）。<html data-news="off"> で消える。端末に覚える（localStorage kj-news。切＝"0"）。記事は画面の大きさに合わせて繰り返す ----------
+let newsOn=true;
+function setNews(v){newsOn=v!=="0";document.documentElement.setAttribute("data-news",newsOn?"on":"off")}
+function fillNews(){
+  const box=$("bgnews");if(!box||!STR.NEWS)return;
+  const need=Math.min(200,Math.max(2,Math.ceil((window.innerWidth*window.innerHeight)/(10*15.5)/STR.NEWS.length)+1)); // 10px・行 15.5px の1字ぶんの面積で、画面が埋まるぶん（上限 200 回）
+  if(box.dataset.n!==String(need)){box.dataset.n=String(need);box.textContent=STR.NEWS.repeat(need)}
 }
 // ---------- 札の字（KJ-093）：大正風（Kaisei Tokumin。初期）／明朝（Shippori Mincho）。<html data-face> を替える。端末に覚える ----------
 let face="taisho";
@@ -596,6 +622,7 @@ function buildPickers(){
   radios($("pow"),"pow",K.CPU_POWERS.map(o=>({value:o.key,label:o.label})),cpuPower,v=>{cpuPower=v;opponent=K.opponentKey("cpu",v);lsSet(OPP_KEY,opponent)});
   radios($("lvl"),"lvl",K.LEVELS.map(o=>({value:o.key,label:o.short,title:o.label})),level,v=>{level=v;lsSet(LVL_KEY,v);T=tablesFor(level);showCounts()});
   radios($("face"),"face",[{value:"taisho",label:STR.TEXT.faceTaisho},{value:"mincho",label:STR.TEXT.faceMincho}],face,v=>{setFace(v);lsSet(FACE_KEY,v)});
+  radios($("news"),"news",[{value:"1",label:STR.TEXT.newsOn},{value:"0",label:STR.TEXT.newsOff}],newsOn?"1":"0",v=>{setNews(v);lsSet(NEWS_KEY,v)}); // 背景の記事の入り切り（KJ-094）
   if(canVibe()){$("grpVib").hidden=false;radios($("vib"),"vib",[{value:"1",label:"入"},{value:"0",label:"切"}],vibeOn?"1":"0",v=>{vibeOn=v==="1";lsSet(VIB_KEY,v);if(vibeOn)buzz("take")})} // 振動が使えない端末には出さない。入にしたとき、1回だけ試しに震える
   radios($("tim"),"tim",K.timeChoices(D).map(sec=>({value:sec,label:K.timeLabel(sec)})),timeLimit,v=>{timeLimit=+v;lsSet(TIME_KEY,v);buildHowto()});
 }
@@ -1440,14 +1467,18 @@ function renderOps(){
   $("clock").innerHTML=`残り <span class="n">${Math.floor(left/60)}:${String(left%60).padStart(2,"0")}</span>`; // 残り時間は大きな数字（KJ-042）
   renderTut();
 }
+// 戦況（KJ-094）：放った言葉を新しい順に、漢字カタカナ交じりの文で（文は K.senkyoLines。型は STR.SENKYO＝仮）。場から取るたびに、その文のおわりへ「場ヨリ○ヲ取ル」が足される。放った言葉そのものは漢字のまま
+let senkyoKey="";
 function renderReleased(){
-  const ul=$("released"),items=G.log.filter(e=>e.op==="放つ");
-  if(ul.childElementCount===items.length)return;
+  const ul=$("released"),lines=K.senkyoLines(G.log,{me:G.me.name,tpl:STR.SENKYO,kana:t=>{const w=T.WORDS.get(t);return w&&w.kana?w.kana:""}});
+  const key=lines.map(l=>l.text).join("\n");
+  if(key===senkyoKey&&ul.childElementCount===lines.length)return;
+  senkyoKey=key;
+  $("senkyo").classList.toggle("has",lines.length>0);
   ul.innerHTML="";
-  for(const e of items.slice().reverse()){
-    const text=e.from.join(""),w=T.WORDS.get(text);
-    const li=document.createElement("li");li.className=e.who===G.me.name?"me":"";
-    li.innerHTML=`<span class="who">${e.who}</span>：<span class="w">${text}</span> ${w?w.kana:""} +${e.pts}点`;
+  for(const l of lines){
+    const li=document.createElement("li");li.className=l.mine?"me":"";
+    for(const sg of l.segs){const sp=document.createElement("span");if(sg.k==="word")sp.className="w";sp.textContent=sg.t;li.appendChild(sp)}
     ul.appendChild(li);
   }
 }
@@ -1506,6 +1537,7 @@ document.addEventListener("visibilitychange",()=>{
 
 window.__KJ={get game(){return G},get tut(){return TUT},get row(){return row},get tables(){return T},get mc(){return MC},get room(){return ROOM},data:D,render,drain}; // ブラウザのテスト用
 
+fillNews();window.addEventListener("resize",fillNews); // 背景の記事（KJ-094）。データを待たずに敷く
 Promise.all(K.FILES.map(f=>fetch(`data/${f}.json`).then(r=>r.json()).then(j=>D[f]=j)))
   .then(()=>{preloadFx();loadSettings();refreshMast();T=tablesFor(level);buildPickers();buildHowto();showCounts();roomUi();$("bTutorial").textContent=D.tutorial.ui.button;$("bTutorial").hidden=false})
   .catch(e=>{$("setupInfo").textContent="データを読めませんでした（file:// では開けません。Pages かローカルのサーバーで開いてください）"});

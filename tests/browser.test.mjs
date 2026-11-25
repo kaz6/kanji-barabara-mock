@@ -140,7 +140,7 @@ test("画面", { skip }, async (t) => {
       assert.equal(await page.evaluate(() => document.getElementById("bRedraw").getAttribute("aria-disabled")), "false", "取りきったら動ける");
       assert.equal(await page.locator("#meHand .tile", { hasText: "山" }).count(), 1, "山 が手札に来た");
       assert.equal(await pos("#field > *"), field0, "取ったあとも場の位置は同じ");
-      assert.match(await page.textContent("#released"), /休日.*\+3点/);
+      assert.match(await page.textContent("#released"), /^アナタ、休日（キュウジツ）ヲ放ツ。二字ニテ三点。場ヨリ山・川ヲ取ル。$/); // 戦況の文（KJ-094）：読みと点は文の中・取った字が足される
       // 引き直し（1回目は0点。KJ-049）：添え字は次の値段と残りの回数
       assert.equal(await page.textContent("#cdRedraw"), "0pt あと5回", "はじめは 0pt あと5回");
       await holdRedraw(page);
@@ -205,7 +205,7 @@ test("画面", { skip }, async (t) => {
     if (process.env.KJ_SHOT_KANA) await page.screenshot({ path: process.env.KJ_SHOT_KANA }); // 報告の画像（KJ-053）
     await page.click("#bRelease");
     assert.equal(await page.evaluate(() => __KJ.game.me.score), 9);
-    assert.match(await page.textContent("#released"), /天の川 あまのがわ \+9点/);
+    assert.match(await page.textContent("#released"), /^アナタ、天の川（アマノガワ）ヲ放ツ。三字ニテ九点。/); // 戦況の文（KJ-094）：言葉は放ったとおり（ひらがなの の も残る）・読みはカタカナ
     assert.ok(await page.evaluate(() => __KJ.game.log.some((e) => e.op === "放つ" && e.from.join("") === "天の川")), "ログの 放つ はひらがな");
     assert.deepEqual(errors, []);
     await ctx.close();
@@ -1117,7 +1117,10 @@ test("画面", { skip }, async (t) => {
     assert.ok(!s.visible.includes(s.hint.word));
     const geo = await page.evaluate(() => ({ sw: document.documentElement.scrollWidth, sh: document.documentElement.scrollHeight, h: innerHeight }));
     assert.ok(geo.sw <= 375, "横スクロールがない");
-    assert.ok(geo.sh <= 700, `375×700 に収まる（${geo.sh}）`);
+    // 戦況の欄（KJ-094）は、1つ放つと 150px に伸びる（前の「放った言葉」も放つたびに伸びた）。ここでは欄を空の高さ（34px）にしたときの全体が 700 に収まること、札・ストックが画面の中にあること
+    const senH = await page.evaluate(() => document.getElementById("senkyo").getBoundingClientRect().height);
+    assert.ok(geo.sh - (senH - 34) <= 700, `375×700 に収まる（欄を空の高さにして ${geo.sh - (senH - 34)}）`);
+    assert.ok(await page.evaluate(() => document.getElementById("meTray").getBoundingClientRect().bottom <= 700), "ストックの下端は 700 以内");
     if (process.env.KJ_HINT_SHOT) await page.screenshot({ path: process.env.KJ_HINT_SHOT.replace(/\.png$/, "-2.png") });
     await page.evaluate(() => { const G = __KJ.game; G.hint.until = G.now() - 0.01; __KJ.render(); });
     s = await st();
@@ -2143,7 +2146,8 @@ test("画面", { skip }, async (t) => {
     });
     // 卓は紙の色・上下は太い罫線。場と台が卓の中にある
     const table = await page.evaluate(() => { const e = document.querySelector(".table"), cs = getComputedStyle(e); return { bg: cs.backgroundColor, img: cs.backgroundImage, bw: cs.borderTopWidth, field: e.contains(document.getElementById("field")), row: e.contains(document.getElementById("row")), ops: e.contains(document.querySelector(".ops")) }; });
-    assert.deepEqual(table, { bg: PAPER, img: "none", bw: "3px", field: true, row: true, ops: true });
+    assert.deepEqual(table, { bg: "rgba(0, 0, 0, 0)", img: "none", bw: "3px", field: true, row: true, ops: true }); // 卓の地は透かす（KJ-094：背景の記事とざらつきが卓の下にも続く）。下の紙は紙の色のまま
+    assert.equal(await page.evaluate(() => getComputedStyle(document.body).backgroundColor), PAPER, "卓の下の紙は紙の色");
     // 札：細い縁（補助色）で札の色の地。影はない。角の印は墨色
     const tile = await page.evaluate(() => { const e = document.querySelector("#meHand .tile"), cs = getComputedStyle(e), mk = getComputedStyle(e.querySelector(".mk")); return { b: cs.borderBottomWidth, side: cs.borderLeftWidth, bc: cs.borderBottomColor, sc: cs.borderLeftColor, shadow: cs.boxShadow, bg: cs.backgroundColor, mk: mk.color }; });
     assert.equal(tile.b, "1px", "札の縁は細い（厚みの太い縁はやめた）"); assert.equal(tile.side, "1px");
@@ -2152,7 +2156,7 @@ test("画面", { skip }, async (t) => {
     assert.equal(tile.shadow, "none", "札に影はない");
     assert.equal(tile.mk, "rgb(42, 38, 34)", "角の印は墨色");
     assert.ok(ratio(tile.bg, PAPER) >= 1.1 && ratio(tile.sc, PAPER) >= 2, "札は紙の上で見分けられる（札の色と縁）");
-    assert.equal(await page.evaluate(() => { const s = getComputedStyle(document.querySelector("#meTray .slot")); return [s.backgroundColor, s.borderTopStyle].join("|"); }), "rgba(0, 0, 0, 0)|dotted", "空きマスは点線の枠だけ");
+    assert.equal(await page.evaluate(() => { const s = getComputedStyle(document.querySelector("#meTray .slot")); return [s.backgroundColor, s.borderTopStyle].join("|"); }), "rgba(232, 219, 180, 0.9)|dotted", "空きマスは点線の枠（中は紙の色を濃く敷く。背景の記事が透けない。KJ-094）");
     // 点と残り時間は大きな数字。補足は小さい
     const fs = await page.evaluate(() => ({ score: parseFloat(getComputedStyle(document.querySelector("#meScore .n")).fontSize), clock: parseFloat(getComputedStyle(document.querySelector("#clock .n")).fontSize), count: parseFloat(getComputedStyle(document.getElementById("meCount")).fontSize), tray: parseFloat(getComputedStyle(document.getElementById("trayHead")).fontSize) }));
     assert.ok(fs.score >= 26 && fs.clock >= 20, `点と残り時間が大きい（${fs.score}・${fs.clock}）`);
@@ -2170,7 +2174,7 @@ test("画面", { skip }, async (t) => {
     const contrasts = () => page.evaluate(() => [...document.querySelectorAll(".ops button")].map((b) => {
       const cs = getComputedStyle(b), bef = getComputedStyle(b, "::before");
       return { id: b.id, off: b.disabled || b.getAttribute("aria-disabled") === "true", color: cs.color, bg: cs.backgroundColor, gauge: b.classList.contains("cd") && parseFloat(bef.width) > 0 ? (() => { // 紙の上では薄く敷く（::before の不透明度）ので、地の色と混ぜた色で見る（KJ-093）
-        const g = bef.backgroundColor.match(/[\d.]+/g).map(Number), u = (cs.backgroundColor === "rgba(0, 0, 0, 0)" ? getComputedStyle(document.querySelector(".table")).backgroundColor : cs.backgroundColor).match(/[\d.]+/g).map(Number), o = parseFloat(bef.opacity);
+        const g = bef.backgroundColor.match(/[\d.]+/g).map(Number), u = (cs.backgroundColor === "rgba(0, 0, 0, 0)" ? getComputedStyle(document.body).backgroundColor : cs.backgroundColor).match(/[\d.]+/g).map(Number), o = parseFloat(bef.opacity);
         return `rgb(${[0, 1, 2].map((i) => Math.round(g[i] * o + u[i] * (1 - o))).join(", ")})`; })() : null, edge: cs.borderBottomColor };
     }));
     const check = (rows, label) => { for (const r of rows) { const under = r.bg === "rgba(0, 0, 0, 0)" ? PAPER : r.bg; assert.ok(ratio(r.color, under) >= 4.5, `${label} ${r.id} 文字と地（${r.color} / ${under}）`); if (r.gauge) assert.ok(ratio(r.color, r.gauge) >= 4.5, `${label} ${r.id} 文字とゲージ（${r.gauge}）`); } };
