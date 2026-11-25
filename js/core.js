@@ -149,6 +149,7 @@
     const partsSeen = new Set(Object.entries(T.parts).flatMap(([k, v]) => [k, ...v]));
     T.KANA_OK = new Set([...T.KANA].filter(([pt]) => partsSeen.has(pt)).map(([, k]) => k));
     T.SPECIAL = new Map(D.special.special.map((s) => [s.w, s]));
+    T.EFFECTS = new Map(Object.entries(D.special.effects || {})); // 放つと効く語（KJ-079。語→効き方の名前。いまは 自刃：split_own_random だけ。点・演出は変えない）
     T.FX_WORDS = new Map((D.special.fx_words || []).map((s) => [s.w, s])); // 演出だけ特別の語（KJ-064。金玉。点・倍率・つながりは special と別で、変えない）
     // CPU が知っている語＝よく使う語（このレベルの語の表にあるものだけ。KJ-015：表にない語を知っていると、放てずに止まる）
     T.COMMON_WORDS = D.words.words.filter((w) => w.common && w.w.length >= 2 && T.WORDS.has(w.w));
@@ -253,6 +254,8 @@
     if (REJECT_TEXT[why]) return REJECT_TEXT[why];
     return /[！？。…]$/.test(why) || why.length > 16 ? why : why + "！";
   };
+  // 放つと効く語の画面の文（KJ-079）。e＝{type:"effect", who, text, hit, from}。自分の手だけ「自刃：休 が切れた」。切れる札が無ければ「自刃：切れる札が無かった」
+  const effectText = (e) => (e.hit ? `${e.text}：${e.from} が切れた` : `${e.text}：切れる札が無かった`);
   const SINGLE_WHY = "1字では放てない（2字以上の言葉）";
   const KANA_ONLY_WHY = "かなだけでは放てない（漢字の札が1枚以上いる）";
   function releasable(T, used, text, opts) {
@@ -467,13 +470,13 @@
     }
     function player(key, name, n) {
       return { key, name, cards: draw(n).map((c) => card(c)), cd: { invert: 0, cycle: 0, homophone: 0 },
-        score: 0, takes: 0, redraws: 0, lastSpecial: null, stuck: false };
+        score: 0, takes: 0, redraws: 0, lastSpecial: null, pendingFx: [], stuck: false };
     }
     g.me = player("me", "あなた", R.start_hand);
     if (M) {
       // 相手は人。札はこの端末に無い（枚数だけ。相手が送る 'event' で更新）。山からも引かない
       g.cpu = { key: "cpu", name: ROOM_OPP_NAME, cards: [], remote: true, hand: R.start_hand, count: R.start_hand + (env.startStock !== false ? R.start_stock_parts || 0 : 0),
-        cd: { invert: 0, cycle: 0, homophone: 0 }, score: 0, takes: 0, redraws: 0, lastSpecial: null, stuck: false };
+        cd: { invert: 0, cycle: 0, homophone: 0 }, score: 0, takes: 0, redraws: 0, lastSpecial: null, pendingFx: [], stuck: false };
     } else {
       g.cpu = player("cpu", "CPU", g.solo ? 0 : R.start_hand); // ひとりで：CPU は出さない（山からも引かない）
     }
@@ -895,12 +898,29 @@
       else if (T.SPECIAL.has(text)) g.events.push({ type: "fx", who: p.name, text });
       else if (T.FX_WORDS.has(text)) { const f = T.FX_WORDS.get(text); g.events.push({ type: "fx", who: p.name, text, together: !!f.together, tone: f.tone || null }); } // 演出だけ（点は scoreOf のまま）
       p.lastSpecial = T.SPECIAL.has(text) ? text : null;
+      if (T.EFFECTS.has(text)) p.pendingFx.push({ text, op: T.EFFECTS.get(text) }); // 場から取り終わったあとに効く（runPendingFx）
       solved(p);
       g.events.push({ type: "release", who: p.name, text, pts });
       checkOver();
       return { ok: true, text, pts };
     };
 
+    // ---------- 放つと効く語（KJ-079・D-098）：放った本人の札に効く。場から取り終わったあと（takes が 0 になったとき）に1回 ----------
+    // split_own_random（自刃）：上の段の札のうち「割れる札」（割れる字で、割った部品が手札・ストックに収まるもの）から1枚を無作為に割る。割れる札が無ければ何も起きない。待ち時間はかけない
+    function runPendingFx(p) {
+      if (p.takes > 0 || !p.pendingFx.length) return;
+      const list = p.pendingFx.splice(0);
+      for (const f of list) {
+        if (f.op !== "split_own_random") continue;
+        const cands = p.cards.filter((x) => !x.tray && canSplit(T, x.c) && fits(p, [x], splitOnce(T, x.c).length));
+        if (!cands.length) { g.events.push({ type: "effect", who: p.name, text: f.text, op: f.op, hit: false }); continue; }
+        const x = pick(cands);
+        const parts = splitOnce(T, x.c);
+        const nc = replaceCards(p, [x.id], parts);
+        addLog(p.name, "割る", [x.c], nc.map((y) => y.c), 0, `${f.text}で切れた`);
+        g.events.push({ type: "effect", who: p.name, text: f.text, op: f.op, hit: true, from: x.c, to: nc.map((y) => y.c) });
+      }
+    }
     // ---------- 取る：場の札を手札へ。空いたところは同じ位置に山から出す ----------
     // 場の1枚を p の手札（上の段）へ。取ったところには山から次の字が出る
     function fromField(p, fieldId) {
@@ -936,6 +956,7 @@
         p.takes -= 1;
         const nc = g.field[g.field.length - 1];
         addLog(p.name, "取る", [x.c], [x.c], 0, `場に ${nc.c} が出た。残り${p.takes}枚取れる`);
+        runPendingFx(p);
         return { ok: true, card: got, c: x.c };
       };
       // 相手が場の列の n 番目を取った（相手の行が届いた／こちらの先着がぶつかった）。こちらの場から消して、次の番号の札を出す
@@ -958,6 +979,7 @@
       if (!r) return fail("場にない");
       p.takes -= 1;
       addLog(p.name, "取る", [r.x.c], [r.x.c], 0, `場に ${r.nc.c} が出た。残り${p.takes}枚取れる${memo ? `（${memo}）` : ""}`);
+      runPendingFx(p);
       return { ok: true, card: r.got, c: r.x.c };
     };
     // 場の札で、手札と合わせて語になるものを先に取る。なければ無作為（CPU の取り方）
@@ -1632,7 +1654,7 @@
 
   return {
     FILES, OPPONENTS, PLAY_MODES, CPU_POWERS, readOpponent, opponentKey, LEVELS, timeChoices, normTime, vibratePattern, timeLabel, levelLabel, levelShort, makeTables, isN5, isLevelChar, isChar, radicalNote, radicalFormNote, splitOnce, canSplit, delivered, joinResults, joinReversed,
-    releasable, counterParts, usedCounters, counterBlocked, counterReading, rejectText, scoreOf, kanaOf, kanaText, wordCharOk, KANA_ONLY_WHY, homoChars, marks, markKinds, cutSpec, FACES, FACE_LABEL, faceJoins, faceResults, rulesLabel, opponentLabel, createGame, createTutorial, TUTORIAL_OPPONENT, playLogRow, endShow, END_LABELS, logSendAllowed, playLogResult, PLAY_LOG_LIMITS,
+    releasable, effectText, counterParts, usedCounters, counterBlocked, counterReading, rejectText, scoreOf, kanaOf, kanaText, wordCharOk, KANA_ONLY_WHY, homoChars, marks, markKinds, cutSpec, FACES, FACE_LABEL, faceJoins, faceResults, rulesLabel, opponentLabel, createGame, createTutorial, TUTORIAL_OPPONENT, playLogRow, endShow, END_LABELS, logSendAllowed, playLogResult, PLAY_LOG_LIMITS,
     strSeed, seededRand, matchRand, ROLES, ROOM_OPPONENT, MATCH_END_GRACE_SEC, MATCH_INSERT_TIMEOUT_SEC, MATCH_PING_SEC, MATCH_GONE_SEC, ROOM_LOBBY_TTL_SEC,
     createMatchClient, memoryClaims, newMatchId, newRoomCode, roomLobbyId, findRoom, hostRoom, joinRoom, startRoom, roomStartAt, roomWaiter,
   };
