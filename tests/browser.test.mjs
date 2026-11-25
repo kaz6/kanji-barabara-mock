@@ -27,6 +27,15 @@ function serve() {
   });
 }
 
+// Redraw は長押しで引き直す（KJ-078。REDRAW_HOLD_MS＝600ms）。マウスを押して、埋まりきるまで待って離す
+async function holdRedraw(page, ms = 800) {
+  const bb = await page.locator("#bRedraw").boundingBox();
+  await page.mouse.move(bb.x + bb.width / 2, bb.y + bb.height / 2);
+  await page.mouse.down();
+  await page.waitForTimeout(ms);
+  await page.mouse.up();
+}
+
 const skip = chromium ? false : "Playwright が入っていない";
 
 // 新しい端末の「はじめる」はチュートリアルから始まる（KJ-043）。既存の画面テストは「チュートリアルを見た」印（kj-tutorial）を付けた端末で始める。
@@ -132,7 +141,7 @@ test("画面", { skip }, async (t) => {
       assert.match(await page.textContent("#released"), /休日.*\+3点/);
       // 引き直し（1回目は0点。KJ-049）：添え字は次の値段と残りの回数
       assert.equal(await page.textContent("#cdRedraw"), "0pt あと5回", "はじめは 0pt あと5回");
-      await page.click("#bRedraw");
+      await holdRedraw(page);
       assert.equal(await page.textContent("#cdRedraw"), "-5pt あと4回", "2回目は 5点・あと4回");
       assert.equal(await page.evaluate(() => document.getElementById("bRedraw").classList.contains("cd")), false, "待たない（ゲージにならない）");
       // ログ
@@ -982,7 +991,7 @@ test("画面", { skip }, async (t) => {
     assert.ok(new Set(await page.evaluate(() => [...document.querySelectorAll(".ops button")].map((b) => Math.round(b.getBoundingClientRect().top)))).size <= 2, "ボタンは2段のまま");
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= 375), "横スクロールがない");
     if (process.env.KJ_GAUGE_SHOT) await page.screenshot({ path: process.env.KJ_GAUGE_SHOT });
-    for (const t of await page.locator(".ops button:not(#bRedraw)").allTextContents()) assert.doesNotMatch(t, /\d|wait/, `ボタンに残りの秒数が出ない（${t}）`);
+    for (const t of await page.locator(".ops button").allTextContents()) assert.doesNotMatch(t, /\d|wait/, `ボタンに残りの秒数が出ない（${t}）`);
     await setLeft(-0.01);
     s = await st();
     assert.equal(s.cd, false, "満ちたらゲージを外す");
@@ -1000,11 +1009,11 @@ test("画面", { skip }, async (t) => {
     await setLeft(-0.01);
     assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById("bInvert")).animationName), "none", "動きを減らす設定では光らない");
     // 引き直しに待ち（ゲージ）はない（KJ-049）。添え字は次の値段と残りの回数
-    await page.click("#bRedraw");
+    await holdRedraw(page);
     const rd = await page.evaluate(() => { const b = document.getElementById("bRedraw"); return { cd: b.classList.contains("cd"), g: b.style.getPropertyValue("--g"), text: b.textContent.trim() }; });
     assert.equal(rd.cd, false);
     assert.equal(rd.g, "");
-    assert.equal(rd.text, "Redraw -5pt あと4回");
+    assert.equal(rd.text, "Redraw-5pt あと4回"); // 2行に積む（KJ-078）。textContent では間の空白が無い
     assert.deepEqual(errors, []);
     await ctx.close();
   });
@@ -1203,7 +1212,7 @@ test("画面", { skip }, async (t) => {
       const parts = await page.evaluate(() => {
         const box = (sel) => [...document.querySelectorAll(sel)].map((e) => { const r = e.getBoundingClientRect(); return { sel, l: r.left, t: r.top, r: r.right, b: r.bottom, w: r.width, h: r.height, shown: r.width > 0 && r.height > 0 }; });
         return [].concat(
-          box("#clock"), box("#cpuScore"), box("#cpuCount"), box("#field > *"), box("#takes"), box("#info"), box(".ops button"),
+          box("#clock"), box("#cpuScore"), box("#cpuCount"), box("#field > *"), box("#takes"), box("#info"), box(".ops button"), box("#bBack"), box("#bRedraw"),
           box("#meHand > *"), box("#meTray > *"), box("#meScore"), box("#meCount"), box("#msg").slice(0, 0));
       });
       const rows = await page.evaluate(() => { const r = document.getElementById("row").getBoundingClientRect(); return [{ sel: "#row", l: r.left, t: r.top, r: r.right, b: r.bottom, shown: r.height > 0 }]; });
@@ -1215,7 +1224,12 @@ test("画面", { skip }, async (t) => {
       }
       assert.equal(parts.filter((p) => p.sel === "#meHand > *").length, 8);
       assert.equal(parts.filter((p) => p.sel === "#meTray > *").length, await page.evaluate(() => __KJ.data.rules.split_extra));
-      assert.equal(parts.filter((p) => p.sel === ".ops button").length, 8, "ボタンは8つ");
+      assert.equal(parts.filter((p) => p.sel === ".ops button").length, 6, "卓のボタンは6つ（Play と群の5つ。Back は台の右端・Redraw は卓の外。KJ-078）");
+      const bk = parts.find((p) => p.sel === "#bBack"), rdp = parts.find((p) => p.sel === "#bRedraw");
+      assert.ok(bk.w >= 64 && bk.h >= 48, `Back は 64×48 以上（${bk.w}×${bk.h}）`);
+      assert.ok(rdp.h >= 36, `Redraw は指で押せる高さ（${rdp.h}）`);
+      assert.ok(parts.find((p) => p.sel === "#meScore").t <= rdp.b && rdp.t <= parts.find((p) => p.sel === "#meScore").b, "Redraw は「あなた ○点 手札」と同じ行");
+      assert.ok(await page.evaluate(() => document.getElementById("bBack").parentElement.contains(document.getElementById("row"))), "Back は台と同じ行");
       // 札は指で押せる大きさ（40px 以上）。ボタンは2段まで
       for (const p of parts.filter((x) => x.sel === "#meHand > *" || x.sel === "#meTray > *")) assert.ok(p.w >= 40 && p.h >= 40, `手札・ストックの札が 40px 以上（${p.w}×${p.h}）`);
       const tops = new Set(parts.filter((p) => p.sel === ".ops button").map((p) => Math.round(p.t)));
@@ -1225,7 +1239,7 @@ test("画面", { skip }, async (t) => {
       // 待ち時間の表示が入った形でも2段のまま
       await page.evaluate(() => { const G = __KJ.game; for (const k of ["invert", "cycle", "homophone"]) G.me.cd[k] = G.now() + 0.5; G.me.score = 0; G.me.redraws = 4; __KJ.render(); }); // ゲージが出ている形（KJ-034）・引き直しの添え字がいちばん長い形（-20pt あと1回。KJ-049）
       assert.ok(new Set(await page.evaluate(() => [...document.querySelectorAll(".ops button")].map((b) => Math.round(b.getBoundingClientRect().top)))).size <= 2, "待ち時間が出ても2段");
-      assert.deepEqual(await page.evaluate(() => [...document.querySelectorAll(".ops button")].filter((b) => b.scrollWidth > b.clientWidth + 1).map((b) => b.id)), [], "待ち時間が出てもボタンの中身が枠に収まる");
+      assert.deepEqual(await page.evaluate(() => [...document.querySelectorAll(".ops button,#bBack,#bRedraw")].filter((b) => b.scrollWidth > b.clientWidth + 1).map((b) => b.id)), [], "待ち時間が出てもボタンの中身が枠に収まる");
       // 横にあふれない
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= 375), "横スクロールがない");
       // 手札と場とストックの札の字が読める大きさ
@@ -2131,15 +2145,15 @@ test("画面", { skip }, async (t) => {
     assert.ok(z.play[1] > z.set[0][1] && z.play[0] > z.set[0][0] * 1.5, `Play は大きい（${z.play}・${z.set[0]}）`);
     assert.ok(new Set(z.set.map((s) => s[1])).size === 1, "群は同じ高さ");
     const quiet = await page.evaluate(() => ["bBack", "bRedraw"].map((id) => { const cs = getComputedStyle(document.getElementById(id)); return [cs.backgroundColor, cs.borderBottomWidth]; }));
-    assert.deepEqual(quiet, [["rgba(0, 0, 0, 0)", "0px"], ["rgba(0, 0, 0, 0)", "0px"]], "Back・Redraw は文字だけ");
+    assert.deepEqual(quiet, [["rgba(0, 0, 0, 0)", "1px"], ["rgba(0, 0, 0, 0)", "1px"]], "Back・Redraw は地なし・枠線だけ（KJ-078。Back は卓の上の明るい線）");
     // 文字が読める明暗差：押せるとき・押せないとき・待ち時間のゲージ（満ちた側とまだの側の両方）で 4.5 以上
-    const contrasts = () => page.evaluate(() => [...document.querySelectorAll(".ops button")].map((b) => {
+    const contrasts = () => page.evaluate(() => [...document.querySelectorAll(".ops button,#bBack")].map((b) => {
       const cs = getComputedStyle(b), bef = getComputedStyle(b, "::before");
       return { id: b.id, off: b.disabled || b.getAttribute("aria-disabled") === "true", color: cs.color, bg: cs.backgroundColor, gauge: b.classList.contains("cd") && parseFloat(bef.width) > 0 ? bef.backgroundColor : null, edge: cs.borderBottomColor };
     }));
     const check = (rows, label) => { for (const r of rows) { const under = r.bg === "rgba(0, 0, 0, 0)" ? "rgb(43, 41, 38)" : r.bg; assert.ok(ratio(r.color, under) >= 4.5, `${label} ${r.id} 文字と地（${r.color} / ${under}）`); if (r.gauge) assert.ok(ratio(r.color, r.gauge) >= 4.5, `${label} ${r.id} 文字とゲージ（${r.gauge}）`); } };
     let rows = await contrasts();
-    assert.ok(rows.filter((r) => r.id !== "bRedraw").every((r) => r.off), "何も選ばないと（Redraw のほかは）押せない");
+    assert.ok(rows.every((r) => r.off), "何も選ばないと（卓のボタンは）押せない");
     check(rows, "押せないとき");
     for (const r of rows.filter((q) => !["bBack", "bRedraw"].includes(q.id))) assert.notEqual(r.bg, "rgba(0, 0, 0, 0)", `${r.id} 押せなくても形が残る`);
     await page.locator("#meHand .tile", { hasText: "上" }).first().click();
@@ -2292,9 +2306,9 @@ test("画面", { skip }, async (t) => {
   });
   await t.test("点の演出：引き直しで減る（-〇 が出て点が揺れる）。値段が大きいほど大きい。マイナスになったら点は灰色", async () => {
     const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 }, null, null, true);
-    await page.click("#bRedraw"); // 1回目は0点：演出なし
+    await holdRedraw(page); // 1回目は0点：演出なし
     assert.equal(await page.locator("#fxPts .pf").count(), 0, "0点の引き直しでは出ない");
-    await page.click("#bRedraw"); // 2回目 -5
+    await holdRedraw(page); // 2回目 -5
     await page.waitForSelector("#fxPts .pf.loss", { state: "attached" });
     assert.equal(await page.textContent("#fxPts .pf.loss"), "-5");
     const fsA = await page.locator("#fxPts .pf.loss").evaluate((e) => parseFloat(getComputedStyle(e).fontSize));
@@ -2304,7 +2318,7 @@ test("画面", { skip }, async (t) => {
     assert.equal(col, "rgb(107, 102, 93)", "点は灰色（--lose）");
     assert.match(await page.textContent("#meScore"), /^-5 点/);
     await page.waitForFunction(() => document.getElementById("fxPts").childElementCount === 0, null, { timeout: 4500 });
-    await page.click("#bRedraw"); await page.click("#bRedraw"); // -10・-15
+    await holdRedraw(page); await holdRedraw(page); // -10・-15
     await page.waitForSelector("#fxPts .pf.loss", { state: "attached" });
     const fsB = await page.locator("#fxPts .pf.loss").last().evaluate((e) => parseFloat(getComputedStyle(e).fontSize));
     assert.ok(fsB > fsA, `値段が大きいほど大きい（${fsA}→${fsB}）`);
@@ -2372,7 +2386,7 @@ test("画面", { skip }, async (t) => {
     assert.equal(await page.locator("#fxPts .pf.ring").count(), 0, "光の輪は出ない");
     assert.equal(await page.evaluate(() => document.getAnimations().filter((a) => a.effect && a.effect.target && (a.effect.target.closest("#fxPts") || a.effect.target.closest("#meScore"))).length), 0, "演出の動きは無い");
     await page.locator("#field .tile").nth(0).click(); await page.locator("#field .tile").nth(1).click();
-    await page.click("#bRedraw"); await page.click("#bRedraw"); // 0点・-5
+    await holdRedraw(page); await holdRedraw(page); // 0点・-5
     assert.equal(await page.textContent("#fxPts .pf.loss"), "-5", "-5 は出る");
     assert.equal(await page.evaluate(() => document.getAnimations().filter((a) => a.effect && a.effect.target && (a.effect.target.closest("#fxPts") || a.effect.target.closest("#meScore"))).length), 0, "揺れない");
     await page.waitForFunction(() => document.getElementById("fxPts").childElementCount === 0, null, { timeout: 4500 });

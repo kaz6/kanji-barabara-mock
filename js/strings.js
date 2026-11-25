@@ -42,8 +42,11 @@
     bCycle: Object.freeze(["", "cycle", "ycle"]),
     bHomo: Object.freeze(["", "homophone", "ame reading"]),
   });
-  // ボタンの中身の HTML（LOGO のあるボタンは印の SVG 入り。無いボタンは文字だけ）
+  // Back の左向きの矢印（KJ-078。矢印の形は仮決め）。文字と同じ高さ・色（currentColor）。読み上げには出さない（文字は Back のまま）
+  const BACK_ARROW = '<svg class="ic ic-back" viewBox="0 0 16 24" style="width:1.1em;height:1.2em" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M14 12H3M7.5 7.5L3 12L7.5 16.5"/></g></svg>';
+  // ボタンの中身の HTML（LOGO のあるボタンは印の SVG 入り。無いボタンは文字だけ。Back だけ左向きの矢印＋文字）
   function buttonHtml(id) {
+    if (id === "bBack") return `${BACK_ARROW}<span class="bk">${BUTTONS.bBack}</span>`;
     const lg = LOGO[id];
     if (lg && lg[1] === "cut") return `<span class="sp-a">${lg[0]}</span><span class="sp-cut" aria-hidden="true"></span><span class="sp-b">${lg[2]}</span>`;
     return lg ? `${lg[0]}${iconSvg(lg[1])}${lg[2]}` : BUTTONS[id];
@@ -60,6 +63,7 @@
     title: "漢字版（仮）",
     lead: (score, min) => `漢字を割ってくっつけて、言葉を放つ。先に ${score} 点か ${min} 分で、多い方が勝ち。`,
     tray: (n, max) => `ストック ${n} / ${max}`,
+    redrawHold: "長押しで引き直し", // Redraw を1回タップしたときに小さく出す（KJ-078。引き直しは長押し。🚫 ではない）
   });
   return Object.freeze({ ICON_SHAPES, iconSvg, BUTTONS, LOGO, buttonHtml, redrawNote, TEXT });
 });
