@@ -67,7 +67,8 @@ test("表紙：題字「バラバラ新報」を二重罫線で挟み、すぐ�
   try {
     const url = `http://127.0.0.1:${srv.address().port}/index.html`;
     const { ctx, page, errors } = await open(browser, url);
-    assert.equal((await page.textContent("#mastTitle")).trim(), "バラバラ新報");
+    assert.equal((await page.textContent("#mastName")).trim(), "バラバラ新報");
+    assert.equal((await page.textContent("#mastTitle")).trim(), "バラバラ新報", "枠の中の字は題字だけ");
     assert.equal(await page.textContent("#mastNo"), "第一號");
     const date = await page.textContent("#mastDate");
     assert.match(date, /^[〇一二三四五六七八九]{4}年[一二三四五六七八九十]+月[一二三四五六七八九十]+日$/);
@@ -77,13 +78,45 @@ test("表紙：題字「バラバラ新報」を二重罫線で挟み、すぐ�
       const t = getComputedStyle(document.getElementById("mastTitle")), l = getComputedStyle(document.querySelector(".mast-line"));
       const r = (id) => document.getElementById(id).getBoundingClientRect();
       const title = r("mastTitle"), no = r("mastNo"), dt = r("mastDate");
-      return { tt: t.borderTopStyle, tb: t.borderBottomStyle, lb: l.borderBottomStyle, below: no.top >= title.bottom - 1, noLeft: no.left < innerWidth / 3, dtMid: Math.abs((dt.left + dt.right) / 2 - innerWidth / 2) < 6, vis: document.getElementById("mast").offsetParent !== null };
+      return { tt: t.borderTopStyle, tb: t.borderBottomStyle, tl: t.borderLeftStyle, tr: t.borderRightStyle, lb: l.borderBottomStyle, below: no.top >= title.bottom - 1, noLeft: no.left < innerWidth / 3, dtMid: Math.abs((dt.left + dt.right) / 2 - innerWidth / 2) < 6, vis: document.getElementById("mast").offsetParent !== null };
     });
-    assert.deepEqual(st, { tt: "double", tb: "double", lb: "double", below: true, noLeft: true, dtMid: true, vis: true }, "題字の上下・号数の行の下が二重罫線／号数は左・日付は中／題字の下の行");
+    assert.deepEqual(st, { tt: "double", tb: "double", tl: "double", tr: "double", lb: "double", below: true, noLeft: true, dtMid: true, vis: true }, "題字の枠（四方）・号数の行の下が二重罫線／号数は左・日付は中／題字の下の行");
     await play(page);
     assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById("mast")).display), "none", "試合の画面には題字を出さない");
     assert.deepEqual(errors, []);
     await ctx.close();
+  } finally { await browser.close(); srv.close(); }
+});
+
+test("表紙の絵柄（KJ-095）：題字の枠の後ろに昇る弁柄の日と放射18本。題字は札の色の地・墨の枠で放射の上。表紙だけ。375／320px で収まる", { skip }, async () => {
+  const srv = await serve(); const browser = await chromium.launch();
+  try {
+    const url = `http://127.0.0.1:${srv.address().port}/index.html`;
+    for (const w of [375, 320]) {
+      const { ctx, page, errors } = await open(browser, url, { vp: { width: w, height: 700 } });
+      const st = await page.evaluate(() => {
+        const box = document.getElementById("mastTitle"), svg = box.querySelector("svg.mast-sun"), name = document.querySelector(".mast-name span");
+        const bs = getComputedStyle(box), ns = getComputedStyle(name), b = box.getBoundingClientRect(), n = name.getBoundingClientRect();
+        const rays = [...svg.querySelectorAll("g path")], sun = svg.querySelector("circle");
+        const sr = svg.getBoundingClientRect();
+        return {
+          rays: rays.length, rayFill: svg.querySelector("g").getAttribute("fill"), rayOp: svg.querySelector("g").getAttribute("fill-opacity"),
+          sunFill: sun.getAttribute("fill"), sunCx: sun.getAttribute("cx"), svgInBox: sr.left >= b.left - 1 && sr.right <= b.right + 1 && sr.top >= b.top - 1 && sr.bottom <= b.bottom + 1,
+          boxBg: bs.backgroundColor, nameBg: ns.backgroundColor, nameBorder: ns.borderTopStyle + " " + ns.borderTopWidth + " " + ns.borderTopColor,
+          nameInside: n.left >= b.left && n.right <= b.right,
+          noHScroll: document.documentElement.scrollWidth <= innerWidth, overflow: bs.overflow,
+          aria: svg.getAttribute("aria-hidden"),
+        };
+      });
+      assert.deepEqual(st, { rays: 18, rayFill: "#9c3b2e", rayOp: ".85", sunFill: "#9c3b2e", sunCx: "181", svgInBox: true, boxBg: "rgb(246, 238, 214)", nameBg: "rgb(246, 238, 214)", nameBorder: "solid 2px rgb(42, 38, 34)", nameInside: true, noHScroll: true, overflow: "hidden", aria: "true" }, `${w}px：日と放射と題字の枠`);
+      // 題字が放射の上に重なっている（題字の中心の点で最前面が題字）
+      const top = await page.evaluate(() => { const nm = document.querySelector(".mast-name"), sv = document.querySelector(".mast-sun"); return { z: getComputedStyle(nm).zIndex, pos: getComputedStyle(nm).position, after: !!(sv.compareDocumentPosition(nm) & Node.DOCUMENT_POSITION_FOLLOWING), svgPe: getComputedStyle(sv).pointerEvents }; });
+      assert.deepEqual(top, { z: "1", pos: "absolute", after: true, svgPe: "none" }, `${w}px：題字は放射の上（z-index・DOM の順）`);
+      await play(page);
+      assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById("mast")).display), "none", "試合の画面には絵柄を出さない");
+      assert.deepEqual(errors, []);
+      await ctx.close();
+    }
   } finally { await browser.close(); srv.close(); }
 });
 
@@ -175,7 +208,7 @@ test("色：紙・札・墨・弁柄。字と地の明暗差は 4.5 以上（表
     assert.deepEqual(root, { "--bg": "#e8dbb4", "--tile": "#f6eed6", "--ink": "#2a2622", "--accent": "#9c3b2e", "--sub": "#625a50", "--line": "#a0957b" });
     assert.equal(await page.evaluate(() => getComputedStyle(document.body).backgroundColor), "rgb(232, 219, 180)");
     // 表紙
-    for (const sel of ["#mastTitle", "#mastNo", "#mastDate", "#title", "#lead", ".setup .gt", "#setupInfo", '#opp label:not(:has(input:checked))', "#opp label:has(input:checked)", "#start", "#bTutorial", "#face label:not(:has(input:checked))", "#face label:has(input:checked)"]) {
+    for (const sel of ["#mastTitle", "#mastName", "#mastNo", "#mastDate", "#title", "#lead", ".setup .gt", "#setupInfo", '#opp label:not(:has(input:checked))', "#opp label:has(input:checked)", "#start", "#bTutorial", "#face label:not(:has(input:checked))", "#face label:has(input:checked)"]) {
       const r = await ratio(page, sel);
       assert.ok(r >= 4.5, `表紙 ${sel} の明暗差 ${r}`);
     }
