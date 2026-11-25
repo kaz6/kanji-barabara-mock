@@ -304,16 +304,6 @@ details ul{padding-left:18px}
 /* ストックが空のときは低く薄く（札が入ったら手札と同じ形）。引きずっている間は、落とせるよう元の大きさにする（KJ-010） */
 .tray.empty .slot{aspect-ratio:auto;height:18px}
 body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
-  /* 並び B（KJ-085）：下の段。Back は左3割（枠線付き）・Play は右7割。押しやすく 56px 以上 */
-  .dock{margin:10px 0}
-  .dock .dock-set{margin-bottom:6px}
-  .dock .dock-set button.op{flex:1 1 auto;padding:9px 6px;min-height:44px;white-space:nowrap}
-  .dock .dock-set button.op#bHomo{flex:2 1 auto}
-  .dock .dock-row{display:flex;gap:6px}
-  .table.dock .dock-row button.op.back{flex:3 1 0;min-height:56px}
-  .dock .dock-row .ops-main{flex:7 1 0;display:block}
-  .dock .dock-row .ops-main button.op.main{display:block;width:100%;min-height:56px}
-  body.layout-b .stage>.ops{display:none}
 /* 遊ぶ画面を375×700に収める（KJ-010）：札は小さく（40px以上）、場は1行、CPU の手札は伏せて枚数だけ、ボタンは2段 */
 @media (max-width:540px){
   main{padding:8px 10px 32px}
@@ -351,12 +341,6 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
   #bRedraw .cdv{width:auto;white-space:nowrap}
   .me .side-head{min-height:40px}
   .trayhead{margin:4px 0 2px;line-height:1.3}
-  /* 並び B（KJ-085）：狭い幅の字の大きさは A の .ops-set と同じ（540px 以下）。基本の規則はこの上の @media の外 */
-  .dock{padding:8px 8px 10px;margin:6px 0}
-  .dock .dock-set{margin-bottom:4px}
-  .dock .dock-row{gap:4px}
-  .dock .dock-set button.op{font-size:13px;padding:6px 2px;min-width:0;text-align:center}
-  .dock .dock-set button.op#bHomo{white-space:normal;line-height:1.25}
 </style>
 </head>
 <body>
@@ -383,7 +367,6 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
       <button class="op" id="bRoomCancel" hidden>やめる</button>
     </div>
     <div class="grp" id="grpVib" hidden><p class="gt">振動</p><span class="opp" id="vib" role="radiogroup" aria-label="振動"></span></div>
-    <div class="grp" id="grpLay"><p class="gt">並び（試合の画面）</p><span class="opp" id="layoutPick" role="radiogroup" aria-label="並び"></span></div>
     <p class="note" id="setupInfo"></p>
     <button class="op main" id="start">はじめる</button>
     <button class="op" id="bTutorial" hidden></button>
@@ -469,12 +452,6 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
     <ul class="log" id="released"></ul>
   </section>
 
-  <!-- 並び B（KJ-085。試すため）：Split・Join・Flip・Cycle・Same reading の5つと Back・Play を、放った言葉の下の暗い段に移す。A のときは空で隠す。ボタンは移すだけ（id・働きは同じ） -->
-  <section class="table dock" id="dock" hidden>
-    <div class="dock-set" id="dockSet"></div>
-    <div class="dock-row" id="dockRow"></div>
-  </section>
-
   </div>
 
   <details>
@@ -505,8 +482,7 @@ const LVL_KEY="kj-level";
 let level=null;     // レベル（"G1"〔小1〕／"N5"／"N4"）。はじめるときに効く。端末に覚える
 let row=[];         // 選んだ札の id（選んだ順。台にはその写しを左から並べる）
 let lastTried="";
-const OPP_KEY="kj-opponent",TIME_KEY="kj-time",VIB_KEY="kj-vibe",LAY_KEY="kj-layout";
-let layout="A"; // 試合の画面の並び（KJ-085。試すため）。A＝今の並び／B＝操作を放った言葉の下にまとめる。端末に覚える
+const OPP_KEY="kj-opponent",TIME_KEY="kj-time",VIB_KEY="kj-vibe";
 let opponent=null;  // 相手のキー（weak・fair・normal・room。solo は画面から外した〔KJ-056〕）。端末に覚える（KJ-007）。画面では「遊び方」と「強さ」の2段で選ぶ（KJ-045）
 let cpuPower="weak"; // 「CPU と」のときの強さ。遊び方を行き来しても覚えている
 let timeLimit=null; // 制限時間（秒）。端末に覚える（KJ-007）
@@ -538,21 +514,6 @@ function loadSettings(){
   const l=lsGet(LVL_KEY);level=K.LEVELS.some(x=>x.key===l)?l:(D.rules.level_default||"N4");
   timeLimit=K.normTime(D,lsGet(TIME_KEY));
   vibeOn=lsGet(VIB_KEY)!=="0"; // 振動の入り切り（KJ-074）。覚えていなければ入
-  layout=lsGet(LAY_KEY)==="B"?"B":"A"; // 並び（KJ-085）。覚えていなければ A
-}
-// ---------- 並び（KJ-085）：B のとき、Split〜Same reading・Back・Play を下の段（#dock）へ移す。A に戻すと元の場所へ ----------
-function applyLayout(){
-  const b=layout==="B",stage=document.querySelector(".stage");
-  document.body.classList.toggle("layout-b",b);
-  $("dock").hidden=!b;
-  const back=$("bBack"),mainEl=$("bRelease").parentElement,setEl=$("bSplit").parentElement;
-  if(b){
-    $("dockSet").appendChild(setEl);$("dockRow").appendChild(back);$("dockRow").appendChild(mainEl);
-  }else{
-    const o=stage.querySelector(".ops");
-    o.appendChild(mainEl);o.appendChild(setEl);
-    stage.querySelector(".rowline").appendChild(back);
-  }
 }
 // ---------- 振動（KJ-074。D-092）：自分の手のときだけ。形は rules.vibrate（K.vibratePattern）。navigator.vibrate が無い端末（iOS の Safari など）では何もしない ----------
 let vibeOn=true;
@@ -578,7 +539,6 @@ function buildPickers(){
   radios($("pow"),"pow",K.CPU_POWERS.map(o=>({value:o.key,label:o.label})),cpuPower,v=>{cpuPower=v;opponent=K.opponentKey("cpu",v);lsSet(OPP_KEY,opponent)});
   radios($("lvl"),"lvl",K.LEVELS.map(o=>({value:o.key,label:o.short,title:o.label})),level,v=>{level=v;lsSet(LVL_KEY,v);T=tablesFor(level);showCounts()});
   if(canVibe()){$("grpVib").hidden=false;radios($("vib"),"vib",[{value:"1",label:"入"},{value:"0",label:"切"}],vibeOn?"1":"0",v=>{vibeOn=v==="1";lsSet(VIB_KEY,v);if(vibeOn)buzz("take")})} // 振動が使えない端末には出さない。入にしたとき、1回だけ試しに震える
-  radios($("layoutPick"),"lay",[{value:"A",label:"A 台のそばに Back"},{value:"B",label:"B 下に操作をまとめる"}],layout,v=>{layout=v==="B"?"B":"A";lsSet(LAY_KEY,layout);applyLayout()});
   radios($("tim"),"tim",K.timeChoices(D).map(sec=>({value:sec,label:K.timeLabel(sec)})),timeLimit,v=>{timeLimit=+v;lsSet(TIME_KEY,v);buildHowto()});
 }
 const playMode=()=>K.readOpponent(D,opponent).mode; // cpu／room
@@ -1485,7 +1445,7 @@ document.addEventListener("visibilitychange",()=>{
 window.__KJ={get game(){return G},get tut(){return TUT},get row(){return row},get tables(){return T},get mc(){return MC},get room(){return ROOM},data:D,render,drain}; // ブラウザのテスト用
 
 Promise.all(K.FILES.map(f=>fetch(`data/${f}.json`).then(r=>r.json()).then(j=>D[f]=j)))
-  .then(()=>{preloadFx();loadSettings();applyLayout();T=tablesFor(level);buildPickers();buildHowto();showCounts();roomUi();$("bTutorial").textContent=D.tutorial.ui.button;$("bTutorial").hidden=false})
+  .then(()=>{preloadFx();loadSettings();T=tablesFor(level);buildPickers();buildHowto();showCounts();roomUi();$("bTutorial").textContent=D.tutorial.ui.button;$("bTutorial").hidden=false})
   .catch(e=>{$("setupInfo").textContent="データを読めませんでした（file:// では開けません。Pages かローカルのサーバーで開いてください）"});
 </script>
 </body>

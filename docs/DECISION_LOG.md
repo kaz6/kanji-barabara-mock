@@ -1201,3 +1201,11 @@ R-025〜R-027 はカードに書いてあった仮置き、R-028〜R-031 は係�
 - テスト：数字は `D.rules.hint` から読む（`tests/helpers.js` の `hintNow`・`withHint`）。続けてはじかれた形は `withHint({ fail_streak: 3, timed_sec: 0 })` で今まで通り動くことだけ確かめる
 - 触っていない：ヒントの見た目、点、残り時間を画面に出すこと、チュートリアルの文（`data/tutorial.json` の「分からなくなったら、札が光ってヒントが出る」はそのまま）
 - 戻し方：`rules.json` の `fail_streak` を 3・`timed_sec` を 0 にすれば元の形（この PR の merge コミットの revert でも戻る。端末に残るものは無い）
+
+### R-115 並び B と、はじめる前の画面の「並び：A／B」の切り替えを消す（KJ-089。受け箱 P-089。作者 2026-11-25 16:33・16:34）
+
+- 作者の言葉：「上下行き来が発生して大変でした。aベースでいきます」「けしますー」
+- カードどおりに作った：はじめる前の画面から「並び」を消し、B のための作り（index.html の `applyLayout`・`#dock`・B の CSS・`kj-layout` を読む所）を消した。PR #80（R-113）で index.html に足した分をそのまま外したので、試合の画面は A のまま（見た目も働きも変えていない）
+- 端末に残った `kj-layout` は読まない（消す処理は無し）。テスト：tests/layoutab.browser.test.mjs を「切り替えも下の段も無い・`kj-layout` が B でも壊れた値でも A の置き場」を見るものに置き替え。CLAUDE.md のテスト一覧と docs/STRINGS.md の「並び」の行を直した
+- 触っていない：A の並び・見た目、新聞の見た目
+- 戻し方：この PR の merge コミットを revert（index.html・tests・docs。端末に残るものは無い）
