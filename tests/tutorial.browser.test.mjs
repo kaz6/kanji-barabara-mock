@@ -7,6 +7,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
+import { readBox } from "./dragwait.mjs";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const require = createRequire(import.meta.url);
@@ -66,9 +67,9 @@ async function autoTaken(page) {
   await page.waitForFunction(() => __KJ.game.me.takes === 0 && !document.querySelector('body > .tile[style*="position: fixed"]'), null, { timeout: 5000 });
 }
 async function dragTo(page, from, to, rx, ry) {
-  // 札は描き直しで作り替わる。その一瞬は位置が読めない（null）ので、両方読めるまで待ち直す（main でも数回に1回落ちていた）
-  let f = null, tb = null;
-  for (let k = 0; k < 40 && !(f && tb); k++) { f = await tile(page, from).boundingBox(); tb = await tile(page, to).boundingBox(); if (!(f && tb)) await page.waitForTimeout(50); }
+  // 札は描き直しで作り替わる。その一瞬は位置が読めない（null）ので、見えて大きさがあるのを待ってから読む（KJ-100。tests/dragwait.mjs）
+  const f = await readBox(tile(page, from));
+  const tb = await readBox(tile(page, to));
   const x1 = f.x + f.width / 2, y1 = f.y + f.height / 2, x2 = tb.x + tb.width * rx, y2 = tb.y + tb.height * ry;
   await page.mouse.move(x1, y1); await page.mouse.down();
   await page.mouse.move((x1 + x2) / 2, (y1 + y2) / 2, { steps: 4 });

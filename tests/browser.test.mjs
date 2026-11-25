@@ -7,6 +7,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
+import { readBox } from "./dragwait.mjs";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const require = createRequire(import.meta.url);
@@ -781,7 +782,7 @@ test("画面", { skip }, async (t) => {
       const { ctx, page, errors } = await open(browser, url, vp, null);
       const order = () => page.locator("#meHand > *").evaluateAll((els) => els.map((e) => e.classList.contains("tile") ? e.title : "_").join(""));
       assert.equal(await order(), "天上天下十口休日");
-      const center = async (loc) => { const b = await loc.boundingBox(); return [b.x + b.width / 2, b.y + b.height / 2]; };
+      const center = async (loc) => { const b = await readBox(loc); return [b.x + b.width / 2, b.y + b.height / 2]; };
       const drag = async (from, to) => {
         await page.locator("#meHand .tile", { hasText: to }).first().scrollIntoViewIfNeeded();
         await page.locator("#meHand .tile", { hasText: from }).first().scrollIntoViewIfNeeded();
@@ -823,8 +824,8 @@ test("画面", { skip }, async (t) => {
     // from の札を引きずって、to の札の (rx, ry)（0〜1。引きずる前の札の大きさで）に持っていく。hold の間に見る
     const dragTo = async (from, to, rx, ry, hold) => {
       await page.locator("#meHand").scrollIntoViewIfNeeded();
-      const f = await page.locator("#meHand .tile", { hasText: from }).first().boundingBox();
-      const tb = await page.locator("#meHand .tile", { hasText: to }).first().boundingBox();
+      const f = await readBox(page.locator("#meHand .tile", { hasText: from }).first());
+      const tb = await readBox(page.locator("#meHand .tile", { hasText: to }).first());
       const x1 = f.x + f.width / 2, y1 = f.y + f.height / 2;
       const x2 = tb.x + tb.width * rx, y2 = tb.y + tb.height * ry;
       await page.mouse.move(x1, y1); await page.mouse.down();
@@ -859,7 +860,7 @@ test("画面", { skip }, async (t) => {
     await reset();
     await dragTo("十", "口", 0.5, 0.12, async () => {
       await page.evaluate(() => __KJ.render());
-      const tb = await page.locator("#meHand .tile", { hasText: "口" }).first().boundingBox();
+      const tb = await readBox(page.locator("#meHand .tile", { hasText: "口" }).first());
       await page.mouse.move(tb.x + tb.width * 0.5, tb.y + tb.height * 0.15, { steps: 2 });
       assert.deepEqual(await lit(), { c: "口", faces: "center,top", on: "top" }, "描き直しのあとも光る");
       assert.match(await joinable(), /口/);
@@ -868,7 +869,7 @@ test("画面", { skip }, async (t) => {
     await reset();
     await dragTo("十", "口", 0.5, 0.9, async () => {
       await page.evaluate(() => __KJ.render());
-      const tb = await page.locator("#meHand .tile", { hasText: "口" }).first().boundingBox();
+      const tb = await readBox(page.locator("#meHand .tile", { hasText: "口" }).first());
       await page.mouse.move(tb.x + tb.width * 0.5, tb.y + tb.height * 0.88, { steps: 2 });
       assert.deepEqual(await lit(), { c: "口", faces: "center,top", on: "" });
     });
@@ -877,8 +878,8 @@ test("画面", { skip }, async (t) => {
     await reset();
     {
       await page.locator("#meHand").scrollIntoViewIfNeeded();
-      const f = await page.locator("#meHand .tile", { hasText: "十" }).first().boundingBox();
-      const tb = await page.locator("#meHand .tile", { hasText: "口" }).first().boundingBox();
+      const f = await readBox(page.locator("#meHand .tile", { hasText: "十" }).first());
+      const tb = await readBox(page.locator("#meHand .tile", { hasText: "口" }).first());
       await page.mouse.move(f.x + f.width / 2, f.y + f.height / 2); await page.mouse.down();
       await page.mouse.move(f.x + f.width / 2, f.y - 30, { steps: 3 });
       await page.mouse.move(tb.x + tb.width * 0.75, tb.y + tb.height * 0.5);
@@ -911,8 +912,8 @@ test("画面", { skip }, async (t) => {
     const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 }, null);
     await page.evaluate(() => { const G = __KJ.game; G.me.cards.push({ id: 9700, c: "口", t: 0, fresh: false, tray: true }); __KJ.render(); });
     await page.locator("#meTray").scrollIntoViewIfNeeded();
-    const f = await page.locator("#meHand .tile", { hasText: "十" }).first().boundingBox();
-    const tb = await page.locator("#meTray .tile").first().boundingBox();
+    const f = await readBox(page.locator("#meHand .tile", { hasText: "十" }).first());
+    const tb = await readBox(page.locator("#meTray .tile").first());
     await page.mouse.move(f.x + f.width / 2, f.y + f.height / 2); await page.mouse.down();
     await page.mouse.move(tb.x + tb.width / 2, tb.y + tb.height / 2, { steps: 8 });
     await page.mouse.up();
@@ -933,7 +934,7 @@ test("画面", { skip }, async (t) => {
   await t.test("ストック（R-042）：手札の札を引きずってストックの空いたマスへ移す。ストックの札と手札の札を入れ替える。ストックの見出し", async () => {
     const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 }, null);
     assert.match(await page.textContent("#trayHead"), /^ストック \d+ \/ \d+$/);
-    const center = async (loc) => { const b = await loc.boundingBox(); return [b.x + b.width / 2, b.y + b.height / 2]; };
+    const center = async (loc) => { const b = await readBox(loc); return [b.x + b.width / 2, b.y + b.height / 2]; };
     const dragTo = async (from, to) => {
       await page.locator("#meTray").scrollIntoViewIfNeeded(); // 手札とストックが両方見える所で（先に動かしておかないと座標がずれる）
       const [x1, y1] = await center(from); const [x2, y2] = await center(to);
@@ -2086,8 +2087,8 @@ test("画面", { skip }, async (t) => {
     await page.evaluate(() => { __KJ.game.me.cards = [..."十口休日"].map((c, i) => ({ id: 9300 + i, c, t: 0, fresh: false })); __KJ.row.length = 0; __KJ.render(); });
     const drag = async (from, to, rx, ry) => {
       await page.locator("#meHand").scrollIntoViewIfNeeded();
-      const f = await page.locator("#meHand .tile", { hasText: from }).first().boundingBox();
-      const tb = await page.locator("#meHand .tile", { hasText: to }).first().boundingBox();
+      const f = await readBox(page.locator("#meHand .tile", { hasText: from }).first());
+      const tb = await readBox(page.locator("#meHand .tile", { hasText: to }).first());
       const x1 = f.x + f.width / 2, y1 = f.y + f.height / 2, x2 = tb.x + tb.width * rx, y2 = tb.y + tb.height * ry;
       await page.mouse.move(x1, y1); await page.mouse.down();
       await page.mouse.move((x1 + x2) / 2, (y1 + y2) / 2, { steps: 4 });
@@ -2271,8 +2272,8 @@ test("画面", { skip }, async (t) => {
     const drop = async (rx, ry) => {
       await page.evaluate(() => { __KJ.game.me.cards = [..."丶大上休十口日月"].map((c, i) => ({ id: 9900 + i + Math.floor(Math.random() * 1e5) * 10, c, t: 0, fresh: false })); __KJ.render(); });
       await page.locator("#meHand").scrollIntoViewIfNeeded();
-      const f = await page.locator("#meHand .tile", { hasText: "丶" }).first().boundingBox();
-      const tb = await page.locator("#meHand .tile", { hasText: "大" }).first().boundingBox();
+      const f = await readBox(page.locator("#meHand .tile", { hasText: "丶" }).first());
+      const tb = await readBox(page.locator("#meHand .tile", { hasText: "大" }).first());
       const x1 = f.x + f.width / 2, y1 = f.y + f.height / 2, x2 = tb.x + tb.width * rx, y2 = tb.y + tb.height * ry;
       await page.mouse.move(x1, y1); await page.mouse.down();
       await page.mouse.move((x1 + x2) / 2, (y1 + y2) / 2, { steps: 4 });
