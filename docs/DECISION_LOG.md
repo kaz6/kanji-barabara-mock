@@ -1290,3 +1290,11 @@ R-025〜R-027 はカードに書いてあった仮置き、R-028〜R-031 は係�
 - テスト：tests/senkyo.test.js・tests/senkyo.browser.test.mjs を足し、tests/browser.test.mjs の4か所（戦況の文・卓の地・空きマス・375×700）を直した
 - 戻し方：この PR の merge コミットを revert（index.html・js/core.js・js/strings.js・fonts/kj-zen-*.woff2・fonts/kj-paper.css・tests・docs）。端末に残るもの：localStorage `kj-news`（読まれなくなるだけ）
 
+
+### R-123 画面テストの引きずりは、札の位置が読めるまで待ってから動かす（KJ-100。受け箱 P-100）
+
+- 決めたこと：引きずる画面テストは、つかむ札と置き先が「見える・画面に入る・位置が取れて幅と高さが 0 でない」まで待ち直してから動かす。共通の手伝いは `tests/dragwait.mjs` の `readBox`・`readCenter`（最長 8 秒。待ち切れなければ何を待っていたかを書いて落とす）。固い待ち時間だけでは済ませない
+- 理由：同じ揺れが3回出た（PR #86 の手元・PR #81 の Actions・PR #89 の Actions）。どれも `tests/tutorial.browser.test.mjs` の dragTo で `boundingBox()` が null になり「Cannot read properties of null (reading 'x')」。回し直すと通る。見立て：札は描き直しで作り替わり、その一瞬は位置が null になる。遅い端末・負荷のあるときに当たる。PR #89 の前の直しは 50ms×40 回の待ち直しだけで、見えているか・大きさがあるかは見ていなかった
+- 直した所：tutorial.browser.test.mjs の dragTo と、browser.test.mjs の引きずる前の位置読み（入れ替え・くっつける・ストック・面・ログ）を `readBox` に替えた。ほかの画面テストの `boundingBox()`（位置を見るだけのもの・cpuhand・layout の押す位置）は引きずりの待ちではないので変えていない
+- 変えていない：遊びの決まり・画面・数値・データ（rules.json の version もそのまま）
+- 戻し方：この PR の merge コミットを revert（tests のみ）。端末に残るものなし
