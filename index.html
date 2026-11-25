@@ -206,6 +206,9 @@ button.op.main:disabled,button.op.main[aria-disabled=true]{background:var(--tile
 /* 待ち時間のゲージ・ヒントの光りは、どちらの形でも見える：待ち中は字を墨に戻して緑のゲージの上で読む／ヒントは薄い金の地に墨の字 */
 :root .table .ops-set button.op.cd:disabled,:root .table .ops-set button.op.cd[aria-disabled=true]{color:var(--on-table)}
 :root .table .ops-set button.op.hint.lift,:root .table .ops-set button.op.hint.lift:disabled,:root .table .ops-set button.op.hint.lift[aria-disabled=true]{background:#fff1c4;color:var(--ink);font-weight:700}
+/* ヒントの金の縁（動きを減らす設定では、これだけが光りになる）は、押せない・下線の影に消されないよう戻す。下線の形の押せるボタンは、金の縁と下線を並べる */
+:root .table .ops-set button.op.hint,:root .table .ops-set button.op.hint:disabled,:root .table .ops-set button.op.hint[aria-disabled=true]{box-shadow:0 0 0 2px var(--hint),0 0 10px 2px rgba(217,154,0,.55)}
+:root[data-btn="line"] .table .ops-set button.op.hint:not(:disabled):not([aria-disabled=true]){box-shadow:0 0 0 2px var(--hint),0 0 10px 2px rgba(217,154,0,.55),inset 0 -3px 0 var(--accent)}
 .table .ops-set button.op#bHomo{flex:2 1 auto}
 .table button.op.main{flex:1 1 auto;font-size:17px;padding:10px 12px;background:var(--accent);border:2px solid var(--ink);color:var(--bg);letter-spacing:.12em}
 .table button.op.main:disabled,.table button.op.main[aria-disabled=true]{background:var(--play-off);border-color:var(--ink);color:var(--play-off-ink);font-weight:700}

@@ -2179,7 +2179,7 @@ test("画面", { skip }, async (t) => {
         return `rgb(${[0, 1, 2].map((i) => Math.round(g[i] * o + u[i] * (1 - o))).join(", ")})`; })() : null, edge: cs.borderBottomColor };
     }));
     const OPS5 = ["bSplit", "bJoin", "bInvert", "bCycle", "bHomo"]; // KJ-099：卓の操作5つの「押せない」は薄い字（押せない部品は明暗差の決まりの外）。ほかのボタンは今まで通り 4.5 以上
-    const check = (rows, label) => { for (const r of rows) { if (r.off && OPS5.includes(r.id)) continue; const under = r.bg === "rgba(0, 0, 0, 0)" ? PAPER : r.bg; assert.ok(ratio(r.color, under) >= 4.5, `${label} ${r.id} 文字と地（${r.color} / ${under}）`); if (r.gauge) assert.ok(ratio(r.color, r.gauge) >= 4.5, `${label} ${r.id} 文字とゲージ（${r.gauge}）`); } };
+    const check = (rows, label) => { for (const r of rows) { if (r.off && OPS5.includes(r.id) && !r.gauge) continue; const under = r.bg === "rgba(0, 0, 0, 0)" ? PAPER : r.bg; assert.ok(ratio(r.color, under) >= 4.5, `${label} ${r.id} 文字と地（${r.color} / ${under}）`); if (r.gauge) assert.ok(ratio(r.color, r.gauge) >= 4.5, `${label} ${r.id} 文字とゲージ（${r.gauge}）`); } };
     let rows = await contrasts();
     assert.ok(rows.every((r) => r.off), "何も選ばないと（卓のボタンは）押せない");
     check(rows, "押せないとき");

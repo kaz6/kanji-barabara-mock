@@ -47,7 +47,7 @@ async function play(page) {
   await page.check('#opp input[value="cpu"]');
   await page.check('#pow input[value="weak"]');
   await page.click("#start");
-  // 「上」（Flip・Cycle が押せる）を選ぶ：押せるのは Flip と Cycle（と Same reading）の2〜3つ
+  // 「上」を選ぶ：押せるのは Split・Flip・Same reading、押せないのは Join・Cycle（2つ以上ずつ見る）
   await page.evaluate(() => {
     const G = __KJ.game; G.cpuTurn = () => null;
     G.me.cards = [..."上天休口辶十日下"].map((c, i) => ({ id: 9000 + i, c, t: 0, fresh: false }));
@@ -155,10 +155,18 @@ for (const look of ["white", "line"]) {
       // ヒントの光り：押せない Split も、押せる Flip も、薄い金の地・墨の字・縁の光り
       await page.evaluate(() => { const G = __KJ.game; G.hint = null; G.me.cards = [..."日分"].map((ch, i) => ({ id: 7200 + i, c: ch, t: 0, fresh: false })); window.__shift(G); __KJ.render(); });
       assert.equal(await page.evaluate(() => __KJ.game.hintActive().button), "bSplit");
-      const hint = await page.evaluate(() => { const c = getComputedStyle(document.getElementById("bSplit")); return { bg: c.backgroundColor, color: c.color, cls: document.getElementById("bSplit").className }; });
+      const hint = await page.evaluate(() => { const c = getComputedStyle(document.getElementById("bSplit")); return { bg: c.backgroundColor, color: c.color, shadow: c.boxShadow, cls: document.getElementById("bSplit").className }; });
       assert.equal(hint.bg, "rgb(255, 241, 196)", "ヒントの光りは薄い金の地");
       assert.equal(hint.color, "rgb(42, 38, 34)", "字は墨");
       assert.match(hint.cls, /hint/);
+      // 金の縁：動きを減らす設定（この試験は reduce）では縁だけが光りになる。押せない Split にも、押せる Cycle（.lift なし＝チュートリアルの「ここを押す」）にも残る
+      assert.match(hint.shadow, /rgb\(217, 154, 0\)/, "ヒントの金の縁が残る（押せない）");
+      await page.locator("#meHand .tile", { hasText: "日" }).first().click();
+      await page.evaluate(() => document.getElementById("bCycle").classList.add("hint"));
+      const sh = await page.evaluate(() => getComputedStyle(document.getElementById("bCycle")).boxShadow);
+      assert.match(sh, /rgb\(217, 154, 0\)/, "ヒントの金の縁が残る（押せる・.lift なし）");
+      if (look === "line") assert.match(sh, /rgb\(156, 59, 46\) 0px -3px 0px 0px inset/, "下線の形は金の縁と下線が並ぶ");
+      await page.evaluate(() => document.getElementById("bCycle").classList.remove("hint"));
       // 待ち時間のゲージ：使ったあと、字は墨でゲージの上で読める。ゲージ（::before）が出る
       await page.evaluate(() => { const G = __KJ.game; G.hint = null; G.me.cards = [..."上天休口辶十日下"].map((ch, i) => ({ id: 9100 + i, c: ch, t: 0, fresh: false })); window.__shift(G); __KJ.render(); });
       await page.locator("#meHand .tile", { hasText: "上" }).first().click();
