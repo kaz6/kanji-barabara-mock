@@ -103,7 +103,12 @@ button.op.cutopen .sp-a{animation:kjSpA .3s ease-in-out}button.op.cutopen .sp-b{
 .cpu .hand{gap:3px}
 .cpu .tile{font-size:clamp(14px,3.4vw,22px);cursor:default}
 .cpu .tile:hover{border-color:var(--line)}
-.cpu .tile .mk{display:none}
+.cpu .tile .mk,.cpu .tile .cut{display:none} /* 相手の札は字だけ（割れ目の点線・角の印は出さない。KJ-092） */
+/* 相手（CPU）の上の段を見せる（KJ-092。作者 2026-11-25）：CPU 対戦のときだけ（render が .peek を付ける）。見るだけ（押せない）。ストックは見せない。小さく並べて、スマホ幅でも自分の手札・ストックが画面に収まるようにする */
+.cpu #cpuHand:not(.peek){display:none}
+.cpu #cpuHand{gap:3px;pointer-events:none}
+.cpu #cpuHand .tile,.cpu #cpuHand .slot{aspect-ratio:auto;height:26px}
+.cpu #cpuHand .tile{font-size:17px;line-height:1}
 /* 場（3枚。取ったところは同じ位置に山から出る） */
 .field{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-width:240px}
 .field .tile{cursor:default}
@@ -326,7 +331,6 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
   .hand{gap:3px}
   .side{margin:6px 0}
   .side-head{height:32px;margin-bottom:2px}
-  .cpu #cpuHand{display:none}
   .cds{font-size:11px;overflow:hidden;text-overflow:ellipsis;min-width:0}
   .fieldside{display:flex;align-items:center;gap:8px;margin:6px 0}
   .fieldside .side-head{margin:0;height:auto}
@@ -1309,6 +1313,7 @@ function render(){
   row=row.filter(id=>G.byId(G.me,id));
   $("cpuSide").hidden=G.solo;
   $("cpuName").textContent=G.cpu.name;
+  $("cpuHand").classList.toggle("peek",!G.solo&&!G.match&&!G.cpu.remote); // 相手の上の段を見せるのは CPU 対戦だけ（ひとり・チュートリアル・合言葉の部屋では出さない。KJ-092）
   renderHand($("cpuHand"),G.cpu,false,false);
   renderHand($("meHand"),G.me,true,false);
   renderHand($("meTray"),G.me,true,true);

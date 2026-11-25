@@ -1889,6 +1889,7 @@ test("画面", { skip }, async (t) => {
     }
     const roles = await Promise.all([A, B].map((P) => P.page.evaluate(() => __KJ.game.match.role)));
     assert.deepEqual(roles, ["host", "guest"]);
+    for (const P of [A, B]) assert.equal(await P.page.evaluate(() => getComputedStyle(document.getElementById("cpuHand")).display), "none", "合言葉の部屋（人どうし）では相手の上の段を出さない（KJ-092）");
     const left = await Promise.all([A, B].map((P) => P.page.evaluate(() => __KJ.game.timeLeft())));
     assert.ok(Math.abs(left[0] - left[1]) < 2, "二人の残り時間がそろう " + left.join(" "));
     const fieldOf = (P) => P.page.evaluate(() => __KJ.game.field.map((x) => x.n + x.c).join(" "));
@@ -2339,7 +2340,7 @@ test("画面", { skip }, async (t) => {
   });
   await t.test("点の演出：スマホ幅でも相手が放った字は相手の欄から飛ぶ（画面の隅からではない）", async () => {
     const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 }, null, null, true);
-    assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById("cpuHand")).display), "none", "375px では相手の手札を隠している");
+    assert.notEqual(await page.evaluate(() => getComputedStyle(document.getElementById("cpuHand")).display), "none", "CPU 対戦では 375px でも相手の上の段を見せる（KJ-092）");
     await page.evaluate(() => { const G = __KJ.game; G.events.push({ type: "release", who: G.cpu.name, text: "本日", pts: 3 }); G.cpu.score += 3; __KJ.drain(); __KJ.render(); });
     await page.waitForSelector("#fxPts .pf.chip", { state: "attached" });
     const b = await page.locator("#fxPts .pf.chip").boundingBox();
