@@ -118,7 +118,7 @@ test("並び：B から A に戻すと元の場所へ（Back は台の右端）�
   } finally { await browser.close(); srv.close(); }
 });
 
-test("並び B：札を2枚選ぶと Split が下の段から押せる／切り替えても 手札・場は動かない", { skip }, async () => {
+test("並び B：札を2枚選ぶと Split が下の段から押せる／選んでも手札は動かない", { skip }, async () => {
   const srv = await serve(); const browser = await chromium.launch();
   try {
     const { ctx, page, errors } = await open(browser, `http://127.0.0.1:${srv.address().port}/index.html`, "B");
@@ -132,5 +132,23 @@ test("並び B：札を2枚選ぶと Split が下の段から押せる／切り�
     assert.equal(await page.evaluate(() => __KJ.game.me.cards.map((c) => c.id).join(",")), before);
     assert.deepEqual(errors, []);
     await ctx.close();
+  } finally { await browser.close(); srv.close(); }
+});
+
+test("並び B：広い画面（800px・560px）でも Back は左3割・Play は右7割・56px 以上で横並び", { skip }, async () => {
+  const srv = await serve(); const browser = await chromium.launch();
+  try {
+    for (const width of [560, 800]) {
+      const { ctx, page, errors } = await open(browser, `http://127.0.0.1:${srv.address().port}/index.html`, "B", { width, height: 900 });
+      await play(page);
+      const set = await box(page, "#bSplit"), back = await box(page, "#bBack"), playB = await box(page, "#bRelease");
+      assert.ok(back.h >= 56 && playB.h >= 56, `${width}px：56px 以上（${back.h}・${playB.h}）`);
+      assert.ok(Math.abs(back.t - playB.t) < 2 && back.r <= playB.l + 1, `${width}px：Back は Play の左で同じ行`);
+      const w = back.w / (back.w + playB.w);
+      assert.ok(w > 0.27 && w < 0.36, `${width}px：Back は3割（${w.toFixed(2)}）`);
+      assert.ok(back.t > set.b - 1, `${width}px：操作5つの下の行`);
+      assert.deepEqual(errors, []);
+      await ctx.close();
+    }
   } finally { await browser.close(); srv.close(); }
 });
