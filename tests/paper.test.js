@@ -83,6 +83,9 @@ test("字体：画面の字（Zen）は、ボタンの英字・数字と、画�
   const zen = faces().find((x) => x.fam === "KJ Zen" && x.weight === 400).set;
   for (const c of "PlaySplitJoinFlipCycleSamereadingBackRedraw0123456789") assert.ok(zen.has(c.codePointAt(0)), c);
   for (const c of "はじめる前に選ぶ遊び方強さレベル時間振動札の字しくみもう一度設定を変えるログ放った言葉") assert.ok(zen.has(c.codePointAt(0)), c);
+  // 表紙の題字・号数・日付（漢数字・〇）・卓の見出し（レビュー P-093：第・號が漏れていた）
+  for (const c of "バラバラ新報第號〇一二三四五六七八九十百千年月日卓　場と台") assert.ok(zen.has(c.codePointAt(0)), `${c} が Zen に無い。python3 tools/build_paper_fonts.py を回す`);
+  for (const w of [700]) assert.ok(faces().find((x) => x.fam === "KJ Zen" && x.weight === w).set.has("第".codePointAt(0)), "太字にも第がある");
 });
 
 test("字体：index.html は字体の CSS を読み、札の字は <html data-face> で替わる（初期は大正風＝Kaisei が先）", () => {

@@ -2151,7 +2151,7 @@ test("画面", { skip }, async (t) => {
     assert.equal(tile.bg, "rgb(246, 238, 214)", "札の色");
     assert.equal(tile.shadow, "none", "札に影はない");
     assert.equal(tile.mk, "rgb(42, 38, 34)", "角の印は墨色");
-    assert.ok(ratio(tile.bg, PAPER) >= 1.05 && ratio(tile.sc, PAPER) >= 2, "札は紙の上で見分けられる（札の色と縁）");
+    assert.ok(ratio(tile.bg, PAPER) >= 1.1 && ratio(tile.sc, PAPER) >= 2, "札は紙の上で見分けられる（札の色と縁）");
     assert.equal(await page.evaluate(() => { const s = getComputedStyle(document.querySelector("#meTray .slot")); return [s.backgroundColor, s.borderTopStyle].join("|"); }), "rgba(0, 0, 0, 0)|dotted", "空きマスは点線の枠だけ");
     // 点と残り時間は大きな数字。補足は小さい
     const fs = await page.evaluate(() => ({ score: parseFloat(getComputedStyle(document.querySelector("#meScore .n")).fontSize), clock: parseFloat(getComputedStyle(document.querySelector("#clock .n")).fontSize), count: parseFloat(getComputedStyle(document.getElementById("meCount")).fontSize), tray: parseFloat(getComputedStyle(document.getElementById("trayHead")).fontSize) }));
@@ -2189,7 +2189,7 @@ test("画面", { skip }, async (t) => {
     const enabled = rows.find((r) => r.id === "bInvert"), disabled = rows.find((r) => r.off && !["bBack", "bRedraw"].includes(r.id));
     assert.ok(disabled, "押せないボタンがある");
     assert.notEqual(enabled.bg, disabled.bg, "押せるときと押せないときが見分けられる");
-    assert.ok(ratio(disabled.bg, PAPER) > 1.05, "押せないボタンは紙に溶けない（一段濃い地）");
+    assert.ok(ratio(disabled.bg, PAPER) > 1.1, "押せないボタンは紙に溶けない（一段濃い地。実測 1.13）");
     await page.click("#bInvert");
     await page.evaluate(() => { const G = __KJ.game; G.me.cd.invert = G.now() + __KJ.data.rules.cooldown_sec.invert / 2; __KJ.render(); });
     await page.waitForTimeout(350);

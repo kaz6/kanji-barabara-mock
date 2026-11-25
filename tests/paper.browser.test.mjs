@@ -270,3 +270,32 @@ test("375／320px：卓・操作・Play・Back・Redraw が画面の中にあり
     }
   } finally { await browser.close(); srv.close(); }
 });
+
+test("レビュー P-093：取ったばかりの札・ヒントの札を選んでも弁柄の縁／押せない Back・Redraw と空の台の字も 4.5 以上／選びの一覧が卓にそろう／号数の行は320pxで1行", { skip }, async () => {
+  const srv = await serve(); const browser = await chromium.launch();
+  try {
+    const url = `http://127.0.0.1:${srv.address().port}/index.html`;
+    for (const w of [375, 320]) {
+      const { ctx, page, errors } = await open(browser, url, { vp: { width: w, height: 800 }, init: { "kj-issue": "20" } });
+      await page.evaluate(CONTRAST);
+      const mast = await page.evaluate(() => { const r = (id) => document.getElementById(id).getBoundingClientRect(); const n = r("mastNo"), d = r("mastDate"); return { oneLine: n.height < 24 && d.height < 24, noOverlap: n.right <= d.left }; });
+      assert.equal(await page.textContent("#mastNo"), "第二十一號");
+      assert.deepEqual(mast, { oneLine: true, noOverlap: true }, `${w}px：第二十一號でも号数が1行`);
+      await play(page);
+      // 押せない Back・Redraw・空の台の字
+      assert.equal(await page.evaluate(() => document.getElementById("bBack").disabled), true);
+      for (const sel of ["#bBack", "#bRedraw", "#row .empty"]) { const r = await ratio(page, sel); assert.ok(r >= 4.5, `${w}px ${sel}（押せない・空）の明暗差 ${r}`); }
+      // 取ったばかり・ヒント
+      const edge = await page.evaluate(() => { const out = {}; const t = document.querySelector("#meHand .tile"); for (const cls of [["new"], ["hint"], ["hint", "lift"]]) { t.className = "tile " + cls.join(" ") + " sel"; out[cls.join(".")] = getComputedStyle(t).borderTopColor; } return out; });
+      for (const [k, v] of Object.entries(edge)) assert.equal(v, "rgb(156, 59, 46)", `${w}px：${k} の札を選んだら弁柄の縁`);
+      await page.evaluate(() => __KJ.render());
+      // 選びの一覧（Same reading）：卓の幅にそろい、卓の外へはみ出さない
+      await page.locator("#meHand .tile").nth(0).click();
+      await page.evaluate(() => { const c = document.getElementById("choices"); c.innerHTML = '<div class="g"><span>x</span><button>天</button></div>'; c.classList.add("on"); });
+      const g = await page.evaluate(() => { const c = document.getElementById("choices").getBoundingClientRect(), t = document.querySelector(".table").getBoundingClientRect(); return { l: c.left - t.left, r: t.right - c.right }; });
+      assert.ok(Math.abs(g.l) <= 1 && Math.abs(g.r) <= 1, `${w}px：選びの一覧は卓にそろう（${JSON.stringify(g)}）`);
+      assert.deepEqual(errors, []);
+      await ctx.close();
+    }
+  } finally { await browser.close(); srv.close(); }
+});
