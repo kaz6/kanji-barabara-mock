@@ -165,12 +165,13 @@ test("戦況：入りきらない古い行は欄の外（左）へ流れる。�
     for (const vp of [{ width: 375, height: 800 }, { width: 320, height: 800 }]) {
       const { ctx, page, errors } = await open(browser, `http://127.0.0.1:${srv.address().port}/index.html`, { vp });
       await play(page);
-      const hs0 = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth); // 戦況を入れる前の横幅（320px は KJ-097 より前から 23px はみ出す。main でも同じ）
       await addRel(page, [["me", "空白", 3, ["新", "話"]]]);
       const h1 = await page.evaluate(() => Math.round(document.getElementById("senkyo").getBoundingClientRect().height));
       const rows = [];
       for (let i = 0; i < 12; i++) rows.push([i % 2 ? "me" : "cpu", ["学校名", "天上天下", "休日", "新月", "口話", "大雨"][i % 6], 3 + i, ["人", "木"]]);
       await addRel(page, rows);
+      // 戦況の欄だけを隠したときの横幅（320px は KJ-097 より前から手札の欄でみ出す。字体のある環境で幅がちがう）。欄を出したときにそれより増えないこと
+      const hs0 = await page.evaluate(() => { const e = document.getElementById("senkyo"); e.style.display = "none"; const v = document.documentElement.scrollWidth - innerWidth; e.style.display = ""; return v; });
       const st = await page.evaluate(() => {
         const ul = document.getElementById("released"), lis = [...ul.children], u = ul.getBoundingClientRect(), sec = document.getElementById("senkyo").getBoundingClientRect();
         const first = lis[0].getBoundingClientRect(), second = lis[1].getBoundingClientRect(), last = lis[lis.length - 1].getBoundingClientRect();
