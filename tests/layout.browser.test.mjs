@@ -250,16 +250,23 @@ test("置き場（KJ-090）：はじめる前の画面に上の3つ・ログの�
   const bk = await box(page, "#bBack"), rd = await box(page, "#bRedraw"), me = await box(page, "#meSide");
   assert.ok(rd.r <= 360 && rd.r <= me.r + 1 && bk.l >= 0, `360px・-15点でも Back・Redraw は欄の中（${Math.round(rd.r)} / ${Math.round(me.r)}）`);
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, "横スクロールが出ない");
-  // CPU の行：長い文でも残り時間と重ならず、文が切れない
-  await page.evaluate(() => { document.getElementById("cpuCds").textContent = "相手の通信が切れた"; });
-  const cds = await page.evaluate(() => { const e = document.getElementById("cpuCds"); return { cut: e.scrollWidth > e.clientWidth + 1 }; });
-  assert.equal(cds.cut, false, "「相手の通信が切れた」が切れない");
-  const c1 = await box(page, "#cpuCds"), c2 = await box(page, "#clock");
-  assert.ok(c1.r <= c2.l || c1.b <= c2.t + 1, "文と残り時間が重ならない");
+  // CPU の行：高さは変わらない。「相手の通信が切れた」は切れず、出ているあいだは残り時間を引っ込める
+  const h0 = (await box(page, "#cpuSide")).h;
+  // 描き直しの時計に上書きされないよう、1回の評価の中で入れて測る
+  const gone = await page.evaluate(() => { const e = document.getElementById("cpuCds"); e.textContent = "相手の通信が切れた"; e.className = "cds gone"; return { cut: e.scrollWidth > e.clientWidth + 1, clock: getComputedStyle(document.getElementById("clock")).display }; });
+  assert.equal(gone.cut, false, "「相手の通信が切れた」が切れない");
+  assert.equal(gone.clock, "none", "出ているあいだは残り時間を引っ込める");
+  const wait = await page.evaluate(() => { const e = document.getElementById("cpuCds"); e.textContent = "待ち：反転 9・巡り 9・同音 9"; e.className = "cds"; return document.getElementById("cpuSide").getBoundingClientRect().height; });
+  assert.ok(Math.abs(wait - h0) <= 1, "待ちが出ても CPU の行の高さは変わらない（卓が上下しない）");
+  await page.evaluate(() => { document.getElementById("cpuCds").textContent = ""; });
   // 選びの一覧が出ていても Back を押せる
   await page.evaluate(() => { __KJ.game.me.score = 0; __KJ.render(); });
   await page.locator("#meHand .tile", { hasText: "天" }).first().click();
-  await page.evaluate(() => { const c = document.getElementById("choices"); c.classList.add("on"); c.dataset.kind = "homo"; c.innerHTML = '<div class="g"><span>x</span><button>山</button><button>川</button><button>玉</button></div>'; });
+  await page.evaluate(() => { const c = document.getElementById("choices"); c.classList.add("on"); c.dataset.kind = "homo"; c.innerHTML = '<div class="g"><span>x</span>' + [..."山川玉回代県借天上下口日"].map((x) => `<button>${x}</button>`).join("") + "</div>"; });
+  // 一覧の字は Back・Redraw と重ならない（隠れて選べなくならない）
+  const bb = await box(page, "#bBack"), rr = await box(page, "#bRedraw");
+  const hit = await page.evaluate(([a, b]) => [...document.querySelectorAll("#choices button")].filter((e) => { const r = e.getBoundingClientRect(); return [a, b].some((q) => r.left < q.r && r.right > q.l && r.top < q.b && r.bottom > q.t); }).length, [bb, rr]);
+  assert.equal(hit, 0, "一覧の字が Back・Redraw の下に隠れない");
   await page.click("#bBack");
   assert.equal(await page.locator("#row .tile").count(), 0, "一覧が出ていても Back で戻る");
   assert.deepEqual(errors, []);

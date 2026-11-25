@@ -2153,7 +2153,7 @@ test("画面", { skip }, async (t) => {
     assert.ok(z.play[1] > z.set[0][1] && z.play[0] > z.set[0][0] * 1.5, `Play は大きい（${z.play}・${z.set[0]}）`);
     assert.ok(new Set(z.set.map((s) => s[1])).size === 1, "群は同じ高さ");
     const quiet = await page.evaluate(() => ["bBack", "bRedraw"].map((id) => { const cs = getComputedStyle(document.getElementById(id)); return [cs.backgroundColor, cs.borderBottomWidth]; }));
-    assert.deepEqual(quiet, [["rgba(0, 0, 0, 0)", "1px"], ["rgba(0, 0, 0, 0)", "1px"]], "Back・Redraw は地なし・枠線だけ（KJ-078。Back は卓の上の明るい線）");
+    assert.deepEqual(quiet, [["rgba(0, 0, 0, 0)", "1px"], ["rgba(0, 0, 0, 0)", "1px"]], "Back・Redraw は地なし・枠線だけ（KJ-078。Back は背景の上の墨色の線）");
     // 文字が読める明暗差：押せるとき・押せないとき・待ち時間のゲージ（満ちた側とまだの側の両方）で 4.5 以上
     const contrasts = () => page.evaluate(() => [...document.querySelectorAll(".ops button")].map((b) => {
       const cs = getComputedStyle(b), bef = getComputedStyle(b, "::before");
