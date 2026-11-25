@@ -1831,7 +1831,6 @@
     push("p", str.slice(last));
     return out;
   }
-  const SENKYO_STOP_QUIET = new Set(["はじまり", "ためした", "ヒント", "終わり", "動けない", "動ける", "入れ替え", "移す", "段", "とばす"]);
   function senkyoLines(log, o) {
     const tpl = o.tpl, out = [];
     const L = Array.isArray(log) ? log : [];
@@ -1843,7 +1842,7 @@
         const f = L[j];
         if (!f || f.who !== e.who) continue;
         if (f.op === "取る") takes.push((f.from || []).join(""));
-        else if (f.op === "放つ" || !SENKYO_STOP_QUIET.has(f.op)) break;
+        else if (f.op === "放つ") break; // 放ったあとは取りきるまで本人は他の手を打てない。間に入るのは相手の攻撃ワードで効かされた記録だけ（同じ名前で残る）なので、数えるのをやめるのは次の放ちだけ
       }
       const word = (e.from || []).join(""), yomi = o.kana ? o.kana(word) : "";
       const mine = e.who === o.me, n = [...word].length, pts = e.pts || 0;

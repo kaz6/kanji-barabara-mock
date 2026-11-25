@@ -33,9 +33,9 @@ body{margin:0;background:
   url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.27 0 0 0 0 0.1 0 0 0 0.24 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E") 0 0/160px 160px,
   url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 0.09' numOctaves='2' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.55 0 0 0 0 0.42 0 0 0 0 0.15 0 0 0 0.14 0'/%3E%3C/filter%3E%3Crect width='320' height='320' filter='url(%23f)'/%3E%3C/svg%3E") 0 0/320px 320px,
   var(--bg);color:var(--ink);font:15px/1.6 var(--ui)}
-main{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:16px 14px 48px}
-/* 背景の記事（KJ-094）：画面の背景いっぱいに、縦書き 10px・墨の不透明度 20% で遊びの決まりを新聞の文体にした文を繰り返す（js/strings.js の NEWS。仮）。札・ボタンの下に隠れる（main より下の層）・押せない・読み上げない。設定「背景の記事」が切のときは <html data-news="off"> で消える（ざらつきは残る） */
-#bgnews{position:fixed;inset:0;z-index:0;pointer-events:none;user-select:none;-webkit-user-select:none;overflow:hidden;contain:strict;transform:translateZ(0);writing-mode:vertical-rl;font-size:10px;line-height:1.55;color:rgba(42,38,34,.2);text-align:justify;padding:6px;overflow-wrap:anywhere}
+main{max-width:760px;margin:0 auto;padding:16px 14px 48px}
+/* 背景の記事（KJ-094）：画面の背景いっぱいに、縦書き 10px・墨の不透明度 20% で遊びの決まりを新聞の文体にした文を繰り返す（js/strings.js の NEWS。仮）。札・ボタンの下に隠れる（z-index:-1 の層。main に z-index は付けない＝点の演出 #fxPts が #fx の上に出る決まりを守る）・押せない・読み上げない。設定「背景の記事」が切のときは <html data-news="off"> で消える（ざらつきは残る） */
+#bgnews{position:fixed;inset:0;z-index:-1;pointer-events:none;user-select:none;-webkit-user-select:none;overflow:hidden;contain:strict;transform:translateZ(0);writing-mode:vertical-rl;font-size:10px;line-height:1.55;color:rgba(42,38,34,.2);text-align:justify;padding:6px;overflow-wrap:anywhere}
 html[data-news="off"] #bgnews{display:none}
 h1{font-size:17px;margin:0 0 2px;font-weight:700}
 .lead{color:var(--sub);font-size:13px;margin:0 0 14px}
@@ -588,7 +588,7 @@ let newsOn=true;
 function setNews(v){newsOn=v!=="0";document.documentElement.setAttribute("data-news",newsOn?"on":"off")}
 function fillNews(){
   const box=$("bgnews");if(!box||!STR.NEWS)return;
-  const need=Math.min(80,Math.max(2,Math.ceil((window.innerWidth*window.innerHeight)/(10*15.5)/STR.NEWS.length)+1)); // 10px・行 15.5px の1字ぶんの面積で、画面が埋まるぶん（上限 80 回）
+  const need=Math.min(200,Math.max(2,Math.ceil((window.innerWidth*window.innerHeight)/(10*15.5)/STR.NEWS.length)+1)); // 10px・行 15.5px の1字ぶんの面積で、画面が埋まるぶん（上限 200 回）
   if(box.dataset.n!==String(need)){box.dataset.n=String(need);box.textContent=STR.NEWS.repeat(need)}
 }
 // ---------- 札の字（KJ-093）：大正風（Kaisei Tokumin。初期）／明朝（Shippori Mincho）。<html data-face> を替える。端末に覚える ----------

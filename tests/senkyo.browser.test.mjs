@@ -207,7 +207,8 @@ test("背景の記事：画面いっぱいに縦書き 10px・墨の不透明度
     assert.equal(st.color, "rgba(42, 38, 34, 0.2)", "墨の不透明度 20%");
     assert.equal(st.pe, "none", "押せない");
     assert.equal(st.hidden, "true", "読み上げない");
-    assert.ok(st.z < st.mz, "札・ボタンの層（main）より下");
+    assert.equal(st.z, -1, "札・ボタンより下の層");
+    assert.ok(Number.isNaN(st.mz), "main に z-index は付けない（#fxPts が #fx の上に出る決まり）");
     assert.equal(st.full, st.vp, "背景いっぱい");
     assert.equal(st.head, "本紙特報。");
     assert.ok(st.len * 10 * 15.5 >= st.area, `画面が埋まるだけ繰り返す（${st.len}字）`);
@@ -224,6 +225,7 @@ test("背景の記事：画面いっぱいに縦書き 10px・墨の不透明度
     assert.notEqual(top.gap, "bgnews");
     // 画面を広げると、足りない分を足す
     await page.setViewportSize({ width: 900, height: 900 });
+    await page.waitForFunction((n) => document.getElementById("bgnews").textContent.length > n, st.len);
     const len2 = await page.evaluate(() => document.getElementById("bgnews").textContent.length);
     assert.ok(len2 > st.len, "広い画面では繰り返しが増える");
     assert.deepEqual(errors, []);
