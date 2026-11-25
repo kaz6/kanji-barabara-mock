@@ -66,6 +66,8 @@ async function pickOpp(page, key) {
   await page.check('#opp input[value="cpu"]');
   await page.check(`#pow input[value="${key}"]`);
 }
+// 時限ヒント（KJ-086）：ページの時計（performance.now）をずらして、放たずに timed_sec 秒たった形にする。pre に渡す
+const shiftClock = (page) => page.addInitScript(() => { window.__shiftSec = 0; window.__shift = (G) => { window.__shiftSec += __KJ.data.rules.hint.timed_sec; G.tick(); }; const pn = performance.now.bind(performance); performance.now = () => pn() + window.__shiftSec * 1000; });
 async function open(browser, url, vp, opponent, pre = null, motion = false) {
   const ctx = await browser.newContext({ viewport: vp, motion });
   await ctx.grantPermissions(["clipboard-read", "clipboard-write"]).catch(() => {});
@@ -1048,8 +1050,9 @@ test("画面", { skip }, async (t) => {
     await ctx.close();
   });
 
-  await t.test("ヒント（KJ-037）：続けて3回はじかれると札が光り「ヒント」の札が出る（2回では出ない）。言葉は文字で出ない。10秒か手札を動かすまで。375×700 に収まる", async () => {
-    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 }, "weak");
+  await t.test("ヒント（KJ-037・KJ-086）：放たずに時限（90秒）たつと札が光り「ヒント」の札が出る（はじかれ続けても出ない）。言葉は文字で出ない。10秒か手札を動かすまで。375×700 に収まる", async () => {
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 }, "weak", shiftClock);
+    const jump = () => page.evaluate(() => { window.__shift(__KJ.game); __KJ.render(); }); // 放たずに時限の秒数がたった形
     const setHand = (chars) => page.evaluate((cs) => { const G = __KJ.game; G.me.cards = [...cs].map((c, i) => ({ id: 7000 + i, c, t: 0, fresh: false })); __KJ.row.length = 0; __KJ.render(); }, chars);
     const tryPair = async (a, b) => { // 2枚を選んで外す＝並べたのに放てない・くっつかない（ためした）
       await page.locator("#meHand .tile:not(.sel)", { hasText: a }).first().click();
@@ -1068,13 +1071,17 @@ test("画面", { skip }, async (t) => {
     await tryPair("刀", "山");
     let s = await st();
     assert.equal(s.tried, 2);
-    assert.equal(s.tag, false, "2回では出ない");
+    assert.equal(s.tag, false, "はじかれただけでは出ない");
     assert.deepEqual(s.lit, []);
     await tryPair("国", "川");
     s = await st();
     assert.equal(s.tried, 3);
+    assert.equal(s.hints, 0);
+    assert.equal(s.tag, false, "はじかれ続けても出ない（KJ-086）");
+    await jump();
+    s = await st();
     assert.equal(s.hints, 1);
-    assert.equal(s.tag, true, "3回で「ヒント」の札が出る");
+    assert.equal(s.tag, true, "放たずに時限の秒数がたつと「ヒント」の札が出る");
     assert.equal(s.tagText, "ヒント");
     assert.equal(s.hint.tier, 1);
     assert.deepEqual([...s.lit].sort(), [...s.hint.ids].sort(), "光る札は ids のとおり");
@@ -1100,7 +1107,7 @@ test("画面", { skip }, async (t) => {
     await tryPair("日", "刀");
     await tryPair("年", "刀");
     assert.equal((await st()).tag, false);
-    await tryPair("日", "年");
+    await jump();
     s = await st();
     assert.equal(s.hint.tier, 2);
     assert.equal(s.hint.button, "bHomo");
@@ -1117,7 +1124,7 @@ test("画面", { skip }, async (t) => {
     assert.deepEqual(s.litBtn, []);
     // 段3：Redraw が光る（札は光らない）
     await setHand("刀刀");
-    await page.evaluate(() => { const G = __KJ.game; for (let i = 0; i < 3; i++) G.tried(G.me, ["刀", "刀"], "辞書にない"); __KJ.render(); });
+    await page.evaluate(() => { const G = __KJ.game; window.__shift(G); __KJ.render(); });
     s = await st();
     assert.equal(s.hint.tier, 3);
     assert.deepEqual(s.litBtn, ["bRedraw"]);
@@ -1137,8 +1144,8 @@ test("画面", { skip }, async (t) => {
   });
 
   await t.test("ヒント（KJ-065）：ほかの手をしても10秒は残る。光る札は持ち上がり、地の色が薄い金。動きを減らす設定では動かさない。375px", async () => {
-    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 }, "weak", null, true); // 既定は「動きを減らす」。動きを見るので motion: true
-    await page.evaluate(() => { const G = __KJ.game; G.me.cards = [..."休日山川火水"].map((c, i) => ({ id: 7000 + i, c, t: 0, fresh: false })); __KJ.row.length = 0; for (let i = 0; i < 3; i++) G.tried(G.me, ["火", "水"], "辞書にない"); __KJ.render(); });
+    const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 }, "weak", shiftClock, true); // 既定は「動きを減らす」。動きを見るので motion: true
+    await page.evaluate(() => { const G = __KJ.game; G.me.cards = [..."休日山川火水"].map((c, i) => ({ id: 7000 + i, c, t: 0, fresh: false })); __KJ.row.length = 0; window.__shift(G); __KJ.render(); });
     const lit = () => page.evaluate(() => [...document.querySelectorAll("#meHand .hint")].map((e) => +e.dataset.id));
     const hintId = await page.evaluate(() => __KJ.game.hintActive().ids);
     assert.deepEqual((await lit()).sort(), [...hintId].sort());
@@ -1157,17 +1164,17 @@ test("画面", { skip }, async (t) => {
     assert.doesNotMatch(await page.evaluate(() => getComputedStyle(document.querySelector("#meHand .hint.jt")).animationName), /kjLift/);
     await page.evaluate(() => document.querySelector("#meHand .hint.jt").classList.remove("jt"));
     // ボタンも薄い金の地で持ち上がる（段3：Redraw は quiet。段2：当の札を選ぶまで押せない見た目）
-    await page.evaluate(() => { const G = __KJ.game; G.hint = null; G.me.cards = [..."刀刀"].map((c, i) => ({ id: 7100 + i, c, t: 0, fresh: false })); for (let i = 0; i < 3; i++) G.tried(G.me, ["刀", "刀"], "x"); __KJ.render(); });
+    await page.evaluate(() => { const G = __KJ.game; G.hint = null; G.me.cards = [..."刀刀"].map((c, i) => ({ id: 7100 + i, c, t: 0, fresh: false })); window.__shift(G); __KJ.render(); });
     const btn = (id) => page.evaluate((i) => { const c = getComputedStyle(document.getElementById(i)); return { bg: c.backgroundColor, anim: c.animationName, color: c.color }; }, id);
     let bb = await btn("bRedraw");
     assert.equal(bb.bg, "rgb(255, 241, 196)", "Redraw（quiet）も薄い金の地");
     assert.match(bb.anim, /kjLift/);
-    await page.evaluate(() => { const G = __KJ.game; G.hint = null; G.me.cards = [..."日分"].map((c, i) => ({ id: 7200 + i, c, t: 0, fresh: false })); for (let i = 0; i < 3; i++) G.tried(G.me, ["日", "分"], "x"); __KJ.render(); });
+    await page.evaluate(() => { const G = __KJ.game; G.hint = null; G.me.cards = [..."日分"].map((c, i) => ({ id: 7200 + i, c, t: 0, fresh: false })); window.__shift(G); __KJ.render(); });
     assert.equal(await page.evaluate(() => __KJ.game.hintActive().button), "bSplit");
     bb = await btn("bSplit");
     assert.equal(bb.bg, "rgb(255, 241, 196)", "Split（当の札を選ぶまで押せない見た目）も薄い金の地");
     assert.match(bb.anim, /kjLift/);
-    await page.evaluate(() => { const G = __KJ.game; G.me.cards = [..."休日山川火水"].map((c, i) => ({ id: 7000 + i, c, t: 0, fresh: false })); G.hint = null; for (let i = 0; i < 3; i++) G.tried(G.me, ["火", "水"], "x"); __KJ.render(); });
+    await page.evaluate(() => { const G = __KJ.game; G.me.cards = [..."休日山川火水"].map((c, i) => ({ id: 7000 + i, c, t: 0, fresh: false })); G.hint = null; window.__shift(G); __KJ.render(); });
     // 動きを減らす設定：動かさず、縁と地の色だけ
     await page.emulateMedia({ reducedMotion: "reduce" });
     const r = await css();

@@ -3,7 +3,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("fs");
 const path = require("path");
-const { K, D, T, T4, TG1, newGame, setHand, takeAll, ROOT } = require("./helpers.js");
+const { K, D, T, T4, TG1, newGame, setHand, takeAll, hintNow, ROOT } = require("./helpers.js");
 
 const C = D.counters;
 const rel = (g, p, text) => g.release(p, setHand(g, p, text));
@@ -156,7 +156,7 @@ test("レベル（N4・小1）でも同じ決まり", () => {
 test("ヒント：手札が 十・円 だけなら、辞書に無い 十円 を狙う", () => {
   const g = newGame(1, "solo");
   setHand(g, g.me, "十円");
-  for (let i = 0; i < 3; i++) g.tried(g.me, ["天", "口"], "辞書にない");
+  hintNow(g);
   assert.ok(g.hint, "ヒントが出る");
   assert.equal(g.hint.word, "十円");
 });

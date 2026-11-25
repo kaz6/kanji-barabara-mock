@@ -506,16 +506,20 @@ test("合言葉の部屋：止めたら（stop）、そのあと届いた行は�
   assert.equal(A.g.field[0].n, 0, "A の場は変わらない");
 });
 
-test("KJ-037 合言葉の部屋でも、続けて3回はじかれるとヒントが出る（相手が先に放った言葉は狙わない）", () => {
-  const { A } = pair();
+test("KJ-037・KJ-086 合言葉の部屋でも、放たずに時限の秒数たつとヒントが出る（相手が先に放った言葉は狙わない）。はじかれ続けても出ない", () => {
+  const { A, clock } = pair();
   setHand(A.g, A.g.me, "休日山川");
-  for (let i = 0; i < 3; i++) A.g.tried(A.g.me, ["休", "山"], "辞書にない");
+  for (let i = 0; i < 9; i++) A.g.tried(A.g.me, ["休", "山"], "辞書にない");
+  assert.equal(A.g.hintActive(), null, "はじかれ続けても出ない");
+  clock.t += D.rules.hint.timed_sec - 1; A.g.tick();
+  assert.equal(A.g.hintActive(), null, "1秒前では出ない");
+  clock.t += 1; A.g.tick();
   assert.equal(A.g.hintActive().tier, 1);
   assert.equal(A.g.hintActive().word, "休日");
   assert.ok(A.g.log.some((e) => e.op === "ヒント"));
   assert.equal(A.g.remoteRelease("休日", 3, 3), true); // 相手が先に放った
   assert.equal(A.g.hintActive(), null, "相手が放った言葉の光りは消える");
-  for (let i = 0; i < 3; i++) A.g.tried(A.g.me, ["休", "山"], "辞書にない");
+  clock.t += D.rules.hint.timed_sec; A.g.tick();
   assert.notEqual(A.g.hintActive().word, "休日", "相手が放った言葉は狙わない");
 });
 

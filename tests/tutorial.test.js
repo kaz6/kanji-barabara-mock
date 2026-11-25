@@ -268,6 +268,11 @@ test("はじかれた手は「ためした」に残る（その手の理由つ�
   for (let i = 0; i < 4; i++) g.tried(g.me, ["天", "上"], "辞書にない");
   assert.equal(g.hintActive(), null);
   assert.equal(g.log.some((e) => e.op === "ヒント"), false);
+  // KJ-086：放たずに時限（hint.timed_sec）がたっても、チュートリアルには出ない（チュートリアルは自分の光りを出す）
+  t.clock.t += D.rules.hint.timed_sec * 3; g.tick();
+  assert.equal(g.timedHint(), false);
+  assert.equal(g.hintActive(), null);
+  assert.equal(g.log.some((e) => e.op === "ヒント"), false);
   assert.equal(g.log.some((e) => e.op === "動けない"), false);
 });
 

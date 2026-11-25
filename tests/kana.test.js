@@ -1,7 +1,7 @@
 // KJ-053（D-069）：部品の ノ・儿・ナ を、言葉の中でかな（の・る・な）として使う
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { K, D, T, T4, TG1, newGame, setHand, takeAll } = require("./helpers");
+const { K, D, T, T4, TG1, newGame, setHand, takeAll, hintNow } = require("./helpers");
 
 const KANA = ["の", "る", "な"];
 const isKana = (c) => c >= "぀" && c <= "ヿ";
@@ -117,7 +117,7 @@ test("動けない・ヒントも、ノ・儿・ナ の札をかなとして数�
   assert.ok(w && T.WORDS.has(w) && w.includes("の"), w);
   // 段1：いま並べれば放てる
   const ids = setHand(g, g.me, "天ノ川");
-  tryN(g, 3);
+  hintNow(g);
   const h = g.hintActive();
   assert.equal(h.tier, 1);
   assert.equal(h.word, "天の川");
@@ -125,7 +125,7 @@ test("動けない・ヒントも、ノ・儿・ナ の札をかなとして数�
   // 段2：割って 儿 が出れば 見る・見る目（見見 → 見 目 儿）。3字の 見る目 を先に狙う（KJ-061）
   const g2 = newGame(1, "weak", "N5");
   setHand(g2, g2.me, "見見");
-  tryN(g2, 3);
+  hintNow(g2);
   const h2 = g2.hintActive();
   assert.equal(h2.tier, 2);
   assert.equal(h2.op, "割る");

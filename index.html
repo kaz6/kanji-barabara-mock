@@ -1460,7 +1460,7 @@ function buildHowto(){
     `<b>引き直し</b>：手札を全部入れ替える（${R.start_hand} 枚）。値段は、その試合で何回目かで上がる（${R.redraw.costs.map(c=>c+" 点").join("→")}）。${R.redraw.costs.length} 回まで。点が足りなくても払える（マイナスになってよい）。`,
     `<b>勝ち</b>：先に ${R.win.score} 点。または ${(TL||R.win.time_limit_sec)/60} 分たって点の多い方。CPU の速さは強さで変わる。`,
     `${Object.keys(D.radical_forms.left).join("・")} を左に置いてくっつけられるときは、${Object.values(D.radical_forms.left).join("・")} の形で見せる（札はもとの字のまま）。色の薄い札は部品（字ではない）。`,
-    `<b>ヒント</b>：続けて ${R.hint.fail_streak} 回はじかれると、使う札と操作のボタンが光る（${R.hint.glow_sec} 秒。ほかの手をしても残る。光らせた言葉を放つ・光らせた札が無くなる・引き直しを使うと消える）。言葉は文字では出ない。点はかからない。`,
+    `<b>ヒント</b>：${R.hint.timed_sec ? `${R.hint.timed_sec} 秒なにも放たない・引き直さないと` : ""}${R.hint.fail_streak ? `${R.hint.timed_sec ? "、または続けて " : "続けて "}${R.hint.fail_streak} 回はじかれると` : ""}、使う札と操作のボタンが光る（${R.hint.glow_sec} 秒。ほかの手をしても残る。光らせた言葉を放つ・光らせた札が無くなる・引き直しを使うと消える）。言葉は文字では出ない。点はかからない。`,
     `<b>ログ</b>：一手ごとの記録。上の「ログ」で見てコピーできる。終わったら「ログをコピー」が出る。`,
   ].map(x=>`<li>${x}</li>`).join("");
 }

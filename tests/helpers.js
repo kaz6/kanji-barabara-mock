@@ -51,4 +51,15 @@ function takeAll(g, p) {
   }
   return n;
 }
-module.exports = { K, D, T, T4, TG1, newGame, setHand, takeAll, ROOT };
+// 時限ヒント（KJ-086）：何も放たずに hint.timed_sec 秒たたせて tick する（ヒントが出る）。数字は rules.json から読む
+function hintNow(g) {
+  g.clock.t += D.rules.hint.timed_sec;
+  g.tick();
+}
+// rules.json の hint を一時的に差し替える（KJ-086。続けてはじかれた形・時限なしの形を確かめる用。終わったら元に戻す）
+function withHint(over, fn) {
+  const old = { ...D.rules.hint };
+  Object.assign(D.rules.hint, over);
+  try { return fn(); } finally { for (const k of Object.keys(D.rules.hint)) delete D.rules.hint[k]; Object.assign(D.rules.hint, old); }
+}
+module.exports = { K, D, T, T4, TG1, newGame, setHand, takeAll, hintNow, withHint, ROOT };
