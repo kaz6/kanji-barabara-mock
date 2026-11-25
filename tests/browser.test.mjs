@@ -1344,6 +1344,15 @@ test("画面", { skip }, async (t) => {
         assert.ok(r > g && g > b && r - b >= 40 && r - b <= 110, `${k} の色 ${v} は茶色（赤>緑>青で、赤と青の差が大きい。グレーでも濃い茶でもない）`);
         assert.ok(r >= 150 && r <= 210, `${k} の色 ${v} は字の線を邪魔しない薄さ`);
       }
+      // 点線だけ少し薄く（KJ-091）：不透明度 0.5〜0.7。角の印 .cutx と 札の字は 1 のまま
+      const op = await page.evaluate(() => ({
+        v: parseFloat(getComputedStyle(document.querySelector("#meHand .cutv, #meHand .cuth")).opacity),
+        x: parseFloat(getComputedStyle(document.querySelector("#field .cutx")).opacity),
+        t: parseFloat(getComputedStyle(document.querySelector("#meHand .tile")).opacity),
+        sp: parseFloat(getComputedStyle(document.querySelector("#bSplit .sp-cut")).opacity),
+      }));
+      assert.ok(op.v >= 0.5 && op.v <= 0.7, `札の点線の不透明度 ${op.v}`); assert.equal(op.sp, op.v, "説明の点線（.sp-cut）も同じ薄さ");
+      assert.equal(op.x, 1, "角の印は変えない"); assert.equal(op.t, 1, "札そのものは薄くしない");
       // 選んだ札（赤地）の上は今まで通り白（KJ-052）
       await page.locator("#meHand .tile").filter({ has: page.locator(".cutv, .cuth") }).first().click();
       const selCol = await page.evaluate(() => {

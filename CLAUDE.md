@@ -18,6 +18,7 @@
 - `fonts/kj-fx.woff`・`fonts/kj-fx.css`・`fonts/OFL-YujiSyuku.txt`：特別な語の演出（`#fx .c`）だけの筆文字（Yuji Syuku。KJ-063）。字は `data/special.json` の語（`special`）と演出だけ特別の語（`fx_words`。金玉。KJ-064：点は変えず、2字を金色で同時に出す）に絞る。特別な語・演出だけの語を足したら `python3 tools/build_fx_font.py`（元の字体は `npm pack @fontsource/yuji-syuku` で取る。使い方は先頭の説明）で作り直す。テスト：tests/fxfont.test.js・tests/fxfont.browser.test.mjs
 - `js/strings.js`：操作のボタンの文字（英語）と、印の SVG（Flip の i・Cycle の C・Same reading の S に組み込む。札の角の印も同じ形。KJ-048）。操作のボタンの文字は英語。js/strings.js に置き、index.html に直書きしない。ボタン以外の画面の文言とログは日本語のまま（KJ-024。一覧は docs/STRINGS.md）
 - `data/tutorial.json`：チュートリアル（KJ-043）の手札・ストック・場・段・文・ボタンの文字。文は全部仮で、ここ1か所で直す。段の進め方と押せる手の制限は `js/core.js` の `createTutorial`（DOM に触らない）
+- `data/parts.json` の `reads_as`：部品の札の読み替え（KJ-096。囗→口。言葉を作るときだけ。ろ とは読まない。core.js の `T.READS`・`kanaOf`）。割る・くっつけるの働きは変えない。テストは tests/kuchi.test.js
 - `data/parts.json` の `kana_parts`：部品の札をかなに読む表（KJ-053。ノ→の・儿→る・ナ→な）。語の表のかなの語（天の川・見る）は `tools/build_data.py` がこれで作る（印 `kana_at`）。札の並びを言葉の書き方にするのは `K.kanaText`。一覧は docs/KANA_WORDS.md（作り直すと上書き）
 - `data/proper_names.json`：言葉として通す地名・名字（KJ-032。都道府県・県庁所在地と政令指定都市・名字上位100）。`tools/build_data.py` が words に入れ、印 `pn`（台の行に〔地名〕〔名字〕）を付ける。一覧は docs/PROPER_NAMES.md
 - `data/blocked_words.json`：全レベルで放てない語（D-048。買春・売春）。`tools/build_data.py` が words から外す
@@ -45,6 +46,7 @@ npm test
 - `tests/radical.test.js`・`tests/radical.browser.test.mjs`：部品の札の意味（KJ-021。部品すべてに行がある・radical_forms と食い違わない・一行の形・一覧にそろっている／画面：部品の札を選ぶと台の行に出る・字の札では出ない・外すと消える）
 - `tests/reach.test.js`：丶 の行き先（KJ-077。行き先だけの字・レベルごとの出番〔勺は出番なし〕・くっつける・割る・面で落とす・語・ストック）
 - `tests/proper_names.test.js`：地名・名字（KJ-032。一覧の数・手に持てるときだけ語に入る・印と読み・点数は普通と同じ・下の名前は通らない）と、全レベルで外す語（買春・売春）
+- `tests/kuchi.test.js`：囗 を 口 として読む（KJ-096。囗＋人 で 人口・点は普通と同じ・回 は今のまま・ろ にならない・CPU とヒントも使う）
 - `tests/kana.test.js`：かなに読む部品（KJ-053。天の川 3字9点・見る 2字3点・かなだけは放てない・ひらがなで残る・CPU とヒント・外す語）
 - `tests/g1help.test.js`：小1 の手当て（KJ-067。`data/rules.json` の `g1`。基本の10字は山に3枚・N5/N4 は2枚のまま／手札に放てる語があり30秒なにも手をしないと光る・N5/N4 と放てる語なしでは光らない）
 - `tests/attack.test.js`：特別攻撃ワード（KJ-080。語ごとの効く操作と枚数・大回転は2枚・大集合は最大の組数・空振り・ストックには効かない・CPU が放っても人に効く・自刃は自分のまま・ログ・ヒントが消える）
