@@ -299,3 +299,30 @@ test("レビュー P-093：取ったばかりの札・ヒントの札を選ん�
     }
   } finally { await browser.close(); srv.close(); }
 });
+
+test("KJ-097：操作5つ（Split・Join・Flip・Cycle・Same reading）の高さは 44px 以上（375／320px）。375×667 で自分の手札・ストックは画面の中", { skip }, async () => {
+  const srv = await serve(); const browser = await chromium.launch();
+  try {
+    const url = `http://127.0.0.1:${srv.address().port}/index.html`;
+    const ids = ["bSplit", "bJoin", "bInvert", "bCycle", "bHomo"];
+    for (const [w, h] of [[375, 667], [320, 667], [320, 568]]) {
+      const { ctx, page, errors } = await open(browser, url, { vp: { width: w, height: h } });
+      await play(page);
+      await page.evaluate(() => { const G = __KJ.game; G.me.cards.push({ id: 9400, c: "月", t: 0, fresh: false, tray: true }); __KJ.render(); }); // ストックに札がある
+      const r = await page.evaluate((ids) => {
+        const out = { h: {} };
+        for (const id of ids) out.h[id] = document.getElementById(id).getBoundingClientRect().height;
+        const q = (s) => document.querySelector(s).getBoundingClientRect();
+        out.hand = q("#meHand").bottom; out.tray = q("#meTray").bottom; out.sw = document.documentElement.scrollWidth;
+        return out;
+      }, ids);
+      console.log(`# KJ-097 ${w}×${h} ops=${JSON.stringify(r.h)} hand=${r.hand} tray=${r.tray}`);
+      for (const id of ids) assert.ok(r.h[id] >= 44, `${w}×${h} ${id} の高さ ${r.h[id]} は 44px 以上`);
+      if (w === 375) assert.ok(r.sw <= w, `${w}px 横スクロールがない`); // 320px の横幅は KJ-097 より前からはみ出しがある（main でも 343px）。このカードでは直さない
+      if (w === 375) assert.ok(r.hand <= h && r.tray <= h, `375×667 手札・ストックの下端が 667 以内（手札 ${r.hand}・ストック ${r.tray}）`);
+      if (process.env.KJ_SHOT_DIR) await page.screenshot({ path: path.join(process.env.KJ_SHOT_DIR, `kj-097-${w}x${h}.png`) });
+      assert.deepEqual(errors, []);
+      await ctx.close();
+    }
+  } finally { await browser.close(); srv.close(); }
+});
