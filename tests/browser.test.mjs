@@ -2015,7 +2015,7 @@ test("画面", { skip }, async (t) => {
     assert.equal(await page.evaluate(() => __KJ.game.log.length), logN, "ログに残さない");
     await click("bHomo");
     assert.equal(await page.locator("#choices.on").count(), 1, "また押すと一覧がまた出る");
-    await click("bBack"); // 一覧は卓の下に重なる（KJ-090：Back は卓の外へ出たので、一覧が出ているあいだは Redraw と同じく一覧に隠れる。ここは押す処理そのものを見る）
+    await page.click("#bBack"); // 一覧が出ていても Back は押せる（KJ-090：一覧より上に出している）
     assert.deepEqual(errors, []);
     await ctx.close();
   });

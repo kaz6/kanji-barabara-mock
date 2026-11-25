@@ -230,3 +230,38 @@ test("置き場（KJ-090）：試合の終わりの面が出ているあいだ�
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test("置き場（KJ-090）：はじめる前の画面に上の3つ・ログの欄は出ない／360px で点が -15 でも Back・Redraw は画面の中／選びの一覧が出ていても Back は押せる／CPU の行の長い文は残り時間に切られない", { skip }, async (t) => {
+  const srv = await serve();
+  const url = `http://127.0.0.1:${srv.address().port}/index.html`;
+  const browser = await chromium.launch();
+  t.after(async () => { await browser.close(); srv.close(); });
+  // はじめる前
+  const ctx0 = await browser.newContext({ viewport: { width: 375, height: 800 } });
+  const p0 = await ctx0.newPage();
+  await p0.goto(url);
+  await p0.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
+  for (const id of ["again", "bSetup", "bLog"]) assert.equal(await p0.isVisible(`#${id}`), false, `はじめる前に ${id} は出ない`);
+  assert.equal(await p0.isVisible("#logPanel"), false);
+  await ctx0.close();
+  // 360px・-15点
+  const { ctx, page, errors } = await open(browser, url, { width: 360, height: 800 });
+  await page.evaluate(() => { __KJ.game.me.score = -15; __KJ.render(); });
+  const bk = await box(page, "#bBack"), rd = await box(page, "#bRedraw"), me = await box(page, "#meSide");
+  assert.ok(rd.r <= 360 && rd.r <= me.r + 1 && bk.l >= 0, `360px・-15点でも Back・Redraw は欄の中（${Math.round(rd.r)} / ${Math.round(me.r)}）`);
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, "横スクロールが出ない");
+  // CPU の行：長い文でも残り時間と重ならず、文が切れない
+  await page.evaluate(() => { document.getElementById("cpuCds").textContent = "相手の通信が切れた"; });
+  const cds = await page.evaluate(() => { const e = document.getElementById("cpuCds"); return { cut: e.scrollWidth > e.clientWidth + 1 }; });
+  assert.equal(cds.cut, false, "「相手の通信が切れた」が切れない");
+  const c1 = await box(page, "#cpuCds"), c2 = await box(page, "#clock");
+  assert.ok(c1.r <= c2.l || c1.b <= c2.t + 1, "文と残り時間が重ならない");
+  // 選びの一覧が出ていても Back を押せる
+  await page.evaluate(() => { __KJ.game.me.score = 0; __KJ.render(); });
+  await page.locator("#meHand .tile", { hasText: "天" }).first().click();
+  await page.evaluate(() => { const c = document.getElementById("choices"); c.classList.add("on"); c.dataset.kind = "homo"; c.innerHTML = '<div class="g"><span>x</span><button>山</button><button>川</button><button>玉</button></div>'; });
+  await page.click("#bBack");
+  assert.equal(await page.locator("#row .tile").count(), 0, "一覧が出ていても Back で戻る");
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
