@@ -146,6 +146,8 @@
     // かなに読む部品（KJ-053・D-069。data/parts.json の kana_parts）：ノ→の・儿→る・ナ→な。台に並べたとき、この札はかなとして言葉に入る。
     // KANA_OK＝このレベルの割り方の行に部品が出てくる（手に入る）かな。語の表（words.json）はこの決め方で作る（tools/build_data.py）
     T.KANA = new Map(Object.entries(D.parts.kana_parts || {}));
+    // 別の字に読み替える部品（KJ-096。data/parts.json の reads_as）：囗→口。言葉を作るときだけ。かなではない（isKanaChar・KANA_OK には入れない）
+    T.READS = new Map(Object.entries(D.parts.reads_as || {}));
     const partsSeen = new Set(Object.entries(T.parts).flatMap(([k, v]) => [k, ...v]));
     T.KANA_OK = new Set([...T.KANA].filter(([pt]) => partsSeen.has(pt)).map(([, k]) => k));
     T.SPECIAL = new Map(D.special.special.map((s) => [s.w, s]));
@@ -244,7 +246,8 @@
   // 逆に並べればくっつく（順番の決まりは変えない。表示だけ）
   const joinReversed = (T, a, b) => joinResults(T, a, b).length === 0 && joinResults(T, b, a).length > 0;
   // かなに読む部品（KJ-053）：札の字 → 言葉の中の字（ノ→の・儿→る・ナ→な。ほかはそのまま）。kanaText は札の並び（字の配列か文字列）を言葉の書き方にする（天ノ川 → 天の川）
-  const kanaOf = (T, c) => (T.KANA && T.KANA.get(c)) || c;
+  // 囗 は 口 として読める（KJ-096。reads_as。ろ とは読まない）
+  const kanaOf = (T, c) => (T.KANA && T.KANA.get(c)) || (T.READS && T.READS.get(c)) || c;
   const kanaText = (T, chars) => [...(typeof chars === "string" ? chars : chars.join(""))].map((c) => kanaOf(T, c)).join("");
   const isKanaChar = (T, c) => !!T.KANA && [...T.KANA.values()].includes(c);
   // 語の字として使えるか：手に持てる字か、このレベルで手に入るかな（KJ-053）
