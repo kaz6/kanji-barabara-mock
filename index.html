@@ -124,6 +124,23 @@ button.op.cutopen .sp-a{animation:kjSpA .3s ease-in-out}button.op.cutopen .sp-b{
 .table .side-head{height:auto;margin-bottom:0}
 .table .side-head b{color:var(--on-table)}
 .stage{position:relative}
+/* 台の行：札の行（row）と、その右端の Back（KJ-078。作者 2026-11-25「案A 台のそばに Back」。64×48 以上・枠線付き・左向きの矢印＋Back） */
+.rowline{display:flex;gap:6px;align-items:center}
+.rowline .row{flex:1 1 auto;min-width:0}
+.table button.op.back{flex:none;display:inline-flex;align-items:center;justify-content:center;gap:4px;min-width:64px;min-height:48px;padding:6px 8px;background:transparent;border:1px solid var(--on-table-sub);border-radius:4px;color:var(--on-table);font-size:14px}
+.table button.op.back:disabled{background:transparent;border-color:#5b574f;color:#a8a295;cursor:default}
+.table button.op.back .ic{flex:none}
+/* Redraw（KJ-078）：卓の外。「あなた ○点 手札 ○/8」の行の右端。長押しで引き直す＝押している間、地が左から埋まり、埋まりきったら引き直す（長さは index.html の REDRAW_HOLD_MS） */
+.me .side-head{height:auto;min-height:44px;align-items:center;overflow:visible}
+.rdwrap{position:relative;margin-left:auto;flex:none}
+#bRedraw{position:relative;isolation:isolate;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;min-width:64px;min-height:40px;padding:4px 10px;line-height:1.25;background:transparent;border:1px solid var(--ink);color:var(--ink);touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#bRedraw:disabled,#bRedraw[aria-disabled=true]{background:transparent;border-color:var(--line);color:var(--dim)}
+#bRedraw::before{content:"";position:absolute;left:0;top:0;bottom:0;width:0;background:var(--gauge);opacity:.45;z-index:-1;pointer-events:none}
+#bRedraw.holding::before{width:100%;transition:width var(--holdms,600ms) linear}
+#bRedraw .cdv{display:block;width:auto;white-space:nowrap;font-size:11px;text-align:center}
+.rdnote{position:absolute;right:0;bottom:calc(100% + 4px);z-index:5;white-space:nowrap;font-size:12px;line-height:1.3;padding:2px 8px;border-radius:4px;background:var(--ink);color:#fff;pointer-events:none}
+.rdnote:empty{display:none}
+#bRedraw.hint.lift,#bRedraw.hint.lift:disabled,#bRedraw.hint.lift[aria-disabled=true]{background:#fff1c4;color:var(--ink);border-color:var(--hint)} /* ヒントで光るとき（卓の外なので .table の規則が効かない） */
 .row{display:flex;gap:6px;height:76px;align-items:center;overflow-x:auto;overflow-y:hidden;background:var(--table-2);border-radius:4px;padding:0 6px}
 .row .tile{width:64px;height:64px;font-size:40px;flex:none}
 .row .empty{color:var(--on-table-sub);font-size:13px}
@@ -135,6 +152,8 @@ button.op.cutopen .sp-a{animation:kjSpA .3s ease-in-out}button.op.cutopen .sp-b{
 .info .pts{color:var(--on-table);font-weight:700}
 .ops{display:flex;flex-direction:column;gap:6px}
 .ops-main,.ops-set{display:flex;gap:6px}
+.ops-main{display:block} /* Play は卓の幅いっぱいの1段（KJ-078） */
+.ops-main button.op.main{display:block;width:100%}
 button.op{font:inherit;font-size:14px;padding:8px 12px;border:1px solid var(--ink);background:#fff;color:var(--ink);border-radius:4px;cursor:pointer;min-width:64px}
 button.op:disabled,button.op[aria-disabled=true]{border-color:var(--line);color:var(--dim);cursor:default}
 button.op.main{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
@@ -300,17 +319,20 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
   .choices{left:-8px;right:-8px;top:calc(100% + 10px)}
   .table .side{margin:0 0 6px}
   .row{height:58px;gap:4px;padding:0 4px}
+  .rowline{gap:4px}
   .row .tile{width:46px;height:46px;font-size:30px}
   .info{height:38px;margin:4px 0 6px;font-size:13px;line-height:19px}
   .info .w{font-size:16px}
-  /* ボタンは2段：上の段は Play（大きく）・Back・Redraw（文字だけ）、下の段は群（Split・Join・Flip・Cycle・Same reading）。Same reading は収まらなければ2行に折り返す（字は小さくしない） */
+  /* ボタンは2段：上の段は Play（幅いっぱい。Back は台の右端・Redraw は卓の外へ。KJ-078）、下の段は群（Split・Join・Flip・Cycle・Same reading）。Same reading は収まらなければ2行に折り返す（字は小さくしない） */
   .ops{gap:4px}
   .ops-main,.ops-set{gap:4px}
   .table .ops-set button.op{font-size:13px;padding:6px 2px;min-width:0;text-align:center}
   .table .ops-set button.op#bHomo{white-space:normal;line-height:1.25}
   .table button.op.quiet{font-size:13px;padding:6px 8px}
   .ops .cdv{width:2em;font-size:11px}
+  #bRedraw{font-size:13px;padding:3px 8px}
   #bRedraw .cdv{width:auto;white-space:nowrap}
+  .me .side-head{min-height:40px}
   .trayhead{margin:4px 0 2px;line-height:1.3}
 </style>
 </head>
@@ -385,14 +407,15 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
   </section>
 
   <section class="stage">
-    <div class="row" id="row"></div>
+    <div class="rowline">
+      <div class="row" id="row"></div>
+      <button class="op back" id="bBack"><span class="lb"></span></button>
+    </div>
     <div class="info" id="info"></div>
     <div class="ops">
       <!-- ボタンの文字は js/strings.js から入れる（英語。KJ-024）。重さは3段（KJ-042）：Play＝大きく主色／Split・Join・Flip・Cycle・Same reading＝同じ大きさの群／Back・Redraw＝文字だけ -->
       <div class="ops-main">
         <button class="op main" id="bRelease"><span class="lb"></span></button>
-        <button class="op quiet" id="bBack"><span class="lb"></span></button>
-        <button class="op quiet" id="bRedraw"><span class="lb"></span> <span class="cdv" id="cdRedraw"></span></button>
       </div>
       <div class="ops-set">
         <button class="op" id="bSplit"><span class="lb"></span></button>
@@ -407,7 +430,10 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
   </section>
 
   <section class="side me" id="meSide">
-    <div class="side-head"><b>あなた</b><span class="score" id="meScore"></span><span class="count" id="meCount"></span></div>
+    <div class="side-head"><b>あなた</b><span class="score" id="meScore"></span><span class="count" id="meCount"></span>
+      <!-- Redraw は長押しで引き直す（KJ-078）。押している間、地が左から埋まる。1回タップだけなら rdNote に小さく出す -->
+      <span class="rdwrap"><span class="rdnote" id="rdNote" role="status" aria-live="polite"></span><button class="op quiet" id="bRedraw"><span class="lb"></span><span class="cdv" id="cdRedraw"></span></button></span>
+    </div>
     <div class="hand" id="meHand"></div>
     <div class="trayhead" id="trayHead"></div>
     <div class="hand tray" id="meTray"></div>
@@ -983,9 +1009,34 @@ $("bJoin").onclick=()=>press("bJoin","join","くっつける",()=>{
 $("bInvert").onclick=()=>press("bInvert","invert","反転",()=>{const r=G.invert(G.me,row);afterOp(r);return r});
 $("bCycle").onclick=()=>press("bCycle","cycle","巡り",()=>{const r=G.cycle(G.me,row);afterOp(r);return r});
 $("bBack").onclick=()=>{noteTried();row=[];hideChoices();afterChange()};
+// Redraw は長押しで引き直す（KJ-078）。押している間、ボタンの地が左から埋まり、埋まりきったら引き直す。指を離したらやめる。1回タップだけでは起きない
+const REDRAW_HOLD_MS=600; // 長押しの長さ（ms。仮決め。ここ1か所）
+let rdTimer=null,rdFired=false,rdNoteT=null;
+function doRedraw(){
+  row=[];hideChoices();if(MC){const mc=MC;mc.redraw().then(()=>{if(!stale(mc))afterChange()});afterChange();return}G.redraw(G.me);afterChange()} // 部屋：手札はすぐ入れ替わる。点の送りの返事は待たずに描く
+function rdCancel(){clearTimeout(rdTimer);rdTimer=null;$("bRedraw").classList.remove("holding")}
+function rdStart(){
+  rdFired=false;
+  if(rdTimer||isOff("bRedraw")||!G||G.over)return; // 押せない見た目のときは長押しにしない（click で理由を出す）
+  const b=$("bRedraw");
+  b.style.setProperty("--holdms",REDRAW_HOLD_MS+"ms");
+  b.classList.remove("holding");void b.offsetWidth;b.classList.add("holding");
+  rdTimer=setTimeout(()=>{rdTimer=null;b.classList.remove("holding");if(isOff("bRedraw")||!G||G.over)return;rdFired=true;doRedraw()},REDRAW_HOLD_MS);
+}
+function rdNote(t){const n=$("rdNote");n.textContent=t;clearTimeout(rdNoteT);if(t)rdNoteT=setTimeout(()=>{n.textContent=""},1800)}
+{
+  const b=$("bRedraw");
+  b.addEventListener("pointerdown",e=>{if(e.pointerType==="mouse"&&e.button!==0)return;rdStart()});
+  for(const ev of ["pointerup","pointercancel","pointerleave"])b.addEventListener(ev,rdCancel);
+  b.addEventListener("contextmenu",e=>e.preventDefault()); // スマホの長押しメニューを出さない
+  b.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&!isOff("bRedraw")){e.preventDefault();if(!e.repeat)rdStart()}});
+  b.addEventListener("keyup",e=>{if(e.key==="Enter"||e.key===" ")rdCancel()});
+  b.addEventListener("blur",rdCancel);
+}
 $("bRedraw").onclick=()=>{
+  if(rdFired){rdFired=false;return} // 長押しで引き直したあとの click（指を離したとき）は何もしない
   if(isOff("bRedraw")){if(!G.over){const why=(TUT&&TUT.blocked("redraw"))||G.whyNot(G.me,"redraw");G.triedOp(G.me,"引き直し",[],why);buzz("reject");afterChange();showWhy(why)}return} // 引き直しを使いきったあとに押した（KJ-041）
-  row=[];hideChoices();if(MC){const mc=MC;mc.redraw().then(()=>{if(!stale(mc))afterChange()});afterChange();return}G.redraw(G.me);afterChange()}; // 部屋：手札はすぐ入れ替わる。点の送りの返事は待たずに描く
+  rdNote(STR.TEXT.redrawHold)}; // 1回タップだけ：何も起きない。長押しだと知らせる（🚫 ではなく、小さな文で）
 $("bHomo").onclick=()=>{
   if($("choices").dataset.kind==="homo"){hideChoices();return} // 選びの一覧が出ているときにもう一度押すと、閉じて元に戻る。何も変えない・待ち時間もかからない・ログにも残さない（KJ-069）
   const lc=lastCard(); // 最後に選んだ札（KJ-054）
