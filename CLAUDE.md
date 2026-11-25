@@ -24,6 +24,7 @@
 - `data/blocked_words_g1.json`：小1 のときだけ放てない語の一覧（KJ-044 追記。語の表から外す。N5・N4 には効かない。中身は作者が決める）
 - `data/radical_meanings.json`：部品の札（字として見せない札。全レベルの合計78）が何と同じ意味かの表（KJ-021。name 呼び名・same 同じ意味の字・mean 短い意味・q ？・forms は radical_forms の左の形）。台の行の1行目に出す（`K.radicalNote`。index.html の render）。一覧は docs/RADICAL_MEANINGS.md（手で合わせる。tests/radical.test.js が部品の漏れを見る）
 - `data/counters.json`：数＋助数詞（KJ-022。十円・二十日 など。数＝一〜十・百・千・万と 二十〜九十・十一〜十九、助数詞＝円・人・本・日・月・年・時・分・回・台・週・度）。辞書に無くても放てる。一度放った言葉に使った助数詞は、その試合ではもう 数＋助数詞 に使えない（`releasable`・`g.isUsed`）。作り直しは `python3 tools/build_counters.py`（docs/COUNTERS.md も書く）。はじかれたときの 🚫 と理由は `K.rejectText`・index.html の `showWhy`。言い方の一覧は docs/REJECT_MESSAGES.md
+- `data/special.json` の `effects`：放つと効く語（KJ-079。語→効き方の名前。自刃＝split_own_random：放った本人の上の段の割れる札を、場から取り終えたあとに1枚無作為に割る）。点・演出・振動は special・fx_words と別で変えない。core.js の `T.EFFECTS`・`runPendingFx`・`K.effectText`。画面の文は index.html の `drain`。テストは tests/effects.test.js・tests/effects.browser.test.mjs
 - `data/rules.json` の `vibrate`：スマホの振動の形（KJ-074。ms。手ごとに rules の1か所。選び方は `K.vibratePattern`。振動は index.html の `buzz`。入り切りは localStorage `kj-vibe`。`navigator.vibrate` が無い端末では入り切りを出さず何もしない。金玉は special_words で振動だけ特別）
 - `data/rules.json`：数値（場・手札・点数・引き直し・勝ち・待ち時間・CPU）。数値を変えるときはここだけ。変えたら `version` を上げる
 - `tests/`：テスト

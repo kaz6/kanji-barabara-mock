@@ -631,6 +631,7 @@ function drain(){
       if(e.who===G.me.name){const w=T.WORDS.get(e.text);buzz("release",{text:e.text,len:[...e.text].length,special:vibSpecial||T.SPECIAL.has(e.text),yoji:!!(w&&w.yoji)})} // 振動：自分が放ったときだけ（相手の手では震えない）
       if(e.who===G.me.name)vibSpecial=false;
     }
+    if(e.type==="effect"&&e.who===G.me.name)showMsg(K.effectText(e)); // 放つと効く語（KJ-079。自刃）：自分の手だけ短く出す
     if(e.type==="over")end(e.winner,e.solo);
   }
 }
