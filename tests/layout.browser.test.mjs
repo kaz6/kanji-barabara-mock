@@ -60,7 +60,7 @@ async function press(page, ms) { // Redraw をマウスで押して ms だけ待
 }
 const shot = async (page, name) => { if (process.env.KJ_SHOT_DIR) await page.screenshot({ path: path.join(process.env.KJ_SHOT_DIR, name) }); };
 
-test("置き場（KJ-078）：Back は台の右端・64×48 以上・最後の1枚を戻す／Play は卓の幅いっぱい／群は Play の下／Redraw は点の行の右端（卓の外）", { skip }, async (t) => {
+test("置き場（KJ-078）：Back は台の右端・64×48 以上・台の札を戻す／Play は卓の幅いっぱい／群は Play の下／Redraw は点の行の右端（卓の外）", { skip }, async (t) => {
   const srv = await serve();
   const url = `http://127.0.0.1:${srv.address().port}/index.html`;
   const browser = await chromium.launch();
