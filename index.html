@@ -678,7 +678,7 @@ function playHits(){
         hitPlay(e.op,el,r.left+r.width/2,r.top+r.height/2,r.width,r.height,h.from,delay);
       }else{
         const box=$("cpuScore").getBoundingClientRect();if(!box.width&&!box.height)return; // 画面に出ていない（ひとり用など）
-        const w=30,hh=36,cx=box.right+24+i*(w+6),cy=box.top+box.height/2;
+        const cnt=$("cpuCount").getBoundingClientRect(),w=30,hh=36,cx=Math.max(box.right,cnt.width?cnt.right:0)+22+i*(w+6),cy=box.top+box.height/2; // 点と「手札 n / 8」の右（重ねない）
         const real=hitChip(h.to.join(""),cx,cy,w,hh,e.op);
         hitPlay(e.op,real,cx,cy,w,hh,h.from,delay);
         setTimeout(()=>real.remove(),HIT_MS[e.op]+delay+60+300); // 動いたあと少しだけ札を見せて消す

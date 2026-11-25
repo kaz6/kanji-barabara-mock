@@ -111,7 +111,8 @@ test("食らいの演出（KJ-081）", { skip }, async (t) => {
     const box = await page.locator("#cpuScore").boundingBox();
     const r = await page.locator("#fxPts .hitfx").first().boundingBox();
     assert.ok(Math.abs((r.y + r.height / 2) - (box.y + box.height / 2)) < 30, "点の行のそば");
-    assert.ok(r.x >= box.x, "点の右");
+    const cnt = await page.locator("#cpuCount").boundingBox();
+    assert.ok(r.x >= box.x + box.width && r.x >= cnt.x + cnt.width - 1, "点と「手札 n / 8」の右（重ならない）");
     assert.deepEqual(await page.evaluate(() => window.__buzz), [], "CPU が食らっても人は震えない");
     await page.waitForFunction(() => document.querySelectorAll("#fxPts .hitfx").length === 0, null, { timeout: 3000 });
     assert.deepEqual(errors, []);
@@ -132,6 +133,7 @@ test("食らいの演出（KJ-081）", { skip }, async (t) => {
     assert.equal(await page.evaluate(() => __KJ.game.me.cards[0].c), "七");
     await hit(page, { op: "cycle", victim: "CPU", hits: [OPS.cycle] });
     assert.equal(await fxCount(page), 0);
+    assert.deepEqual(await page.evaluate(() => window.__buzz), [[30, 40, 30]], "震えは動きを減らす設定と別（人が食らった1回だけ）");
     await ctx.close();
   });
 
@@ -150,6 +152,24 @@ test("食らいの演出（KJ-081）", { skip }, async (t) => {
     await page.evaluate(() => { vibeOn = false; window.__buzz.length = 0; }); // 振動「切」
     await hit(page, { op: "cycle", victim: "あなた", hits: [OPS.cycle] });
     assert.deepEqual(await page.evaluate(() => window.__buzz), []);
+    await ctx.close();
+  });
+
+  await t.test("ゲームの流れで：CPU が 回転 を放つと人の札が回って、人が震える", async () => {
+    const { ctx, page, errors } = await begin(browser, url);
+    await page.evaluate(() => {
+      const G = __KJ.game;
+      G.me.cards = [..."六年万魚肉年万魚"].map((c, i) => ({ id: 9000 + i, c, t: 0, fresh: false }));
+      G.cpu.cards = [..."回転年万魚肉年万"].map((c, i) => ({ id: 9800 + i, c, t: 0, fresh: false }));
+      G.cpuHint = null;
+      const ids = G.cpu.cards.slice(0, 2).map((x) => x.id);
+      G.release(G.cpu, ids);
+      __KJ.drain(); __KJ.render();
+    });
+    assert.equal(await page.evaluate(() => __KJ.game.me.cards.map((x) => x.c).includes("七")), true, "六 が 七 に ");
+    assert.ok((await fxCount(page)) >= 1);
+    assert.deepEqual(await page.evaluate(() => window.__buzz), [[30, 40, 30]]);
+    assert.deepEqual(errors, []);
     await ctx.close();
   });
 
