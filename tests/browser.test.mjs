@@ -1233,10 +1233,11 @@ test("画面", { skip }, async (t) => {
       assert.equal(parts.filter((p) => p.sel === "#meTray > *").length, await page.evaluate(() => __KJ.data.rules.split_extra));
       assert.equal(parts.filter((p) => p.sel === ".ops button").length, 6, "卓のボタンは6つ（Play と群の5つ。Back は台の右端・Redraw は卓の外。KJ-078）");
       const bk = parts.find((p) => p.sel === "#bBack"), rdp = parts.find((p) => p.sel === "#bRedraw");
-      assert.ok(bk.w >= 64 && bk.h >= 48, `Back は 64×48 以上（${bk.w}×${bk.h}）`);
+      assert.ok(bk.w >= 44 && Math.abs(bk.h - rdp.h) <= 1, `Back は幅 44px 以上・高さは Redraw と同じ（${bk.w}×${bk.h}・Redraw ${rdp.h}。KJ-090）`);
+      assert.ok(bk.r <= rdp.l - 8 && Math.abs(bk.t - rdp.t) <= 1, "Back は Redraw のすぐ左（8px 以上あく。KJ-090）");
       assert.ok(rdp.h >= 36, `Redraw は指で押せる高さ（${rdp.h}）`);
       assert.ok(parts.find((p) => p.sel === "#meScore").t <= rdp.b && rdp.t <= parts.find((p) => p.sel === "#meScore").b, "Redraw は「あなた ○点 手札」と同じ行");
-      assert.ok(await page.evaluate(() => document.getElementById("bBack").parentElement.contains(document.getElementById("row"))), "Back は台と同じ行");
+      assert.ok(await page.evaluate(() => !document.querySelector(".table").contains(document.getElementById("bBack"))), "Back は卓の外（「あなた ○点 手札」の行。KJ-090）");
       // 札は指で押せる大きさ（40px 以上）。ボタンは2段まで
       for (const p of parts.filter((x) => x.sel === "#meHand > *" || x.sel === "#meTray > *")) assert.ok(p.w >= 40 && p.h >= 40, `手札・ストックの札が 40px 以上（${p.w}×${p.h}）`);
       const tops = new Set(parts.filter((p) => p.sel === ".ops button").map((p) => Math.round(p.t)));
@@ -2014,7 +2015,7 @@ test("画面", { skip }, async (t) => {
     assert.equal(await page.evaluate(() => __KJ.game.log.length), logN, "ログに残さない");
     await click("bHomo");
     assert.equal(await page.locator("#choices.on").count(), 1, "また押すと一覧がまた出る");
-    await page.click("#bBack");
+    await page.click("#bBack"); // 一覧が出ていても Back は押せる（KJ-090：一覧より上に出している）
     assert.deepEqual(errors, []);
     await ctx.close();
   });
@@ -2152,9 +2153,9 @@ test("画面", { skip }, async (t) => {
     assert.ok(z.play[1] > z.set[0][1] && z.play[0] > z.set[0][0] * 1.5, `Play は大きい（${z.play}・${z.set[0]}）`);
     assert.ok(new Set(z.set.map((s) => s[1])).size === 1, "群は同じ高さ");
     const quiet = await page.evaluate(() => ["bBack", "bRedraw"].map((id) => { const cs = getComputedStyle(document.getElementById(id)); return [cs.backgroundColor, cs.borderBottomWidth]; }));
-    assert.deepEqual(quiet, [["rgba(0, 0, 0, 0)", "1px"], ["rgba(0, 0, 0, 0)", "1px"]], "Back・Redraw は地なし・枠線だけ（KJ-078。Back は卓の上の明るい線）");
+    assert.deepEqual(quiet, [["rgba(0, 0, 0, 0)", "1px"], ["rgba(0, 0, 0, 0)", "1px"]], "Back・Redraw は地なし・枠線だけ（KJ-078。Back は背景の上の墨色の線）");
     // 文字が読める明暗差：押せるとき・押せないとき・待ち時間のゲージ（満ちた側とまだの側の両方）で 4.5 以上
-    const contrasts = () => page.evaluate(() => [...document.querySelectorAll(".ops button,#bBack")].map((b) => {
+    const contrasts = () => page.evaluate(() => [...document.querySelectorAll(".ops button")].map((b) => {
       const cs = getComputedStyle(b), bef = getComputedStyle(b, "::before");
       return { id: b.id, off: b.disabled || b.getAttribute("aria-disabled") === "true", color: cs.color, bg: cs.backgroundColor, gauge: b.classList.contains("cd") && parseFloat(bef.width) > 0 ? bef.backgroundColor : null, edge: cs.borderBottomColor };
     }));
@@ -2167,6 +2168,10 @@ test("画面", { skip }, async (t) => {
     rows = await contrasts();
     assert.ok(rows.some((r) => !r.off && r.id === "bInvert"), "上 を選ぶと Flip が押せる");
     check(rows, "押せるとき");
+    // Back は卓の外（KJ-090）：背景の上で読める（押せるとき 4.5 以上）
+    const bkc = await page.evaluate(() => ({ color: getComputedStyle(document.getElementById("bBack")).color, bg: getComputedStyle(document.body).backgroundColor, off: document.getElementById("bBack").disabled }));
+    assert.equal(bkc.off, false, "札を選ぶと Back が押せる");
+    assert.ok(ratio(bkc.color, bkc.bg) >= 4.5, `押せるとき bBack 文字と地（${bkc.color} / ${bkc.bg}）`);
     const enabled = rows.find((r) => r.id === "bInvert"), disabled = rows.find((r) => r.off && !["bBack", "bRedraw"].includes(r.id));
     assert.ok(disabled, "押せないボタンがある");
     assert.notEqual(enabled.bg, disabled.bg, "押せるときと押せないときが見分けられる");
