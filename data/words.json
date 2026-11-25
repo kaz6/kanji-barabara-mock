@@ -15,78 +15,78 @@
  },
  "stats": {
   "hold_by_level": {
-   "N5": 140,
-   "N4": 353,
-   "G1": 137
+   "N5": 143,
+   "N4": 357,
+   "G1": 140
   },
   "by_level": {
    "N5": {
-    "total": 2614,
+    "total": 2663,
     "by_length": {
      "1": 97,
-     "2": 1773,
-     "3": 573,
-     "4": 171
+     "2": 1807,
+     "3": 586,
+     "4": 173
     },
-    "common": 751,
-    "yoji": 43,
-    "pn": 16,
+    "common": 755,
+    "yoji": 44,
+    "pn": 17,
     "kana": {
      "な": 1,
-     "の": 114,
-     "る": 34
+     "の": 119,
+     "る": 35
     }
    },
    "N4": {
-    "total": 10895,
+    "total": 10987,
     "by_length": {
      "1": 253,
-     "2": 6605,
-     "3": 2835,
-     "4": 1202
+     "2": 6672,
+     "3": 2855,
+     "4": 1207
     },
-    "common": 2475,
-    "yoji": 202,
-    "pn": 56,
+    "common": 2483,
+    "yoji": 203,
+    "pn": 57,
     "kana": {
      "な": 4,
-     "の": 310,
-     "る": 123
+     "の": 315,
+     "る": 124
     }
    },
    "G1": {
-    "total": 2749,
+    "total": 2799,
     "by_length": {
      "1": 78,
-     "2": 1870,
-     "3": 610,
-     "4": 191
+     "2": 1906,
+     "3": 623,
+     "4": 192
     },
-    "common": 747,
-    "yoji": 47,
-    "pn": 28,
+    "common": 751,
+    "yoji": 48,
+    "pn": 29,
     "kana": {
      "な": 1,
-     "の": 102,
-     "る": 34
+     "の": 107,
+     "る": 35
     }
    }
   },
-  "total": 10941,
+  "total": 11033,
   "by_length": {
    "1": 261,
-   "2": 6626,
-   "3": 2847,
-   "4": 1207
+   "2": 6693,
+   "3": 2867,
+   "4": 1212
   },
-  "common": 2487,
-  "yoji": 204,
-  "pn": 56,
-  "pn_added": 24,
+  "common": 2495,
+  "yoji": 205,
+  "pn": 57,
+  "pn_added": 25,
   "kana": {
    "な": 4,
-   "の": 310,
-   "る": 123
+   "の": 315,
+   "る": 124
   },
   "kana_skipped": {
    "かなが2つ以上": 17,
@@ -2701,6 +2701,16 @@
    "common": true
   },
   {
+   "w": "一丸",
+   "lv": "N5",
+   "kana": "いちがん",
+   "en": [
+    "one lump; one body"
+   ],
+   "g1": true,
+   "common": true
+  },
+  {
    "w": "一二",
    "lv": "N5",
    "kana": "いちに",
@@ -4344,6 +4354,15 @@
     "medium and high (level)"
    ],
    "g1": true,
+   "common": true
+  },
+  {
+   "w": "丸太",
+   "lv": "N4",
+   "kana": "まるた",
+   "en": [
+    "log"
+   ],
    "common": true
   },
   {
@@ -6618,6 +6637,15 @@
    "common": true
   },
   {
+   "w": "凡人",
+   "lv": "N4",
+   "kana": "ぼんじん",
+   "en": [
+    "ordinary person; average person"
+   ],
+   "common": true
+  },
+  {
    "w": "出る",
    "lv": "N5",
    "kana": "でる",
@@ -6885,6 +6913,25 @@
    "en": [
     "running (for election); coming forward as a candidate",
     "going on horseback"
+   ],
+   "common": true
+  },
+  {
+   "w": "刃先",
+   "lv": "N5",
+   "kana": "はさき",
+   "en": [
+    "edge of blade"
+   ],
+   "g1": true,
+   "common": true
+  },
+  {
+   "w": "刃物",
+   "lv": "N4",
+   "kana": "はもの",
+   "en": [
+    "edged tool; cutlery"
    ],
    "common": true
   },
@@ -15566,6 +15613,16 @@
    "common": true
   },
   {
+   "w": "氷山",
+   "lv": "N5",
+   "kana": "ひょうざん",
+   "en": [
+    "iceberg"
+   ],
+   "g1": true,
+   "common": true
+  },
+  {
    "w": "注入",
    "lv": "N4",
    "kana": "ちゅうにゅう",
@@ -23753,6 +23810,14 @@
    ]
   },
   {
+   "w": "不凡",
+   "lv": "N4",
+   "kana": "ふぼん",
+   "en": [
+    "uncommon; outstanding"
+   ]
+  },
+  {
    "w": "不同",
    "lv": "N4",
    "kana": "ふどう",
@@ -24626,6 +24691,158 @@
    "kana": "なかぐろ",
    "en": [
     "middle dot; centred period"
+   ]
+  },
+  {
+   "w": "丸一",
+   "lv": "N5",
+   "kana": "まるいち",
+   "en": [
+    "bisected-circle seal"
+   ],
+   "g1": true
+  },
+  {
+   "w": "丸丸",
+   "lv": "N5",
+   "kana": "まるまる",
+   "en": [
+    "plump; rotund",
+    "entirely; completely"
+   ],
+   "g1": true
+  },
+  {
+   "w": "丸八",
+   "lv": "N5",
+   "kana": "まるはち",
+   "en": [
+    "Cyathea mertensiana (species of tree fern)"
+   ],
+   "g1": true
+  },
+  {
+   "w": "丸十",
+   "lv": "N5",
+   "kana": "まるじゅう",
+   "en": [
+    "cross in a circle"
+   ],
+   "g1": true
+  },
+  {
+   "w": "丸台",
+   "lv": "N4",
+   "kana": "まるだい",
+   "en": [
+    "braiding stand with a circular top"
+   ]
+  },
+  {
+   "w": "丸味",
+   "lv": "N4",
+   "kana": "まるみ",
+   "en": [
+    "roundness; rotundity",
+    "mellowness; maturity"
+   ]
+  },
+  {
+   "w": "丸字",
+   "lv": "N4",
+   "kana": "まるじ",
+   "en": [
+    "rounded handwriting"
+   ],
+   "g1": true
+  },
+  {
+   "w": "丸山",
+   "lv": "N5",
+   "kana": "まるやま",
+   "en": [
+    "Maruyama"
+   ],
+   "g1": true,
+   "pn": [
+    "名字"
+   ]
+  },
+  {
+   "w": "丸木",
+   "lv": "N5",
+   "kana": "まるき",
+   "en": [
+    "log"
+   ],
+   "g1": true
+  },
+  {
+   "w": "丸本",
+   "lv": "N5",
+   "kana": "まるぼん",
+   "en": [
+    "reciter's book; complete set of books"
+   ],
+   "g1": true
+  },
+  {
+   "w": "丸石",
+   "lv": "N4",
+   "kana": "まるいし",
+   "en": [
+    "boulder; cobble"
+   ],
+   "g1": true
+  },
+  {
+   "w": "丸穴",
+   "lv": "N5",
+   "kana": "まるあな",
+   "en": [
+    "round hole"
+   ],
+   "g1": true
+  },
+  {
+   "w": "丸竹",
+   "lv": "N4",
+   "kana": "まるたけ",
+   "en": [
+    "cut bamboo"
+   ],
+   "g1": true
+  },
+  {
+   "w": "丸薬",
+   "lv": "N4",
+   "kana": "がんやく",
+   "en": [
+    "pill"
+   ]
+  },
+  {
+   "w": "丸走",
+   "lv": "N4",
+   "kana": "まるそう",
+   "en": [
+    "biker gang"
+   ]
+  },
+  {
+   "w": "丸顔",
+   "lv": "N4",
+   "kana": "まるがお",
+   "en": [
+    "round face; moon face"
+   ]
+  },
+  {
+   "w": "丸首",
+   "lv": "N5",
+   "kana": "まるくび",
+   "en": [
+    "round-necked (T-shirt)"
    ]
   },
   {
@@ -28744,6 +28961,80 @@
    ]
   },
   {
+   "w": "凡事",
+   "lv": "N4",
+   "kana": "ぼんじ",
+   "en": [
+    "reasonable thing; natural thing"
+   ]
+  },
+  {
+   "w": "凡体",
+   "lv": "N4",
+   "kana": "ぼんたい",
+   "en": [
+    "mediocrity; mediocre"
+   ]
+  },
+  {
+   "w": "凡作",
+   "lv": "N4",
+   "kana": "ぼんさく",
+   "en": [
+    "mediocre work; poor work"
+   ]
+  },
+  {
+   "w": "凡凡",
+   "lv": "N4",
+   "kana": "ぼんぼん",
+   "en": [
+    "ordinary; usual"
+   ]
+  },
+  {
+   "w": "凡小",
+   "lv": "N4",
+   "kana": "ぼんしょう",
+   "en": [
+    "small and of mediocre talent"
+   ]
+  },
+  {
+   "w": "凡手",
+   "lv": "N4",
+   "kana": "ぼんしゅ",
+   "en": [
+    "mediocre ability; person of ordinary skills",
+    "uninteresting (trivial, worthless) move (go, shogi, othello, etc.)"
+   ]
+  },
+  {
+   "w": "凡書",
+   "lv": "N4",
+   "kana": "ぼんしょ",
+   "en": [
+    "ordinary book; ordinary handwriting"
+   ]
+  },
+  {
+   "w": "凡百",
+   "lv": "N4",
+   "kana": "ぼんひゃく",
+   "en": [
+    "many; many kinds"
+   ]
+  },
+  {
+   "w": "出丸",
+   "lv": "N5",
+   "kana": "でまる",
+   "en": [
+    "small castle projecting from a larger castle; tower projecting from a larger castle"
+   ],
+   "g1": true
+  },
+  {
    "w": "出京",
    "lv": "N4",
    "kana": "しゅっきょう",
@@ -28775,6 +29066,15 @@
    "kana": "でさき",
    "en": [
     "one's destination"
+   ],
+   "g1": true
+  },
+  {
+   "w": "出刃",
+   "lv": "N5",
+   "kana": "でば",
+   "en": [
+    "knife; pointed carver"
    ],
    "g1": true
   },
@@ -28938,6 +29238,15 @@
    "g1": true
   },
   {
+   "w": "刀刃",
+   "lv": "N5",
+   "kana": "とうじん",
+   "en": [
+    "sword blade"
+   ],
+   "g1": true
+  },
+  {
    "w": "刀子",
    "lv": "N5",
    "kana": "とうす",
@@ -28978,6 +29287,24 @@
    "en": [
     "sword bean (Canavalia gladiata)"
    ]
+  },
+  {
+   "w": "刃文",
+   "lv": "N4",
+   "kana": "はもん",
+   "en": [
+    "temper pattern of a sword blade"
+   ],
+   "g1": true
+  },
+  {
+   "w": "刃金",
+   "lv": "N5",
+   "kana": "はがね",
+   "en": [
+    "steel"
+   ],
+   "g1": true
   },
   {
    "w": "分の",
@@ -29208,6 +29535,15 @@
    "kana": "せつにゅう",
    "en": [
     "OFF-ON (marking on switches)"
+   ]
+  },
+  {
+   "w": "切刃",
+   "lv": "N4",
+   "kana": "せっぱ",
+   "en": [
+    "thin washer on either side of the guard (tsuba) of a sword",
+    "(up to) the hilt; wits' end"
    ]
   },
   {
@@ -35361,6 +35697,15 @@
    "g1": true
   },
   {
+   "w": "大凡",
+   "lv": "N4",
+   "kana": "おおよそ",
+   "en": [
+    "about; roughly",
+    "generally; on the whole"
+   ]
+  },
+  {
    "w": "大前",
    "lv": "N5",
    "kana": "おおまえ",
@@ -37781,6 +38126,15 @@
    "kana": "しょうさん",
    "en": [
     "third year of elementary school; third year elementary school student"
+   ],
+   "g1": true
+  },
+  {
+   "w": "小丸",
+   "lv": "N5",
+   "kana": "こまる",
+   "en": [
+    "komaru (type of playing cards)"
    ],
    "g1": true
   },
@@ -44299,6 +44653,16 @@
    ]
   },
   {
+   "w": "本丸",
+   "lv": "N5",
+   "kana": "ほんまる",
+   "en": [
+    "inner citadel",
+    "core; center"
+   ],
+   "g1": true
+  },
+  {
    "w": "本代",
    "lv": "N4",
    "kana": "ほんだい",
@@ -45487,6 +45851,15 @@
    "kana": "けっぽん",
    "en": [
     "missing volume"
+   ],
+   "g1": true
+  },
+  {
+   "w": "欠氷",
+   "lv": "N5",
+   "kana": "かきごおり",
+   "en": [
+    "shaved ice (usually served with flavored simple syrup); Italian ice"
    ],
    "g1": true
   },
@@ -46837,6 +47210,15 @@
    ]
   },
   {
+   "w": "水氷",
+   "lv": "N5",
+   "kana": "すいひょう",
+   "en": [
+    "(water) ice; frozen water"
+   ],
+   "g1": true
+  },
+  {
    "w": "水注",
    "lv": "N4",
    "kana": "すいちゅう",
@@ -47036,6 +47418,138 @@
    "kana": "すいぎょ",
    "en": [
     "water and fish"
+   ]
+  },
+  {
+   "w": "氷る",
+   "lv": "N5",
+   "kana": "こおる",
+   "en": [
+    "to freeze; to be frozen over"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "氷上",
+   "lv": "N5",
+   "kana": "ひょうじょう",
+   "en": [
+    "on ice"
+   ],
+   "g1": true
+  },
+  {
+   "w": "氷人",
+   "lv": "N5",
+   "kana": "ひょうじん",
+   "en": [
+    "go-between (in marriage)"
+   ],
+   "g1": true
+  },
+  {
+   "w": "氷刃",
+   "lv": "N5",
+   "kana": "ひょうじん",
+   "en": [
+    "sharp, glistening sword"
+   ],
+   "g1": true
+  },
+  {
+   "w": "氷室",
+   "lv": "N4",
+   "kana": "こおりむろ",
+   "en": [
+    "ice house; ice room"
+   ]
+  },
+  {
+   "w": "氷屋",
+   "lv": "N4",
+   "kana": "こおりや",
+   "en": [
+    "ice man; ice shop"
+   ]
+  },
+  {
+   "w": "氷映",
+   "lv": "N4",
+   "kana": "ひょうえい",
+   "en": [
+    "iceblink"
+   ]
+  },
+  {
+   "w": "氷水",
+   "lv": "N5",
+   "kana": "こおりみず",
+   "en": [
+    "ice water",
+    "shaved ice (usually served with flavored simple syrup)"
+   ],
+   "g1": true
+  },
+  {
+   "w": "氷海",
+   "lv": "N4",
+   "kana": "ひょうかい",
+   "en": [
+    "frozen sea; icy waters"
+   ]
+  },
+  {
+   "w": "氷田",
+   "lv": "N5",
+   "kana": "ひょうでん",
+   "en": [
+    "field of eternal snow"
+   ],
+   "g1": true
+  },
+  {
+   "w": "氷舌",
+   "lv": "N5",
+   "kana": "ひょうぜつ",
+   "en": [
+    "ice tongue"
+   ],
+   "g1": true
+  },
+  {
+   "w": "氷雨",
+   "lv": "N5",
+   "kana": "ひさめ",
+   "en": [
+    "hail; sleet",
+    "chilly rain; freezing rain"
+   ],
+   "g1": true
+  },
+  {
+   "w": "氷頭",
+   "lv": "N4",
+   "kana": "ひず",
+   "en": [
+    "thinly-sliced salmon head cartilage (also whale etc.)"
+   ]
+  },
+  {
+   "w": "氷食",
+   "lv": "N5",
+   "kana": "ひょうしょく",
+   "en": [
+    "glacial scouring; glacial erosion"
+   ],
+   "g1": true
+  },
+  {
+   "w": "氷魚",
+   "lv": "N5",
+   "kana": "ひうお",
+   "en": [
+    "whitebait; immature sweetfish"
    ]
   },
   {
@@ -47427,6 +47941,14 @@
    "en": [
     "sea air; sea breeze",
     "ocean and atmosphere"
+   ]
+  },
+  {
+   "w": "海氷",
+   "lv": "N4",
+   "kana": "かいひょう",
+   "en": [
+    "sea ice"
    ]
   },
   {
@@ -49774,6 +50296,15 @@
    ]
   },
   {
+   "w": "白刃",
+   "lv": "N5",
+   "kana": "はくじん",
+   "en": [
+    "drawn sword; naked sword"
+   ],
+   "g1": true
+  },
+  {
    "w": "白化",
    "lv": "N5",
    "kana": "はっか",
@@ -50899,6 +51430,15 @@
    ]
   },
   {
+   "w": "着氷",
+   "lv": "N4",
+   "kana": "ちゃくひょう",
+   "en": [
+    "icing (on an aircraft, ship, etc.); ice accretion",
+    "landing (a jump in ice skating)"
+   ]
+  },
+  {
    "w": "着火",
    "lv": "N4",
    "kana": "ちゃっか",
@@ -50969,6 +51509,14 @@
    "en": [
     "fletcher; arrow maker",
     "fletching; arrow-making"
+   ]
+  },
+  {
+   "w": "矢刃",
+   "lv": "N4",
+   "kana": "しじん",
+   "en": [
+    "weapon; arrow and sword"
    ]
   },
   {
@@ -53119,6 +53667,14 @@
    ]
   },
   {
+   "w": "自刃",
+   "lv": "N4",
+   "kana": "じじん",
+   "en": [
+    "suicide by the sword"
+   ]
+  },
+  {
    "w": "自切",
    "lv": "N4",
    "kana": "じせつ",
@@ -53636,6 +54192,15 @@
    ]
   },
   {
+   "w": "花丸",
+   "lv": "N5",
+   "kana": "はなまる",
+   "en": [
+    "encircled flower seal (equiv. of a gold star awarded to children for good work at school)"
+   ],
+   "g1": true
+  },
+  {
    "w": "花代",
    "lv": "N4",
    "kana": "はなだい",
@@ -53724,6 +54289,15 @@
    "en": [
     "flowers and water offered to Buddha",
     "irrigation of a rice field during flowering"
+   ],
+   "g1": true
+  },
+  {
+   "w": "花氷",
+   "lv": "N5",
+   "kana": "はなごおり",
+   "en": [
+    "flowers surrounded by ice"
    ],
    "g1": true
   },
@@ -59068,6 +59642,15 @@
    "g1": true
   },
   {
+   "w": "雨氷",
+   "lv": "N5",
+   "kana": "うひょう",
+   "en": [
+    "freezing rain"
+   ],
+   "g1": true
+  },
+  {
    "w": "雨注",
    "lv": "N4",
    "kana": "うちゅう",
@@ -60976,6 +61559,15 @@
    ]
   },
   {
+   "w": "黒丸",
+   "lv": "N4",
+   "kana": "くろまる",
+   "en": [
+    "black spot; black dot",
+    "middle dot; interpunct"
+   ]
+  },
+  {
    "w": "黒体",
    "lv": "N4",
    "kana": "こくたい",
@@ -62136,6 +62728,15 @@
    "common": true
   },
   {
+   "w": "南氷洋",
+   "lv": "N4",
+   "kana": "なんひょうよう",
+   "en": [
+    "Antarctic Ocean"
+   ],
+   "common": true
+  },
+  {
    "w": "反作用",
    "lv": "N4",
    "kana": "はんさよう",
@@ -62901,6 +63502,18 @@
    "en": [
     "traveller; traveler"
    ],
+   "common": true
+  },
+  {
+   "w": "日の丸",
+   "lv": "N5",
+   "kana": "ひのまる",
+   "en": [
+    "outline of the Sun (esp. represented as a red circle)",
+    "the Japanese flag"
+   ],
+   "kana_at": 1,
+   "g1": true,
    "common": true
   },
   {
@@ -64330,6 +64943,15 @@
    ]
   },
   {
+   "w": "一年氷",
+   "lv": "N5",
+   "kana": "いちねんごおり",
+   "en": [
+    "first-year ice"
+   ],
+   "g1": true
+  },
+  {
    "w": "一年草",
    "lv": null,
    "kana": "いちねんそう",
@@ -64604,6 +65226,16 @@
    "en": [
     "cure-all; panacea"
    ]
+  },
+  {
+   "w": "三の丸",
+   "lv": "N5",
+   "kana": "さんのまる",
+   "en": [
+    "outermost region of the castle"
+   ],
+   "kana_at": 1,
+   "g1": true
   },
   {
    "w": "三の糸",
@@ -65861,6 +66493,50 @@
    "g1": true
   },
   {
+   "w": "丸一年",
+   "lv": "N5",
+   "kana": "まるいちねん",
+   "en": [
+    "the whole year; all the year"
+   ],
+   "g1": true
+  },
+  {
+   "w": "丸一日",
+   "lv": "N5",
+   "kana": "まるいちにち",
+   "en": [
+    "the whole day; all the day"
+   ],
+   "g1": true
+  },
+  {
+   "w": "丸一月",
+   "lv": "N5",
+   "kana": "まるひとつき",
+   "en": [
+    "the whole month; all the month"
+   ],
+   "g1": true
+  },
+  {
+   "w": "丸大豆",
+   "lv": "N4",
+   "kana": "まるだいず",
+   "en": [
+    "whole soybeans; unprocessed soybeans"
+   ]
+  },
+  {
+   "w": "丸文字",
+   "lv": "N4",
+   "kana": "まるもじ",
+   "en": [
+    "rounded handwriting"
+   ],
+   "g1": true
+  },
+  {
    "w": "主の日",
    "lv": "N4",
    "kana": "しゅのひ",
@@ -66058,6 +66734,16 @@
    "kana_at": 2
   },
   {
+   "w": "二の丸",
+   "lv": "N5",
+   "kana": "にのまる",
+   "en": [
+    "outer citadel"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
    "w": "二の町",
    "lv": "N4",
    "kana": "にのまち",
@@ -66213,6 +66899,15 @@
    "g1": true
   },
   {
+   "w": "二年氷",
+   "lv": "N5",
+   "kana": "にねんごおり",
+   "en": [
+    "second-year ice"
+   ],
+   "g1": true
+  },
+  {
    "w": "二年生",
    "lv": "N5",
    "kana": "にねんせい",
@@ -66330,6 +67025,14 @@
    "kana": "にしんぎ",
    "en": [
     "binary tree"
+   ]
+  },
+  {
+   "w": "二重丸",
+   "lv": "N4",
+   "kana": "にじゅうまる",
+   "en": [
+    "double circle (indicating \"very good\" on a piece of school work)"
    ]
   },
   {
@@ -68343,6 +69046,15 @@
    ]
   },
   {
+   "w": "円刃刀",
+   "lv": "N5",
+   "kana": "えんじんとう",
+   "en": [
+    "round-edged scalpel"
+   ],
+   "g1": true
+  },
+  {
    "w": "円運動",
    "lv": "N4",
    "kana": "えんうんどう",
@@ -68445,6 +69157,14 @@
    "kana": "ふゆやさい",
    "en": [
     "winter vegetables"
+   ]
+  },
+  {
+   "w": "凡試合",
+   "lv": "N4",
+   "kana": "ぼんしあい",
+   "en": [
+    "dull match; dull game"
    ]
   },
   {
@@ -69296,6 +70016,14 @@
    "kana": "きたごち",
    "en": [
     "northeasterly wind"
+   ]
+  },
+  {
+   "w": "北氷洋",
+   "lv": "N4",
+   "kana": "ほくひょうよう",
+   "en": [
+    "Arctic Ocean"
    ]
   },
   {
@@ -71748,6 +72476,15 @@
    "kana": "たこくかん",
    "en": [
     "multilateral; multinational"
+   ],
+   "g1": true
+  },
+  {
+   "w": "多年氷",
+   "lv": "N5",
+   "kana": "たねんひょう",
+   "en": [
+    "multi-year ice"
    ],
    "g1": true
   },
@@ -78200,6 +78937,33 @@
    ]
   },
   {
+   "w": "氷の刃",
+   "lv": "N5",
+   "kana": "こおりのやいば",
+   "en": [
+    "gleaming sword"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "氷下魚",
+   "lv": "N5",
+   "kana": "こまい",
+   "en": [
+    "saffron cod (Eleginus gracilis)",
+    "fish caught under ice"
+   ]
+  },
+  {
+   "w": "氷小豆",
+   "lv": "N4",
+   "kana": "こおりあずき",
+   "en": [
+    "bowl of shaved ice with boiled adzuki beans"
+   ]
+  },
+  {
    "w": "注意力",
    "lv": "N4",
    "kana": "ちゅういりょく",
@@ -81745,6 +82509,16 @@
    "en": [
     "reed warbler (esp. the great reed warbler, but also the black-browed reed warbler)"
    ],
+   "g1": true
+  },
+  {
+   "w": "西の丸",
+   "lv": "N5",
+   "kana": "にしのまる",
+   "en": [
+    "western citadel; west wing of the Edo castle (where the heir apparent or retired shogun would live)"
+   ],
+   "kana_at": 1,
    "g1": true
   },
   {
@@ -87165,6 +87939,30 @@
    ]
   },
   {
+   "w": "丸一週間",
+   "lv": "N5",
+   "kana": "まるいっしゅうかん",
+   "en": [
+    "the whole week; all the week"
+   ]
+  },
+  {
+   "w": "丸太小屋",
+   "lv": "N4",
+   "kana": "まるたごや",
+   "en": [
+    "log cabin; blockhouse"
+   ]
+  },
+  {
+   "w": "丸太足場",
+   "lv": "N4",
+   "kana": "まるたあしば",
+   "en": [
+    "scaffolding"
+   ]
+  },
+  {
    "w": "乗合馬車",
    "lv": "N4",
    "kana": "のりあいばしゃ",
@@ -91883,6 +92681,16 @@
    ]
   },
   {
+   "w": "月下氷人",
+   "lv": "N5",
+   "kana": "げっかひょうじん",
+   "en": [
+    "go-between; matchmaker"
+   ],
+   "g1": true,
+   "yoji": true
+  },
+  {
    "w": "月火水木",
    "lv": "N5",
    "kana": "げつかすいもく",
@@ -94556,6 +95364,14 @@
    "kana": "きどうじかん",
    "en": [
     "startup (interval of) time"
+   ]
+  },
+  {
+   "w": "足場丸太",
+   "lv": "N4",
+   "kana": "あしばまるた",
+   "en": [
+    "scaffolding pole"
    ]
   },
   {

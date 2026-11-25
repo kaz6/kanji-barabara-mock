@@ -144,6 +144,12 @@ def holdable(level_chars, parts_json, cycles_json, antonyms_json, homo_groups=No
                     grew = True
     base = CH | held
     keep = rows_kept(base)
+    # 行き先だけの字（KJ-077・D-095。parts.json の reach）：左右の部品が両方手に入るときだけ行を使う（makeTables の T.REACH と同じ）
+    reach = parts_json.get("reach", {})
+    seen = {c for k in keep for c in [k, *allp[k]]}
+    reach_rows = {k: v for k, v in reach.items() if all(c in base or c in seen for c in v)}
+    allp = {**allp, **reach_rows}
+    keep = keep | set(reach_rows)
     hold = set(CH)
     for k in keep:
         for c in [k, *allp[k]]:

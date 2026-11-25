@@ -59,7 +59,7 @@ test("部品表：できる字はデータの字か中継ぎ（relay）で、中
 for (const lv of ["N5", "N4"]) {
   const L = TT[lv];
   test(`部品表（${lv}）：できる字はレベルの字か中継ぎ。中継ぎはそのレベルのどれかの字の部品になる`, () => {
-    for (const k of Object.keys(L.parts)) assert.ok(L.CHARS.has(k) || L.RELAY.has(k), `${k}`);
+    for (const k of Object.keys(L.parts)) assert.ok(L.CHARS.has(k) || L.RELAY.has(k) || L.REACH.has(k), `${k}`); // REACH＝行き先だけの字（KJ-077）
     for (const r of L.RELAY) assert.ok(Object.values(L.parts).some((v) => v.includes(r)), `relay ${r}`);
     if (lv === "N5") for (const k of Object.keys(L.parts)) assert.ok(LV[k] !== "N4" || L.RELAY.has(k), `N5 で N4 の字 ${k} ができる（田 は中継ぎなのでよい）`);
   });
@@ -291,7 +291,7 @@ test("決まり：数値がそろっている（KJ-003 の仮置き）", () => {
 
 test("字として見せる（jouyou）：N5 の外で、部品表に出てくる字。玉 を含む", () => {
   assert.ok(K.isChar(TT.N4, "里") && !K.isChar(TT.N4, "辶"));
-  const used = new Set(Object.entries(parts).flatMap(([k, v]) => [k, ...v]));
+  const used = new Set(Object.entries({ ...parts, ...D.parts.reach }).flatMap(([k, v]) => [k, ...v]));
   for (const c of D.parts.jouyou) {
     assert.ok(!N5.has(c), `${c} は N5`);
     assert.ok(used.has(c), `${c} は部品表に出てこない`);
@@ -304,7 +304,8 @@ test("字として見せる（jouyou）：N5 の外で、部品表に出てく�
 test("split_shapes：割り方（parts.json）の字すべてに形がある。割れない字には無い", () => {
   const sh = D.split_shapes.shapes;
   for (const k of Object.keys(parts)) assert.ok(sh[k], `${k} に形が無い`);
-  for (const k of Object.keys(sh)) assert.ok(parts[k], `${k} は割れない字なのに形がある`);
+  for (const k of Object.keys(sh)) assert.ok(parts[k] || D.parts.reach[k], `${k} は割れない字なのに形がある`);
+  for (const k of Object.keys(D.parts.reach)) assert.ok(sh[k], `${k}（行き先だけの字）に形が無い`);
   for (const [k, v] of Object.entries(sh)) {
     assert.ok(["lr", "tb", "other"].includes(v.s), `${k} の形`);
     if (v.s !== "other") assert.ok(v.at > 0 && v.at < 1, `${k} の線の位置`);
