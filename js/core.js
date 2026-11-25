@@ -659,6 +659,7 @@
     const HR = R.hint || { fail_streak: 3, glow_sec: 10 };
     g.hintStreak = 0;
     g.hintCount = 0;
+    g.hinted = []; // KJ-082：その試合で人に出たヒントの「狙った言葉」（出た順。CPU・チュートリアルは入れない）。終わりの「見逃した言葉」に使う
     g.hint = null; // { tier: 1|2|3, ids: [光らせる札の id], button: ボタンの id（段1は無し）, op, word, until }
     // KJ-065：ヒントは glow_sec（10秒）のあいだ、ほかの手をしても残る。消えるのは、10秒たったとき・光らせた言葉が使われたとき（自分が放った・CPU や相手が先に放った）・光らせた札が手札から無くなったとき（1枚でも）
     g.hintActive = () => {
@@ -750,6 +751,7 @@
       const h = makeHint(p);
       g.hint = h.ids.length || h.button ? { ...h, until: now() + HR.glow_sec, redraws: p.redraws } : null; // 光らせる物が無いとき（引き直しを使いきった）は、札も出さない
       g.hintCount++;
+      if (h.word) g.hinted.push(h.word);
       const lit = h.ids.map((id) => g.byId(p, id)).filter(Boolean).map((x) => x.c);
       addLog(p.name, "ヒント", lit, [], 0, `段${h.tier}：${h.op}${h.word ? `。狙った言葉：${h.word}（${[...h.word].length}字）` : ""}`);
     };
@@ -765,6 +767,7 @@
       if (h.tier !== 1) return false; // 手札で放てる言葉があるときだけ（1手で放てる段2・引き直しの段3は、見逃しでは光らせない）
       g.hint = { ...h, until: now() + HR.glow_sec, redraws: g.me.redraws };
       g.hintCount++;
+      if (h.word) g.hinted.push(h.word);
       const lit = h.ids.map((id) => g.byId(g.me, id)).filter(Boolean).map((x) => x.c);
       addLog(g.me.name, "ヒント", lit, [], 0, `見逃し${sec}秒。段1：放つ。狙った言葉：${h.word}（${[...h.word].length}字）`);
       return true;
@@ -1161,10 +1164,21 @@
       lastOpTry = { row: g.log[g.log.length - 1], key, n: 1 };
     };
 
+    // KJ-082（D-100）：ヒントで光ったのに、その試合で人が放たなかった言葉を1つ。字数の多いもの → 同じなら試合の後のほう。無ければ null
+    g.missedWord = () => {
+      const thrown = new Set(g.log.filter((e) => e.op === "放つ" && e.who === g.me.name).map((e) => e.from.join("")));
+      let best = null;
+      g.hinted.forEach((w, i) => {
+        if (thrown.has(w)) return;
+        if (!best || [...w].length >= [...best].length) best = w; // 同じ字数なら後に出たほう
+      });
+      return best;
+    };
     function finish(winner, why) {
       g.over = true;
       g.winner = winner;
-      addLog("—", "終わり", [], [], 0, g.solo ? `ひとりで ${g.me.score}点（${why}）` : (winner ? `${winner.name}の勝ち` : "引き分け") + `（${why}）`);
+      const missed = g.missedWord();
+      addLog("—", "終わり", [], [], 0, (g.solo ? `ひとりで ${g.me.score}点（${why}）` : (winner ? `${winner.name}の勝ち` : "引き分け") + `（${why}）`) + (missed ? `。見逃した言葉：${missed}` : ""));
       g.events.push({ type: "over", winner, solo: g.solo });
     }
     // 合言葉の部屋の終わり（createMatchClient が先着や時間切れで決めて呼ぶ）。winnerKey は "me"／"opp"／null（引き分け）
@@ -1698,7 +1712,16 @@
       const text = e.from.join(""), w = T && T.WORDS ? T.WORDS.get(text) : null;
       return { text, kana: w ? w.kana : "", pts: e.pts, tier: Math.max(1, Math.min(3, [...text].length - 1)) };
     });
-    return { kind, label: END_LABELS[kind], me: g.me.score, cpu: g.solo ? null : g.cpu.score, items };
+    // KJ-082：見逃した言葉（ヒントで光ったのに放たれなかった1つ）。字・読み・意味は台の行と同じもの。無ければ null
+    const mw = g.missedWord ? g.missedWord() : null;
+    let missed = null;
+    if (mw) {
+      const w = T && T.WORDS ? T.WORDS.get(mw) : null;
+      const kana = w ? w.kana : (T && T.COUNTER_READ && counterReading(T, mw) ? counterReading(T, mw).join("・") : "");
+      const en = w && w.en ? w.en.join(" / ") : "";
+      missed = { text: mw, kana, en, line: `見逃した言葉：${mw}${kana ? `（${kana}）` : ""}${en ? ` ${en}` : ""}` };
+    }
+    return { kind, label: END_LABELS[kind], me: g.me.score, cpu: g.solo ? null : g.cpu.score, items, missed };
   }
 
   // play_logs に1行送る中身。1手も動いていなければ null（送らない）
