@@ -71,7 +71,7 @@ test("自刃の画面（KJ-079）", { skip }, async (t) => {
     assert.equal((await page.locator("#msg").innerText()).trim(), "自刃：休 が切れた");
     assert.equal(await page.evaluate(() => __KJ.game.me.cards.map((x) => x.c).includes("休")), false);
     assert.equal(await page.evaluate(() => __KJ.game.me.score), 3, "点はふつうの2字3点");
-    await page.screenshot({ path: path.join(ROOT, "docs/img/kj-079-jijin-hit-375.png") });
+    if (process.env.KJ_SHOT) await page.screenshot({ path: path.join(ROOT, "docs/img/kj-079-jijin-hit-375.png") }); // 画像は KJ_SHOT=1 のときだけ撮り直す
     assert.deepEqual(errors, []);
     await ctx.close();
   });
@@ -80,7 +80,7 @@ test("自刃の画面（KJ-079）", { skip }, async (t) => {
     const { ctx, page, errors } = await begin(browser, url, "自刃一一一一");
     await throwAndTake(page);
     assert.equal((await page.locator("#msg").innerText()).trim(), "自刃：切れる札が無かった");
-    await page.screenshot({ path: path.join(ROOT, "docs/img/kj-079-jijin-none-375.png") });
+    if (process.env.KJ_SHOT) await page.screenshot({ path: path.join(ROOT, "docs/img/kj-079-jijin-none-375.png") }); // 画像は KJ_SHOT=1 のときだけ撮り直す
     assert.deepEqual(errors, []);
     await ctx.close();
   });
