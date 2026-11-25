@@ -50,6 +50,7 @@ npm test
 - `tests/attack.test.js`：特別攻撃ワード（KJ-080。語ごとの効く操作と枚数・大回転は2枚・大集合は最大の組数・空振り・ストックには効かない・CPU が放っても人に効く・自刃は自分のまま・ログ・ヒントが消える）
 - `tests/tutorial.test.js`・`tests/tutorial.browser.test.mjs`：チュートリアル（8段を通せる・その手だけ通す・時間なし CPU なし・ログ／画面で通し・とばす・ボタンから・合言葉では出ない）
 - `tests/layout.browser.test.mjs`：試合の画面の置き場（KJ-078・KJ-090。Back は「あなた」の行の Redraw の左・上の3つは「しくみ」の行・残り時間は CPU の行の右端・Play は幅いっぱい・Redraw は卓の外／Redraw の1回タップ・長押し・途中で離す）
+- `tests/cpuhand.browser.test.mjs`：CPU 対戦で相手の上の段を見せる（KJ-092。CPU の行の下に8マス・字だけ・ストックは出さない・押せない・CPU が動くと変わる・375×667 に自分の手札が収まる・ひとりとチュートリアルでは出ない。合言葉の部屋で出ないことは tests/browser.test.mjs）
 - `tests/layoutab.browser.test.mjs`：試合の画面の並びは A だけ（KJ-089。並び B と、はじめる前の画面の「並び」の切り替えを消した。切り替えも下の段 `#dock` も無い・端末に `kj-layout` の B が残っていても A の置き場〔Back は Redraw の左・Play は幅いっぱい〕。`kj-layout` は読まない）
 - `tests/joinnote.test.js`・`tests/joinnote.browser.test.mjs`：部品の札のくっつく相手（KJ-083。手札・ストックにあるときだけ・字の札では出ない・並べる順・3組まで・3つの形〔`data/rules.json` の `join_note`。full／partner／mask。`K.joinNote`〕／画面：1行目に出る・375／320px で情報の欄が2行のまま）
 - `tests/missed.test.js`・`tests/missed.browser.test.mjs`：終わりの「見逃した言葉」（KJ-082。ヒントで光って放たなかった語が出る・放った語は出ない・字数の多いほう→後のほう・ヒントが無ければ出ない・CPU は数えない・小1 の見逃しの光りも／画面：終わりに1行出る・無ければ空）
