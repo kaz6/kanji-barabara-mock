@@ -119,6 +119,16 @@ test("食らいの演出（KJ-081）", { skip }, async (t) => {
     await ctx.close();
   });
 
+  await t.test("CPU が くっつけ られる：寄る前の2枚も含めて、演出の札はみな「手札 n / 8」の右", async () => {
+    const { ctx, page } = await begin(browser, url);
+    await hit(page, { op: "join", victim: "CPU", hits: [OPS.join] });
+    const cnt = await page.locator("#cpuCount").boundingBox();
+    const xs = await page.locator("#fxPts .hitfx").evaluateAll((els) => els.map((e) => e.getBoundingClientRect().left));
+    assert.ok(xs.length >= 3, "寄る2枚＋できた札");
+    for (const x of xs) assert.ok(x >= cnt.x + cnt.width - 1, `左端 ${x} が ${cnt.x + cnt.width} より右`);
+    await ctx.close();
+  });
+
   await t.test("2組に効いたら（大集合など）、札が2つぶん出る", async () => {
     const { ctx, page } = await begin(browser, url);
     await hit(page, { op: "join", victim: "あなた", hits: [OPS.join, { from: ["日", "月"], to: ["明"] }] });
