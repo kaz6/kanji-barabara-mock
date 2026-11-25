@@ -17,6 +17,7 @@ test("rules.vibrate：作者に伝えた形が入っている（仮置き）", (
   assert.equal(V.join, 20);
   assert.deepEqual(V.win, [100, 60, 100, 60, 300]);
   assert.equal(V.lose, 150);
+  assert.deepEqual(V.hit, [30, 40, 30], "特別攻撃ワードを食らったとき（KJ-081。人が食らったときだけ）");
 });
 
 test("vibratePattern：手ごとに決めた形を返す", () => {
@@ -27,6 +28,7 @@ test("vibratePattern：手ごとに決めた形を返す", () => {
   assert.deepEqual(P("reject"), [15, 60, 15]);
   assert.deepEqual(P("win"), V.win);
   assert.equal(P("lose"), 150);
+  assert.deepEqual(P("hit"), [30, 40, 30]);
 });
 
 test("vibratePattern：放つは 特別な語 ＞ 4字・四字熟語 ＞ 3字 ＞ 2字", () => {

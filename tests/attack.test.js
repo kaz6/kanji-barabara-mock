@@ -261,3 +261,19 @@ test("画面の文：食らわせた・食らった・空振り", () => {
   assert.equal(t("切る", "年年年年年年年年"), "あなたの 切る：空振り");
   assert.equal(t("大回転", "六六年年年年年年"), "あなたの 大回転：CPU の 六 が 七 に、CPU の 六 が 七 に");
 });
+
+// ---- 食らいの演出（KJ-081）：画面が効いた札を見つけるための ids（効いた札の新しい id。hits と同じ順） ----
+test("効いたとき event.ids が hits と同じ並びで、いまの札の id を指す（割る＝2枚・くっつける＝1枚）", () => {
+  let { g } = human("切る", "休年年年年年年年");
+  let ev = effects(g)[0];
+  assert.equal(ev.ids.length, ev.hits.length);
+  assert.deepEqual(ev.ids[0].map((id) => g.cpu.cards.find((x) => x.id === id).c), ["人", "木"]);
+  ({ g } = human("集合", "人木年年年年年年"));
+  ev = effects(g)[0];
+  assert.equal(ev.hits.length, 1);
+  assert.deepEqual(ev.ids[0].map((id) => g.cpu.cards.find((x) => x.id === id).c), ev.hits[0].to);
+  assert.equal(ev.ids[0].length, 1);
+  ({ g } = human("回転", "年年年年年年年年"));
+  ev = effects(g)[0];
+  assert.deepEqual([ev.hit, ev.hits, ev.ids], [false, [], []], "空振りは ids も空");
+});

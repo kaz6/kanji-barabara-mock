@@ -38,6 +38,8 @@ h1{font-size:17px;margin:0 0 2px;font-weight:700}
 #fxPts .pf.loss{color:var(--lose)}
 #fxPts .pf.t2,#fxPts .pf.t3{text-shadow:0 0 8px var(--shine),0 0 2px var(--shine)}
 #fxPts .pf.chip{font-family:var(--kanji);font-size:26px;color:var(--ink);background:var(--tile);border-bottom:3px solid var(--edge);border-radius:4px;padding:3px 8px;line-height:1.1}
+#fxPts .pf.hitfx{font-family:var(--kanji);color:var(--ink);background:var(--tile);border-bottom:3px solid var(--edge);border-radius:4px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#fxPts .pf.hitfx i{position:absolute;left:-20%;top:50%;width:140%;height:3px;margin-top:-1.5px;background:var(--ink);border-radius:2px;transform:rotate(-38deg) scaleX(0);transform-origin:0 50%} /* 斬る：札を斜めに払う一閃 */
 #fxPts .pf.ring{width:80px;height:80px;border:4px solid var(--shine);border-radius:50%;box-shadow:0 0 18px 4px var(--shine);background:none}
 .score.neg .n{color:var(--lose)}
 .score .n{display:inline-block}
@@ -621,6 +623,69 @@ $("bTutorial").onclick=startTutorial;
 $("tutSkip").onclick=()=>finishTutorial("skip");
 $("tutGo").onclick=()=>finishTutorial("done");
 function scheduleCpu(){cpuTimer=setTimeout(()=>{if(!G||G.over)return;G.cpuTurn();afterChange();if(!G.over)scheduleCpu()},G.cpuDelay()*1000)}
+// ---------- 食らいの演出（KJ-081。D-099）：効かされた札に短い動き（0.4〜0.6秒）。人が食らったら手札のその札で、CPU が食らったら CPU の点の行のそばに小さく札を出して同じ動き ----------
+// 動きを減らす設定の端末では動かさない（字は render で変わっている）。効かせたのが人（CPU の札に効いた）のときも同じ動きを CPU の点のそばで見せる
+const HITQ=[];
+const HIT_MS={split:560,cycle:520,invert:480,join:560,homophone:420};
+function hitChip(text,cx,cy,w,h,op){ // 生成り色の札（--tile）。#fxPts に出して、時間がきたら必ず消す
+  const e=document.createElement("div");e.className="pf chip hitfx";e.dataset.op=op;e.textContent=text;
+  e.style.width=w+"px";e.style.height=h+"px";e.style.fontSize=Math.round(h*0.62)+"px";e.style.padding="0";
+  e.style.left=Math.round(cx-w/2)+"px";e.style.top=Math.round(cy-h/2)+"px";
+  $("fxPts").appendChild(e);return e;
+}
+function hitPlay(op,real,cx,cy,w,h,from,delay){ // real＝動かす札（手札のその札。CPU のときは小さく出した札）。from＝効く前の字
+  const D0={duration:HIT_MS[op],delay,easing:"ease-out",fill:"backwards"},ms=HIT_MS[op]+delay+60;
+  const half={duration:HIT_MS[op]/2,delay,easing:"ease-in",fill:"both"},late={duration:HIT_MS[op]/2,delay:delay+HIT_MS[op]/2,easing:"ease-out",fill:"backwards"};
+  const gone=(...els)=>setTimeout(()=>els.forEach(x=>x&&x.remove()),ms);
+  if(op==="split"){ // 斜めの一閃 → 札が割れて落ち着く
+    const g=hitChip(from.join(""),cx,cy,w,h,op),l=document.createElement("i");g.appendChild(l);
+    l.animate([{transform:"rotate(-38deg) scaleX(0)"},{transform:"rotate(-38deg) scaleX(1)"}],{duration:HIT_MS[op]*0.45,delay,easing:"ease-out",fill:"both"});
+    g.animate([{opacity:1},{opacity:1,offset:.5},{opacity:0}],{...D0,fill:"both"});
+    real.animate([{transform:"scale(.82)"},{transform:"scale(1)"}],{...D0,delay:delay+HIT_MS[op]*0.35});
+    gone(g);
+  }else if(op==="cycle"){ // 札が1回転して字が変わる
+    const g=hitChip(from.join(""),cx,cy,w,h,op);
+    g.animate([{transform:"rotate(0deg)",opacity:1},{transform:"rotate(180deg)",opacity:0}],half);
+    real.animate([{transform:"rotate(180deg)"},{transform:"rotate(360deg)"}],late);
+    gone(g);
+  }else if(op==="invert"){ // 札がめくれて字が変わる
+    const g=hitChip(from.join(""),cx,cy,w,h,op);
+    g.animate([{transform:"scaleX(1)"},{transform:"scaleX(0)"}],{...half,fill:"both"});
+    real.animate([{transform:"scaleX(0)"},{transform:"scaleX(1)"}],late);
+    gone(g);
+  }else if(op==="join"){ // 2枚が寄って1枚に
+    const gs=from.map((c,i)=>{const g=hitChip(c,cx+(i?1:-1)*w*0.62,cy,w,h,op);g.animate([{transform:"translateX(0)",opacity:1},{transform:`translateX(${(i?-1:1)*w*0.62}px)`,opacity:.9,offset:.7},{transform:`translateX(${(i?-1:1)*w*0.62}px)`,opacity:0}],{...D0,fill:"both"});return g});
+    real.animate([{transform:"scale(.6)"},{transform:"scale(1)"}],{...D0,delay:delay+HIT_MS[op]*0.5});
+    gone(...gs);
+  }else{ // 同じ読み：字がふっと入れ替わる
+    const g=hitChip(from.join(""),cx,cy,w,h,op);
+    g.animate([{opacity:1},{opacity:0}],{...D0,fill:"both"});
+    real.animate([{opacity:0},{opacity:1}],D0);
+    gone(g);
+  }
+}
+function playHits(){
+  while(HITQ.length){
+    const e=HITQ.shift();
+    if(G.over||reduceMotion())continue;
+    const mine=e.victim===G.me.name;
+    e.hits.forEach((h,i)=>{
+      const delay=i*140;
+      if(mine){
+        const el=(e.ids&&e.ids[i]||[]).map(id=>document.querySelector(`#meHand [data-cid="${id}"],#meTray [data-cid="${id}"]`)).find(Boolean);
+        if(!el)return;
+        const r=el.getBoundingClientRect();if(!r.width)return;
+        hitPlay(e.op,el,r.left+r.width/2,r.top+r.height/2,r.width,r.height,h.from,delay);
+      }else{
+        const box=$("cpuScore").getBoundingClientRect();if(!box.width&&!box.height)return; // 画面に出ていない（ひとり用など）
+        const cnt=$("cpuCount").getBoundingClientRect(),w=30,hh=36,cx=Math.max(box.right,cnt.width?cnt.right:0)+22+Math.round(w*0.62)+i*(w+6),cy=box.top+box.height/2; // 点と「手札 n / 8」の右（重ねない）
+        const real=hitChip(h.to.join(""),cx,cy,w,hh,e.op);
+        hitPlay(e.op,real,cx,cy,w,hh,h.from,delay);
+        setTimeout(()=>real.remove(),HIT_MS[e.op]+delay+60+300); // 動いたあと少しだけ札を見せて消す
+      }
+    });
+  }
+}
 function drain(){
   if(!G)return;
   while(G.events.length){
@@ -631,6 +696,7 @@ function drain(){
       if(e.who===G.me.name){const w=T.WORDS.get(e.text);buzz("release",{text:e.text,len:[...e.text].length,special:vibSpecial||T.SPECIAL.has(e.text),yoji:!!(w&&w.yoji)})} // 振動：自分が放ったときだけ（相手の手では震えない）
       if(e.who===G.me.name)vibSpecial=false;
     }
+    if(e.type==="effect"&&e.victim&&e.hits&&e.hits.length){HITQ.push(e);if(e.victim===G.me.name)buzz("hit")} // 食らいの演出（KJ-081）：効いたときだけ。震えるのは人が食らったときだけ（食らわせたときは今の「放つ」の振動のまま）
     if(e.type==="effect"&&(e.who===G.me.name||e.victim===G.me.name))showMsg(K.effectText(e)); // 放つと効く語（KJ-079 自刃・KJ-080 相手の札に効く語）：自分が放った手と、自分の札が食らった手だけ短く出す（CPU の自刃は出さない）
     if(e.type==="over")end(e.winner,e.solo);
   }
@@ -1252,6 +1318,7 @@ function render(){
   if(rad)info.innerHTML=`<span class="rad" data-c="${pc?pc.c:s.rc[0].c}">${rad}</span>`+info.innerHTML;
   renderReleased();
   renderOps();
+  playHits(); // 食らいの演出（KJ-081）。札を作り直したあとに出す
 }
 const setOff=(id,off)=>$(id).setAttribute("aria-disabled",off?"true":"false");
 const isOff=id=>$(id).getAttribute("aria-disabled")==="true";

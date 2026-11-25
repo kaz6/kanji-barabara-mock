@@ -926,8 +926,8 @@
       if (g.solo || M || v.remote) return;
       const upper = () => v.cards.filter((x) => !x.tray);
       const note = `${p === g.me ? "あなた" : p.name} の ${text} で`;
-      const hits = [];
-      const one = (x, op, to) => { const nc = replaceCards(v, [x.id], to); addLog(v.name, op, [x.c], nc.map((y) => y.c), 0, note); hits.push({ from: [x.c], to: nc.map((y) => y.c) }); };
+      const hits = [], ids = []; // ids＝効いた札の新しい id（hits と同じ順。画面の演出が札を見つけるため。KJ-081）
+      const one = (x, op, to) => { const nc = replaceCards(v, [x.id], to); addLog(v.name, op, [x.c], nc.map((y) => y.c), 0, note); hits.push({ from: [x.c], to: nc.map((y) => y.c) }); ids.push(nc.map((y) => y.id)); };
       if (ef.op === "join") {
         // 2枚を1枚に。ef.n 組（"max" はできるだけ多く。1枚は1つの組にしか使わない。組の選びは無作為）
         const cs = upper(), N = cs.length, pairs = [];
@@ -955,6 +955,7 @@
           const nc = replaceCards(v, [a.id, b.id], [to]);
           addLog(v.name, "くっつける", [a.c, b.c], [to], 0, note);
           hits.push({ from: [a.c, b.c], to: nc.map((y) => y.c) });
+          ids.push(nc.map((y) => y.id));
         }
       } else {
         const ok = {
@@ -972,7 +973,7 @@
           else one(x, "同音", [pick(homoChars(T, x.c))]);
         }
       }
-      g.events.push({ type: "effect", who: p.name, victim: v.name, text, op: ef.op, hit: hits.length > 0, hits });
+      g.events.push({ type: "effect", who: p.name, victim: v.name, text, op: ef.op, hit: hits.length > 0, hits, ids });
     }
     // ---------- 放つと効く語（KJ-079・D-098）：放った本人の札に効く。場から取り終わったあと（takes が 0 になったとき）に1回 ----------
     // split_own_random（自刃）：上の段の札のうち「割れる札」（割れる字で、割った部品が手札・ストックに収まるもの）から1枚を無作為に割る。割れる札が無ければ何も起きない。待ち時間はかけない
