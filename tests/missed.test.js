@@ -1,7 +1,7 @@
 // KJ-082（D-100）：試合の終わりに、ヒントで光ったのに放たれなかった言葉を1つ、文字で見せる
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { K, D, T, newGame, setHand } = require("./helpers");
+const { K, D, T, newGame, setHand, hintNow } = require("./helpers");
 
 const tryN = (g, n, p = g.me) => { for (let i = 0; i < n; i++) g.tried(p, [p.cards[0].c, p.cards[1].c], "辞書にない"); };
 const endIt = (g) => { g.clock.t += g.timeLimit; g.tick(); assert.equal(g.over, true); return K.endShow(g, T, g.winner); };
@@ -10,7 +10,7 @@ const endNote = (g) => g.log.find((e) => e.op === "終わり").note;
 test("KJ-082 ヒントで光って放たなかった言葉が、終わりに字・読み・意味で出る。台の行と同じ読みと意味", () => {
   const g = newGame(1, "solo", "N5");
   setHand(g, g.me, "休日山川");
-  tryN(g, 3);
+  hintNow(g);
   const word = g.hinted[0];
   assert.ok(word, "ヒントの狙った言葉が控えられる");
   const w = T.WORDS.get(word);
@@ -25,7 +25,7 @@ test("KJ-082 ヒントで光って放たなかった言葉が、終わりに字�
 test("KJ-082 放った言葉は出さない", () => {
   const g = newGame(1, "solo", "N5");
   setHand(g, g.me, "休日山川");
-  tryN(g, 3);
+  hintNow(g);
   const word = g.hinted[0];
   setHand(g, g.me, word);
   assert.ok(g.release(g.me, g.me.cards.map((x) => x.id)).ok);
@@ -37,7 +37,8 @@ test("KJ-082 放った言葉は出さない", () => {
 test("KJ-082 ヒントが出ていなければ出さない（ログにも足さない）", () => {
   const g = newGame(1, "solo", "N5");
   setHand(g, g.me, "休日山川");
-  tryN(g, 2);
+  g.clock.t += D.rules.hint.timed_sec - 1; g.tick(); // 時限の1秒前では出ない
+  assert.deepEqual(g.hinted, []);
   const d = endIt(g);
   assert.equal(d.missed, null);
   assert.ok(!endNote(g).includes("見逃した言葉"));

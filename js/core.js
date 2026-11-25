@@ -373,7 +373,7 @@
       `放ったら 放った字数×${R.take_per_char}枚を場から選んで、取りきるまで、ほかの手は何もできない（取れる枚数はためられない）。放った言葉は消える（相手には届かない）`,
       `引き直し 1試合${R.redraw.costs.length}回まで・${R.redraw.costs.map((c) => c + "点").join("→")}と回数で上がる・手札を全部入れ替え（${R.start_hand}枚）。点はマイナスになってよい（足りなくても払える）`,
       `勝ち 先に${R.win.score}点、または${limit / 60}分で点の多い方（同点は引き分け）。ひとりでは50点で終わらず${limit / 60}分で終わる`,
-      `ヒント 人が続けて${R.hint.fail_streak}回はじかれたら、自動で札とボタンを光らせる（${R.hint.glow_sec}秒のあいだ、ほかの手をしても残る。光らせた言葉を放つか、光らせた札が（1枚でも）手札から無くなる・引き直しを使うと消える。言葉は文字で出さない。点はかけない）`,
+      `ヒント ${R.hint.timed_sec ? `人が${R.hint.timed_sec}秒なにも放たない（放つ・引き直しで数え直し）と` : "時限は無し。"}${R.hint.fail_streak ? `${R.hint.timed_sec ? "、または" : ""}人が続けて${R.hint.fail_streak}回はじかれると` : ""}、自動で札とボタンを光らせる（${R.hint.glow_sec}秒のあいだ、ほかの手をしても残る。光らせた言葉を放つか、光らせた札が（1枚でも）手札から無くなる・引き直しを使うと消える。言葉は文字で出さない。点はかけない）`,
       `待ち時間 反転=${R.cooldown_sec.invert}秒 巡り=${R.cooldown_sec.cycle}秒 同音=${R.cooldown_sec.homophone}秒（その人の操作ごと）`,
       key === "solo" || key === ROOM_OPPONENT.key ? "CPU なし" : `CPU ${a}〜${b}秒に1回動く`,
     ];
@@ -596,8 +596,10 @@
     // 小1 の見逃しの光り（KJ-067）：人が最後に手をした時刻。ヒント・動けない・終わりなど、手でないログは数えない
     const NOT_MOVE = new Set(["はじめ", "はじまり", "ヒント", "終わり", "動けない", "動ける"]);
     let idleFrom = t0;
+    let timedFrom = t0; // 時限ヒント（KJ-086）：人が最後に放った・引き直した・ヒントが出た時刻（はじめは試合のはじめ）
     function addLog(who, op, from, to, pts, note) {
       if (who === g.me.name && !NOT_MOVE.has(op)) idleFrom = now();
+      if (who === g.me.name && (op === "放つ" || op === "引き直し" || op === "ヒント")) timedFrom = now();
       g.log.push({ t: logT(), who, op, from: from || [], to: to || [], pts: pts || 0,
         meScore: g.me.score, cpuScore: g.cpu.score, me: nCards(g.me), cpu: nCards(g.cpu), note: note || "" });
       if (!QUIET.has(op)) checkStuck();
@@ -686,7 +688,7 @@
     // 数える＝自分の「ためした」（g.tried）。放つ・割る・くっつける・反転・巡り・同音が通ったら数え直し。ヒントを出したら数え直し。
     // 言葉は文字で出さない（光る札・ボタンだけ。狙った言葉はログにだけ書く）。CPU は関係しない
     const HINT_OPS = [["割る", "split", "bSplit"], ["反転", "invert", "bInvert"], ["巡り", "cycle", "bCycle"], ["同音", "homophone", "bHomo"]];
-    const HR = R.hint || { fail_streak: 3, glow_sec: 10 };
+    const HR = R.hint || { fail_streak: 0, timed_sec: 90, glow_sec: 10 };
     g.hintStreak = 0;
     g.hintCount = 0;
     g.hinted = []; // KJ-082：その試合で人に出たヒントの「狙った言葉」（出た順。CPU・チュートリアルは入れない）。終わりの「見逃した言葉」に使う
@@ -775,15 +777,36 @@
       if (g.redrawsLeft(p) > 0) return { tier: 3, ids: [], button: "bRedraw", op: "引き直し", word: "" };
       return { tier: 3, ids: [], button: null, op: "引き直し（使いきった）", word: "" };
     };
+    // 続けてはじかれたヒント（KJ-037）は KJ-086 で止めた（fail_streak 0 のときは出ない。仕組みは残す）
     const maybeHint = (p) => {
-      if (g.tutorial || g.hintStreak < HR.fail_streak) return; // チュートリアルは自分の光りを出す（createTutorial）。自動のヒントは出さない
+      if (g.tutorial || !HR.fail_streak || g.hintStreak < HR.fail_streak) return; // チュートリアルは自分の光りを出す（createTutorial）。自動のヒントは出さない
       g.hintStreak = 0; // ヒントを出したら数え直し
+      timedFrom = now();
       const h = makeHint(p);
       g.hint = h.ids.length || h.button ? { ...h, until: now() + HR.glow_sec, redraws: p.redraws } : null; // 光らせる物が無いとき（引き直しを使いきった）は、札も出さない
       g.hintCount++;
       if (h.word) g.hinted.push(h.word);
       const lit = h.ids.map((id) => g.byId(p, id)).filter(Boolean).map((x) => x.c);
       addLog(p.name, "ヒント", lit, [], 0, `段${h.tier}：${h.op}${h.word ? `。狙った言葉：${h.word}（${[...h.word].length}字）` : ""}`);
+    };
+
+    // 時限ヒント（KJ-086）：人が最後に放ってから（試合のはじめからも）hint.timed_sec 秒たったら、ヒントを出す（0 なら出さない）。
+    // 数え直し＝人が放ったとき・引き直したとき・ヒントを出したとき（addLog ほか）。割る・くっつける・はじかれる・札を動かすでは数え直さない。
+    // 場から取っている間は数えない（取り終えてから数え始める）。チュートリアル・時間切れのあとも数えない。光り方・段・狙う語は、はじかれ続けたヒントと同じ
+    g.timedHint = () => {
+      const sec = HR.timed_sec;
+      if (!sec || g.tutorial || !live()) return false;
+      if (locked(g.me)) { timedFrom = now(); return false; } // 取っている間は数えない
+      if (now() - timedFrom < sec) return false;
+      timedFrom = now(); // ヒントを出したら（光らせる物が無くても、すでに光っていても）数え直す
+      if (g.hintActive()) return false; // ほかのヒント（小1 の見逃し）が光っているあいだは重ねない
+      const p = g.me, h = makeHint(p);
+      g.hint = h.ids.length || h.button ? { ...h, until: now() + HR.glow_sec, redraws: p.redraws } : null;
+      g.hintCount++;
+      if (h.word) g.hinted.push(h.word);
+      const lit = h.ids.map((id) => g.byId(p, id)).filter(Boolean).map((x) => x.c);
+      addLog(p.name, "ヒント", lit, [], 0, `放たない${sec}秒。段${h.tier}：${h.op}${h.word ? `。狙った言葉：${h.word}（${[...h.word].length}字）` : ""}`);
+      return true;
     };
 
     // 小1 の見逃しの光り（KJ-067・D-085）：手札に放てる言葉があるのに、人が g1.idle_hint_sec（30秒）なにも手をしなかったら、その言葉の札を光らせる。
@@ -1081,6 +1104,7 @@
       const r = fromField(p, fieldId);
       if (!r) return fail("場にない");
       p.takes -= 1;
+      if (p === g.me && p.takes === 0) timedFrom = now(); // KJ-086：取り終えてから時限ヒントを数え始める
       addLog(p.name, "取る", [r.x.c], [r.x.c], 0, `場に ${r.nc.c} が出た。残り${p.takes}枚取れる${memo ? `（${memo}）` : ""}`);
       runPendingFx(p);
       return { ok: true, card: r.got, c: r.x.c };
@@ -1225,6 +1249,7 @@
       if (!live() || g.tutorial) return false; // チュートリアルに時間はない
       let changed = false;
       if (now() < g.endsAt && g.idleHint()) changed = true; // 小1：見逃しの光り（KJ-067）
+      if (now() < g.endsAt && g.timedHint()) changed = true; // 時限ヒント（KJ-086）。時間切れのあとは数えない
       if (M) return changed; // 合言葉の部屋の時間切れは createMatchClient が二人の点をそろえてから終える
       if (now() >= g.endsAt && g.solo) {
         finish(null, `${g.timeLimit / 60}分`);
@@ -1322,7 +1347,7 @@
         `# 相手 ${opponentLabel(D, g.opponent, g.timeLimit)}`,
         `# 時間 ${g.tutorial ? "なし（チュートリアル）" : timeLabel(g.timeLimit)}`,
         ...rulesLabel(D, g.opponent, g.level, g.timeLimit).map((x) => "# 仮置き " + x),
-        "# 手 はじめ・割る・くっつける・反転・巡り・同音・放つ・取る・引き直し・入れ替え（札の位置を替えた。手札とストックの間も）・移す（手札⇄ストックの空いたマスへ）・ためした（放つ・くっつける・割る・反転・巡り・同音・取る・引き直しがはじかれた。並べてやめた並びも）・動けない（放てる言葉が手札に無くなった。使った札＝その時の手札）・動ける・ヒント（続けて3回はじかれて自動で出した。光らせた札と、狙った言葉はメモに）・段（チュートリアルの1段が終わった。メモに段の名前と秒数）・とばす（チュートリアルをとばした）・終わり",
+        "# 手 はじめ・割る・くっつける・反転・巡り・同音・放つ・取る・引き直し・入れ替え（札の位置を替えた。手札とストックの間も）・移す（手札⇄ストックの空いたマスへ）・ためした（放つ・くっつける・割る・反転・巡り・同音・取る・引き直しがはじかれた。並べてやめた並びも）・動けない（放てる言葉が手札に無くなった。使った札＝その時の手札）・動ける・ヒント（放たない時間が長くて自動で出した。小1 の見逃しの光りも。光らせた札と、狙った言葉はメモに）・段（チュートリアルの1段が終わった。メモに段の名前と秒数）・とばす（チュートリアルをとばした）・終わり",
         "# 点＝その手で増えた点（引き直しで払った点はマイナス）",
         "# データ " + FILES.map((f) => `${f}=${D[f].version}`).join(" "),
         `# 字 ${T.CHARS.size}（手に持てる字 ${T.HOLD.size}）・語 ${T.WORDS.size}（巡り ${T.CYCLES.map((c) => c.name).join("・")}）`,
