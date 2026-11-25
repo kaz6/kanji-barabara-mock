@@ -316,6 +316,10 @@ body.esOn details>summary .bar{position:fixed;top:6px;left:10px;right:10px;z-ind
 .esm{margin:14px 0 auto;max-width:340px;padding:0 8px;font-size:13px;line-height:1.5;color:var(--sub);text-align:center;overflow-wrap:anywhere} /* KJ-082：見逃した言葉の1行（無いときは空で、下の余白だけ残る） */
 .esm:empty{margin-top:0}
 .esm .w{font-family:var(--kanji);font-size:16px;color:var(--ink)}
+/* KJ-087：終わりの画面の言葉をタップすると、その下に開く小さな欄（読み・英語の意味・コトバンクで引く）。ul の中では1行ぜんぶ使って次の行へ */
+.esm.has .w,.esw.in{cursor:pointer}
+.esd{flex-basis:100%;list-style:none;margin:2px 0 0;padding:6px 10px;background:var(--slot);color:var(--sub);font-size:13px;line-height:1.5;text-align:center;cursor:default;overflow-wrap:anywhere}
+.esd a{display:inline-block;padding:10px 8px;color:var(--ink);text-decoration:underline}
 .esw{display:flex;flex-direction:column;align-items:center;min-width:64px;opacity:0;visibility:hidden}
 .esw .w{font-family:var(--kanji);line-height:1.15}
 .esw .wr{display:flex;align-items:baseline;gap:5px}
@@ -903,16 +907,42 @@ function showEnd(winner){
     const li=document.createElement("li");li.className=`esw t${it.tier}`;
     li.innerHTML=`<span class="wr"><span class="w"></span><span class="p"></span></span><span class="k"></span>`;
     li.querySelector(".w").textContent=it.text;li.querySelector(".p").textContent=`+${it.pts}点`;li.querySelector(".k").textContent=it.kana;
-    ul.appendChild(li);return li});
+    li._w=it;ul.appendChild(li);return li});
   // KJ-082：ヒントで光ったのに放たれなかった言葉を1つ（無ければ空）。字は大きく、読みと意味はそのまま
-  const mi=$("esMissed");mi.textContent="";
+  const mi=$("esMissed");mi.textContent="";mi.classList.toggle("has",!!d.missed);mi._w=d.missed||null;
   if(d.missed){const m=d.missed;mi.append("見逃した言葉：");const w=document.createElement("span");w.className="w";w.textContent=m.text;mi.append(w,(m.kana?`（${m.kana}）`:"")+(m.en?` ${m.en}`:""))}
   ES={items,timers:[],done:false};
   delete el.dataset.done;el.classList.add("on");document.body.classList.add("esOn");
   items.forEach((li,i)=>ES.timers.push(setTimeout(()=>{li.classList.add("in","fresh");if(i===items.length-1)esDone()},END_PACE.first+i*END_PACE.gap)));
   if(!items.length)ES.timers.push(setTimeout(esDone,END_PACE.first));
 }
-$("endShow").onclick=()=>{if(!ES)return;if(ES.done)closeEnd();else esAll()};
+// KJ-087：言葉（放った言葉・見逃した言葉）をタップすると、そのすぐ下に欄が開く（読み・英語の意味・コトバンクで引く）。開けるのは1つだけ。もう一度タップで閉じる。
+// 言葉をタップしたときは終わりの画面を閉じない（自動で閉じる時計も止める）。言葉と欄の外は今まで通り。辞書の中身は取り込まない（リンクだけ）
+function esInfo(host,w){
+  const old=$("endShow").querySelector(".esd");
+  const same=old&&old._host===host;
+  if(old)old.remove();
+  if(same)return;
+  const box=document.createElement(host.tagName==="LI"?"li":"div");box.className="esd";box._host=host;
+  const parts=[];
+  if(w.reading)parts.push("読み："+w.reading);
+  if(w.ens&&w.ens.length)parts.push("意味："+w.ens.join(" / "));
+  const t=document.createElement("div");t.textContent=parts.join("　");if(parts.length)box.appendChild(t);
+  const a=document.createElement("a");a.href=w.url;a.target="_blank";a.rel="noopener noreferrer";a.textContent="コトバンクで引く";box.appendChild(a);
+  if(host.tagName==="LI")host.after(box);else host.appendChild(box);
+}
+$("endShow").onclick=e=>{
+  if(!ES)return;
+  if(e.target.closest(".esd"))return; // 欄の中（リンクを押す）。閉じない
+  const host=e.target.closest(".esw.in,#esMissed.has");
+  if(host&&host._w){
+    esClear();ES.timers=[]; // 閉じる時計を止める。まだ出ていない言葉は出しきる
+    for(const li of ES.items){li.classList.add("in");li.classList.remove("fresh")}
+    ES.done=true;$("endShow").dataset.done="1";
+    esInfo(host,host._w);return;
+  }
+  if(ES.done)closeEnd();else esAll();
+};
 function afterChange(){drain();render();refreshLogPanel();autoTakeKick()}
 
 // ---------- 合言葉の部屋（KJ-033 後半・D-049）：つなぎと、部屋を作る／入る ----------

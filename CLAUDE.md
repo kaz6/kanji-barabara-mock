@@ -58,6 +58,7 @@ npm test
 - `tests/layoutab.browser.test.mjs`：試合の画面の並びは A だけ（KJ-089。並び B と、はじめる前の画面の「並び」の切り替えを消した。切り替えも下の段 `#dock` も無い・端末に `kj-layout` の B が残っていても A の置き場〔Back は Redraw の左・Play は幅いっぱい〕。`kj-layout` は読まない）
 - `tests/joinnote.test.js`・`tests/joinnote.browser.test.mjs`：部品の札のくっつく相手（KJ-083。手札・ストックにあるときだけ・字の札では出ない・並べる順・3組まで・3つの形〔`data/rules.json` の `join_note`。full／partner／mask。`K.joinNote`〕／画面：1行目に出る・375／320px で情報の欄が2行のまま）
 - `tests/missed.test.js`・`tests/missed.browser.test.mjs`：終わりの「見逃した言葉」（KJ-082。ヒントで光って放たなかった語が出る・放った語は出ない・字数の多いほう→後のほう・ヒントが無ければ出ない・CPU は数えない・小1 の見逃しの光りも／画面：終わりに1行出る・無ければ空）
+- `tests/endword.test.js`・`tests/endword.browser.test.mjs`：終わりの画面の言葉をタップ（KJ-087。`K.endShow` の items・missed に reading・ens〔2つまで〕・url〔コトバンク〕・en の無い語・辞書に無い語で落ちない／画面：欄が語の下に開く・もう一度で閉じる・開けるのは1つ・画面が閉じない〔時計が止まる〕・外を押すと閉じる・見逃した言葉にも・リンクの URL と target）
 - `tests/paper.test.js`・`tests/paper.browser.test.mjs`：新聞紙風の見た目（KJ-093。漢数字・号数・日付・字体の同梱と落とし先・札に出る字がどれかの字体にある／画面：表紙の題字と号数と日付・号数が試合ごとに増える・札の字の切り替えと覚える・字と地の明暗差 4.5 以上・卓の罫線と見出し・選んだ札の弁柄の縁・角丸なし・375／320px で押せる）
 - `tests/senkyo.test.js`・`tests/senkyo.browser.test.mjs`：戦況の欄・背景の記事・紙のざらつき（KJ-094。文の型〔`SENKYO`〕・あなた→アナタ・取った字が文のおわりに増える・新しい順・点と字数は漢数字・読みはカタカナ／画面：縦書きの欄と見出し・あなたの行は弁柄の太字・古い行が左へ流れる・375×700 に収まる〔空のあいだ 34px〕・記事は押せない／札の下・入り切りを覚える〔localStorage が使えなくても落ちない〕・ざらつきの背景・空きマスは透けない）
 - `tests/btnlook.browser.test.mjs`：卓の操作5つの押せる／押せないの見え方（KJ-099。設定「ボタン：白抜き／下線」〔`<html data-btn>`・localStorage `kj-btn`。初期は白抜き〕・押せる字は 4.5 以上・押せないは紙の地に墨 0.35・Play／Back／Redraw は変わらない・ヒントの光りと待ち時間のゲージが見える）。`KJ_SHOT_BTN=<フォルダ>` で画像を書く
