@@ -198,6 +198,14 @@ button.op.main:disabled,button.op.main[aria-disabled=true]{background:var(--tile
 .table .ops-set{gap:0;border:1px solid var(--ink)}
 .table .ops-set button.op{flex:1 1 auto;padding:7px 6px;min-height:44px;white-space:nowrap;border-right:1px solid var(--ink)} /* 指で押す高さ 44px 以上（KJ-097。Back・Redraw・Play と同じ） */
 .table .ops-set button.op:last-child{border-right:0}
+/* KJ-099：卓の操作5つ（Split・Join・Flip・Cycle・Same reading）の押せる／押せないの見え方。設定「ボタン」が <html data-btn> を替える（白抜き＝初期／下線）。Play・Back・Redraw・はじめる前の画面のボタンは今のまま。
+   押せない＝紙の地に墨の不透明度 .35 の字（地は濃くしない。押せない部品は明暗差の決まりの外）。押せる＝白抜き：墨の地に札の色の太字／下線：札の色の地に墨の太字＋弁柄の太い下線 */
+:root:not([data-btn="line"]) .table .ops-set button.op{background:var(--ink);color:var(--tile);font-weight:700}
+:root[data-btn="line"] .table .ops-set button.op{background:var(--tile);color:var(--ink);font-weight:700;box-shadow:inset 0 -3px 0 var(--accent)}
+:root .table .ops-set button.op:disabled,:root .table .ops-set button.op[aria-disabled=true]{background:var(--table);color:rgba(42,38,34,.35);font-weight:400;box-shadow:none}
+/* 待ち時間のゲージ・ヒントの光りは、どちらの形でも見える：待ち中は字を墨に戻して緑のゲージの上で読む／ヒントは薄い金の地に墨の字 */
+:root .table .ops-set button.op.cd:disabled,:root .table .ops-set button.op.cd[aria-disabled=true]{color:var(--on-table)}
+:root .table .ops-set button.op.hint.lift,:root .table .ops-set button.op.hint.lift:disabled,:root .table .ops-set button.op.hint.lift[aria-disabled=true]{background:#fff1c4;color:var(--ink);font-weight:700}
 .table .ops-set button.op#bHomo{flex:2 1 auto}
 .table button.op.main{flex:1 1 auto;font-size:17px;padding:10px 12px;background:var(--accent);border:2px solid var(--ink);color:var(--bg);letter-spacing:.12em}
 .table button.op.main:disabled,.table button.op.main[aria-disabled=true]{background:var(--play-off);border-color:var(--ink);color:var(--play-off-ink);font-weight:700}
@@ -432,6 +440,7 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
     </div>
     <div class="grp" id="grpVib" hidden><p class="gt">振動</p><span class="opp" id="vib" role="radiogroup" aria-label="振動"></span></div>
     <div class="grp" id="grpFace"><p class="gt" id="faceLabel"></p><span class="opp" id="face" role="radiogroup" aria-label="札の字"></span></div>
+    <div class="grp" id="grpBtn"><p class="gt" id="btnLabel"></p><span class="opp" id="btn" role="radiogroup" aria-label="ボタン"></span></div>
     <div class="grp" id="grpNews"><p class="gt" id="newsLabel"></p><span class="opp" id="news" role="radiogroup" aria-label="背景の記事"></span></div>
     <p class="note" id="setupInfo"></p>
     <button class="op main" id="start">はじめる</button>
@@ -537,7 +546,7 @@ const $title=document.getElementById("title");
 const STR=window.KJ_STR; // 画面の文言（ボタンの文字・角の印。KJ-024）
 for(const id of Object.keys(STR.BUTTONS)){const b=document.getElementById(id);if(STR.LOGO[id])b.setAttribute("aria-label",STR.BUTTONS[id]);b.querySelector(".lb").innerHTML=STR.buttonHtml(id)} // 印を字に組み込んだボタン（Fl＋印＋p など）は SVG 入り。読み上げは aria-label（KJ-048）
 document.getElementById("mastTitle").textContent=STR.TEXT.masthead;document.getElementById("faceLabel").textContent=STR.TEXT.faceLabel; // 表紙の題字・設定の見出し（KJ-093）
-document.getElementById("newsLabel").textContent=STR.TEXT.newsLabel;document.getElementById("skHead").textContent=STR.SENKYO.head; // 設定の見出し・戦況の見出し（KJ-094）
+document.getElementById("newsLabel").textContent=STR.TEXT.newsLabel;document.getElementById("btnLabel").textContent=STR.TEXT.btnLabel;document.getElementById("skHead").textContent=STR.SENKYO.head; // 設定の見出し・戦況の見出し（KJ-094）
 $title.textContent=STR.TEXT.title; // 題（KJ-042。文は仮。js/strings.js の1か所で直せる）
 const D={};
 let T=null, G=null; // 表・ゲームの状態
@@ -548,7 +557,7 @@ const LVL_KEY="kj-level";
 let level=null;     // レベル（"G1"〔小1〕／"N5"／"N4"）。はじめるときに効く。端末に覚える
 let row=[];         // 選んだ札の id（選んだ順。台にはその写しを左から並べる）
 let lastTried="";
-const OPP_KEY="kj-opponent",TIME_KEY="kj-time",VIB_KEY="kj-vibe",FACE_KEY="kj-face",ISSUE_KEY="kj-issue",NEWS_KEY="kj-news";
+const OPP_KEY="kj-opponent",TIME_KEY="kj-time",VIB_KEY="kj-vibe",FACE_KEY="kj-face",ISSUE_KEY="kj-issue",NEWS_KEY="kj-news",BTN_KEY="kj-btn";
 let opponent=null;  // 相手のキー（weak・fair・normal・room。solo は画面から外した〔KJ-056〕）。端末に覚える（KJ-007）。画面では「遊び方」と「強さ」の2段で選ぶ（KJ-045）
 let cpuPower="weak"; // 「CPU と」のときの強さ。遊び方を行き来しても覚えている
 let timeLimit=null; // 制限時間（秒）。端末に覚える（KJ-007）
@@ -582,6 +591,7 @@ function loadSettings(){
   vibeOn=lsGet(VIB_KEY)!=="0"; // 振動の入り切り（KJ-074）。覚えていなければ入
   setFace(lsGet(FACE_KEY)==="mincho"?"mincho":"taisho"); // 札の字（KJ-093）。覚えていなければ大正風
   setNews(lsGet(NEWS_KEY)==="0"?"0":"1"); // 背景の記事（KJ-094）。覚えていなければ入
+  setBtn(lsGet(BTN_KEY)==="line"?"line":"white"); // 卓の操作の見え方（KJ-099）。覚えていなければ白抜き
 }
 // ---------- 背景の記事（KJ-094）：入／切（初期は入）。<html data-news="off"> で消える。端末に覚える（localStorage kj-news。切＝"0"）。記事は画面の大きさに合わせて繰り返す ----------
 let newsOn=true;
@@ -591,6 +601,9 @@ function fillNews(){
   const need=Math.min(200,Math.max(2,Math.ceil((window.innerWidth*window.innerHeight)/(10*15.5)/STR.NEWS.length)+1)); // 10px・行 15.5px の1字ぶんの面積で、画面が埋まるぶん（上限 200 回）
   if(box.dataset.n!==String(need)){box.dataset.n=String(need);box.textContent=STR.NEWS.repeat(need)}
 }
+// ---------- 卓の操作5つの見え方（KJ-099）：白抜き（初期）／下線。<html data-btn> を替える。端末に覚える（localStorage kj-btn） ----------
+let btnLook="white";
+function setBtn(v){btnLook=v==="line"?"line":"white";document.documentElement.setAttribute("data-btn",btnLook)}
 // ---------- 札の字（KJ-093）：大正風（Kaisei Tokumin。初期）／明朝（Shippori Mincho）。<html data-face> を替える。端末に覚える ----------
 let face="taisho";
 function setFace(f){face=f==="mincho"?"mincho":"taisho";document.documentElement.setAttribute("data-face",face)}
@@ -622,6 +635,7 @@ function buildPickers(){
   radios($("pow"),"pow",K.CPU_POWERS.map(o=>({value:o.key,label:o.label})),cpuPower,v=>{cpuPower=v;opponent=K.opponentKey("cpu",v);lsSet(OPP_KEY,opponent)});
   radios($("lvl"),"lvl",K.LEVELS.map(o=>({value:o.key,label:o.short,title:o.label})),level,v=>{level=v;lsSet(LVL_KEY,v);T=tablesFor(level);showCounts()});
   radios($("face"),"face",[{value:"taisho",label:STR.TEXT.faceTaisho},{value:"mincho",label:STR.TEXT.faceMincho}],face,v=>{setFace(v);lsSet(FACE_KEY,v)});
+  radios($("btn"),"btn",[{value:"white",label:STR.TEXT.btnWhite},{value:"line",label:STR.TEXT.btnLine}],btnLook,v=>{setBtn(v);lsSet(BTN_KEY,v)}); // 卓の操作の見え方（KJ-099）
   radios($("news"),"news",[{value:"1",label:STR.TEXT.newsOn},{value:"0",label:STR.TEXT.newsOff}],newsOn?"1":"0",v=>{setNews(v);lsSet(NEWS_KEY,v)}); // 背景の記事の入り切り（KJ-094）
   if(canVibe()){$("grpVib").hidden=false;radios($("vib"),"vib",[{value:"1",label:"入"},{value:"0",label:"切"}],vibeOn?"1":"0",v=>{vibeOn=v==="1";lsSet(VIB_KEY,v);if(vibeOn)buzz("take")})} // 振動が使えない端末には出さない。入にしたとき、1回だけ試しに震える
   radios($("tim"),"tim",K.timeChoices(D).map(sec=>({value:sec,label:K.timeLabel(sec)})),timeLimit,v=>{timeLimit=+v;lsSet(TIME_KEY,v);buildHowto()});
