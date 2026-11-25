@@ -251,7 +251,10 @@ body.tutorial #clock,body.tutorial #again,body.tutorial #bLog,body.tutorial #bCo
 #esScore .t{font-size:18px;font-weight:400;color:var(--sub)}
 #esScore .you{color:var(--ink)}
 #esScore .them{color:var(--sub);font-size:44px}
-#esWords{list-style:none;margin:10px 0 auto;padding:0;display:flex;flex-wrap:wrap;gap:10px 14px;justify-content:center;max-width:620px}
+#esWords{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:10px 14px;justify-content:center;max-width:620px}
+.esm{margin:14px 0 auto;max-width:340px;padding:0 8px;font-size:13px;line-height:1.5;color:var(--sub);text-align:center;overflow-wrap:anywhere} /* KJ-082：見逃した言葉の1行（無いときは空で、下の余白だけ残る） */
+.esm:empty{margin-top:0}
+.esm .w{font-family:var(--kanji);font-size:16px;color:var(--ink)}
 .esw{display:flex;flex-direction:column;align-items:center;min-width:64px;opacity:0;visibility:hidden}
 .esw .w{font-family:var(--kanji);line-height:1.15}
 .esw .wr{display:flex;align-items:baseline;gap:5px}
@@ -380,6 +383,7 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
     <div id="esLabel"></div>
     <div id="esScore"></div>
     <ul id="esWords"></ul>
+    <div id="esMissed" class="esm"></div>
   </div>
   <div class="msgline"><span class="hint-tag" id="hintTag" hidden>ヒント</span><span class="msg" id="msg"></span></div>
   <!-- チュートリアルの案内（KJ-043）。文もボタンの文字も data/tutorial.json から入れる -->
@@ -792,6 +796,9 @@ function showEnd(winner){
     li.innerHTML=`<span class="wr"><span class="w"></span><span class="p"></span></span><span class="k"></span>`;
     li.querySelector(".w").textContent=it.text;li.querySelector(".p").textContent=`+${it.pts}点`;li.querySelector(".k").textContent=it.kana;
     ul.appendChild(li);return li});
+  // KJ-082：ヒントで光ったのに放たれなかった言葉を1つ（無ければ空）。字は大きく、読みと意味はそのまま
+  const mi=$("esMissed");mi.textContent="";
+  if(d.missed){const m=d.missed;mi.append("見逃した言葉：");const w=document.createElement("span");w.className="w";w.textContent=m.text;mi.append(w,(m.kana?`（${m.kana}）`:"")+(m.en?` ${m.en}`:""))}
   ES={items,timers:[],done:false};
   delete el.dataset.done;el.classList.add("on");
   items.forEach((li,i)=>ES.timers.push(setTimeout(()=>{li.classList.add("in","fresh");if(i===items.length-1)esDone()},END_PACE.first+i*END_PACE.gap)));
