@@ -63,6 +63,10 @@
     title: "漢字版（仮）",
     lead: (score, min) => `漢字を割ってくっつけて、言葉を放つ。先に ${score} 点か ${min} 分で、多い方が勝ち。`,
     tray: (n, max) => `ストック ${n} / ${max}`,
+    masthead: "バラバラ新報", // 表紙の題字（KJ-093。作者「題は表紙に回します」。名は仮）
+    faceLabel: "札の字", // 設定：札の字体（KJ-093。初期は大正風）
+    faceTaisho: "大正風", // Kaisei Tokumin
+    faceMincho: "明朝", // Shippori Mincho
     redrawHold: "長押しで引き直し", // Redraw を1回タップしたときに小さく出す（KJ-078。引き直しは長押し。🚫 ではない）
   });
   return Object.freeze({ ICON_SHAPES, iconSvg, BUTTONS, LOGO, buttonHtml, redrawNote, TEXT });

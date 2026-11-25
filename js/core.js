@@ -1782,6 +1782,36 @@
     return { kind, label: END_LABELS[kind], me: g.me.score, cpu: g.solo ? null : g.cpu.score, items, missed };
   }
 
+  // ---------- 表紙の号数と日付（KJ-093。新聞紙風の見た目。DOM に触らない）----------
+  // 漢数字。1〜9999（範囲の外・数でないときは 一）。十・百・千の前の「一」は付けない（十二・百五・千・二千二十六）
+  const KANSUJI_DIGITS = ["〇", "一", "二", "三", "四", "五", "六", "七", "八", "九"];
+  function kansuji(n) {
+    n = Math.floor(Number(n));
+    if (!(n >= 1 && n <= 9999)) return "一";
+    const units = [[1000, "千"], [100, "百"], [10, "十"]];
+    let out = "";
+    for (const [u, ch] of units) {
+      const d = Math.floor(n / u);
+      n -= d * u;
+      if (d === 0) continue;
+      out += (d === 1 ? "" : KANSUJI_DIGITS[d]) + ch;
+    }
+    if (n > 0) out += KANSUJI_DIGITS[n];
+    return out;
+  }
+  // 号数の文字。played＝その端末で始めた試合の数（読めない・負・整数でないときは 0）。第○號（○＝played+1）
+  function issueLabel(played) {
+    let n = Math.floor(Number(played));
+    if (!(n >= 0) || n > 9998) n = 0;
+    return `第${kansuji(n + 1)}號`;
+  }
+  // 今日の日付（漢数字）。年は 1字ずつ（二〇二六年）、月・日は十の位を使う（十一月二十五日）
+  function kansujiDate(d) {
+    const dt = d instanceof Date && !isNaN(d) ? d : new Date();
+    const year = String(dt.getFullYear()).split("").map((c) => KANSUJI_DIGITS[+c]).join("");
+    return `${year}年${kansuji(dt.getMonth() + 1)}月${kansuji(dt.getDate())}日`;
+  }
+
   // play_logs に1行送る中身。1手も動いていなければ null（送らない）
   function playLogRow(g, deviceId) {
     if (!g || !(playedAny(g) || (g.tutorialInfo && g.tutorialInfo.finished === "skip"))) return null; // チュートリアルは、1手も動かずにとばしたことも送る
@@ -1804,6 +1834,7 @@
   }
 
   return {
+    kansuji, issueLabel, kansujiDate,
     FILES, OPPONENTS, PLAY_MODES, CPU_POWERS, readOpponent, opponentKey, LEVELS, timeChoices, normTime, vibratePattern, timeLabel, levelLabel, levelShort, makeTables, isN5, isLevelChar, isChar, radicalNote, radicalFormNote, joinPartners, joinNote, JOIN_NOTE_MODES, splitOnce, canSplit, delivered, joinResults, joinReversed,
     releasable, effectText, counterParts, usedCounters, counterBlocked, counterReading, rejectText, scoreOf, kanaOf, kanaText, wordCharOk, KANA_ONLY_WHY, homoChars, marks, markKinds, cutSpec, FACES, FACE_LABEL, faceJoins, faceResults, rulesLabel, opponentLabel, createGame, createTutorial, TUTORIAL_OPPONENT, playLogRow, endShow, END_LABELS, logSendAllowed, playLogResult, PLAY_LOG_LIMITS,
     strSeed, seededRand, matchRand, ROLES, ROOM_OPPONENT, MATCH_END_GRACE_SEC, MATCH_INSERT_TIMEOUT_SEC, MATCH_PING_SEC, MATCH_GONE_SEC, ROOM_LOBBY_TTL_SEC,

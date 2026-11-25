@@ -80,7 +80,8 @@ test("置き場（KJ-078・KJ-090）：Back は「あなた」の行の Redraw �
   assert.ok(bk.r <= rd0.l - 8 && rd0.l - bk.r <= 16, `Back は Redraw のすぐ左（間 ${rd0.l - bk.r}px）`);
   // 台の行：Back が抜けたので卓の内側の幅いっぱい
   assert.ok(await page.evaluate(() => !document.querySelector(".rowline > button")), "台の行にボタンはない");
-  assert.ok(tb.r - row.r <= 14 && row.l - tb.l <= 14, `台の行は卓の幅いっぱい（左右の余白 ${row.l - tb.l}・${tb.r - row.r}）`);
+  // KJ-093：卓の左に縦書きの見出し（幅 18〜20px＋すきま）があるので、左の余白はその分だけ大きい
+  assert.ok(tb.r - row.r <= 14 && row.l - tb.l <= 34, `台の行は卓の幅いっぱい（左右の余白 ${row.l - tb.l}・${tb.r - row.r}）`);
   assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById("bBack")).borderTopWidth), "1px", "枠線付き");
   assert.ok(await page.evaluate(() => !!document.querySelector("#bBack svg") && document.getElementById("bBack").textContent.trim() === "Back"), "左向きの矢印＋Back");
   // Play：卓の幅いっぱい（卓の内側の幅）

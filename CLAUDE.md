@@ -16,6 +16,7 @@
 - `data/kanji.json`・`words.json`：字と語に `lv`（N5／N4）と、小1（KJ-044。小学1年の80字）の印 `g1`（N5・N4 のどちらにも無い小1 の字は `lv`＝G1）。遊ぶときは `makeTables(D, level)` でレベルに絞る。作り直しは `python3 tools/build_data.py`（`pip install jamdict-data`。`--level N5` で N5 だけ）。手作りの表（parts など）はこのスクリプトでは作らない。N4 で足した割り方の一覧は docs/N4_TABLES.md、小1 の字と割り方は docs/G1_TABLES.md
 - `fonts/kj-glyphs.otf`・`fonts/kj-glyphs.css`・`data/glyphs.json`・`docs/GLYPHS.md`：端末の字体に無い字（JIS X 0208 の外。部首補助・簡体字の形・拡張B など）の字形を同梱したもの。部品表・偏・巡りに新しい字を足したら `python3 tools/build_glyphs.py`（要 fontTools と Noto Serif CJK JP）で作り直す。テスト（tests/data.test.js）が、札の字が全部この一覧にあるかを見る
 - `fonts/kj-fx.woff`・`fonts/kj-fx.css`・`fonts/OFL-YujiSyuku.txt`：特別な語の演出（`#fx .c`）だけの筆文字（Yuji Syuku。KJ-063）。字は `data/special.json` の語（`special`）と演出だけ特別の語（`fx_words`。金玉。KJ-064：点は変えず、2字を金色で同時に出す）に絞る。特別な語・演出だけの語を足したら `python3 tools/build_fx_font.py`（元の字体は `npm pack @fontsource/yuji-syuku` で取る。使い方は先頭の説明）で作り直す。テスト：tests/fxfont.test.js・tests/fxfont.browser.test.mjs
+- `fonts/kj-paper.css`・`fonts/kj-zen-*.woff2`・`fonts/kj-shippori-400.woff2`・`fonts/kj-kaisei-400.woff2`・`fonts/OFL-Paper.txt`・`docs/PAPER_STYLE.md`：新聞紙風の見た目（KJ-093）の字体。画面の字＝Zen Old Mincho（`--ui`）、札の字＝大正風 Kaisei Tokumin（初期）か 明朝 Shippori Mincho（`--kanji`。設定「札の字」が `<html data-face>` を替える。localStorage `kj-face`）。要る字だけに絞った同梱。字を足したら `python3 tools/build_paper_fonts.py`（元の字体は `npm pack @fontsource/zen-old-mincho @fontsource/shippori-mincho @fontsource/kaisei-tokumin`。使い方は先頭の説明）で作り直す。色は index.html の `:root`（紙・札・墨・弁柄）。表紙の題字「バラバラ新報」（仮。`js/strings.js` の `TEXT.masthead`）・号数（localStorage `kj-issue`。`K.issueLabel`）・日付（`K.kansujiDate`）
 - `js/strings.js`：操作のボタンの文字（英語）と、印の SVG（Flip の i・Cycle の C・Same reading の S に組み込む。札の角の印も同じ形。KJ-048）。操作のボタンの文字は英語。js/strings.js に置き、index.html に直書きしない。ボタン以外の画面の文言とログは日本語のまま（KJ-024。一覧は docs/STRINGS.md）
 - `data/tutorial.json`：チュートリアル（KJ-043）の手札・ストック・場・段・文・ボタンの文字。文は全部仮で、ここ1か所で直す。段の進め方と押せる手の制限は `js/core.js` の `createTutorial`（DOM に触らない）
 - `data/parts.json` の `reads_as`：部品の札の読み替え（KJ-096。囗→口。言葉を作るときだけ。ろ とは読まない。core.js の `T.READS`・`kanaOf`）。割る・くっつけるの働きは変えない。テストは tests/kuchi.test.js
@@ -56,6 +57,7 @@ npm test
 - `tests/layoutab.browser.test.mjs`：試合の画面の並びは A だけ（KJ-089。並び B と、はじめる前の画面の「並び」の切り替えを消した。切り替えも下の段 `#dock` も無い・端末に `kj-layout` の B が残っていても A の置き場〔Back は Redraw の左・Play は幅いっぱい〕。`kj-layout` は読まない）
 - `tests/joinnote.test.js`・`tests/joinnote.browser.test.mjs`：部品の札のくっつく相手（KJ-083。手札・ストックにあるときだけ・字の札では出ない・並べる順・3組まで・3つの形〔`data/rules.json` の `join_note`。full／partner／mask。`K.joinNote`〕／画面：1行目に出る・375／320px で情報の欄が2行のまま）
 - `tests/missed.test.js`・`tests/missed.browser.test.mjs`：終わりの「見逃した言葉」（KJ-082。ヒントで光って放たなかった語が出る・放った語は出ない・字数の多いほう→後のほう・ヒントが無ければ出ない・CPU は数えない・小1 の見逃しの光りも／画面：終わりに1行出る・無ければ空）
+- `tests/paper.test.js`・`tests/paper.browser.test.mjs`：新聞紙風の見た目（KJ-093。漢数字・号数・日付・字体の同梱と落とし先・札に出る字がどれかの字体にある／画面：表紙の題字と号数と日付・号数が試合ごとに増える・札の字の切り替えと覚える・字と地の明暗差 4.5 以上・卓の罫線と見出し・選んだ札の弁柄の縁・角丸なし・375／320px で押せる）
 - `tests/browser.test.mjs`：画面（合言葉の部屋を2つのページで1試合〔kj_claims は page.route で偽物に回し、Realtime は差し替え〕・台に札を置いても手札と場が動かない・並べる順が逆・放つ→取る・引き直し・ログをコピー・選ぶと札はマスに残り台に写しが並ぶ・入れ替え）。Playwright の Chromium がないと skip になる。skip は「通った」ではない
 - 変えたら必ず `npm test` を回し、件数と結果を PR に書く
 
