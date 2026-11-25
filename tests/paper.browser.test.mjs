@@ -359,3 +359,93 @@ test("KJ-097：操作5つ（Split・Join・Flip・Cycle・Same reading）の高�
     }
   } finally { await browser.close(); srv.close(); }
 });
+
+test("表紙を詰める（KJ-101）：絵柄の箱が前（190px）より低く、題字は箱の上寄りで小さい。昇る日は箱の下に付いたまま。375／320px で収まる", { skip }, async () => {
+  const srv = await serve(); const browser = await chromium.launch();
+  try {
+    const url = `http://127.0.0.1:${srv.address().port}/index.html`;
+    for (const w of [412, 375, 320]) {
+      const { ctx, page, errors } = await open(browser, url, { vp: { width: w, height: 700 } });
+      const st = await page.evaluate(() => {
+        const box = document.getElementById("mastTitle"), name = document.querySelector(".mast-name span"), svg = box.querySelector("svg.mast-sun");
+        const b = box.getBoundingClientRect(), n = name.getBoundingClientRect(), sr = svg.getBoundingClientRect();
+        const sun = svg.querySelector("circle").getBoundingClientRect();
+        return { boxH: b.height, fs: parseFloat(getComputedStyle(name).fontSize), nameTop: n.top - b.top, sunBottomAtBox: Math.abs(sun.bottom - b.bottom) < 8 || sun.bottom >= b.bottom - 6, sunShown: sun.top < b.bottom - 8, noHScroll: document.documentElement.scrollWidth <= innerWidth, nameInside: n.left >= b.left && n.right <= b.right && n.bottom <= b.bottom };
+      });
+      assert.ok(st.boxH < 190 && st.boxH <= 140, `${w}px：箱の高さ ${st.boxH}（前は 190）`);
+      assert.ok(st.fs < 38 && st.fs <= 28, `${w}px：題字の大きさ ${st.fs}（前は 38／32）`);
+      assert.ok(st.nameTop < 40 && st.nameTop <= 20, `${w}px：題字は箱の上寄り（上から ${st.nameTop}px。前は 40+罫）`);
+      assert.equal(st.sunShown, true, `${w}px：昇る日が箱の中に見えている`);
+      assert.equal(st.nameInside && st.noHScroll, true, `${w}px：題字が箱に収まり、横にはみ出さない`);
+      assert.deepEqual(errors, []);
+      await ctx.close();
+    }
+  } finally { await browser.close(); srv.close(); }
+});
+
+test("説明文（KJ-101）：いつも大正風（KJ Kaisei）。札の字を明朝にしても変わらない。背景の記事の上で明暗差 4.5 以上", { skip }, async () => {
+  const srv = await serve(); const browser = await chromium.launch();
+  try {
+    const url = `http://127.0.0.1:${srv.address().port}/index.html`;
+    const { ctx, page, errors } = await open(browser, url, { vp: { width: 375, height: 700 } });
+    await page.evaluate(CONTRAST);
+    const fam = () => page.evaluate(() => getComputedStyle(document.getElementById("lead")).fontFamily.split(",")[0].replace(/"/g, "").trim());
+    assert.equal(await fam(), "KJ Kaisei", "初期（大正風）");
+    await page.evaluate(() => document.documentElement.setAttribute("data-face", "mincho"));
+    assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--kanji").includes("KJ Shippori")), true, "札の字は明朝に替わった");
+    assert.equal(await fam(), "KJ Kaisei", "札の字を明朝にしても説明文は大正風のまま");
+    // 字体が実際に読まれ、説明文の字が Kaisei で描かれる（端末の字体に落ちていない）
+    const ok = await page.evaluate(async () => { await document.fonts.load('13px "KJ Kaisei"', document.getElementById("lead").textContent); return document.fonts.check('13px "KJ Kaisei"', document.getElementById("lead").textContent); });
+    assert.equal(ok, true, "KJ Kaisei が説明文の字を持って読まれている");
+    assert.ok((await ratio(page, "#lead")) >= 4.5, "字と地の明暗差");
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  } finally { await browser.close(); srv.close(); }
+});
+
+test("▼（KJ-101）：はじめる前の画面で、下に見えていない所があるときだけ右下に出る。いちばん下で消え、戻ると出る。押せない。試合中・チュートリアル・終わりの画面では出ない", { skip }, async () => {
+  const srv = await serve(); const browser = await chromium.launch();
+  try {
+    const url = `http://127.0.0.1:${srv.address().port}/index.html`;
+    const vis = (page) => page.evaluate(() => { const e = document.getElementById("scrollHint"); return !!e && getComputedStyle(e).display !== "none"; });
+    // 低い画面：下に余りがある → 出る
+    const { ctx, page, errors } = await open(browser, url, { vp: { width: 375, height: 500 } });
+    assert.equal(await vis(page), true, "はじめは下に余りがあるので出る");
+    const geo = await page.evaluate(() => { const e = document.getElementById("scrollHint"), r = e.getBoundingClientRect(), s = getComputedStyle(e); return { pos: s.position, pe: s.pointerEvents, right: innerWidth - r.right, bottom: innerHeight - r.bottom, anim: s.animationName, aria: e.getAttribute("aria-hidden"), color: s.color }; });
+    assert.equal(geo.pos, "fixed"); assert.equal(geo.pe, "none", "押せない"); assert.equal(geo.aria, "true");
+    assert.ok(geo.right >= 0 && geo.right <= 40 && geo.bottom >= 0 && geo.bottom <= 40, `右下にある（右 ${geo.right}・下 ${geo.bottom}）`);
+    assert.equal(geo.anim, "none", "動きを減らす設定（この試験の端末）では動かさず置くだけ");
+    // 押せない：▼の真上の点を押すと、下にあるものに届く（▼が受けない）
+    assert.equal(await page.evaluate(() => { const e = document.getElementById("scrollHint"), r = e.getBoundingClientRect(); const t = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return t !== e; }), true);
+    // いちばん下まで行くと消える。戻ると また出る
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await page.waitForFunction(() => getComputedStyle(document.getElementById("scrollHint")).display === "none");
+    assert.equal(await vis(page), false, "いちばん下で消える");
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForFunction(() => getComputedStyle(document.getElementById("scrollHint")).display !== "none");
+    // 終わりの画面（body.esOn）・チュートリアル（body.tutorial）では出ない
+    await page.evaluate(() => document.body.classList.add("esOn"));
+    await page.waitForFunction(() => getComputedStyle(document.getElementById("scrollHint")).display === "none");
+    await page.evaluate(() => { document.body.classList.remove("esOn"); document.body.classList.add("tutorial"); });
+    await page.waitForFunction(() => getComputedStyle(document.getElementById("scrollHint")).display === "none");
+    await page.evaluate(() => document.body.classList.remove("tutorial"));
+    await page.waitForFunction(() => getComputedStyle(document.getElementById("scrollHint")).display !== "none");
+    // 試合中は出ない
+    await play(page);
+    assert.equal(await vis(page), false, "試合中は出ない");
+    assert.deepEqual(errors, []);
+    await ctx.close();
+    // 高い画面：下に余りが無い → 出ない
+    const t = await open(browser, url, { vp: { width: 375, height: 4000 } });
+    assert.equal(await vis(t.page), false, "全部見えているときは出ない");
+    await t.ctx.close();
+    // 動きを減らさない端末では動く
+    const ctx2 = await browser.newContext({ viewport: { width: 375, height: 500 }, reducedMotion: "no-preference" });
+    await ctx2.addInitScript(() => { try { localStorage.setItem("kj-tutorial", "1"); } catch (e) { /* 読めない端末 */ } });
+    const p2 = await ctx2.newPage(); await p2.goto(url);
+    await p2.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
+    const anim = await p2.evaluate(() => { const s = getComputedStyle(document.getElementById("scrollHint")); return { n: s.animationName, d: s.animationDuration, i: s.animationIterationCount }; });
+    assert.deepEqual(anim, { n: "kjHintBob", d: "1.6s", i: "infinite" }, "ゆっくり（1.6 秒）上下する");
+    await ctx2.close();
+  } finally { await browser.close(); srv.close(); }
+});

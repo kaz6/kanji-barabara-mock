@@ -69,3 +69,7 @@
 
 - 題字の枠（`#mastTitle`。二重罫線・札の色の地）の後ろに、下の真ん中から昇る弁柄の日と放射の帯18本（`svg.mast-sun`。index.html に直接。画像ファイルなし）。題字（`#mastName`）は札の色の地・墨の枠で放射の上。表紙だけ（`body.playing .mast` は隠れる）
 
+## 表紙を詰める（KJ-101。受け箱 P-101）
+
+- 題字の箱・題字の数は `.mast` の変数（`--mast-h`・`--mast-top`・`--mast-fs`・`--mast-fs-s`）。説明文（`#lead`）は札の字の切り替えに関わらず Kaisei。▼（`#scrollHint`）は下に余りがあるときだけ右下に出る。R-128
+
