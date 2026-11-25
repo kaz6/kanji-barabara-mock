@@ -102,13 +102,11 @@ test("CPU 対戦：CPU が動くと、その場で上の段が変わる（中身
   assert.equal(await peekText(page), "山川玉木休日月_");
   // 本物の CPU の手（cpuTurn）を何回か動かし、そのたびに画面の上の段が CPU の手札と同じ
   await page.evaluate(() => { const G = __KJ.game; G.cpuTurn = G.realCpuTurn; });
-  const seen = new Set();
   for (let i = 0; i < 25; i++) {
     await page.evaluate(() => { const G = __KJ.game; G.cpuTurn(); __KJ.render(); });
-    const shown = await peekText(page); seen.add(shown);
+    const shown = await peekText(page);
     assert.equal(shown, await model(), `${i + 1}手目のあとも CPU の手札と同じ`);
   }
-  assert.ok(seen.size >= 1);
   assert.deepEqual(errors, []);
   await ctx.close();
 });
@@ -119,6 +117,7 @@ test("375×667：相手の上の段を見せても、自分の手札・ストッ
   t.after(async () => { await browser.close(); srv.close(); });
   const { ctx, page, errors } = await open(browser, url, { vp: { width: 375, height: 667 } });
   await setUp(page);
+  await page.evaluate(() => { const G = __KJ.game; G.me.cards.push({ id: 9400, c: "月", t: 0, fresh: false, tray: true }); __KJ.render(); }); // ストックに札がある（試合のはじめもそう。空だと低くなって楽な方だけを測る）
   const m = await page.evaluate(() => { const q = (s) => document.querySelector(s).getBoundingClientRect(); return { hand: q("#meHand").bottom, tray: q("#meTray").bottom, w: document.documentElement.scrollWidth, tile: q("#cpuHand .tile").width }; });
   assert.ok(m.hand <= 667 && m.tray <= 667, `手札・ストックの下端が 667 以内（手札 ${m.hand}・ストック ${m.tray}）`);
   assert.ok(m.w <= 375, "横スクロールがない");
