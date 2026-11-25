@@ -61,14 +61,14 @@ test("割る：氷→水・丶、丸→九・丶、刃→刀・丶、凡→几�
   assert.deepEqual(K.joinResults(T4, "大", "丶"), ["太", "犬"]);
 });
 
-test("ほかの組は動かない：行き先を足した行を除くと、くっつける表は足す前と同じ数。同じ左右から2つできる組は 十口 と 大丶 のまま", () => {
+test("ほかの組は動かない：行き先を足した行を除くと、くっつける表は足す前と同じ数。同じ左右から2つできる組は 十口 と 大丶 のまま（N4 は 日一＝目・旦 が増える。KJ-098）", () => {
   for (const L of [TG1, T, T4]) {
     const base = Object.keys(L.parts).filter((k) => !L.REACH.has(k));
     assert.equal(base.length + L.REACH.size, Object.keys(L.parts).length);
     const multi = [...L.JOIN].filter(([, v]) => v.length > 1).map(([k]) => k);
-    assert.ok(multi.every((k) => k === "十口" || k === "大丶"), multi.join());
+    assert.ok(multi.every((k) => k === "十口" || k === "大丶" || k === "日一"), multi.join());
   }
-  assert.deepEqual([TG1, T, T4].map((L) => Object.keys(L.parts).length - L.REACH.size), [75, 68, 219], "割り方の数（小1・N5・N4）は足す前のまま");
+  assert.deepEqual([TG1, T, T4].map((L) => Object.keys(L.parts).length - L.REACH.size), [75, 68, 220], "割り方の数（小1・N5・N4）は足す前のまま（N4 は 旦 の1行が増えた。KJ-098）");
 });
 
 test("面で落とす：氷は 水 の右に 丶（水を丶の左へ）、凡は 丶 を 几 の中央へ", () => {
