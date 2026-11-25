@@ -52,7 +52,7 @@ test("筆文字：はじめる前の画面のうちに読まれ、#fx .c だけ�
       const other = getComputedStyle(document.getElementById("start")).fontFamily;
       return { c: getComputedStyle(c).fontFamily, other, root: getComputedStyle(document.body).fontFamily };
     });
-    assert.match(fam.c, /^"KJ Fx", "KJ Glyphs"/);
+    assert.match(fam.c, /^"KJ Fx", "KJ Kaisei", "KJ Shippori", "KJ Glyphs"/, "筆文字のあとは今の札の字（KJ-093：Kaisei → Shippori → kj-glyphs）");
     assert.ok(!fam.other.includes("KJ Fx") && !fam.root.includes("KJ Fx"));
     assert.deepEqual(errors, []);
     await ctx.close();

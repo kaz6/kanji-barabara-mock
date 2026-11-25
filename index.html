@@ -6,23 +6,28 @@
 <title>漢字版（仮）モック</title>
 <link rel="stylesheet" href="fonts/kj-glyphs.css">
 <link rel="stylesheet" href="fonts/kj-fx.css">
+<link rel="stylesheet" href="fonts/kj-paper.css">
 <style>
 :root{
-  /* 色の役割（KJ-042。値は仮。ここだけ変えれば全体が変わる）
-     赤（--accent）＝選んだ札と Play だけ ／ 青（--join）＝くっつけられる・合体の面 ／ 緑（--gauge）＝待ち時間のゲージ ／ 金（--hint）＝ヒント
-     墨色（--table）＝場と台が乗る卓 ／ 生成り（--tile）＝札 ／ 札の下の縁（--edge）＝厚み ／ 角の印（Flip・Cycle・Same reading の SVG）＝墨色（--ink。選んだ札の上は白） */
-  --bg:#f6f4ef; --ink:#1d1b18; --sub:#6b665d; --line:#d9d4c9; --tile:#fffdf8; --cut:#b48f62; --cut-op:.6;
-  --edge:#c2baa6; --slot:#e6e1d5; --accent:#c8402a; --accent-edge:#8f2a1a; --ok:#2f6b4f; --dim:#a9a397; --join:#2f6fd6;
-  --table:#2b2926; --table-2:#383530; --on-table:#f2ede2; --on-table-sub:#b9b2a2;
-  --btn:#efe9da; --btn-edge:#b9b19d; --btn-off:#4a463f; --btn-off-ink:#d9d2c2; --play-off:#7a3a2f; --play-off-ink:#f4ddd7;
+  /* 色の役割（KJ-042。KJ-093：新聞紙風。値は仮。ここだけ変えれば全体が変わる）
+     紙（--bg 黄ばんだ紙）・札（--tile）・墨（--ink）・弁柄（--accent）＝Play・選んだ札の縁・あなたの印。補助（--sub／--dim）・点線（--line）
+     青（--join）＝くっつけられる・合体の面 ／ 緑（--gauge）＝待ち時間のゲージ ／ 金（--hint）＝ヒント
+     卓（--table）は紙と同じ色（暗い面はやめた）。札の下の縁（--edge）は紙の濃い色。角の印（Flip・Cycle・Same reading の SVG）＝墨色（--ink） */
+  --bg:#e8dbb4; --ink:#2a2622; --sub:#625a50; --line:#a0957b; --tile:#f6eed6; --cut:#b48f62; --cut-op:.6;
+  --edge:#7d7366; --slot:#dccf9e; --accent:#9c3b2e; --accent-edge:#6e2a21; --ok:#2f6b4f; --dim:#625a50; --join:#2f6fd6;
+  --table:#e8dbb4; --table-2:#ddd0a4; --on-table:#2a2622; --on-table-sub:#625a50;
+  --btn:transparent; --btn-edge:#2a2622; --btn-off:#dccf9e; --btn-off-ink:#574f45; /* 押せないボタン：一段濃い紙の地に濃い字（文字は読める明暗差 4.5 以上） */ --play-off:#7a3a2f; --play-off-ink:#f4ddd7;
   --hint:#d99a00; /* ヒントの光り（KJ-037。仮決め。青＝くっつけられる・赤＝選んだ札とは別の色） */
-  --win:#2f6b4f; --lose:#6b665d; /* 終わりの「勝ち！」「負け…」の色（KJ-018。仮決め。赤は選んだ札と Play だけなので使わない） */
+  --win:#2f6b4f; --lose:#625a50; /* 終わりの「勝ち！」「負け…」の色（KJ-018。仮決め。弁柄は選んだ札と Play だけなので使わない） */
   --shine:#f3d98a; /* 長い言葉の「キラッ」の色（KJ-018。仮決め） */
-  --gauge:#44705a; /* 待ち時間のゲージ（KJ-034。仮決め。KJ-042：墨色の卓の上でも文字が読める濃さの緑） */
-  --kanji:"KJ Glyphs","Hiragino Mincho ProN","Yu Mincho","Noto Serif CJK JP","Noto Serif JP","Source Han Serif JP",serif;
+  --gauge:#44705a; /* 待ち時間のゲージ（KJ-034。仮決め。KJ-093：紙の上では薄く敷く） */
+  /* 字体（KJ-093）：画面の字＝Zen Old Mincho／札の字＝Kaisei Tokumin（大正風。初期）か Shippori Mincho（明朝）。設定「札の字」が <html data-face> を替える。無い字は もう一方 → 今の字体（kj-glyphs）へ落ちる */
+  --ui:"KJ Zen","KJ Glyphs","Hiragino Mincho ProN","Yu Mincho","Noto Serif CJK JP","Noto Serif JP","Source Han Serif JP",serif;
+  --kanji:"KJ Kaisei","KJ Shippori","KJ Glyphs","Hiragino Mincho ProN","Yu Mincho","Noto Serif CJK JP","Noto Serif JP","Source Han Serif JP",serif;
 }
+:root[data-face="mincho"]{--kanji:"KJ Shippori","KJ Kaisei","KJ Glyphs","Hiragino Mincho ProN","Yu Mincho","Noto Serif CJK JP","Noto Serif JP","Source Han Serif JP",serif}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 "KJ Glyphs",system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 var(--ui)}
 main{max-width:760px;margin:0 auto;padding:16px 14px 48px}
 h1{font-size:17px;margin:0 0 2px;font-weight:700}
 .lead{color:var(--sub);font-size:13px;margin:0 0 14px}
@@ -37,9 +42,9 @@ h1{font-size:17px;margin:0 0 2px;font-weight:700}
 #fxPts .pf.gain{color:var(--win)}
 #fxPts .pf.loss{color:var(--lose)}
 #fxPts .pf.t2,#fxPts .pf.t3{text-shadow:0 0 8px var(--shine),0 0 2px var(--shine)}
-#fxPts .pf.chip{font-family:var(--kanji);font-size:26px;color:var(--ink);background:var(--tile);border-bottom:3px solid var(--edge);border-radius:4px;padding:3px 8px;line-height:1.1}
-#fxPts .pf.hitfx{font-family:var(--kanji);color:var(--ink);background:var(--tile);border-bottom:3px solid var(--edge);border-radius:4px;display:flex;align-items:center;justify-content:center;overflow:hidden}
-#fxPts .pf.hitfx i{position:absolute;left:-20%;top:50%;width:140%;height:3px;margin-top:-1.5px;background:var(--ink);border-radius:2px;transform:rotate(-38deg) scaleX(0);transform-origin:0 50%} /* 斬る：札を斜めに払う一閃 */
+#fxPts .pf.chip{font-family:var(--kanji);font-size:26px;color:var(--ink);background:var(--tile);border:1px solid var(--edge);border-radius:0;padding:3px 8px;line-height:1.1}
+#fxPts .pf.hitfx{font-family:var(--kanji);color:var(--ink);background:var(--tile);border:1px solid var(--edge);border-radius:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#fxPts .pf.hitfx i{position:absolute;left:-20%;top:50%;width:140%;height:3px;margin-top:-1.5px;background:var(--ink);border-radius:0;transform:rotate(-38deg) scaleX(0);transform-origin:0 50%} /* 斬る：札を斜めに払う一閃 */
 #fxPts .pf.ring{width:80px;height:80px;border:4px solid var(--shine);border-radius:50%;box-shadow:0 0 18px 4px var(--shine);background:none}
 .score.neg .n{color:var(--lose)}
 .score .n{display:inline-block}
@@ -50,21 +55,21 @@ h1{font-size:17px;margin:0 0 2px;font-weight:700}
 .cds{margin-left:auto;font-size:12px;color:var(--sub);font-variant-numeric:tabular-nums}
 .hand{display:grid;grid-template-columns:repeat(8,1fr);gap:4px}
 .trayhead{font-size:11px;color:var(--sub);margin:8px 0 3px}
-.tray .slot{background:var(--slot)}
+.tray .slot{background:transparent}
 .opp{display:inline-flex;gap:10px;align-items:center;font-size:14px;flex-wrap:wrap}
 .opp label{cursor:pointer;white-space:nowrap}
-.slot{aspect-ratio:1;background:var(--slot);border-radius:4px}
-.table .slot{background:var(--table-2)}
-.tile{aspect-ratio:1;position:relative;background:var(--tile);border:1px solid var(--line);border-bottom:3px solid var(--edge);border-radius:4px;
+.slot{aspect-ratio:1;background:transparent;border:1px dotted var(--line);border-radius:0}
+.table .slot{background:transparent}
+.tile{aspect-ratio:1;position:relative;background:var(--tile);border:1px solid var(--edge);border-radius:0;
   display:flex;align-items:center;justify-content:center;font-family:var(--kanji);font-size:clamp(20px,4.6vw,30px);
   cursor:pointer;user-select:none;padding:0;color:var(--ink);width:100%}
 .tile:hover{border-color:var(--ink)}
 /* 選んだ札は手札・ストックのマスに残り、色が変わって角に選んだ順の数字が付く（KJ-030）。指一本で札を引きずって入れ替える */
 .me .tile{touch-action:none}
-.tile.sel{background:var(--accent);border-color:var(--accent);border-bottom-color:var(--accent-edge);color:#fff}
-.tile .ord{position:absolute;top:1px;left:3px;font:bold 12px/1.2 system-ui,sans-serif;color:#fff}
+.tile.sel{border:2px solid var(--accent)} /* 選んだ札：弁柄の縁（KJ-093。地は札の色のまま。字は墨） */
+.tile .ord{position:absolute;top:1px;left:3px;font:bold 12px/1.2 system-ui,sans-serif;color:var(--accent)}
 .tile.drag{opacity:.55;border-style:dashed}
-.tile.over{border-color:var(--ink);border-width:2px;border-bottom-width:3px}
+.tile.over{border-color:var(--ink);border-width:2px}
 /* 引きずってくっつける（KJ-017）：くっつけられる相手の札の枠は青。上に来た札は大きく見せ、落とすと字になる面だけ青く光る（指している面は濃く） */
 .tile.joinable{border-color:var(--join);box-shadow:0 0 0 1px var(--join)}
 .tile.jt{transform:scale(1.5);z-index:4;box-shadow:0 0 0 2px var(--join)}
@@ -74,12 +79,13 @@ h1{font-size:17px;margin:0 0 2px;font-weight:700}
 .tile .fz.bottom{clip-path:polygon(30% 70%,70% 70%,100% 100%,0 100%)}
 .tile .fz.left{clip-path:polygon(0 0,30% 30%,30% 70%,0 100%)}
 .tile .fz.right{clip-path:polygon(100% 0,100% 100%,70% 70%,70% 30%)}
-.tile .fz.center{inset:30%;border-radius:2px}
-.tile.part{background:#f1ede4;color:#4a463f}
-.tile.part.sel{background:var(--accent);border-color:var(--accent);border-bottom-color:var(--accent-edge);color:#fff} /* 部品の札も選ぶと赤地に白（部品の色に負けない） */
-.tile.new{border-color:var(--ink);border-width:2px;border-bottom-width:3px} /* 取ったばかりの札：赤は選んだ札だけなので墨色の枠 */
+.tile .fz.center{inset:30%}
+.tile.part{background:#ece1bc;color:var(--ink)}
+.tile.part.sel{background:#ece1bc;border:2px solid var(--accent)} /* 部品の札も選ぶと弁柄の縁（地は部品の色のまま） */
+.tile.new{border-color:var(--ink);border-width:2px} /* 取ったばかりの札：弁柄は選んだ札だけなので墨色の枠 */
+.tile.new.sel{border-color:var(--accent)} /* 取ったばかりの札を選んだら、選んだ札の弁柄の縁（レビュー P-093） */
 .tile .mk{position:absolute;top:1px;right:3px;font:10px/1.2 system-ui,sans-serif;color:var(--ink);letter-spacing:-1px} /* 角の印は墨色（KJ-042） */
-.tile.sel .mk{color:#fff} /* 選んだ札（赤地）の上でも角の印が見える（KJ-024。PR #22 のレビューの気づき） */
+.tile.sel .mk{color:var(--ink)} /* 選んだ札の上でも角の印は墨色（KJ-024） */
 /* 待ち時間のあいだ（KJ-040）：待っている操作の印だけ薄くする。ゲージが満ちたら外れて元の濃さ。選んだ札（赤地・白い印）でも薄くなる。薄さは仮 */
 .wait-invert .mi[data-k="invert"],.wait-cycle .mi[data-k="cycle"],.wait-homophone .mi[data-k="homophone"]{opacity:.3}
 .sp-a,.sp-b{display:inline-block}.sp-a{transform-origin:100% 100%;transform:rotate(-9deg)}.sp-b{transform-origin:0% 100%;transform:rotate(9deg)} /* Split のロゴ（KJ-059）：Sp｜lit。下の角を軸に、上が開く逆ハの字 */
@@ -94,12 +100,11 @@ button.op.cutopen .sp-a{animation:kjSpA .3s ease-in-out}button.op.cutopen .sp-b{
 .tile .cut{position:absolute;pointer-events:none;z-index:1}
 .tile .cutv{left:calc(var(--at)*100%);top:7%;bottom:7%;border-left:1.5px dashed var(--cut);opacity:var(--cut-op)} /* 点線だけ少し薄く（KJ-091。色 --cut は変えず不透明度で。角の印 .cutx は変えない） */
 .tile .cuth{top:calc(var(--at)*100%);left:7%;right:7%;border-top:1.5px dashed var(--cut);opacity:var(--cut-op)}
-.tile .cutx{right:2px;bottom:1px;font:bold 9px/1 system-ui,sans-serif;color:var(--cut);border:1px solid var(--cut);border-radius:2px;padding:0 1px}
+.tile .cutx{right:2px;bottom:1px;font:bold 9px/1 system-ui,sans-serif;color:var(--cut);border:1px solid var(--cut);padding:0 1px}
 .tile.hasmk .cutv.r{top:36%}
 .tile.sel .cutv.l{top:36%}
 .tile.hasmk .cuth.t{right:56%}
 .tile.sel .cuth.t{left:34%}
-.tile.sel .cut{--cut:#fff}
 .cpu .hand{gap:3px}
 .cpu .tile{font-size:clamp(14px,3.4vw,22px);cursor:default}
 .cpu .tile:hover{border-color:var(--line)}
@@ -124,9 +129,18 @@ button.op.cutopen .sp-a{animation:kjSpA .3s ease-in-out}button.op.cutopen .sp-b{
   .cpu .hand{grid-template-columns:repeat(8,1fr)}
   .tile .mk{font-size:10px}
 }
+/* 表紙の題字（KJ-093。作者「題字は表紙に回します〜」）：題字を二重罫線で挟み、すぐ下の行に 第○號（左）・今日の日付（中）。行の下にも二重罫線。試合の画面には出さない。題字の後ろの絵柄は入れない（作者の判断待ち） */
+.mast{margin:0 0 12px}
+.mast-title{font-size:38px;font-weight:700;letter-spacing:.18em;text-align:center;line-height:1.3;padding:6px 0 6px .18em;border-top:6px double var(--ink);border-bottom:6px double var(--ink)}
+.mast-line{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;font-size:13px;padding:5px 2px;border-bottom:6px double var(--ink)}
+.mast-line #mastNo{justify-self:start;font-weight:700;white-space:nowrap}
+body.playing .mast{display:none}
+@media (max-width:374px){.mast-line{font-size:12px}}
 /* 台（高さを固定する） */
 /* 卓（KJ-042）：場と台が乗る真ん中を墨色の単色の面に。囲み線はやめ、色の面で分ける */
-.table{background:var(--table);color:var(--on-table);border-radius:6px;padding:10px 10px 12px;margin:10px 0}
+.table{position:relative;background:var(--table);color:var(--on-table);border-radius:0;border-top:3px solid var(--ink);border-bottom:3px solid var(--ink);padding:10px 0 12px 28px;margin:10px 0}
+/* 卓の左の縦書きの見出し「卓　場と台」（KJ-093。新聞の囲み記事の見出し。字は飾りなので読み上げには出ない・押せない） */
+.table::before{content:"卓　場と台";position:absolute;left:0;top:0;bottom:0;width:20px;writing-mode:vertical-rl;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;letter-spacing:.35em;border-right:1px solid var(--ink);pointer-events:none}
 .table .side{margin:0 0 8px}
 .table .side-head{height:auto;margin-bottom:0}
 .table .side-head b{color:var(--on-table)}
@@ -147,12 +161,12 @@ button.op.cutopen .sp-a{animation:kjSpA .3s ease-in-out}button.op.cutopen .sp-b{
 #bRedraw::before{content:"";position:absolute;left:0;top:0;bottom:0;width:0;background:var(--gauge);opacity:.45;z-index:-1;pointer-events:none}
 #bRedraw.holding::before{width:100%;transition:width var(--holdms,600ms) linear}
 #bRedraw .cdv{display:block;width:auto;white-space:nowrap;font-size:11px;text-align:center}
-.rdnote{position:absolute;right:0;bottom:calc(100% + 4px);z-index:5;white-space:nowrap;font-size:12px;line-height:1.3;padding:2px 8px;border-radius:4px;background:var(--ink);color:#fff;pointer-events:none}
+.rdnote{position:absolute;right:0;bottom:calc(100% + 4px);z-index:5;white-space:nowrap;font-size:12px;line-height:1.3;padding:2px 8px;border-radius:0;background:var(--ink);color:var(--bg);pointer-events:none}
 .rdnote:empty{display:none}
 #bRedraw.hint.lift,#bRedraw.hint.lift:disabled,#bRedraw.hint.lift[aria-disabled=true]{background:#fff1c4;color:var(--ink);border-color:var(--hint)} /* ヒントで光るとき（卓の外なので .table の規則が効かない） */
-.row{display:flex;gap:6px;height:76px;align-items:center;overflow-x:auto;overflow-y:hidden;background:var(--table-2);border-radius:4px;padding:0 6px}
+.row{display:flex;gap:6px;height:76px;align-items:center;overflow-x:auto;overflow-y:hidden;background:var(--table-2);border:1px solid var(--line);border-radius:0;padding:0 6px}
 .row .tile{width:64px;height:64px;font-size:40px;flex:none}
-.row .empty{color:var(--on-table-sub);font-size:13px}
+.row .empty{color:var(--ink);font-size:13px}
 .info{height:46px;margin:6px 0 8px;color:var(--on-table);font-size:14px;line-height:23px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .info .w{font-family:var(--kanji);font-size:18px}
 .info .l1{display:block;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} /* 1行目：部品の意味＋くっつく相手（KJ-083） */
@@ -165,26 +179,29 @@ button.op.cutopen .sp-a{animation:kjSpA .3s ease-in-out}button.op.cutopen .sp-b{
 .ops-main,.ops-set{display:flex;gap:6px}
 .ops-main{display:block} /* Play は卓の幅いっぱいの1段（KJ-078） */
 .ops-main button.op.main{display:block;width:100%}
-button.op{font:inherit;font-size:14px;padding:8px 12px;border:1px solid var(--ink);background:#fff;color:var(--ink);border-radius:4px;cursor:pointer;min-width:64px}
+button.op{font:inherit;font-size:14px;padding:8px 12px;border:1px solid var(--ink);background:var(--tile);color:var(--ink);border-radius:0;cursor:pointer;min-width:64px}
 button.op:disabled,button.op[aria-disabled=true]{border-color:var(--line);color:var(--dim);cursor:default}
-button.op.main{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
-button.op.main:disabled,button.op.main[aria-disabled=true]{background:#fff;border-color:var(--line);color:var(--dim);font-weight:400}
+button.op.main{background:var(--accent);border-color:var(--ink);color:var(--bg);font-weight:700}
+button.op.main:disabled,button.op.main[aria-disabled=true]{background:var(--tile);border-color:var(--line);color:var(--dim);font-weight:400}
 /* 卓の上のボタン（KJ-042）。重さは3段。押せないボタンは灰色に溶かさず、形を残して少し暗く（文字は読める明暗差を保つ） */
-.table button.op{border:0;border-bottom:3px solid var(--btn-edge);background:var(--btn);color:var(--ink);min-width:0}
-.table button.op:disabled,.table button.op[aria-disabled=true]{background:var(--btn-off);border-bottom-color:var(--btn-off);color:var(--btn-off-ink)}
-.table .ops-set button.op{flex:1 1 auto;padding:7px 6px;white-space:nowrap}
+/* 操作5つ（Split・Join・Flip・Cycle・Same reading）は、罫線で仕切った一続きの段（KJ-093）。Play は弁柄の地に紙色の字 */
+.table button.op{border:0;background:var(--btn);color:var(--ink);min-width:0}
+.table button.op:disabled,.table button.op[aria-disabled=true]{background:var(--btn-off);color:var(--btn-off-ink)}
+.table .ops-set{gap:0;border:1px solid var(--ink)}
+.table .ops-set button.op{flex:1 1 auto;padding:7px 6px;white-space:nowrap;border-right:1px solid var(--ink)}
+.table .ops-set button.op:last-child{border-right:0}
 .table .ops-set button.op#bHomo{flex:2 1 auto}
-.table button.op.main{flex:1 1 auto;font-size:17px;padding:10px 12px;background:var(--accent);border-bottom-color:var(--accent-edge);color:#fff}
-.table button.op.main:disabled,.table button.op.main[aria-disabled=true]{background:var(--play-off);border-bottom-color:var(--play-off);color:var(--play-off-ink);font-weight:700}
+.table button.op.main{flex:1 1 auto;font-size:17px;padding:10px 12px;background:var(--accent);border:2px solid var(--ink);color:var(--bg);letter-spacing:.12em}
+.table button.op.main:disabled,.table button.op.main[aria-disabled=true]{background:var(--play-off);border-color:var(--ink);color:var(--play-off-ink);font-weight:700}
 .table button.op.quiet{background:transparent;border-bottom:0;color:var(--on-table);padding:6px 10px}
-.table button.op.quiet:disabled,.table button.op.quiet[aria-disabled=true]{background:transparent;color:#a8a295}
-.table button.op.quiet.cd{background:var(--btn-off);color:var(--btn-off-ink)}
+.table button.op.quiet:disabled,.table button.op.quiet[aria-disabled=true]{background:transparent;color:var(--dim)}
+.table button.op.quiet.cd{background:var(--slot);color:var(--ink)}
 .cdv{display:inline-block;width:2.2em;text-align:left;font-variant-numeric:tabular-nums;font-size:12px}
 #bRedraw .cdv{width:auto;white-space:nowrap}
 /* 待ち時間のゲージ（KJ-034）：使ったあと、ボタンの地が左から右へ満ちていく。満ちたら押せる。満ちた瞬間に小さく光る（色は仮決め） */
 button.op.cd{position:relative;isolation:isolate}
 .table button.op.cd{color:var(--on-table)}
-button.op.cd::before{content:"";position:absolute;left:0;top:0;bottom:0;width:calc(var(--g,0) * 100%);background:var(--gauge);z-index:-1;transition:width .25s linear;pointer-events:none}
+button.op.cd::before{content:"";position:absolute;left:0;top:0;bottom:0;width:calc(var(--g,0) * 100%);background:var(--gauge);opacity:.4;z-index:-1;transition:width .25s linear;pointer-events:none} /* 紙の上では薄く敷く（字が読める） */
 button.op.full{animation:kjGaugeFull .6s ease-out}
 @keyframes kjGaugeFull{0%{box-shadow:0 0 0 0 rgba(47,107,79,.55)}100%{box-shadow:0 0 0 6px rgba(47,107,79,0)}}
 @media (prefers-reduced-motion:reduce){button.op.full{animation:none}} /* 動きを減らす設定：光るのだけやめる（ゲージの満ち方は出す） */
@@ -195,44 +212,44 @@ button.op.full{animation:kjGaugeFull .6s ease-out}
 .tile.hint.lift{background:#fff1c4}
 .tile.hint.lift.jt{animation:kjHint 1.2s ease-in-out infinite alternate} /* くっつけ先（.jt。1.5倍）のあいだは持ち上げを止める（アニメーションの transform が .jt に勝つため） */
 .table button.op.hint.lift,.table button.op.hint.lift:disabled,.table button.op.hint.lift[aria-disabled=true],.table button.op.hint.lift.quiet,.table button.op.hint.lift.quiet.cd{background:#fff1c4;color:var(--ink);border-bottom-color:var(--hint)} /* 押せない・quiet・待ち中のボタンでも薄い金の地（文字は墨色） */
-.tile.sel.hint,.tile.sel.hint.lift{border-color:var(--hint);background:var(--accent)} /* 選んだ札は赤地に白のまま（薄い金の地にしない） */
+.tile.sel.hint,.tile.sel.hint.lift{border-color:var(--accent);background:var(--tile)} /* 選んだ札は札の色のまま（薄い金の地にしない） */
 @keyframes kjHint{from{box-shadow:0 0 0 2px var(--hint),0 0 4px 0 rgba(217,154,0,.3)}to{box-shadow:0 0 0 2px var(--hint),0 0 12px 3px rgba(217,154,0,.7)}}
 @keyframes kjLift{from{transform:translateY(-2px)}to{transform:translateY(-6px)}}
 @media (prefers-reduced-motion:reduce){.tile.hint,button.op.hint,.tile.hint.lift,.tile.hint.lift.jt,button.op.hint.lift{animation:none}}
-.hint-tag{display:inline-block;margin-right:8px;padding:0 8px;border:1px solid var(--hint);border-radius:10px;color:#7a5600;background:#fff6dc;font-size:12px;font-weight:700;line-height:18px;vertical-align:1px}
+.hint-tag{display:inline-block;margin-right:8px;padding:0 8px;border:1px solid var(--hint);border-radius:0;color:#7a5600;background:#fff6dc;font-size:12px;font-weight:700;line-height:18px;vertical-align:1px}
 /* 選ぶ札（同音・くっつけて2通り）は台の下に重ねて出す。手札を押し下げない */
-.choices{display:none;position:absolute;left:-10px;right:-10px;top:calc(100% + 12px);z-index:5;background:var(--table);color:var(--on-table);border-radius:0 0 6px 6px;padding:8px 12px 12px}
+.choices{display:none;position:absolute;left:-28px;right:0;top:calc(100% + 12px);z-index:5;background:var(--table);color:var(--on-table);border:1px solid var(--ink);border-top:0;border-radius:0;padding:8px 12px 12px}
 .choices.on{display:block}
 .choices .g{margin:4px 0;display:flex;flex-wrap:wrap;align-items:center;gap:4px}
 .choices .g span{font-size:12px;color:var(--on-table-sub);min-width:64px}
-.choices button{font-family:var(--kanji);font-size:22px;width:44px;height:44px;border:1px solid var(--line);border-bottom:3px solid var(--edge);background:var(--tile);color:var(--ink);border-radius:4px;cursor:pointer}
+.choices button{font-family:var(--kanji);font-size:22px;width:44px;height:44px;border:1px solid var(--edge);background:var(--tile);color:var(--ink);border-radius:0;cursor:pointer}
 /* はじめる前の画面（KJ-007。KJ-042：墨色の面に、ラジオ（ブラウザの青）をやめて札の形の選択ボタン。選んだものが赤地に白） */
-.setup{background:var(--table);color:var(--on-table);border-radius:6px;padding:16px 14px 16px;margin:8px 0}
+.setup{background:var(--table);color:var(--on-table);border-radius:0;border-top:3px solid var(--ink);border-bottom:3px solid var(--ink);padding:16px 14px 16px;margin:8px 0}
 .setup h2{font-size:15px;margin:0 0 12px}
 .setup .grp{margin:0 0 14px}
 .setup .gt{font-size:12px;color:var(--on-table-sub);margin:0 0 6px}
 .setup .opp{gap:6px}
-.setup .opp label{position:relative;padding:9px 14px;background:var(--tile);color:var(--ink);border-bottom:3px solid var(--edge);border-radius:4px;line-height:1.3}
+.setup .opp label{position:relative;padding:9px 14px;background:var(--tile);color:var(--ink);border:1px solid var(--edge);border-radius:0;line-height:1.3}
 .setup .opp label input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
-.setup .opp label:has(input:checked){background:var(--accent);color:#fff;border-bottom-color:var(--accent-edge);font-weight:700}
+.setup .opp label:has(input:checked){background:var(--accent);color:var(--bg);border-color:var(--ink);font-weight:700}
 .setup .opp label:has(input:focus-visible){outline:2px solid var(--on-table);outline-offset:2px}
 .setup .note{color:var(--on-table-sub)}
-.setup button.op{border:0;border-bottom:3px solid var(--btn-edge);background:var(--btn);color:var(--ink)}
-.setup button.op:disabled,.setup button.op[aria-disabled=true]{background:var(--btn-off);border-bottom-color:var(--btn-off);color:var(--btn-off-ink)}
-.setup button.op.main{width:100%;margin-top:6px;padding:14px;font-size:17px;background:var(--accent);border-bottom-color:var(--accent-edge);color:#fff}
+.setup button.op{border:1px solid var(--ink);background:var(--tile);color:var(--ink)}
+.setup button.op:disabled,.setup button.op[aria-disabled=true]{background:var(--btn-off);border-color:var(--line);color:var(--btn-off-ink)}
+.setup button.op.main{width:100%;margin-top:6px;padding:14px;font-size:17px;background:var(--accent);border:2px solid var(--ink);color:var(--bg)}
 /* チュートリアル（KJ-043）：案内は1行（2行ぶんの高さを確保して、段が替わっても下の札が動かない）。金＝ヒントの色を案内にも使い、光る札と「ここを見る」でつなぐ */
-.tut{background:#fff6dc;border:1px solid var(--hint);border-radius:6px;padding:6px 10px 8px;margin:6px 0}
+.tut{background:#fff6dc;border:1px solid var(--hint);border-radius:0;padding:6px 10px 8px;margin:6px 0}
 .tut-head{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:#7a5600;min-height:26px}
 .tut-head .sp{flex:1}
-.tut button.op{font-size:12px;padding:2px 10px;min-width:0;background:#fff;border-color:#7a5600;color:#7a5600}
+.tut button.op{font-size:12px;padding:2px 10px;min-width:0;background:var(--tile);border-color:#7a5600;color:#7a5600}
 .tut p{margin:2px 0 0;font-size:14px;line-height:1.45;color:var(--ink);min-height:41px}
-.tut button.op.go{display:block;width:100%;margin-top:6px;padding:9px 12px;font-size:15px;font-weight:700;background:var(--ink);border-color:var(--ink);color:#fff}
+.tut button.op.go{display:block;width:100%;margin-top:6px;padding:9px 12px;font-size:15px;font-weight:700;background:var(--ink);border-color:var(--ink);color:var(--bg)}
 body.tutorial #clock,body.tutorial #again,body.tutorial #bLog,body.tutorial #bCopyEnd,body.tutorial .lead{display:none}
 .choices button.hint{border-color:var(--hint);box-shadow:0 0 0 2px var(--hint),0 0 10px 2px rgba(217,154,0,.55)}
 .setup #bTutorial{display:block;width:100%;margin-top:8px;padding:10px 12px}
 /* 合言葉の部屋（KJ-033 後半）：部屋を作る・合言葉で入る・待つ */
 .roomrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0}
-.roomrow input{font:inherit;font-size:18px;width:7.5em;padding:6px 8px;border:0;background:var(--tile);color:var(--ink);border-radius:4px;letter-spacing:.15em;font-variant-numeric:tabular-nums}
+.roomrow input{font:inherit;font-size:18px;width:7.5em;padding:6px 8px;border:1px solid var(--edge);background:var(--tile);color:var(--ink);border-radius:0;letter-spacing:.15em;font-variant-numeric:tabular-nums}
 .roomcode{font-size:32px;font-weight:700;letter-spacing:.2em;font-variant-numeric:tabular-nums;margin:4px 0}
 .cds.gone{color:var(--ink);font-weight:700;text-decoration:underline}
 [hidden]{display:none!important}
@@ -252,16 +269,16 @@ body:not(.playing) #topbar,body:not(.playing) #logPanel{display:none} /* はじ�
 .choices{padding-top:56px}
 .table:has(#choices.on)+#meSide .bkrd{position:relative;z-index:6}
 .table:has(#choices.on)+#meSide #bBack,.table:has(#choices.on)+#meSide #bRedraw{border-color:var(--on-table-sub);color:var(--on-table)}
-.table:has(#choices.on)+#meSide #bBack:disabled,.table:has(#choices.on)+#meSide #bRedraw:disabled,.table:has(#choices.on)+#meSide #bRedraw[aria-disabled=true]{border-color:#5b574f;color:#a8a295}
+.table:has(#choices.on)+#meSide #bBack:disabled,.table:has(#choices.on)+#meSide #bRedraw:disabled,.table:has(#choices.on)+#meSide #bRedraw[aria-disabled=true]{border-color:var(--line);color:var(--dim)}
 .cds.gone~.clock{display:none} /* 「相手の通信が切れた」は長いので、出ているあいだだけ残り時間を引っ込める（行の高さを変えない） */
 body.esOn details>summary .bar{position:fixed;top:6px;left:10px;right:10px;z-index:20}
 .msgline{height:24px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px}
 .msg{font-weight:700}
 .msg.win,.msg.lose{color:var(--ink)} /* 赤は選んだ札と Play だけ（KJ-042）。勝ち負けは文字で分かる */
 .note{color:var(--sub);font-size:12px}
-.panel{display:none;background:var(--slot);border-radius:6px;padding:10px 12px;margin:8px 0}
+.panel{display:none;background:var(--slot);border-radius:0;padding:10px 12px;margin:8px 0}
 .panel.on{display:block}
-.panel textarea{width:100%;height:220px;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;border:0;background:var(--tile);border-radius:4px;padding:6px;white-space:pre;resize:vertical}
+.panel textarea{width:100%;height:220px;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;border:1px solid var(--line);background:var(--tile);border-radius:0;padding:6px;white-space:pre;resize:vertical}
 /* 試合が終わったときの表示（KJ-018）：勝ち負け→点→放った言葉を1つずつ。上の帯（もう一度・設定を変える・ログ）は上に出したまま */
 #endShow{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:flex-start;gap:10px;padding:64px 16px 24px;background:var(--bg);z-index:10;overflow:auto;cursor:pointer} /* 中身が画面より高くても上が切れないよう、真ん中寄せは auto の余白で */
 #endShow.on{display:flex}
@@ -288,7 +305,7 @@ body.esOn details>summary .bar{position:fixed;top:6px;left:10px;right:10px;z-ind
 .esw.in{opacity:1;visibility:visible}
 .esw.fresh.t1{animation:kjPop .11s ease-out}
 .esw.fresh.t2{animation:kjHop .25s ease-out}
-.esw.t3{border-radius:10px;padding:2px 8px}
+.esw.t3{border-radius:0;padding:2px 8px}
 .esw.fresh.t3{animation:kjBig .4s ease-out,kjFlash .55s ease-out}
 .esw.t2.in .w,.esw.t3.in .w{background:linear-gradient(100deg,var(--ink) 0 40%,var(--shine) 50%,var(--ink) 60% 100%) 120% 0/250% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
 .esw.fresh.t2 .w{animation:kjShine .3s ease-out .05s forwards}
@@ -310,12 +327,12 @@ details p,details li{font-size:13px;color:#3d3a34}
 details ul{padding-left:18px}
 .credit{color:var(--sub);font-size:12px}
 /* はじかれたとき（KJ-022）：画面の真ん中に大きく 🚫 と、短い理由。1.5秒で消える。音なし・操作は邪魔しない */
-#nope{position:fixed;left:50%;top:42%;transform:translate(-50%,-50%);z-index:12;display:none;flex-direction:column;align-items:center;gap:6px;min-width:min(80vw,300px);max-width:90vw;padding:14px 22px;box-sizing:border-box;background:rgba(246,244,239,.96);border:2px solid var(--ink);border-radius:10px;pointer-events:none;text-align:center}
+#nope{position:fixed;left:50%;top:42%;transform:translate(-50%,-50%);z-index:12;display:none;flex-direction:column;align-items:center;gap:6px;min-width:min(80vw,300px);max-width:90vw;padding:14px 22px;box-sizing:border-box;background:rgba(246,238,214,.96);border:2px solid var(--ink);border-radius:0;pointer-events:none;text-align:center}
 #nope.on{display:flex}
 #nope .no-ic{font-size:min(26vw,120px);line-height:1}
 #nope .no-why{font-size:20px;font-weight:700;color:var(--ink);line-height:1.3;text-wrap:balance}
 /* 特別な語の演出 */
-#fx{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(246,244,239,.92);z-index:10;pointer-events:none}
+#fx{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(232,219,180,.92);z-index:10;pointer-events:none}
 #fx.on{display:flex}
 #fx .c{font-family:"KJ Fx",var(--kanji);font-size:min(22vw,150px);line-height:1;opacity:0;transform:scale(1.6);transition:opacity .12s,transform .18s}
 #fx .c.in{opacity:1;transform:scale(1)}
@@ -343,8 +360,9 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
   #bBack{font-size:13px;min-width:44px;padding:3px 8px}
   .clock{font-size:12px;margin-left:auto}
   .msgline{height:20px;font-size:13px}
-  .table{padding:8px 8px 10px;margin:6px 0}
-  .choices{left:-8px;right:-8px;top:calc(100% + 10px)}
+  .table{padding:8px 0 10px 26px;margin:6px 0}
+  .table::before{width:18px;font-size:12px}
+  .choices{left:-26px;right:0;top:calc(100% + 10px)}
   .table .side{margin:0 0 6px}
   .row{height:58px;gap:4px;padding:0 4px}
   .rowline{gap:4px}
@@ -372,6 +390,10 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
 </head>
 <body>
 <main>
+  <header class="mast" id="mast">
+    <div class="mast-title" id="mastTitle"></div>
+    <div class="mast-line"><span id="mastNo"></span><span id="mastDate"></span><span></span></div>
+  </header>
   <h1 id="title"></h1>
   <p class="lead" id="lead"></p>
 
@@ -394,6 +416,7 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
       <button class="op" id="bRoomCancel" hidden>やめる</button>
     </div>
     <div class="grp" id="grpVib" hidden><p class="gt">振動</p><span class="opp" id="vib" role="radiogroup" aria-label="振動"></span></div>
+    <div class="grp" id="grpFace"><p class="gt" id="faceLabel"></p><span class="opp" id="face" role="radiogroup" aria-label="札の字"></span></div>
     <p class="note" id="setupInfo"></p>
     <button class="op main" id="start">はじめる</button>
     <button class="op" id="bTutorial" hidden></button>
@@ -481,6 +504,7 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
       <button class="op" id="bCopyEnd" hidden>ログをコピー</button>
     </span></summary>
     <ul id="howto"></ul>
+    <p class="credit">画面の字：Zen Old Mincho（The Zen Old Mincho Project Authors）／札の字：Kaisei Tokumin（The Kaisei Project Authors）・Shippori Mincho（The Shippori Mincho Project Authors）。どれも SIL OFL 1.1（fonts/OFL-Paper.txt）。</p>
     <p class="credit">特別な語の演出の字：Yuji Syuku（Kinuta Font Factory。SIL OFL 1.1）。</p>
     <p class="credit">データ：JMdict・KANJIDIC2（© Electronic Dictionary Research and Development Group, EDRDG。CC BY-SA 3.0。<a href="https://www.edrdg.org/edrdg/licence.html">ライセンス</a>）。jamdict-data 経由で取り込み、語・字・読みを抜き出して加工しています。N5 の字は KANJIDIC2 の旧4級（103字）で代用。</p>
   </details>
@@ -496,6 +520,7 @@ const K=window.KJ;
 const $title=document.getElementById("title");
 const STR=window.KJ_STR; // 画面の文言（ボタンの文字・角の印。KJ-024）
 for(const id of Object.keys(STR.BUTTONS)){const b=document.getElementById(id);if(STR.LOGO[id])b.setAttribute("aria-label",STR.BUTTONS[id]);b.querySelector(".lb").innerHTML=STR.buttonHtml(id)} // 印を字に組み込んだボタン（Fl＋印＋p など）は SVG 入り。読み上げは aria-label（KJ-048）
+document.getElementById("mastTitle").textContent=STR.TEXT.masthead;document.getElementById("faceLabel").textContent=STR.TEXT.faceLabel; // 表紙の題字・設定の見出し（KJ-093）
 $title.textContent=STR.TEXT.title; // 題（KJ-042。文は仮。js/strings.js の1か所で直せる）
 const D={};
 let T=null, G=null; // 表・ゲームの状態
@@ -506,7 +531,7 @@ const LVL_KEY="kj-level";
 let level=null;     // レベル（"G1"〔小1〕／"N5"／"N4"）。はじめるときに効く。端末に覚える
 let row=[];         // 選んだ札の id（選んだ順。台にはその写しを左から並べる）
 let lastTried="";
-const OPP_KEY="kj-opponent",TIME_KEY="kj-time",VIB_KEY="kj-vibe";
+const OPP_KEY="kj-opponent",TIME_KEY="kj-time",VIB_KEY="kj-vibe",FACE_KEY="kj-face",ISSUE_KEY="kj-issue";
 let opponent=null;  // 相手のキー（weak・fair・normal・room。solo は画面から外した〔KJ-056〕）。端末に覚える（KJ-007）。画面では「遊び方」と「強さ」の2段で選ぶ（KJ-045）
 let cpuPower="weak"; // 「CPU と」のときの強さ。遊び方を行き来しても覚えている
 let timeLimit=null; // 制限時間（秒）。端末に覚える（KJ-007）
@@ -538,7 +563,15 @@ function loadSettings(){
   const l=lsGet(LVL_KEY);level=K.LEVELS.some(x=>x.key===l)?l:(D.rules.level_default||"N4");
   timeLimit=K.normTime(D,lsGet(TIME_KEY));
   vibeOn=lsGet(VIB_KEY)!=="0"; // 振動の入り切り（KJ-074）。覚えていなければ入
+  setFace(lsGet(FACE_KEY)==="mincho"?"mincho":"taisho"); // 札の字（KJ-093）。覚えていなければ大正風
 }
+// ---------- 札の字（KJ-093）：大正風（Kaisei Tokumin。初期）／明朝（Shippori Mincho）。<html data-face> を替える。端末に覚える ----------
+let face="taisho";
+function setFace(f){face=f==="mincho"?"mincho":"taisho";document.documentElement.setAttribute("data-face",face)}
+// ---------- 表紙の号数（KJ-093）：その端末で始めた試合の数＋1。端末に覚える（読めなければ 第一號）。チュートリアルは数えない ----------
+function issuesPlayed(){const n=parseInt(lsGet(ISSUE_KEY),10);return n>=0?n:0}
+function countIssue(){lsSet(ISSUE_KEY,issuesPlayed()+1);refreshMast()}
+function refreshMast(){$("mastNo").textContent=K.issueLabel(issuesPlayed());$("mastDate").textContent=K.kansujiDate(new Date())}
 // ---------- 振動（KJ-074。D-092）：自分の手のときだけ。形は rules.vibrate（K.vibratePattern）。navigator.vibrate が無い端末（iOS の Safari など）では何もしない ----------
 let vibeOn=true;
 const canVibe=()=>{try{return typeof navigator!=="undefined"&&typeof navigator.vibrate==="function"}catch(e){return false}};
@@ -562,6 +595,7 @@ function buildPickers(){
   radios($("opp"),"opp",K.PLAY_MODES.map(o=>({value:o.key,label:o.label})),playMode(),v=>{cancelRoom();opponent=K.opponentKey(v,cpuPower);lsSet(OPP_KEY,opponent);roomUi()});
   radios($("pow"),"pow",K.CPU_POWERS.map(o=>({value:o.key,label:o.label})),cpuPower,v=>{cpuPower=v;opponent=K.opponentKey("cpu",v);lsSet(OPP_KEY,opponent)});
   radios($("lvl"),"lvl",K.LEVELS.map(o=>({value:o.key,label:o.short,title:o.label})),level,v=>{level=v;lsSet(LVL_KEY,v);T=tablesFor(level);showCounts()});
+  radios($("face"),"face",[{value:"taisho",label:STR.TEXT.faceTaisho},{value:"mincho",label:STR.TEXT.faceMincho}],face,v=>{setFace(v);lsSet(FACE_KEY,v)});
   if(canVibe()){$("grpVib").hidden=false;radios($("vib"),"vib",[{value:"1",label:"入"},{value:"0",label:"切"}],vibeOn?"1":"0",v=>{vibeOn=v==="1";lsSet(VIB_KEY,v);if(vibeOn)buzz("take")})} // 振動が使えない端末には出さない。入にしたとき、1回だけ試しに震える
   radios($("tim"),"tim",K.timeChoices(D).map(sec=>({value:sec,label:K.timeLabel(sec)})),timeLimit,v=>{timeLimit=+v;lsSet(TIME_KEY,v);buildHowto()});
 }
@@ -576,6 +610,7 @@ function start(){
   leaveRoom();leaveTutorial();
   T=tablesFor(level);buildHowto();
   G=K.createGame(D,T,{now:clock,opponent,timeLimit});
+  countIssue();
   row=[];lastTried="";vibSpecial=false;hideNope();
   $("msg").textContent="";$("msg").className="msg";
   $("bCopyEnd").hidden=true;
@@ -587,7 +622,7 @@ function start(){
 // はじめて「はじめる」を押した人（端末に印が無い人）は、チュートリアルから（KJ-043。人と対戦〔合言葉〕には「はじめる」が無いので出ない）
 $("start").onclick=()=>{if(tutorialSeen())start();else startTutorial()};
 $("again").onclick=()=>{if(G&&G.match)toSetup();else start()}; // 合言葉の部屋の「もう一度」は、はじめる前の画面へ（部屋を作り直す。仮）
-function toSetup(){clearTimeout(cpuTimer);sendAbandoned();leaveRoom();leaveTutorial();G=null;row=[];hideChoices();$("logPanel").classList.remove("on");showScreen(false);T=tablesFor(level);showCounts();buildHowto();roomUi()}
+function toSetup(){refreshMast();clearTimeout(cpuTimer);sendAbandoned();leaveRoom();leaveTutorial();G=null;row=[];hideChoices();$("logPanel").classList.remove("on");showScreen(false);T=tablesFor(level);showCounts();buildHowto();roomUi()}
 $("bSetup").onclick=toSetup;
 // ---------- チュートリアル（KJ-043・D-057）----------
 // 決まった手札・場（data/tutorial.json）で、操作を1つずつ見せる。時間なし・CPU なし。終えるか「とばす」を押したら端末に印を付け、選んでいた設定の本番へ（合言葉の部屋を選んでいたら、はじめる前の画面へ）
@@ -964,6 +999,7 @@ function beginRoom(startRow){
   T=tablesFor(rm.level);
   G=K.createGame(D,T,{now:clock,timeLimit:rm.timeLimit,match:{id:rm.matchId,role:rm.role,startAt}});
   MC=K.createMatchClient(G,CLAIMS,{rand:cryptoRand});
+  countIssue();
   row=[];lastTried="";hideNope();
   showMsg(rm.role==="guest"?`作った人の設定：レベル ${K.levelShort(rm.level)}・${K.timeLabel(rm.timeLimit)}`:"");
   $("bCopyEnd").hidden=true;hideChoices();setRoomMsg("");
@@ -1471,7 +1507,7 @@ document.addEventListener("visibilitychange",()=>{
 window.__KJ={get game(){return G},get tut(){return TUT},get row(){return row},get tables(){return T},get mc(){return MC},get room(){return ROOM},data:D,render,drain}; // ブラウザのテスト用
 
 Promise.all(K.FILES.map(f=>fetch(`data/${f}.json`).then(r=>r.json()).then(j=>D[f]=j)))
-  .then(()=>{preloadFx();loadSettings();T=tablesFor(level);buildPickers();buildHowto();showCounts();roomUi();$("bTutorial").textContent=D.tutorial.ui.button;$("bTutorial").hidden=false})
+  .then(()=>{preloadFx();loadSettings();refreshMast();T=tablesFor(level);buildPickers();buildHowto();showCounts();roomUi();$("bTutorial").textContent=D.tutorial.ui.button;$("bTutorial").hidden=false})
   .catch(e=>{$("setupInfo").textContent="データを読めませんでした（file:// では開けません。Pages かローカルのサーバーで開いてください）"});
 </script>
 </body>
