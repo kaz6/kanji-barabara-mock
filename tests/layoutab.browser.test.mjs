@@ -50,7 +50,7 @@ async function play(page) {
 const box = (page, sel) => page.evaluate((s) => { const r = document.querySelector(s).getBoundingClientRect(); return { l: r.left, t: r.top, r: r.right, b: r.bottom, w: r.width, h: r.height }; }, sel);
 const inTable = (page, sel) => page.evaluate((s) => !!document.querySelector(s).closest(".table:not(.dock)"), sel);
 
-test("並び：切り替えも下の段もない／端末に kj-layout=B が残っていても A の置き場（Back は台の右端・操作は卓の中）", { skip }, async () => {
+test("並び：切り替えも下の段もない／端末に kj-layout=B が残っていても A の置き場（Back は Redraw の左で卓の外・操作は卓の中。KJ-090）", { skip }, async () => {
   const srv = await serve(); const browser = await chromium.launch();
   try {
     const url = `http://127.0.0.1:${srv.address().port}/index.html`;
@@ -58,9 +58,10 @@ test("並び：切り替えも下の段もない／端末に kj-layout=B が残�
       const { ctx, page, errors } = await open(browser, url, stored);
       assert.equal(await page.evaluate(() => !document.getElementById("layoutPick") && !document.getElementById("grpLay") && !document.getElementById("dock")), true, `${stored}：切り替えも下の段もない`);
       await play(page);
-      for (const id of ["bBack", "bRelease", "bSplit", "bJoin", "bInvert", "bCycle", "bHomo"]) assert.equal(await inTable(page, "#" + id), true, `${stored}：${id} は卓の中`);
-      const back = await box(page, "#bBack"), row = await box(page, "#row");
-      assert.ok(back.l >= row.r - 1, `${stored}：Back は台の右`);
+      for (const id of ["bRelease", "bSplit", "bJoin", "bInvert", "bCycle", "bHomo"]) assert.equal(await inTable(page, "#" + id), true, `${stored}：${id} は卓の中`);
+      assert.equal(await inTable(page, "#bBack"), false, `${stored}：Back は卓の外（KJ-090）`);
+      const back = await box(page, "#bBack"), rd = await box(page, "#bRedraw");
+      assert.ok(back.r <= rd.l, `${stored}：Back は Redraw の左`);
       const play_ = await box(page, "#bRelease");
       assert.ok(play_.w > 300, `${stored}：Play は幅いっぱい`);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, "横にはみ出さない");

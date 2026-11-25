@@ -129,12 +129,14 @@ button.op.cutopen .sp-a{animation:kjSpA .3s ease-in-out}button.op.cutopen .sp-b{
 /* 台の行：札の行（row）と、その右端の Back（KJ-078。作者 2026-11-25「案A 台のそばに Back」。64×48 以上・枠線付き・左向きの矢印＋Back） */
 .rowline{display:flex;gap:6px;align-items:center}
 .rowline .row{flex:1 1 auto;min-width:0}
-.table button.op.back{flex:none;display:inline-flex;align-items:center;justify-content:center;gap:4px;min-width:64px;min-height:48px;padding:6px 8px;background:transparent;border:1px solid var(--on-table-sub);border-radius:4px;color:var(--on-table);font-size:14px}
-.table button.op.back:disabled{background:transparent;border-color:#5b574f;color:#a8a295;cursor:default}
-.table button.op.back .ic{flex:none}
+/* Back（KJ-090。作者 2026-11-25「バックまで、指が遠い」）：卓から出して、「あなた ○点 手札」の行の Redraw のすぐ左へ。高さは Redraw と同じ（行を伸ばして揃える）・幅は 44px 以上・Redraw との間は 8px 以上 */
+.bkrd{display:flex;align-items:stretch;gap:10px;margin-left:auto;flex:none}
+#bBack{flex:none;display:inline-flex;align-items:center;justify-content:center;gap:4px;min-width:56px;min-height:40px;padding:4px 10px;background:transparent;border:1px solid var(--ink);color:var(--ink);font-size:14px;line-height:1.25}
+#bBack:disabled{background:transparent;border-color:var(--line);color:var(--dim);cursor:default}
+#bBack .ic{flex:none}
 /* Redraw（KJ-078）：卓の外。「あなた ○点 手札 ○/8」の行の右端。長押しで引き直す＝押している間、地が左から埋まり、埋まりきったら引き直す（長さは index.html の REDRAW_HOLD_MS） */
 .me .side-head{height:auto;min-height:44px;align-items:center;overflow:visible}
-.rdwrap{position:relative;margin-left:auto;flex:none}
+.rdwrap{position:relative;flex:none;display:flex}
 #bRedraw{position:relative;isolation:isolate;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;min-width:64px;min-height:40px;padding:4px 10px;line-height:1.25;background:transparent;border:1px solid var(--ink);color:var(--ink);touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 #bRedraw:disabled,#bRedraw[aria-disabled=true]{background:transparent;border-color:var(--line);color:var(--dim)}
 #bRedraw::before{content:"";position:absolute;left:0;top:0;bottom:0;width:0;background:var(--gauge);opacity:.45;z-index:-1;pointer-events:none}
@@ -231,9 +233,16 @@ body.tutorial #clock,body.tutorial #again,body.tutorial #bLog,body.tutorial #bCo
 [hidden]{display:none!important}
 /* 上の帯・ログ */
 .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
-.clock{margin-left:auto;font-variant-numeric:tabular-nums;font-size:12px;color:var(--sub)}
+.clock{margin-left:auto;flex:none;font-variant-numeric:tabular-nums;font-size:12px;color:var(--sub)} /* 残り時間は「CPU ○点 手札」の行の右端（KJ-090） */
 /* 上の3ボタン（もう一度・設定を変える・ログ）は Back・Redraw と同じ文字だけ（KJ-066。D-084。D-056 の3段目）。枠は透明にして、押せる大きさは変えない */
 #again,#bSetup,#bLog{border-color:transparent;background:transparent;color:var(--ink)}
+/* 上の3つ（もう一度・設定を変える・ログ）は、いちばん下の「しくみ」と同じ行の右へ（KJ-090）。しくみを開くと中身はその下に出る。試合の終わりの面が出ているあいだは、面に隠れないよう画面の上に留める（今までと同じ） */
+details>summary{display:flex;align-items:center;gap:8px;flex-wrap:wrap;list-style:none}
+details>summary::-webkit-details-marker{display:none}
+details>summary .sm::before{content:"▸ ";font-weight:400}
+details[open]>summary .sm::before{content:"▾ "}
+details>summary .bar{margin:0 0 0 auto;gap:4px 6px;flex-wrap:wrap;justify-content:flex-end;cursor:default;font-weight:400}
+body.esOn details>summary .bar{position:fixed;top:6px;left:10px;right:10px;z-index:20}
 .msgline{height:24px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px}
 .msg{font-weight:700}
 .msg.win,.msg.lose{color:var(--ink)} /* 赤は選んだ札と Play だけ（KJ-042）。勝ち負けは文字で分かる */
@@ -242,7 +251,6 @@ body.tutorial #clock,body.tutorial #again,body.tutorial #bLog,body.tutorial #bCo
 .panel.on{display:block}
 .panel textarea{width:100%;height:220px;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;border:0;background:var(--tile);border-radius:4px;padding:6px;white-space:pre;resize:vertical}
 /* 試合が終わったときの表示（KJ-018）：勝ち負け→点→放った言葉を1つずつ。上の帯（もう一度・設定を変える・ログ）は上に出したまま */
-#game>.bar{position:relative;z-index:20}
 #endShow{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:flex-start;gap:10px;padding:64px 16px 24px;background:var(--bg);z-index:10;overflow:auto;cursor:pointer} /* 中身が画面より高くても上が切れないよう、真ん中寄せは auto の余白で */
 #endShow.on{display:flex}
 #esLabel{margin-top:auto;font-size:48px;font-weight:700;line-height:1.2;letter-spacing:.04em}
@@ -320,6 +328,8 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
   .takes{font-size:12px}
   .bar{gap:5px 6px;margin:4px 0}
   .bar button.op{font-size:13px;padding:4px 9px;min-width:0}
+  .bkrd{gap:8px}
+  #bBack{font-size:13px;min-width:44px;padding:3px 8px}
   .clock{font-size:12px;margin-left:auto}
   .msgline{height:20px;font-size:13px}
   .table{padding:8px 8px 10px;margin:6px 0}
@@ -341,6 +351,12 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
   #bRedraw .cdv{width:auto;white-space:nowrap}
   .me .side-head{min-height:40px}
   .trayhead{margin:4px 0 2px;line-height:1.3}
+/* 320px 前後（KJ-090）：「あなた ○点 手札 8/8 ＋ Back ＋ Redraw」が1行に入らないときは、「手札 8/8」を2行目に回す（字は小さくしない） */
+@media (max-width:340px){
+  .me .side-head{flex-wrap:wrap;row-gap:0}
+  .me .side-head .count{order:3;flex:1 0 100%}
+  .me .side-head .bkrd{order:2}
+}
 </style>
 </head>
 <body>
@@ -373,13 +389,6 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
   </section>
 
   <div id="game" hidden>
-  <div class="bar">
-    <button class="op" id="again">もう一度</button>
-    <button class="op" id="bSetup">設定を変える</button>
-    <button class="op" id="bLog">ログ</button>
-    <button class="op" id="bCopyEnd" hidden>ログをコピー</button>
-    <span class="clock" id="clock"></span>
-  </div>
   <!-- 試合が終わったときの表示（KJ-018）。タップで全部いっぺんに出す／出し終わったあとのタップで閉じる。文は js/core.js の END_LABELS -->
   <div id="endShow" role="status" aria-live="polite">
     <div id="esLabel"></div>
@@ -395,15 +404,10 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
     <button class="op go" id="tutGo" hidden></button>
   </section>
 
-  <section class="panel" id="logPanel">
-    <textarea id="logText" readonly></textarea>
-    <div class="bar"><button class="op" id="bCopy">コピー</button><span class="note" id="copyMsg"></span></div>
-  </section>
-
   <div id="fxPts" aria-hidden="true"></div>
 
   <section class="side cpu" id="cpuSide">
-    <div class="side-head"><b id="cpuName">CPU</b><span class="score" id="cpuScore"></span><span class="count" id="cpuCount"></span><span class="cds" id="cpuCds"></span></div>
+    <div class="side-head"><b id="cpuName">CPU</b><span class="score" id="cpuScore"></span><span class="count" id="cpuCount"></span><span class="cds" id="cpuCds"></span><span class="clock" id="clock"></span></div>
     <div class="hand" id="cpuHand"></div>
   </section>
 
@@ -417,11 +421,10 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
   <section class="stage">
     <div class="rowline">
       <div class="row" id="row"></div>
-      <button class="op back" id="bBack"><span class="lb"></span></button>
     </div>
     <div class="info" id="info"></div>
     <div class="ops">
-      <!-- ボタンの文字は js/strings.js から入れる（英語。KJ-024）。重さは3段（KJ-042）：Play＝大きく主色／Split・Join・Flip・Cycle・Same reading＝同じ大きさの群／Back＝台の右端の枠線付き（KJ-078）・Redraw＝卓の外 -->
+      <!-- ボタンの文字は js/strings.js から入れる（英語。KJ-024）。重さは3段（KJ-042）：Play＝大きく主色／Split・Join・Flip・Cycle・Same reading＝同じ大きさの群／Back＝卓の外の「あなた」の行で Redraw の左（枠線付き。KJ-078・KJ-090）・Redraw＝卓の外 -->
       <div class="ops-main">
         <button class="op main" id="bRelease"><span class="lb"></span></button>
       </div>
@@ -440,7 +443,7 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
   <section class="side me" id="meSide">
     <div class="side-head"><b>あなた</b><span class="score" id="meScore"></span><span class="count" id="meCount"></span>
       <!-- Redraw は長押しで引き直す（KJ-078）。押している間、地が左から埋まる。1回タップだけなら rdNote に小さく出す -->
-      <span class="rdwrap"><span class="rdnote" id="rdNote" role="status" aria-live="polite"></span><button class="op quiet" id="bRedraw"><span class="lb"></span><span class="cdv" id="cdRedraw"></span></button></span>
+      <span class="bkrd"><button class="op quiet back" id="bBack"><span class="lb"></span></button><span class="rdwrap"><span class="rdnote" id="rdNote" role="status" aria-live="polite"></span><button class="op quiet" id="bRedraw"><span class="lb"></span><span class="cdv" id="cdRedraw"></span></button></span></span>
     </div>
     <div class="hand" id="meHand"></div>
     <div class="trayhead" id="trayHead"></div>
@@ -454,8 +457,18 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
 
   </div>
 
+  <section class="panel" id="logPanel">
+    <textarea id="logText" readonly></textarea>
+    <div class="bar"><button class="op" id="bCopy">コピー</button><span class="note" id="copyMsg"></span></div>
+  </section>
+
   <details>
-    <summary>しくみ</summary>
+    <summary><span class="sm">しくみ</span><span class="bar" id="topbar">
+      <button class="op" id="again">もう一度</button>
+      <button class="op" id="bSetup">設定を変える</button>
+      <button class="op" id="bLog">ログ</button>
+      <button class="op" id="bCopyEnd" hidden>ログをコピー</button>
+    </span></summary>
     <ul id="howto"></ul>
     <p class="credit">特別な語の演出の字：Yuji Syuku（Kinuta Font Factory。SIL OFL 1.1）。</p>
     <p class="credit">データ：JMdict・KANJIDIC2（© Electronic Dictionary Research and Development Group, EDRDG。CC BY-SA 3.0。<a href="https://www.edrdg.org/edrdg/licence.html">ライセンス</a>）。jamdict-data 経由で取り込み、語・字・読みを抜き出して加工しています。N5 の字は KANJIDIC2 の旧4級（103字）で代用。</p>
@@ -774,7 +787,7 @@ function showEndAfterFx(winner){
   if(!wait){showEnd(winner);return}
   esWait=setTimeout(()=>{if(G===g)showEnd(winner)},wait+100);
 }
-function closeEnd(){clearTimeout(esWait);esClear();ES=null;const el=$("endShow");if(el)el.classList.remove("on")}
+function closeEnd(){clearTimeout(esWait);esClear();ES=null;const el=$("endShow");if(el)el.classList.remove("on");document.body.classList.remove("esOn")}
 function esAll(){ // 全部いっぺんに出す
   if(!ES)return;
   esClear();ES.timers=[];
@@ -802,7 +815,7 @@ function showEnd(winner){
   const mi=$("esMissed");mi.textContent="";
   if(d.missed){const m=d.missed;mi.append("見逃した言葉：");const w=document.createElement("span");w.className="w";w.textContent=m.text;mi.append(w,(m.kana?`（${m.kana}）`:"")+(m.en?` ${m.en}`:""))}
   ES={items,timers:[],done:false};
-  delete el.dataset.done;el.classList.add("on");
+  delete el.dataset.done;el.classList.add("on");document.body.classList.add("esOn");
   items.forEach((li,i)=>ES.timers.push(setTimeout(()=>{li.classList.add("in","fresh");if(i===items.length-1)esDone()},END_PACE.first+i*END_PACE.gap)));
   if(!items.length)ES.timers.push(setTimeout(esDone,END_PACE.first));
 }
