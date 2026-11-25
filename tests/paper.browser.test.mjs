@@ -370,11 +370,12 @@ test("表紙を詰める（KJ-101）：絵柄の箱が前（190px）より低く
         const box = document.getElementById("mastTitle"), name = document.querySelector(".mast-name span"), svg = box.querySelector("svg.mast-sun");
         const b = box.getBoundingClientRect(), n = name.getBoundingClientRect(), sr = svg.getBoundingClientRect();
         const sun = svg.querySelector("circle").getBoundingClientRect();
-        return { boxH: b.height, fs: parseFloat(getComputedStyle(name).fontSize), nameTop: n.top - b.top, sunBottomAtBox: Math.abs(sun.bottom - b.bottom) < 8 || sun.bottom >= b.bottom - 6, sunShown: sun.top < b.bottom - 8, noHScroll: document.documentElement.scrollWidth <= innerWidth, nameInside: n.left >= b.left && n.right <= b.right && n.bottom <= b.bottom };
+        return { boxH: b.height, fs: parseFloat(getComputedStyle(name).fontSize), nameTop: n.top - b.top, sunBottomAtBox: sun.bottom >= b.bottom - 6, sunShown: sun.top < b.bottom - 8, noHScroll: document.documentElement.scrollWidth <= innerWidth, nameInside: n.left >= b.left && n.right <= b.right && n.bottom <= b.bottom };
       });
       assert.ok(st.boxH < 190 && st.boxH <= 140, `${w}px：箱の高さ ${st.boxH}（前は 190）`);
       assert.ok(st.fs < 38 && st.fs <= 28, `${w}px：題字の大きさ ${st.fs}（前は 38／32）`);
       assert.ok(st.nameTop < 40 && st.nameTop <= 20, `${w}px：題字は箱の上寄り（上から ${st.nameTop}px。前は 40+罫）`);
+      assert.equal(st.sunBottomAtBox, true, `${w}px：昇る日は箱の下に付いたまま`);
       assert.equal(st.sunShown, true, `${w}px：昇る日が箱の中に見えている`);
       assert.equal(st.nameInside && st.noHScroll, true, `${w}px：題字が箱に収まり、横にはみ出さない`);
       assert.deepEqual(errors, []);
@@ -383,7 +384,7 @@ test("表紙を詰める（KJ-101）：絵柄の箱が前（190px）より低く
   } finally { await browser.close(); srv.close(); }
 });
 
-test("説明文（KJ-101）：いつも大正風（KJ Kaisei）。札の字を明朝にしても変わらない。背景の記事の上で明暗差 4.5 以上", { skip }, async () => {
+test("説明文（KJ-101）：いつも大正風（KJ Kaisei）。札の字を明朝にしても変わらない。紙の地の上でも、背景の記事の字（墨 20%）が後ろに重なる所でも明暗差 4.5 以上", { skip }, async () => {
   const srv = await serve(); const browser = await chromium.launch();
   try {
     const url = `http://127.0.0.1:${srv.address().port}/index.html`;
@@ -397,7 +398,19 @@ test("説明文（KJ-101）：いつも大正風（KJ Kaisei）。札の字を�
     // 字体が実際に読まれ、説明文の字が Kaisei で描かれる（端末の字体に落ちていない）
     const ok = await page.evaluate(async () => { await document.fonts.load('13px "KJ Kaisei"', document.getElementById("lead").textContent); return document.fonts.check('13px "KJ Kaisei"', document.getElementById("lead").textContent); });
     assert.equal(ok, true, "KJ Kaisei が説明文の字を持って読まれている");
-    assert.ok((await ratio(page, "#lead")) >= 4.5, "字と地の明暗差");
+    assert.ok((await ratio(page, "#lead")) >= 4.5, "字と紙の地の明暗差");
+    // 背景の記事（#bgnews。墨 20% の字）が後ろに重なる所：紙の地に墨を 20% 重ねた色に対しても 4.5 以上（レビュー P-101）
+    const over = await page.evaluate(() => {
+      const lin = (v) => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); };
+      const lum = (c) => .2126 * lin(c[0]) + .7152 * lin(c[1]) + .0722 * lin(c[2]);
+      const nums = (s) => /\(([^)]+)\)/.exec(s)[1].split(",").map(Number);
+      const f = nums(getComputedStyle(document.getElementById("lead")).color), bg = nums(getComputedStyle(document.body).backgroundColor);
+      const news = nums(getComputedStyle(document.getElementById("bgnews")).color), a = news[3] ?? 1;
+      const mix = [0, 1, 2].map((i) => bg[i] * (1 - a) + news[i] * a);
+      const x = lum(f), y = lum(mix);
+      return (Math.max(x, y) + .05) / (Math.min(x, y) + .05);
+    });
+    assert.ok(over >= 4.5, `記事の字と重なる所の明暗差 ${over}`);
     assert.deepEqual(errors, []);
     await ctx.close();
   } finally { await browser.close(); srv.close(); }

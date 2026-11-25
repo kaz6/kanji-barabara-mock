@@ -71,5 +71,5 @@
 
 ## 表紙を詰める（KJ-101。受け箱 P-101）
 
-- 題字の箱・題字の数は `.mast` の変数（`--mast-h`・`--mast-top`・`--mast-fs`・`--mast-fs-s`）。説明文（`#lead`）は札の字の切り替えに関わらず Kaisei。▼（`#scrollHint`）は下に余りがあるときだけ右下に出る。R-128
+- 題字の箱・題字の数は `.mast` の変数4つ（`--mast-h`・`--mast-top`・`--mast-fs`・`--mast-fs-s`）。説明文（`#lead`）は札の字の切り替えに関わらず Kaisei。▼（`#scrollHint`）は下に余りがあるときだけ右下に出る。R-128
 

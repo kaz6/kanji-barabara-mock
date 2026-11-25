@@ -39,7 +39,7 @@ main{max-width:760px;margin:0 auto;padding:16px 14px 48px}
 html[data-news="off"] #bgnews{display:none}
 h1{font-size:17px;margin:0 0 2px;font-weight:700}
 /* 説明文（KJ-101）：札の字の切り替え（data-face）に関わらず、いつも大正風（Kaisei Tokumin）。無い字は 画面の字 → 今の字体へ落ちる */
-.lead{color:var(--sub);font-size:13px;margin:0 0 14px;font-family:"KJ Kaisei",var(--ui)}
+.lead{color:var(--ink);font-size:13px;margin:0 0 14px;font-family:"KJ Kaisei",var(--ui)}
 /* ▼（KJ-101）：はじめる前の画面の右下に固定。下にまだ見えていない所があるときだけ出す（#scrollHint.on。いちばん下で消える）。押せない（下のボタンを邪魔しない）。動きを減らす設定のときは動かさず置くだけ */
 #scrollHint{display:none;position:fixed;right:14px;bottom:10px;z-index:5;pointer-events:none;user-select:none;-webkit-user-select:none;font-size:22px;line-height:1;color:var(--accent);animation:kjHintBob 1.6s ease-in-out infinite}
 #scrollHint.on{display:block}
@@ -638,6 +638,7 @@ function updateScrollHint(){
 window.addEventListener("scroll",updateScrollHint,{passive:true});window.addEventListener("resize",updateScrollHint);
 if(window.MutationObserver)new MutationObserver(updateScrollHint).observe(document.body,{attributes:true,attributeFilter:["class"]});
 if(window.ResizeObserver)new ResizeObserver(updateScrollHint).observe(document.body);
+updateScrollHint();
 function refreshMast(){$("mastNo").textContent=K.issueLabel(issuesPlayed());$("mastDate").textContent=K.kansujiDate(new Date())}
 // ---------- 振動（KJ-074。D-092）：自分の手のときだけ。形は rules.vibrate（K.vibratePattern）。navigator.vibrate が無い端末（iOS の Safari など）では何もしない ----------
 let vibeOn=true;
