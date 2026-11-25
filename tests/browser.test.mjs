@@ -2178,11 +2178,12 @@ test("画面", { skip }, async (t) => {
         const g = bef.backgroundColor.match(/[\d.]+/g).map(Number), u = (cs.backgroundColor === "rgba(0, 0, 0, 0)" ? getComputedStyle(document.body).backgroundColor : cs.backgroundColor).match(/[\d.]+/g).map(Number), o = parseFloat(bef.opacity);
         return `rgb(${[0, 1, 2].map((i) => Math.round(g[i] * o + u[i] * (1 - o))).join(", ")})`; })() : null, edge: cs.borderBottomColor };
     }));
-    const check = (rows, label) => { for (const r of rows) { const under = r.bg === "rgba(0, 0, 0, 0)" ? PAPER : r.bg; assert.ok(ratio(r.color, under) >= 4.5, `${label} ${r.id} 文字と地（${r.color} / ${under}）`); if (r.gauge) assert.ok(ratio(r.color, r.gauge) >= 4.5, `${label} ${r.id} 文字とゲージ（${r.gauge}）`); } };
+    const OPS5 = ["bSplit", "bJoin", "bInvert", "bCycle", "bHomo"]; // KJ-099：卓の操作5つの「押せない」は薄い字（押せない部品は明暗差の決まりの外）。ほかのボタンは今まで通り 4.5 以上
+    const check = (rows, label) => { for (const r of rows) { if (r.off && OPS5.includes(r.id) && !r.gauge) continue; const under = r.bg === "rgba(0, 0, 0, 0)" ? PAPER : r.bg; assert.ok(ratio(r.color, under) >= 4.5, `${label} ${r.id} 文字と地（${r.color} / ${under}）`); if (r.gauge) assert.ok(ratio(r.color, r.gauge) >= 4.5, `${label} ${r.id} 文字とゲージ（${r.gauge}）`); } };
     let rows = await contrasts();
     assert.ok(rows.every((r) => r.off), "何も選ばないと（卓のボタンは）押せない");
     check(rows, "押せないとき");
-    for (const r of rows.filter((q) => !["bBack", "bRedraw"].includes(q.id))) assert.notEqual(r.bg, "rgba(0, 0, 0, 0)", `${r.id} 押せなくても形が残る（一段濃い紙の地）`);
+    for (const r of rows.filter((q) => !["bBack", "bRedraw"].includes(q.id))) assert.notEqual(r.bg, "rgba(0, 0, 0, 0)", `${r.id} 押せなくても地が残る（KJ-099：操作5つは紙の地。Play は濃い地）`);
     await page.locator("#meHand .tile", { hasText: "上" }).first().click();
     rows = await contrasts();
     assert.ok(rows.some((r) => !r.off && r.id === "bInvert"), "上 を選ぶと Flip が押せる");
@@ -2194,7 +2195,9 @@ test("画面", { skip }, async (t) => {
     const enabled = rows.find((r) => r.id === "bInvert"), disabled = rows.find((r) => r.off && !["bBack", "bRedraw"].includes(r.id));
     assert.ok(disabled, "押せないボタンがある");
     assert.notEqual(enabled.bg, disabled.bg, "押せるときと押せないときが見分けられる");
-    assert.ok(ratio(disabled.bg, PAPER) > 1.1, "押せないボタンは紙に溶けない（一段濃い地。実測 1.13）");
+    // KJ-099：押せない＝紙の地に薄い字（地は濃くしない）。押せるのと地か字の濃さがはっきり違う（押せる字は上で 4.5 以上を見た）
+    assert.match(disabled.color, /^rgba\(42, 38, 34, 0\.3[0-9]*\)$/, "押せない操作の字は墨の不透明度 0.35");
+    assert.notEqual(enabled.color, disabled.color, "押せると押せないで、字の色も違う")
     await page.click("#bInvert");
     await page.evaluate(() => { const G = __KJ.game; G.me.cd.invert = G.now() + __KJ.data.rules.cooldown_sec.invert / 2; __KJ.render(); });
     await page.waitForTimeout(350);
