@@ -1763,12 +1763,19 @@
   // 試合が終わったときの表示の中身（KJ-018・D-036／D-039）。DOM に触らない。画面は index.html
   // kind：win／lose／draw／solo。label：大きく出す文字（ひとりでは「おわり」）。me・cpu：大きく出す点（ひとりでは cpu が null）。
   // items：自分が放った言葉を、放った順に（くっつけて作った字は出さない）。tier：2字=1（ポコッ）・3字=2（キラッと少し跳ねる）・4字=3（さらに大きく跳ねて光る）
+  // KJ-087：終わりの画面の言葉をタップしたときに開く欄の中身。読み（かな。数＋助数詞は助数詞の読み）・英語の意味（words.json の en。2つまで）・辞書（コトバンク）で引く URL。
+  // 辞書の中身は取り込まない（リンクだけ）。語の表に en が無い語（数＋助数詞・地名・名字など）は en が空
+  function kotobankUrl(word) { return "https://kotobank.jp/search?q=" + encodeURIComponent(word); }
+  function endWordInfo(T, text, w) {
+    const cr = !w && T && T.COUNTER_READ ? counterReading(T, text) : null;
+    return { reading: w ? w.kana : (cr ? cr.join("・") : ""), ens: w && w.en ? w.en.slice(0, 2) : [], url: kotobankUrl(text) };
+  }
   const END_LABELS = { win: "勝ち！", lose: "負け…", draw: "引き分け", solo: "おわり" };
   function endShow(g, T, winner) {
     const kind = g.solo ? "solo" : winner === g.me ? "win" : winner === g.cpu ? "lose" : "draw";
     const items = g.log.filter((e) => e.op === "放つ" && e.who === g.me.name).map((e) => {
       const text = e.from.join(""), w = T && T.WORDS ? T.WORDS.get(text) : null;
-      return { text, kana: w ? w.kana : "", pts: e.pts, tier: Math.max(1, Math.min(3, [...text].length - 1)) };
+      return { text, kana: w ? w.kana : "", pts: e.pts, tier: Math.max(1, Math.min(3, [...text].length - 1)), ...endWordInfo(T, text, w) };
     });
     // KJ-082：見逃した言葉（ヒントで光ったのに放たれなかった1つ）。字・読み・意味は台の行と同じもの。無ければ null
     const mw = g.missedWord ? g.missedWord() : null;
@@ -1777,7 +1784,7 @@
       const w = T && T.WORDS ? T.WORDS.get(mw) : null;
       const kana = w ? w.kana : (T && T.COUNTER_READ && counterReading(T, mw) ? counterReading(T, mw).join("・") : "");
       const en = w && w.en ? w.en.join(" / ") : "";
-      missed = { text: mw, kana, en, line: `見逃した言葉：${mw}${kana ? `（${kana}）` : ""}${en ? ` ${en}` : ""}` };
+      missed = { text: mw, kana, en, ...endWordInfo(T, mw, w), line: `見逃した言葉：${mw}${kana ? `（${kana}）` : ""}${en ? ` ${en}` : ""}` };
     }
     return { kind, label: END_LABELS[kind], me: g.me.score, cpu: g.solo ? null : g.cpu.score, items, missed };
   }
@@ -1879,7 +1886,7 @@
   return {
     kansuji, issueLabel, kansujiDate, toKatakana, senkyoLines,
     FILES, OPPONENTS, PLAY_MODES, CPU_POWERS, readOpponent, opponentKey, LEVELS, timeChoices, normTime, vibratePattern, timeLabel, levelLabel, levelShort, makeTables, isN5, isLevelChar, isChar, radicalNote, radicalFormNote, joinPartners, joinNote, JOIN_NOTE_MODES, splitOnce, canSplit, delivered, joinResults, joinReversed,
-    releasable, effectText, counterParts, usedCounters, counterBlocked, counterReading, rejectText, scoreOf, kanaOf, kanaText, wordCharOk, KANA_ONLY_WHY, homoChars, marks, markKinds, cutSpec, FACES, FACE_LABEL, faceJoins, faceResults, rulesLabel, opponentLabel, createGame, createTutorial, TUTORIAL_OPPONENT, playLogRow, endShow, END_LABELS, logSendAllowed, playLogResult, PLAY_LOG_LIMITS,
+    releasable, effectText, counterParts, usedCounters, counterBlocked, counterReading, rejectText, scoreOf, kanaOf, kanaText, wordCharOk, KANA_ONLY_WHY, homoChars, marks, markKinds, cutSpec, FACES, FACE_LABEL, faceJoins, faceResults, rulesLabel, opponentLabel, createGame, createTutorial, TUTORIAL_OPPONENT, playLogRow, endShow, kotobankUrl, END_LABELS, logSendAllowed, playLogResult, PLAY_LOG_LIMITS,
     strSeed, seededRand, matchRand, ROLES, ROOM_OPPONENT, MATCH_END_GRACE_SEC, MATCH_INSERT_TIMEOUT_SEC, MATCH_PING_SEC, MATCH_GONE_SEC, ROOM_LOBBY_TTL_SEC,
     createMatchClient, memoryClaims, newMatchId, newRoomCode, roomLobbyId, findRoom, hostRoom, joinRoom, startRoom, roomStartAt, roomWaiter,
   };
