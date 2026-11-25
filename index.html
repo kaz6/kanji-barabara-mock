@@ -188,7 +188,7 @@ button.op.main:disabled,button.op.main[aria-disabled=true]{background:var(--tile
 .table button.op{border:0;background:var(--btn);color:var(--ink);min-width:0}
 .table button.op:disabled,.table button.op[aria-disabled=true]{background:var(--btn-off);color:var(--btn-off-ink)}
 .table .ops-set{gap:0;border:1px solid var(--ink)}
-.table .ops-set button.op{flex:1 1 auto;padding:7px 6px;white-space:nowrap;border-right:1px solid var(--ink)}
+.table .ops-set button.op{flex:1 1 auto;padding:7px 6px;min-height:44px;white-space:nowrap;border-right:1px solid var(--ink)} /* 指で押す高さ 44px 以上（KJ-097。Back・Redraw・Play と同じ） */
 .table .ops-set button.op:last-child{border-right:0}
 .table .ops-set button.op#bHomo{flex:2 1 auto}
 .table button.op.main{flex:1 1 auto;font-size:17px;padding:10px 12px;background:var(--accent);border:2px solid var(--ink);color:var(--bg);letter-spacing:.12em}
@@ -360,7 +360,7 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
   #bBack{font-size:13px;min-width:44px;padding:3px 8px}
   .clock{font-size:12px;margin-left:auto}
   .msgline{height:20px;font-size:13px}
-  .table{padding:8px 0 10px 26px;margin:6px 0}
+  .table{padding:8px 0 6px 26px;margin:6px 0} /* 下の余白 10→6：操作5つが 44px 以上になった分を吸収（KJ-097） */
   .table::before{width:18px;font-size:12px}
   .choices{left:-26px;right:0;top:calc(100% + 10px)}
   .table .side{margin:0 0 6px}
