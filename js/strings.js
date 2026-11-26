@@ -65,7 +65,8 @@
   };
   // ボタン以外の短い文言（KJ-042。作者「文は仮」。ここ1か所で直せる）。ボタンではないので日本語のまま
   const TEXT = Object.freeze({
-    lead: (score, min) => `漢字を割ってくっつけて、言葉を放つ。先に ${score} 点か ${min} 分で、多い方が勝ち。`,
+    lead: (score, min) => `漢字を割ってくっつけて、放つ。\n${score}点先取か${min}分経過時に、得点の多い方が勝ち。`, // 作者の文（KJ-110。2行。作者の言葉のまま。\n は画面で改行）
+    leadEn: (score, min) => `Split kanji, join them, and play words. First to ${score} points — or the higher score after ${min} minutes — wins.`, // 説明文の英訳（KJ-110。仮。作者が直す。Play に合わせて words）
     tray: (n, max) => `ストック ${n} / ${max}`,
     masthead: "漢対普請瓦版", // 表紙の題字（KJ-093。KJ-109 で替えた。作者「漢対普請瓦版 / Split & Join — a Kanji Duel でいきます」）。題は共有の文（KJ-107／KJ-108）もここから取る
     mastheadRuby: "かんたいふしんかわらばん", // 題字の上のルビ（KJ-109）

@@ -83,8 +83,18 @@ test("字体（KJ-101）：表紙の説明文（TEXT.lead）の字と 0〜9 は�
   const kai = faces().find((x) => x.fam === "KJ Kaisei").set;
   const S = require("../js/strings.js");
   const text = (S.TEXT || S.default.TEXT).lead(30, 5) + "0123456789";
-  const miss = [...text].filter((c) => c !== " " && !kai.has(c.codePointAt(0))); // 空白は字体に入れない（落ち先の字体で同じ幅）
+  const miss = [...text].filter((c) => c !== " " && c !== "\n" && !kai.has(c.codePointAt(0))); // 空白は字体に入れない（落ち先の字体で同じ幅）
   assert.deepEqual(miss, [], `説明文の字が Kaisei に無い：${miss.join("")}。python3 tools/build_paper_fonts.py を回す`);
+});
+
+test("字体（KJ-110）：説明文の英訳（TEXT.leadEn）の字（— を含む）は、画面の字（Zen）にある", () => {
+  const zen = faces().find((x) => x.fam === "KJ Zen" && x.weight === 400).set;
+  const S = require("../js/strings.js");
+  const text = (S.TEXT || S.default.TEXT).leadEn(50, 15);
+  const miss = [...text].filter((c) => !zen.has(c.codePointAt(0)));
+  assert.deepEqual(miss, [], `英訳の字が Zen に無い：${miss.join("")}`);
+  const ja = (S.TEXT || S.default.TEXT).lead(50, 5);
+  assert.equal(ja.split("\n").length, 2, "説明文は2行");
 });
 
 test("字体（KJ-104）：はじかれたときの判子の字「否」は、Kaisei Tokumin の字体にある", () => {
