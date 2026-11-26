@@ -1798,6 +1798,25 @@
     return { kind, label: END_LABELS[kind], me: g.me.score, cpu: g.solo ? null : g.cpu.score, items, missed };
   }
 
+  // ---------- 戦果の共有（KJ-108。DOM に触らない）----------
+  // 終わりの画面（endShow の結果 d）を、新聞の見出し風の文にする。型は js/strings.js の SHARE_RESULT（仮。作者が直す）。
+  // o＝{ tpl: SHARE_RESULT, title: 題字, issue: 号数の文字, level: レベルの略称, opponent: 相手のキー（weak・fair・normal・room）}
+  // 返り値 { title, text }。text は「題 号数／（勝ち負け）／決め手／（レベル）」を sep でつないだもの。決め手は、自分が放った言葉のうち点がいちばん高い1つ（同点は先のもの）。放った言葉が無ければ決め手の行は出さない
+  function shareResultText(d, o) {
+    const tpl = o.tpl, n = (x) => (Number(x) < 0 ? tpl.minus + kansuji(-Number(x)) : Number(x) === 0 ? "〇" : kansuji(x)); // 点は引き直しでマイナスになりうる（「一」と出さない）
+    const fill = (str, vals) => String(str).replace(/\{(\w+)\}/g, (m, k) => (vals[k] === undefined ? "" : String(vals[k])));
+    const who = o.opponent === ROOM_OPPONENT.key ? tpl.whoRoom : (tpl.whoCpu[o.opponent] || tpl.whoCpu.weak);
+    const vals = { title: o.title, issue: o.issue, who, me: n(d.me), opp: n(d.cpu === null || d.cpu === undefined ? 0 : d.cpu), level: o.level };
+    const lines = [fill(tpl.title, vals), fill(tpl[d.kind] || tpl.draw, vals)];
+    let best = null;
+    for (const it of d.items || []) if (!best || it.pts > best.pts) best = it;
+    if (best) lines.push(fill(tpl.best, { word: best.text, pts: n(best.pts) }));
+    lines.push(fill(tpl.level, vals));
+    return { title: o.title, text: lines.join(tpl.sep) };
+  }
+  // 戦果の共有のリンク：ページの URL から ? と # を除いたもの（?room= は付けない）
+  const siteUrl = (base) => String(base || "").replace(/[?#].*$/, "");
+
   // ---------- 表紙の号数と日付（KJ-093。新聞紙風の見た目。DOM に触らない）----------
   // 漢数字。1〜9999（範囲の外・数でないときは 一）。十・百・千の前の「一」は付けない（十二・百五・千・二千二十六）
   const KANSUJI_DIGITS = ["〇", "一", "二", "三", "四", "五", "六", "七", "八", "九"];
@@ -1893,7 +1912,7 @@
   }
 
   return {
-    kansuji, issueLabel, kansujiDate, toKatakana, senkyoLines,
+    kansuji, issueLabel, kansujiDate, shareResultText, siteUrl, toKatakana, senkyoLines,
     FILES, OPPONENTS, PLAY_MODES, CPU_POWERS, readOpponent, opponentKey, LEVELS, timeChoices, normTime, vibratePattern, timeLabel, levelLabel, levelShort, makeTables, isN5, isLevelChar, isChar, radicalNote, radicalFormNote, joinPartners, joinNote, JOIN_NOTE_MODES, splitOnce, canSplit, delivered, joinResults, joinReversed,
     releasable, effectText, counterParts, usedCounters, counterBlocked, counterReading, rejectText, scoreOf, kanaOf, kanaText, wordCharOk, KANA_ONLY_WHY, homoChars, marks, markKinds, cutSpec, FACES, FACE_LABEL, faceJoins, faceResults, rulesLabel, opponentLabel, createGame, createTutorial, TUTORIAL_OPPONENT, playLogRow, endShow, kotobankUrl, END_LABELS, logSendAllowed, playLogResult, PLAY_LOG_LIMITS,
     strSeed, seededRand, matchRand, ROLES, ROOM_OPPONENT, MATCH_END_GRACE_SEC, MATCH_INSERT_TIMEOUT_SEC, MATCH_PING_SEC, MATCH_GONE_SEC, ROOM_LOBBY_TTL_SEC,
