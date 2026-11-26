@@ -1403,3 +1403,13 @@ R-025〜R-027 はカードに書いてあった仮置き、R-028〜R-031 は係�
 - 確かめた：375×700 で空のとき、ページ全体の高さは 700 のまま（40px にしても札・ストックの位置は動かない）。37px でも1列に入る（40px は余裕込み）
 - 戻し方：この PR の merge コミットを revert（端末に残るものは無い）
 
+
+### R-135 合言葉の共有：「共有」のボタンと、?room= のリンク（KJ-107。受け箱 P-107。作者 2026-11-26 19:19）
+
+- 作者の言葉：「共有機能って入れれる？ 合言葉の共有と、戦果の共有。」（戦果は P-108）
+- 決めたこと（カードのとおり）：部屋を作って合言葉が出たら、合言葉の横に「共有」のボタン。`navigator.share`（Web Share）で文とリンク（ページの URL に `?room=合言葉`）を渡す。`navigator.share` が無い端末は、同じ文とリンクをクリップボードに写して「コピーした」。`?room=` 付きで開いたら、遊び方を「友だちと（合言葉）」にし、入る側の欄に合言葉を入れておく（入るのは「合言葉で入る」を押してから）。合言葉の決まり（数字4けた）に合わなければ何も入れない
+- 作り：core.js の `K.roomCodeFromSearch`（?room= の読み取り・全角も受ける）・`K.roomShareUrl`（リンクの組み立て）。index.html の `bShare`・`applyRoomLink`。文は `js/strings.js` の `TEXT.shareText`（仮。「漢対普請瓦版で対戦しよう。合言葉 ○○」。題は `TEXT.masthead` を渡す）・`shareButton`・`shareCopied`・`shareFailed`
+- 係の仮決め：リンクで開いたときの遊び方は、その場だけ「友だちと」にして端末（localStorage `kj-opponent`）には書かない／share の閉じた（AbortError）ときは何も出さない／share もコピーもできないときの文「共有できなかった。合言葉を口で伝えてください」（仮）／`navigator.share` が閉じた以外で失敗したときは、コピーに回す
+- 触っていない：合言葉の部屋の決まり（先着・時間切れ・kj_claims）・Supabase・名義・宣伝の文
+- テスト：tests/share.test.js・tests/share.browser.test.mjs
+- 戻し方：この PR の merge コミットを revert（端末に残るものは無い）

@@ -70,6 +70,10 @@
     masthead: "漢対普請瓦版", // 表紙の題字（KJ-093。KJ-109 で替えた。作者「漢対普請瓦版 / Split & Join — a Kanji Duel でいきます」）。題は共有の文（KJ-107／KJ-108）もここから取る
     mastheadRuby: "かんたいふしんかわらばん", // 題字の上のルビ（KJ-109）
     mastheadSub: "Split & Join — a Kanji Duel", // 題字の下の英字の副題（KJ-109）
+    shareButton: "共有", // 合言葉の共有（KJ-107）。部屋を作って合言葉が出たら、合言葉の横に出す
+    shareText: (code, title) => `${title}で対戦しよう。合言葉 ${code}`, // 共有の文（仮。KJ-107）。title は masthead（題は KJ-109 のもの）
+    shareCopied: "コピーした", // navigator.share が無い端末で、文とリンクをクリップボードに写したとき
+    shareFailed: "共有できなかった。合言葉を口で伝えてください", // 共有もコピーもできなかったとき
     faceLabel: "札の字", // 設定：札の字体（KJ-093。初期は大正風）
     faceTaisho: "大正風", // Kaisei Tokumin
     faceMincho: "明朝", // Shippori Mincho

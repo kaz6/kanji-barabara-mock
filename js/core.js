@@ -447,6 +447,15 @@
   }
   const MATCH_ID_RE = /^m-[0-9a-z]{16}$/;
   // 合言葉：数字4けた（1000〜9999。頭の 0 で迷わないように）
+  // 共有のリンクの ?room=合言葉（KJ-107）：search（"?room=1234&x=1" など）から合言葉を取る。決まり（数字4けた）に合わなければ null
+  const roomCodeFromSearch = (search) => {
+    let v = null;
+    try { v = new URLSearchParams(String(search || "")).get("room"); } catch (e) { v = null; }
+    v = v === null ? "" : v.trim().replace(/[０-９]/g, (d) => String.fromCharCode(d.charCodeAt(0) - 0xfee0));
+    return ROOM_CODE_RE.test(v) ? v : null;
+  };
+  // 共有のリンク：base（ページの URL。? や # は除く）に ?room=合言葉 を付ける
+  const roomShareUrl = (base, code) => String(base || "").replace(/[?#].*$/, "") + "?room=" + encodeURIComponent(code);
   const newRoomCode = (rand) => String(1000 + (Math.floor((rand || Math.random)() * 9000) % 9000));
   const ROOM_CODE_RE = /^[0-9]{4}$/;
   const roomLobbyId = (code) => "room-" + code; // 合言葉の行の match_id（kind "join"・key＝本当の match_id）
@@ -1888,6 +1897,6 @@
     FILES, OPPONENTS, PLAY_MODES, CPU_POWERS, readOpponent, opponentKey, LEVELS, timeChoices, normTime, vibratePattern, timeLabel, levelLabel, levelShort, makeTables, isN5, isLevelChar, isChar, radicalNote, radicalFormNote, joinPartners, joinNote, JOIN_NOTE_MODES, splitOnce, canSplit, delivered, joinResults, joinReversed,
     releasable, effectText, counterParts, usedCounters, counterBlocked, counterReading, rejectText, scoreOf, kanaOf, kanaText, wordCharOk, KANA_ONLY_WHY, homoChars, marks, markKinds, cutSpec, FACES, FACE_LABEL, faceJoins, faceResults, rulesLabel, opponentLabel, createGame, createTutorial, TUTORIAL_OPPONENT, playLogRow, endShow, kotobankUrl, END_LABELS, logSendAllowed, playLogResult, PLAY_LOG_LIMITS,
     strSeed, seededRand, matchRand, ROLES, ROOM_OPPONENT, MATCH_END_GRACE_SEC, MATCH_INSERT_TIMEOUT_SEC, MATCH_PING_SEC, MATCH_GONE_SEC, ROOM_LOBBY_TTL_SEC,
-    createMatchClient, memoryClaims, newMatchId, newRoomCode, roomLobbyId, findRoom, hostRoom, joinRoom, startRoom, roomStartAt, roomWaiter,
+    createMatchClient, memoryClaims, newMatchId, newRoomCode, roomCodeFromSearch, roomShareUrl, roomLobbyId, findRoom, hostRoom, joinRoom, startRoom, roomStartAt, roomWaiter,
   };
 });
