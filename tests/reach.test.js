@@ -2,12 +2,14 @@
 // 行き先だけの字（data/parts.json の reach）：山には入らない。左右の部品が両方そのレベルで手に入るときだけ使う（js/core.js の T.REACH）
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { K, D, T, T4, TG1, newGame, setHand } = require("./helpers");
+const { K, D, T, T4, TG1, newGame, setHand, hintNow } = require("./helpers");
 
 const chars = (cards) => cards.map((x) => x.c).join("");
-const REACH = { 氷: ["水", "丶"], 丸: ["九", "丶"], 刃: ["刀", "丶"], 凡: ["几", "丶"], 勺: ["勹", "丶"] };
+const cardsAll = (g) => [...g.deck, ...g.me.cards.map((x) => x.c), ...g.cpu.cards.map((x) => x.c), ...g.field.map((x) => x.c)];
+const REACH = { 氷: ["水", "丶"], 丸: ["九", "丶"], 刃: ["刀", "丶"], 凡: ["几", "丶"], 勺: ["勹", "丶"], 旧: ["｜", "日"] };
+// KJ-113：旧＝｜＋日 も行き先だけの字（reach に足した）。｜ は 中・引 を割ると出る部品
 
-test("行き先だけの字：データは5つ。並べる順は 水丶・九丶・刀丶・几丶・勹丶。字として見せる（jouyou）。山に入る字ではない", () => {
+test("行き先だけの字：データは6つ（KJ-113 で 旧 を足した）。並べる順は 水丶・九丶・刀丶・几丶・勹丶・｜日。字として見せる（jouyou）。山に入る字ではない", () => {
   assert.deepEqual(D.parts.reach, REACH);
   for (const c of Object.keys(REACH)) {
     assert.ok(D.parts.jouyou.includes(c), `${c} は jouyou（字として見せる）`);
@@ -20,9 +22,9 @@ test("行き先だけの字：データは5つ。並べる順は 水丶・九丶
 });
 
 test("レベルごとの出番：小1・N5 は 氷・丸・刃、N4 は さらに 凡。勺（勹 が手に入らない）はどのレベルでも出番なし", () => {
-  assert.deepEqual([...TG1.REACH].sort(), ["丸", "刃", "氷"].sort());
-  assert.deepEqual([...T.REACH].sort(), ["丸", "刃", "氷"].sort());
-  assert.deepEqual([...T4.REACH].sort(), ["丸", "刃", "凡", "氷"].sort());
+  assert.deepEqual([...TG1.REACH].sort(), ["丸", "刃", "旧", "氷"].sort());
+  assert.deepEqual([...T.REACH].sort(), ["丸", "刃", "旧", "氷"].sort());
+  assert.deepEqual([...T4.REACH].sort(), ["丸", "刃", "凡", "旧", "氷"].sort());
   for (const L of [TG1, T, T4]) {
     assert.deepEqual(L.JOIN.get("勹丶"), undefined, "勹丶 は どのレベルでも使えない");
     assert.ok(!L.parts["勺"]);
@@ -92,4 +94,71 @@ test("はじまりのストック：使いやすい部品の上位に 丶 が入
     const g = newGame(1, "normal", lv);
     assert.ok(g.stockCandidates.map((x) => x.c).includes("丶"), lv);
   }
+});
+
+// KJ-113：｜＋日＝旧（行き先だけの字）
+test("旧：くっつける ｜＋日＝旧（小1・N5・N4）。順が逆（日＋｜）ではくっつかない。ほかの組は増えない", () => {
+  for (const [L, lv] of [[TG1, "G1"], [T, "N5"], [T4, "N4"]]) {
+    assert.deepEqual(K.joinResults(L, "｜", "日"), ["旧"], lv);
+    assert.deepEqual(K.joinResults(L, "日", "｜"), [], `${lv}：逆順は通らない`);
+    const g = newGame(1, "normal", lv);
+    assert.equal(chars(g.join(g.me, setHand(g, g.me, "｜日")).cards), "旧", lv);
+    const g2 = newGame(1, "normal", lv);
+    assert.equal(g2.join(g2.me, setHand(g2, g2.me, "日｜")).ok, false, `${lv}：日｜ ではくっつかない`);
+  }
+});
+
+test("旧：割ると ｜ と 日（ほかの ｜ の字・中・引 は今のまま）。山に入る字ではない", () => {
+  for (const lv of ["G1", "N5", "N4"]) {
+    const g = newGame(1, "normal", lv);
+    const [id] = setHand(g, g.me, "旧");
+    assert.equal(chars(g.split(g.me, [id]).cards), "｜日", lv);
+    const g3 = newGame(1, "normal", lv);
+    assert.ok(!cardsAll(g3).includes("旧"), `${lv}：旧 は山・場・手札に出ない`);
+  }
+  assert.deepEqual(K.joinResults(T4, "口", "｜"), ["中"]);
+  assert.deepEqual(K.joinResults(T4, "弓", "｜"), ["引"]);
+  assert.deepEqual(D.split_shapes.shapes["旧"], { s: "lr", at: 0.25, q: true });
+});
+
+test("旧：面で落とす（｜ を 日 の左へ・日 を ｜ の右へ）。字として見せる・手に持てる字（3レベルとも）", () => {
+  for (const L of [TG1, T, T4]) {
+    assert.deepEqual(K.faceJoins(L, "｜", "日"), { left: ["旧"] });
+    assert.deepEqual(K.faceJoins(L, "日", "｜"), { right: ["旧"] });
+    assert.ok(K.isChar(L, "旧") && L.HOLD.has("旧"));
+  }
+  assert.ok(D.parts.jouyou.includes("旧"));
+  assert.ok(!D.kanji.kanji.some((k) => k.c === "旧") && !D.parts.parts["旧"]);
+});
+
+test("旧：語が放てる（辞書にある語だけ。手で足していない）。レベルごとの数は 小1 18・N5 16・N4 49", () => {
+  const n = (L) => [...L.WORDS.keys()].filter((w) => w.includes("旧")).length;
+  assert.deepEqual([n(TG1), n(T), n(T4)], [18, 16, 49]);
+  for (const w of ["旧友", "新旧", "旧人"]) assert.ok(TG1.WORDS.has(w) && T.WORDS.has(w) && T4.WORDS.has(w), w);
+  assert.ok(!T.WORDS.has("旧式") && T4.WORDS.has("旧式"), "旧式 は 式 が N4 の字なので N4 から");
+  assert.equal(D.words.words.filter((x) => x.w.includes("旧")).every((x) => [...x.w].every((c) => c === "旧" || c === "る" || (D.kanji.kanji.some((k) => k.c === c) || D.parts.jouyou.includes(c) || D.parts.reach[c]))), true);
+});
+
+test("旧：1字では放てない。旧友 は放てる。CPU も 旧 を使う（新旧を放つ・｜日 をくっつける）。ヒントも旧友を指す", () => {
+  const g = newGame(1, "normal", "N5");
+  const [one] = setHand(g, g.me, "旧");
+  assert.equal(g.release(g.me, [one]).ok, false, "1字は放てない");
+  const g2 = newGame(1, "normal", "N5");
+  assert.equal(g2.release(g2.me, setHand(g2, g2.me, "旧友")).ok, true, "旧友 は N5 で放てる");
+  const g3 = newGame(1, "normal", "N5");
+  setHand(g3, g3.cpu, "新旧");
+  const r = g3.cpuTurn();
+  assert.ok(r && r.ok, r && r.why);
+  assert.ok(g3.isUsed("新旧"), "新旧（CPU が知っている語）を放った");
+  const g5 = newGame(1, "normal", "N5");
+  setHand(g5, g5.cpu, "｜日新");
+  const r5 = g5.cpuTurn();
+  assert.ok(r5 && r5.ok, r5 && r5.why);
+  assert.ok(g5.cpu.cards.some((x) => x.c === "旧"), "CPU は ｜日 をくっつけて 旧 にする");
+  const g4 = newGame(1, "weak", "N5");
+  const ids = setHand(g4, g4.me, "旧友");
+  hintNow(g4);
+  const h = g4.hintActive();
+  assert.equal(h.word, "旧友");
+  assert.deepEqual([...h.ids].sort(), [...ids].sort());
 });

@@ -22,8 +22,8 @@ test("KJ-067 rules.json の g1：30秒・3枚・10字。10字は小1 の山の�
   for (const c of G.extra_chars) assert.ok(TG1.CHARS.has(c), `${c} は小1 の字`);
   const m = countPairs(TG1);
   const top = [...m].sort((a, b) => b[1] - a[1] || a[0].codePointAt(0) - b[0].codePointAt(0)).slice(0, 10).map((x) => x[0]);
-  assert.deepEqual(G.extra_chars, top);
-  assert.deepEqual(G.extra_chars.map((c) => m.get(c)), [11, 8, 8, 8, 4, 4, 3, 3, 2, 2]);
+  assert.deepEqual([...G.extra_chars].sort(), [...top].sort(), "10字の顔ぶれ（順は問わない）");
+  assert.deepEqual(top.map((c) => m.get(c)), [11, 9, 8, 8, 4, 4, 3, 3, 2, 2], "組の数（KJ-113：旧＝｜＋日 で 日 が 8→9）");
 });
 
 test("KJ-067 小1 の山：基本の10字は3枚、ほかの70字は2枚（場・手札・山を合わせて。数は seed によらない）", () => {

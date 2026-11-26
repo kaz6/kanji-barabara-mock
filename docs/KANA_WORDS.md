@@ -326,7 +326,7 @@
 | 黒牛の舌 | くろうしのした | N4 |  | black cow-tongue (species of tonguefish, Paraplagusia japonica) |
 | 黒豆の木 | くろまめのき | N4 |  | bog bilberry (Vaccinium uliginosum); northern bilberry |
 
-## る（札 儿）124 語
+## る（札 儿）125 語
 
 | 語 | 読み | レベル | 小1 | 意味 |
 |---|---|---|---|---|
@@ -375,6 +375,7 @@
 | 分る | わかる | N5 | 小1 | to understand; to comprehend / to become clear; to be known |
 | 古る | ふる | N5 | 小1 | to age; to get old |
 | 料る | りょうる | N4 |  | to cook (food) / to manage well; to handle well |
+| 旧る | ふる | N5 | 小1 | to age; to get old |
 | 早る | はやる | N4 | 小1 | to be impatient; to be eager / to be excited; to be in high spirits |
 | 明る | あかる | N4 |  | to become bright; to become clear |
 | 止る | とまる | N5 | 小1 | to stop (moving); to come to a stop / to stop (doing, working, being supplied); to come to a halt |
