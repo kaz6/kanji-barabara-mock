@@ -77,10 +77,10 @@ test("耂（KJ-114）：教 → 孝 → 耂 と割り、耂 を割ると 土・�
     await page.evaluate(() => { __KJ.game.me.cards = [..."土ノ人木休辶"].map((c, i) => ({ id: 9300 + i, c, t: 0, fresh: false })); __KJ.render(); });
     await pick(page, "土", "ノ");
     assert.equal(await page.getAttribute("#bJoin", "aria-disabled"), "false", "土ノ の順なら Join が押せる");
-    await shot(page, "oigashira-3-join-375x667.png");
     await page.click("#bJoin");
     h = await hand(page);
     assert.ok(h.includes("耂") && !h.includes("ノ"), h);
+    await shot(page, "oigashira-3-joined-375x667.png");
     const r = await page.evaluate(() => ({ w: document.documentElement.scrollWidth, vw: innerWidth }));
     assert.ok(r.w <= r.vw, "横にはみ出さない");
     assert.deepEqual(errors, []);

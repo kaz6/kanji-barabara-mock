@@ -1,4 +1,4 @@
-// KJ-114：耂（おいがしら）を 土（上？下）＋ノ に割れるようにする（作者「土　と　ノ　に分けられないかな」）。逆に 土＋ノ で 耂
+// KJ-114：耂（おいがしら）を 土＋ノ に割れるようにする（作者「これも、土　と　ノ　に分けられないかな…変かな」）。逆に 土＋ノ で 耂
 // 耂 は 者・考・孝 の中継ぎ（relay）。N4 でだけ行が出る（者・考・孝 が N4 の字）。字としては見せない（部品の札のまま）
 const test = require("node:test");
 const assert = require("node:assert/strict");
@@ -75,11 +75,12 @@ test("台の行：耂 を選ぶと 部品の意味（おいがしら＝老）。
   assert.match(note2, /土＋ノ→耂/);
 });
 
-test("CPU もヒントも 耂 を割って使う（耂日 → 土日）", () => {
+test("CPU は 土＋ノ を 耂 にくっつける（手札 土ノ子 → 耂子。孝 への道）。ヒントは 耂 を割って 土日 を狙う（耂日学）", () => {
   const g = newGame(1, "normal", "N4");
-  setHand(g, g.cpu, "耂日学");
+  setHand(g, g.cpu, "土ノ子");
   const r = g.cpuTurn();
   assert.ok(r && r.ok, r && r.why);
+  assert.equal(chars(g.cpu.cards), "耂子");
   const g2 = newGame(1, "weak", "N4");
   setHand(g2, g2.me, "耂日学");
   hintNow(g2);
