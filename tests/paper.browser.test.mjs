@@ -62,13 +62,27 @@ const CONTRAST = `(function(){
 })()`;
 const ratio = (page, sel) => page.evaluate((s) => { const e = document.querySelector(s); if (!e) return null; return window.__ratio(e); }, sel);
 
-test("表紙：題字「バラバラ新報」を二重罫線で挟み、すぐ下の行に 第○號（左）・今日の日付（中）。試合の画面には出ない", { skip }, async () => {
+test("表紙：題字「漢対普請瓦版」（ルビ・英字の副題つき。KJ-109）を二重罫線で挟み、すぐ下の行に 第○號（左）・今日の日付（中）。見出し #title は無い。試合の画面には出ない", { skip }, async () => {
   const srv = await serve(); const browser = await chromium.launch();
   try {
     const url = `http://127.0.0.1:${srv.address().port}/index.html`;
     const { ctx, page, errors } = await open(browser, url);
-    assert.equal((await page.textContent("#mastName")).trim(), "バラバラ新報");
-    assert.equal((await page.textContent("#mastTitle")).trim(), "バラバラ新報", "枠の中の字は題字だけ");
+    // KJ-109：題字・ルビ・英字の副題は同じ枠（#mastName）の中の3行。文は js/strings.js の TEXT 1か所
+    assert.equal((await page.textContent("#mastMain")).trim(), "漢対普請瓦版");
+    assert.equal((await page.textContent("#mastRuby")).trim(), "かんたいふしんかわらばん");
+    assert.equal((await page.textContent("#mastSub")).trim(), "Split & Join — a Kanji Duel");
+    assert.equal(await page.evaluate(() => window.KJ_STR.TEXT.masthead), "漢対普請瓦版", "題は TEXT.masthead の1か所");
+    assert.equal(await page.evaluate(() => [window.KJ_STR.TEXT.mastheadRuby, window.KJ_STR.TEXT.mastheadSub].join("|")), "かんたいふしんかわらばん|Split & Join — a Kanji Duel");
+    assert.equal((await page.textContent("#mastTitle")).replace(/\s+/g, ""), "かんたいふしんかわらばん漢対普請瓦版Split&Join—aKanjiDuel", "枠の中の字は題字・ルビ・副題だけ");
+    assert.equal(await page.locator("#title").count(), 0, "見出し「漢字版（仮）」（#title）は消した");
+    assert.ok((await page.textContent("#lead")).trim().length > 0, "説明文（#lead）は残す");
+    assert.equal(await page.title(), "漢対普請瓦版 — Split & Join");
+    const rows = await page.evaluate(() => { const r = (id) => document.getElementById(id).getBoundingClientRect(); const f = (id) => parseFloat(getComputedStyle(document.getElementById(id)).fontSize); return { ruby: r("mastRuby"), main: r("mastMain"), sub: r("mastSub"), name: r("mastName"), fr: f("mastRuby"), fm: f("mastMain"), fs: f("mastSub") }; });
+    assert.ok(rows.ruby.bottom <= rows.main.top + 1 && rows.main.bottom <= rows.sub.top + 1, "上からルビ・題字・副題の順（重ならない）");
+    assert.ok(rows.ruby.top >= rows.name.top && rows.sub.bottom <= rows.name.bottom, "3行とも同じ枠の中");
+    assert.equal(rows.fr, 9, "ルビは9px");
+    assert.equal(rows.fs, 11, "副題は11px");
+    assert.ok(rows.fm >= 24, "題字は大きいまま");
     assert.equal(await page.textContent("#mastNo"), "第一號");
     const date = await page.textContent("#mastDate");
     assert.match(date, /^[〇一二三四五六七八九]{4}年[一二三四五六七八九十]+月[一二三四五六七八九十]+日$/);
@@ -114,6 +128,27 @@ test("表紙の絵柄（KJ-095）：題字の枠の後ろに昇る弁柄の日�
       assert.deepEqual(top, { z: "1", pos: "absolute", after: true, svgPe: "none" }, `${w}px：題字は放射の上（z-index・DOM の順）`);
       await play(page);
       assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById("mast")).display), "none", "試合の画面には絵柄を出さない");
+      assert.deepEqual(errors, []);
+      await ctx.close();
+    }
+  } finally { await browser.close(); srv.close(); }
+});
+
+test("表紙の題字（KJ-109）：412／375／320px で、題字・ルビ・副題が枠の中に収まり、枠は絵柄の箱からはみ出さない", { skip }, async () => {
+  const srv = await serve(); const browser = await chromium.launch();
+  try {
+    const url = `http://127.0.0.1:${srv.address().port}/index.html`;
+    for (const w of [412, 375, 320]) {
+      const { ctx, page, errors } = await open(browser, url, { vp: { width: w, height: 780 } });
+      const st = await page.evaluate(() => {
+        const r = (e) => e.getBoundingClientRect(), g = (id) => document.getElementById(id);
+        const box = r(g("mastTitle")), name = r(g("mastName"));
+        const inName = ["mastRuby", "mastMain", "mastSub"].every((id) => { const x = r(g(id)); return x.left >= name.left && x.right <= name.right && x.top >= name.top && x.bottom <= name.bottom; });
+        return { nameInBox: name.left >= box.left && name.right <= box.right && name.top >= box.top && name.bottom <= box.bottom, inName, noHScroll: document.documentElement.scrollWidth <= innerWidth, nameW: Math.round(name.width), boxW: Math.round(box.width) };
+      });
+      assert.equal(st.nameInBox, true, `${w}px：題字の枠が箱の中 ${JSON.stringify(st)}`);
+      assert.equal(st.inName, true, `${w}px：3行とも枠の中`);
+      assert.equal(st.noHScroll, true, `${w}px：横にはみ出さない`);
       assert.deepEqual(errors, []);
       await ctx.close();
     }
@@ -208,7 +243,7 @@ test("色：紙・札・墨・弁柄。字と地の明暗差は 4.5 以上（表
     assert.deepEqual(root, { "--bg": "#e8dbb4", "--tile": "#f6eed6", "--ink": "#2a2622", "--accent": "#9c3b2e", "--sub": "#625a50", "--line": "#a0957b" });
     assert.equal(await page.evaluate(() => getComputedStyle(document.body).backgroundColor), "rgb(232, 219, 180)");
     // 表紙
-    for (const sel of ["#mastTitle", "#mastName", "#mastNo", "#mastDate", "#title", "#lead", ".setup .gt", "#setupInfo", '#opp label:not(:has(input:checked))', "#opp label:has(input:checked)", "#start", "#bTutorial", "#face label:not(:has(input:checked))", "#face label:has(input:checked)"]) {
+    for (const sel of ["#mastTitle", "#mastName", "#mastRuby", "#mastMain", "#mastSub", "#mastNo", "#mastDate", "#lead", ".setup .gt", "#setupInfo", '#opp label:not(:has(input:checked))', "#opp label:has(input:checked)", "#start", "#bTutorial", "#face label:not(:has(input:checked))", "#face label:has(input:checked)"]) {
       const r = await ratio(page, sel);
       assert.ok(r >= 4.5, `表紙 ${sel} の明暗差 ${r}`);
     }
