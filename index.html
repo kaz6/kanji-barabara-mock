@@ -379,7 +379,7 @@ details ul{padding-left:18px}
 #nope.on .no-ic{animation:stampIn var(--stamp-pop) ease-out}
 @keyframes stampIn{from{transform:rotate(var(--stamp-tilt)) scale(var(--stamp-from))}to{transform:rotate(var(--stamp-tilt)) scale(1)}}
 @media (prefers-reduced-motion:reduce){#nope.on .no-ic{animation:none}}
-#nope .no-why{font-size:20px;font-weight:700;color:var(--ink);line-height:1.3;text-wrap:balance;background:var(--bg);border:1px solid var(--ink);padding:3px 10px;max-width:90vw;box-sizing:border-box}
+#nope .no-why{font-size:20px;font-weight:700;color:var(--ink);line-height:1.3;text-wrap:balance;background:var(--tile);border:1px solid var(--ink);padding:3px 10px;max-width:90vw;box-sizing:border-box}
 /* 特別な語の演出 */
 #fx{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(232,219,180,.92);z-index:10;pointer-events:none}
 #fx.on{display:flex}
@@ -1214,7 +1214,7 @@ const REJECT_MS=1500;let nopeTimer=null;
 function hideNope(){clearTimeout(nopeTimer);nopeTimer=null;$("nope").classList.remove("on")}
 function showWhy(why){
   if(!why)return;
-  $("nopeWhy").textContent=K.rejectText(why);const nb=$("nope"),ic=nb.firstElementChild;ic.style.animation="none";void ic.offsetWidth;ic.style.animation="";nb.classList.add("on"); // 判子は出し直すたびに押し直す（KJ-104）
+  $("nopeWhy").textContent=K.rejectText(why);const nb=$("nope"),ic=nb.querySelector(".no-ic");ic.style.animation="none";void ic.offsetWidth;ic.style.animation="";nb.classList.add("on"); // 判子は出し直すたびに押し直す（KJ-104）
   clearTimeout(nopeTimer);nopeTimer=setTimeout(hideNope,REJECT_MS);
 }
 function afterOp(res){if(res&&res.ok){row=res.sel||(res.cards?res.cards.map(x=>x.id):[]);lastTried=""}hideChoices();afterChange()} // 1枚に効く操作は、前に選んでいた札の選びを残す（res.sel。KJ-054）
