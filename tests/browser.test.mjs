@@ -1118,9 +1118,9 @@ test("画面", { skip }, async (t) => {
     assert.ok(!s.visible.includes(s.hint.word));
     const geo = await page.evaluate(() => ({ sw: document.documentElement.scrollWidth, sh: document.documentElement.scrollHeight, h: innerHeight }));
     assert.ok(geo.sw <= 375, "横スクロールがない");
-    // 戦況の欄（KJ-094）は、1つ放つと 150px に伸びる（前の「放った言葉」も放つたびに伸びた）。ここでは欄を空の高さ（34px）にしたときの全体が 700 に収まること、札・ストックが画面の中にあること
+    // 戦況の欄（KJ-094）は、1つ放つと 150px に伸びる（前の「放った言葉」も放つたびに伸びた）。ここでは欄を空の高さ（40px。KJ-106）にしたときの全体が 700 に収まること、札・ストックが画面の中にあること
     const senH = await page.evaluate(() => document.getElementById("senkyo").getBoundingClientRect().height);
-    assert.ok(geo.sh - (senH - 34) <= 700, `375×700 に収まる（欄を空の高さにして ${geo.sh - (senH - 34)}）`);
+    assert.ok(geo.sh - (senH - 40) <= 700, `375×700 に収まる（欄を空の高さにして ${geo.sh - (senH - 40)}）`);
     assert.ok(await page.evaluate(() => document.getElementById("meTray").getBoundingClientRect().bottom <= 700), "ストックの下端は 700 以内");
     if (process.env.KJ_HINT_SHOT) await page.screenshot({ path: process.env.KJ_HINT_SHOT.replace(/\.png$/, "-2.png") });
     await page.evaluate(() => { const G = __KJ.game; G.hint.until = G.now() - 0.01; __KJ.render(); });
