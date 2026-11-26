@@ -371,11 +371,15 @@ summary{cursor:pointer;font-weight:700}
 details p,details li{font-size:13px;color:#3d3a34}
 details ul{padding-left:18px}
 .credit{color:var(--sub);font-size:12px}
-/* はじかれたとき（KJ-022）：画面の真ん中に大きく 🚫 と、短い理由。1.5秒で消える。音なし・操作は邪魔しない */
-#nope{position:fixed;left:50%;top:42%;transform:translate(-50%,-50%);z-index:12;display:none;flex-direction:column;align-items:center;gap:6px;min-width:min(80vw,300px);max-width:90vw;padding:14px 22px;box-sizing:border-box;background:rgba(246,238,214,.96);border:2px solid var(--ink);border-radius:0;pointer-events:none;text-align:center}
+/* はじかれたとき（KJ-022）：画面の真ん中に 否 の判子と、短い理由。1.5秒で消える。音なし・操作は邪魔しない */
+/* はじかれた印（KJ-104。見本「はじかれたときの印」案2）：朱の角判「否」と、その下の理由の小札。数は仮。ここで直す */
+#nope{--stamp-size:72px;--stamp-char:50px;--stamp-tilt:-8deg;--stamp-pop:.12s;--stamp-from:1.25;position:fixed;left:50%;top:42%;transform:translate(-50%,-50%);z-index:12;display:none;flex-direction:column;align-items:center;gap:8px;width:max-content;max-width:90vw;box-sizing:border-box;pointer-events:none;text-align:center}
 #nope.on{display:flex}
-#nope .no-ic{font-size:min(26vw,120px);line-height:1}
-#nope .no-why{font-size:20px;font-weight:700;color:var(--ink);line-height:1.3;text-wrap:balance}
+#nope .no-ic{width:var(--stamp-size);height:var(--stamp-size);box-sizing:border-box;display:flex;align-items:center;justify-content:center;border:4px double var(--accent);color:var(--accent);background:rgba(246,238,214,.5);font-family:"KJ Kaisei",var(--ui);font-size:var(--stamp-char);font-weight:400;line-height:1;opacity:.92;transform:rotate(var(--stamp-tilt))}
+#nope.on .no-ic{animation:stampIn var(--stamp-pop) ease-out}
+@keyframes stampIn{from{transform:rotate(var(--stamp-tilt)) scale(var(--stamp-from))}to{transform:rotate(var(--stamp-tilt)) scale(1)}}
+@media (prefers-reduced-motion:reduce){#nope.on .no-ic{animation:none}}
+#nope .no-why{font-size:20px;font-weight:700;color:var(--ink);line-height:1.3;text-wrap:balance;background:var(--tile);border:1px solid var(--ink);padding:3px 10px;max-width:90vw;box-sizing:border-box}
 /* 特別な語の演出 */
 #fx{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(232,219,180,.92);z-index:10;pointer-events:none}
 #fx.on{display:flex}
@@ -556,7 +560,7 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
     <p class="credit">データ：JMdict・KANJIDIC2（© Electronic Dictionary Research and Development Group, EDRDG。CC BY-SA 3.0。<a href="https://www.edrdg.org/edrdg/licence.html">ライセンス</a>）。jamdict-data 経由で取り込み、語・字・読みを抜き出して加工しています。N5 の字は KANJIDIC2 の旧4級（103字）で代用。</p>
   </details>
 </main>
-<div id="nope" role="status" aria-live="polite"><div class="no-ic" aria-hidden="true">🚫</div><div class="no-why" id="nopeWhy"></div></div>
+<div id="nope" role="status" aria-live="polite"><div class="no-ic" aria-hidden="true">否</div><div class="no-why" id="nopeWhy"></div></div>
 <div id="fx"><div class="who" id="fxWho"></div><div id="fxChars" style="display:flex;gap:2vw"></div></div>
 
 <script src="js/core.js"></script>
@@ -1205,12 +1209,12 @@ function triedTake(id,why,c){const f=G.field.find(x=>x.id===id);const ch=f?f.c:c
 // 返事待ちのあいだに試合が終わった・捨てた・別の試合になったときの返事は、画面に反映しない（勝ち負けの表示を上書きしない）
 function stale(mc){if(MC===mc&&G&&!G.over)return false;if(G)afterChange();return true}
 function showMsg(t){const m=$("msg");m.textContent=t||"";m.className="msg"}
-// はじかれた理由（KJ-022・D-040）：画面の真ん中に 🚫 と短い言い切りの理由。REJECT_MS で消える（次のはじかれで出し直し）。K.rejectText が言い換える
+// はじかれた理由（KJ-022・D-040。KJ-104 で 🚫 を朱の角判「否」に替えた）：画面の真ん中に 否 の判子と短い言い切りの理由。REJECT_MS で消える（次のはじかれで出し直し）。K.rejectText が言い換える
 const REJECT_MS=1500;let nopeTimer=null;
 function hideNope(){clearTimeout(nopeTimer);nopeTimer=null;$("nope").classList.remove("on")}
 function showWhy(why){
   if(!why)return;
-  $("nopeWhy").textContent=K.rejectText(why);$("nope").classList.add("on");
+  $("nopeWhy").textContent=K.rejectText(why);const nb=$("nope"),ic=nb.querySelector(".no-ic");ic.style.animation="none";void ic.offsetWidth;ic.style.animation="";nb.classList.add("on"); // 判子は出し直すたびに押し直す（KJ-104）
   clearTimeout(nopeTimer);nopeTimer=setTimeout(hideNope,REJECT_MS);
 }
 function afterOp(res){if(res&&res.ok){row=res.sel||(res.cards?res.cards.map(x=>x.id):[]);lastTried=""}hideChoices();afterChange()} // 1枚に効く操作は、前に選んでいた札の選びを残す（res.sel。KJ-054）

@@ -87,6 +87,11 @@ test("字体（KJ-101）：表紙の説明文（TEXT.lead）の字と 0〜9 は�
   assert.deepEqual(miss, [], `説明文の字が Kaisei に無い：${miss.join("")}。python3 tools/build_paper_fonts.py を回す`);
 });
 
+test("字体（KJ-104）：はじかれたときの判子の字「否」は、Kaisei Tokumin の字体にある", () => {
+  const kai = faces().find((x) => x.fam === "KJ Kaisei").set;
+  assert.ok(kai.has("否".codePointAt(0)), "否 が Kaisei に無い。python3 tools/build_paper_fonts.py を回す");
+});
+
 test("字体：画面の字（Zen）は、ボタンの英字・数字と、画面の日本語の文に出る字を持つ", () => {
   const zen = faces().find((x) => x.fam === "KJ Zen" && x.weight === 400).set;
   for (const c of "PlaySplitJoinFlipCycleSamereadingBackRedraw0123456789") assert.ok(zen.has(c.codePointAt(0)), c);

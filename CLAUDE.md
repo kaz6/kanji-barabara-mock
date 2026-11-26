@@ -25,7 +25,7 @@
 - `data/blocked_words.json`：全レベルで放てない語（D-048。買春・売春）。`tools/build_data.py` が words から外す
 - `data/blocked_words_g1.json`：小1 のときだけ放てない語の一覧（KJ-044 追記。語の表から外す。N5・N4 には効かない。中身は作者が決める）
 - `data/radical_meanings.json`：部品の札（字として見せない札。全レベルの合計78）が何と同じ意味かの表（KJ-021。name 呼び名・same 同じ意味の字・mean 短い意味・q ？・forms は radical_forms の左の形）。台の行の1行目に出す（`K.radicalNote`。index.html の render）。一覧は docs/RADICAL_MEANINGS.md（手で合わせる。tests/radical.test.js が部品の漏れを見る）
-- `data/counters.json`：数＋助数詞（KJ-022。十円・二十日 など。数＝一〜十・百・千・万と 二十〜九十・十一〜十九、助数詞＝円・人・本・日・月・年・時・分・回・台・週・度）。辞書に無くても放てる。一度放った言葉に使った助数詞は、その試合ではもう 数＋助数詞 に使えない（`releasable`・`g.isUsed`）。作り直しは `python3 tools/build_counters.py`（docs/COUNTERS.md も書く）。はじかれたときの 🚫 と理由は `K.rejectText`・index.html の `showWhy`。言い方の一覧は docs/REJECT_MESSAGES.md
+- `data/counters.json`：数＋助数詞（KJ-022。十円・二十日 など。数＝一〜十・百・千・万と 二十〜九十・十一〜十九、助数詞＝円・人・本・日・月・年・時・分・回・台・週・度）。辞書に無くても放てる。一度放った言葉に使った助数詞は、その試合ではもう 数＋助数詞 に使えない（`releasable`・`g.isUsed`）。作り直しは `python3 tools/build_counters.py`（docs/COUNTERS.md も書く）。はじかれたときの 否 の判子（朱の角判。KJ-104。数は index.html の `#nope` の変数）と理由は `K.rejectText`・index.html の `showWhy`。言い方の一覧は docs/REJECT_MESSAGES.md
 - `data/special.json` の `effects`：放つと効く語（KJ-079・KJ-080。語→`{op, target, n}`。op＝split・cycle・invert・join・homophone／target＝self〔自刃：放った本人の上の段の割れる札を、場から取り終えたあとに1枚無作為に割る〕・opp〔切る・回転・反転・合体・同音 など：放った瞬間に、相手の上の段の効く札へ。大回転＝2枚・大集合＝`"max"`〔できるだけ多くの組〕〕。点・演出・振動は special・fx_words と別で変えない。core.js の `T.EFFECTS`・`hitOpponent`・`runPendingFx`・`K.effectText`。画面の文は index.html の `drain`。テストは tests/effects.test.js・tests/attack.test.js・tests/effects.browser.test.mjs
 - `data/rules.json` の `vibrate`：スマホの振動の形（KJ-074。ms。手ごとに rules の1か所。選び方は `K.vibratePattern`。振動は index.html の `buzz`。入り切りは localStorage `kj-vibe`。`navigator.vibrate` が無い端末では入り切りを出さず何もしない。金玉は special_words で振動だけ特別）
 - `data/rules.json`：数値（場・手札・点数・引き直し・勝ち・待ち時間・CPU）。数値を変えるときはここだけ。変えたら `version` を上げる
@@ -42,7 +42,7 @@ npm test
 - `tests/data.test.js`：データの整合（レベル・部品表〔輪がない〕・対義・巡り・偏の形・同じ読み・語・特別な語・決まり）
 - `tests/game.test.js`：割る・くっつける・待ち時間・放つ・点数・使用済み・取る・引き直し・勝ち・CPU・ログ。時計と乱数は差し替えている（`tests/helpers.js`）
 - `tests/match.test.js`：合言葉の部屋の先着（場の札・言葉・勝ちの点・時間切れ・相手が抜けた）と、部屋を作る／入る・届いた行の確かめ・insert の時間切れ。つなぎは偽物（`KJ.memoryClaims`）。本物の Supabase には出さない
-- `tests/counters.test.js`・`tests/counters.browser.test.mjs`：数＋助数詞（KJ-022。データ・読み・十円 が放てる・使った助数詞は使えない〔辞書の語にも・CPU も・二人とも〕・動けない・言い方／画面：🚫 と「〇円は一度きり！」が真ん中に出て消える・ほかのはじかれ方でも出る）
+- `tests/counters.test.js`・`tests/counters.browser.test.mjs`：数＋助数詞（KJ-022。データ・読み・十円 が放てる・使った助数詞は使えない〔辞書の語にも・CPU も・二人とも〕・動けない・言い方／画面：否 の判子と「〇円は一度きり！」が真ん中に出て消える・ほかのはじかれ方でも出る）
 - `tests/vibrate.test.js`・`tests/vibrate.browser.test.mjs`：スマホの振動（KJ-074。形の選び方・手ごとの形・切なら震えない・相手の手で震えない・`navigator.vibrate` が無い端末で落ちない。`navigator.vibrate` は差し替え）
 - `tests/radical.test.js`・`tests/radical.browser.test.mjs`：部品の札の意味（KJ-021。部品すべてに行がある・radical_forms と食い違わない・一行の形・一覧にそろっている／画面：部品の札を選ぶと台の行に出る・字の札では出ない・外すと消える）
 - `tests/reach.test.js`：丶 の行き先（KJ-077。行き先だけの字・レベルごとの出番〔勺は出番なし〕・くっつける・割る・面で落とす・語・ストック）
