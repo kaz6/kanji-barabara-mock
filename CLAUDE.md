@@ -56,6 +56,7 @@ npm test
 - `tests/layout.browser.test.mjs`：試合の画面の置き場（KJ-078・KJ-090。Back は「あなた」の行の Redraw の左・上の3つは「しくみ」の行・残り時間は CPU の行の右端・Play は幅いっぱい・Redraw は卓の外／Redraw の1回タップ・長押し・途中で離す）
 - `tests/cpuhand.browser.test.mjs`：CPU 対戦で相手の上の段を見せる（KJ-092。CPU の行の下に8マス・字だけ・ストックは出さない・押せない・CPU が動くと変わる・375×667 に自分の手札が収まる・ひとりとチュートリアルでは出ない。合言葉の部屋で出ないことは tests/browser.test.mjs）
 - `tests/joinmark.browser.test.mjs`：Join のボタンの印（KJ-103。Jo｜in が Split の逆に傾く〔+5／−5 度〕・継ぎ目の真上に墨の放射3本〔線3本・太さ1.6・端は丸〕・根元と字の上端の間 0〜3px・字に重ならない・押せないとき 0.35・375／320px ではみ出さない・読み上げは Join・押せばくっつく）。`KJ_SHOT_JOIN=<フォルダ>` で画像を書く
+- `tests/oigashira.test.js`・`tests/oigashira.browser.test.mjs`：耂 を 土＋ノ に割る（KJ-114。N4 でだけ・輪がない・割る／くっつける〔土＋ノ→耂。逆順は通らない〕・面では落とせない・台の行・CPU が 土ノ子 を 耂子 に・ヒント／画面：教→孝→耂→土ノ→耂 を 375×667 で）。`KJ_SHOT_OIGASHIRA=<フォルダ>` で画像を書く
 - `tests/joinpop.browser.test.mjs`：Join の放射の弾み（KJ-105。くっつけに成功すると放射だけ一度弾む〔1→約1.6→1・根元が軸〕・面でくっつけても弾む・失敗と CPU のくっつけでは弾まない・押せない見え方でも見える・reduced-motion では弾まない・字とほかは動かさない）。`KJ_SHOT_JOINPOP=<フォルダ>` で画像を書く
 - `tests/layoutab.browser.test.mjs`：試合の画面の並びは A だけ（KJ-089。並び B と、はじめる前の画面の「並び」の切り替えを消した。切り替えも下の段 `#dock` も無い・端末に `kj-layout` の B が残っていても A の置き場〔Back は Redraw の左・Play は幅いっぱい〕。`kj-layout` は読まない）
 - `tests/joinnote.test.js`・`tests/joinnote.browser.test.mjs`：部品の札のくっつく相手（KJ-083。手札・ストックにあるときだけ・字の札では出ない・並べる順・3組まで・3つの形〔`data/rules.json` の `join_note`。full／partner／mask。`K.joinNote`〕／画面：1行目に出る・375／320px で情報の欄が2行のまま）
