@@ -1425,3 +1425,13 @@ R-025〜R-027 はカードに書いてあった仮置き、R-028〜R-031 は係�
 - テスト：tests/shareend.test.js・tests/shareend.browser.test.mjs
 - 戻し方：この PR の merge コミットを revert（端末に残るものは無い）
 
+
+### R-137 表紙の説明文を作者の文に替え、下に小さく英訳を付ける（KJ-110。受け箱 P-110。作者 2026-11-26 23:51・23:53）
+
+- 作者の言葉：「漢字を割ってくっつけて、放つ。／{点}点先取か{分}分経過時に、得点の多い方が勝ち。」「英訳も下に小さくつけましょうか」「英語はWordsにしましょう。ゲーム内だとPlayだから、どちらかに合わせませんか？」
+- 決めたこと（カードのとおり）：`js/strings.js` の `TEXT.lead` を作者の2行に（改行は `\n`＋`white-space:pre-line`）。`TEXT.leadEn`（1か所）に英訳。画面の字（Zen）11.5px・墨
+- 仮：英訳「Split kanji, join them, and play words. First to {点} points — or the higher score after {分} minutes — wins.」（words は卓の Play に合わせた。作者が直す）
+- 字体：`tools/build_paper_fonts.py` で作り直した（Kaisei に 得・改・経・過が入った。Zen には前のカードで増えた字も入った）
+- 触っていない：題字・号数・日付・▼・設定・試合の画面
+- テスト：tests/paper.browser.test.mjs・tests/paper.test.js
+- 戻し方：この PR の merge コミットを revert（端末に残るものは無い）
