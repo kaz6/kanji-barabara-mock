@@ -52,7 +52,7 @@ function fakeClaims() {
   };
 }
 
-// share: "ok"＝navigator.share を差し替え（呼ばれた引数を window.__shared に残す）／"abort"＝閉じた（AbortError）／"none"＝navigator.share が無い端末
+// share: "ok"＝navigator.share を差し替え（呼ばれた引数を window.__shared に残す）／"abort"＝閉じた（AbortError）／"fail"＝閉じた以外の失敗／"none"＝navigator.share が無い端末
 async function open(browser, url, { share = "none", handler = null, pre = null, vp = { width: 375, height: 667 } } = {}) {
   const ctx = await browser.newContext({ viewport: vp, permissions: ["clipboard-read", "clipboard-write"] });
   await ctx.addInitScript(([s, pre]) => {
@@ -60,7 +60,7 @@ async function open(browser, url, { share = "none", handler = null, pre = null, 
     window.__shared = [];
     window.supabase = { createClient: () => ({ channel: () => { const ch = { on: () => ch, subscribe: (cb) => { setTimeout(() => cb("CHANNEL_ERROR"), 0); return ch; }, unsubscribe: () => {} }; return ch; } }) };
     if (s === "none") Object.defineProperty(navigator, "share", { configurable: true, value: undefined });
-    else Object.defineProperty(navigator, "share", { configurable: true, value: (d) => { window.__shared.push(d); return s === "abort" ? Promise.reject(Object.assign(new Error("x"), { name: "AbortError" })) : Promise.resolve(); } });
+    else Object.defineProperty(navigator, "share", { configurable: true, value: (d) => { window.__shared.push(d); if (s === "fail") return Promise.reject(Object.assign(new Error("x"), { name: "NotAllowedError" })); return s === "abort" ? Promise.reject(Object.assign(new Error("x"), { name: "AbortError" })) : Promise.resolve(); } });
     if (pre) { try { new Function(pre)(); } catch (e) { /* 読めない端末 */ } }
   }, [share, pre]);
   const page = await ctx.newPage();
@@ -142,6 +142,18 @@ test("合言葉の共有の画面（KJ-107）", { skip }, async (t) => {
       await A.ctx.close();
     });
 
+    await t.test("navigator.share が閉じた以外（NotAllowedError など）で失敗したら、コピーに回る", async () => {
+      const A = await open(browser, base, { share: "fail", handler: fakeClaims() });
+      await A.page.check('#opp input[value="room"]');
+      await A.page.click("#bHost");
+      await A.page.waitForSelector("#roomShow:not([hidden])");
+      const code = (await A.page.textContent("#roomShow")).trim();
+      await A.page.click("#bShare");
+      await A.page.waitForFunction(() => document.getElementById("roomMsg").textContent === "コピーした");
+      assert.equal(await A.page.evaluate(() => navigator.clipboard.readText()), `漢対普請瓦版で対戦しよう。合言葉 ${code}\n${base}?room=${code}`);
+      await A.ctx.close();
+    });
+
     await t.test("?room=合言葉 で開く：「友だちと」が選ばれ、入る側の欄に合言葉が入っている。まだ入っていない", async () => {
       const claimsHits = [];
       const handler = async (route) => { claimsHits.push(route.request().method()); return fakeClaims()(route); };
@@ -186,7 +198,8 @@ test("合言葉の共有の画面（KJ-107）", { skip }, async (t) => {
       assert.equal(await B.page.inputValue("#roomCode"), code);
       await B.page.click("#bEnter");
       for (const P of [A, B]) await P.page.waitForSelector("#game:not([hidden])", { timeout: 8000 });
-      assert.equal(await B.page.isVisible("#bShare"), false, "入る側には共有が出ない");
+      assert.equal(await B.page.$eval("#bShare", (e) => e.hidden), true, "入る側には共有が出ない");
+      assert.equal(await A.page.$eval("#bShare", (e) => e.hidden), false, "作った側（対）には出ている");
       assert.deepEqual([...A.errors, ...B.errors], []);
       await A.ctx.close(); await B.ctx.close();
     });
