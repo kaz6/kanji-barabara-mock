@@ -437,7 +437,7 @@ test("説明文（KJ-110）：作者の文の2行（数は決まりと選んだ�
       assert.ok(t.ja.includes("15分経過時") && t.en.includes("after 15 minutes"), "時間を選ぶと数が変わる");
       // 2行：改行で2行に見える（高さ＝行の高さの2倍前後）／英訳は日本語の下にある
       const g = await page.evaluate(() => { const a = document.getElementById("lead"), b = document.getElementById("leadEn"); const lh = parseFloat(getComputedStyle(a).lineHeight) || 13 * 1.5; return { h: a.getBoundingClientRect().height, lh, aBottom: a.getBoundingClientRect().bottom, bTop: b.getBoundingClientRect().top, size: parseFloat(getComputedStyle(b).fontSize), sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth }; });
-      assert.ok(g.h >= g.lh * 1.8, `日本語は2行以上 ${g.h}/${g.lh}`);
+      assert.ok(g.h >= g.lh * 1.8 && g.h <= g.lh * 2.2, `日本語はちょうど2行 ${g.h}/${g.lh}`);
       assert.ok(g.bTop >= g.aBottom - 0.5, "英訳は日本語の下");
       assert.ok(g.size >= 11 && g.size <= 12, `英訳の大きさ ${g.size}`);
       assert.ok(g.sw <= g.cw, "横にはみ出さない");
@@ -447,6 +447,11 @@ test("説明文（KJ-110）：作者の文の2行（数は決まりと選んだ�
       assert.deepEqual(errors, []);
       await ctx.close();
     }
+    // 試合中は広い画面でも英訳は出ない（試合の画面は変えない）
+    const { ctx, page } = await open(browser, url, { vp: { width: 800, height: 700 } });
+    await page.evaluate(() => document.body.classList.add("playing"));
+    assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById("leadEn")).display), "none");
+    await ctx.close();
   } finally { await browser.close(); srv.close(); }
 });
 
