@@ -910,7 +910,7 @@ function end(winner,solo){
 // そのあと自分が放った言葉を放った順に1つずつ（長いほど派手）。タップで全部いっぺんに出す。出し終わって少したつか、もう一度タップで閉じて、いまの終わりの画面を見せる。
 // 時間の長さは表示のためのもの（遊びの数値ではないので rules.json には置かない。仮決め）
 const END_PACE={first:350,gap:175,hold:4000}; // hold＝言葉を出し終わってから閉じるまで（KJ-066。D-086。1.8秒→4秒。仮置き）
-let LASTEND=null; // 最後に出した終わりの画面の結果（K.endShow）・レベル・相手。「共有」（#bShareEnd）の文のもと
+let LASTEND=null; // 終わった時点の結果（K.endShow。end() で決める）・レベル・相手。「共有」（#bShareEnd）の文のもと
 let ES=null; // {items:[li], timers:[], done:bool}
 function esClear(){if(ES){for(const t of ES.timers)clearTimeout(t)}}
 let esWait=null;
