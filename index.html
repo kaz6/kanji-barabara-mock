@@ -362,9 +362,9 @@ body.esOn details>summary .bar{position:fixed;top:6px;left:10px;right:10px;z-ind
 @keyframes kjShine{from{background-position:120% 0}to{background-position:-20% 0}}
 @media (prefers-reduced-motion:reduce){.esw.fresh.t1,.esw.fresh.t2,.esw.fresh.t3,.esw.fresh.t2 .w,.esw.fresh.t3 .w{animation:none}}
 /* 戦況（KJ-094。P-094。見本「新聞21」）：左に墨の地の縦書きの見出し「戦況」、中は縦書きで、放った言葉を新しい順（右が新しい）に漢字カタカナ交じりの文で。入りきらない古いほうは欄の左の外へ流れる。あなたの行は弁柄の太字。放った言葉そのものは漢字のまま（札の字） */
-.senkyo{display:flex;height:34px;margin:6px 0;border-top:2px solid var(--ink);border-bottom:1px solid var(--ink)} /* 空のあいだは低く（「放った言葉」の見出しと同じ 34px。375×700 に収める決まり＝KJ-010 を守る）。1つ放ったら --sk-h の高さに */
+.senkyo{display:flex;height:40px;margin:6px 0;border-top:2px solid var(--ink);border-bottom:1px solid var(--ink)} /* 空のあいだは低く（40px。見出し「戦況」2字が1列に入る最小。KJ-106。375×700 に収める決まり＝KJ-010 を守る）。1つ放ったら --sk-h の高さに */
 .senkyo.has{height:var(--sk-h,150px)}
-.sk-head{flex:none;margin:0;writing-mode:vertical-rl;font-size:12px;font-weight:700;letter-spacing:2px;line-height:1.2;padding:3px 5px;background:var(--ink);color:var(--bg);overflow:hidden}
+.sk-head{flex:none;margin:0;white-space:nowrap;writing-mode:vertical-rl;font-size:12px;font-weight:700;letter-spacing:2px;line-height:1.2;padding:3px 5px;background:var(--ink);color:var(--bg);overflow:hidden}
 .senkyo.has .sk-head{font-size:15px;letter-spacing:4px;line-height:1.3;padding:6px 5px}
 .log{flex:1;min-width:0;writing-mode:vertical-rl;font-size:11px;line-height:1.75;margin:0;padding:6px 6px;list-style:none;overflow:hidden;color:#3a342d}
 .log li{padding:0 3px;border-left:1px solid var(--line)}

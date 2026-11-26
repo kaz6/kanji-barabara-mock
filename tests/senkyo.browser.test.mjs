@@ -91,7 +91,16 @@ test("戦況の欄：左に墨の地の縦書きの見出し「戦況」・中�
     assert.equal(st.headFg, "rgb(232, 219, 180)", "字は紙の色");
     assert.equal(st.logWm, "vertical-rl", "中は縦書き");
     assert.ok(st.left, "見出しは左・中の左端に接する");
-    assert.equal(st.h, 34, "空のあいだは低い（前の「放った言葉」の見出しと同じ。375×700 に収める決まり。KJ-010）");
+    assert.equal(st.h, 40, "空のあいだは低い（40px。見出し「戦況」2字が1列に入る最小。KJ-106。375×700 に収める決まり。KJ-010）");
+    // KJ-106：空のとき、見出しの2字は1列に「戦」の下に「況」と並ぶ（2列に割れて「況戦」と読めない）
+    const cols = await page.evaluate(() => { const h = document.getElementById("skHead"), t = h.firstChild, out = []; for (let i = 0; i < t.length; i++) { const r = document.createRange(); r.setStart(t, i); r.setEnd(t, i + 1); const b = r.getBoundingClientRect(); out.push({ c: t.data[i], l: Math.round(b.left), r: Math.round(b.right), t: Math.round(b.top) }); } return { out, headRects: (() => { const r = document.createRange(); r.selectNodeContents(h); return r.getClientRects().length; })(), hh: Math.round(h.getBoundingClientRect().height) }; });
+    assert.equal(cols.out.length, 2);
+    assert.equal(cols.out[0].c, "戦", "上の字は「戦」");
+    assert.equal(cols.out[1].c, "況", "下の字は「況」");
+    assert.ok(Math.abs(cols.out[0].l - cols.out[1].l) <= 1 && Math.abs(cols.out[0].r - cols.out[1].r) <= 1, `2字の左端がそろう（1列。${JSON.stringify(cols.out)}）`);
+    assert.ok(cols.out[0].t < cols.out[1].t, "「戦」が「況」の上");
+    assert.equal(cols.headRects, 1, "見出しは1列（折り返さない）");
+    assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById("skHead")).fontSize), "12px", "字の大きさは今のまま");
     assert.equal(st.oldHead, "無い", "「放った言葉」の見出しは戦況に替わった");
     assert.equal(st.n, 0, "放つ前は何も無い");
     await addRel(page, [["me", "空白", 3, []]]);
