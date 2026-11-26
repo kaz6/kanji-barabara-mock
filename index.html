@@ -467,8 +467,7 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
       <div class="roomrow"><button class="op" id="bHost">部屋を作る</button></div>
       <p class="gt">入る側は、作った人のレベル・時間で遊ぶ</p>
       <div class="roomrow"><input id="roomCode" inputmode="numeric" autocomplete="off" maxlength="4" placeholder="数字4けた" aria-label="合言葉"><button class="op" id="bEnter">合言葉で入る</button></div>
-      <p class="roomcode" id="roomShow" hidden></p>
-      <div class="roomrow"><button class="op" id="bShare" hidden></button></div>
+      <div class="roomrow" id="codeRow" hidden><p class="roomcode" id="roomShow" hidden></p><button class="op" id="bShare" hidden></button></div>
       <p class="note" id="roomMsg"></p>
       <button class="op" id="bRoomCancel" hidden>やめる</button>
     </div>
@@ -1067,7 +1066,7 @@ function roomUi(){
   $("start").hidden=on;
   $("bHost").disabled=wait;$("bEnter").disabled=wait;$("roomCode").disabled=wait;
   $("bRoomCancel").hidden=!wait;
-  $("bShare").hidden=!(wait&&ROOM.role==="host"&&ROOM.code);
+  $("codeRow").hidden=$("bShare").hidden=!(wait&&ROOM.role==="host"&&ROOM.code);
   $("roomShow").hidden=!(wait&&ROOM.role==="host"&&ROOM.code);$("roomShow").textContent=ROOM&&ROOM.code?ROOM.code:"";
   if(!wait&&!on)setRoomMsg("");
 }
@@ -1080,8 +1079,7 @@ $("bShare").onclick=async()=>{
   if(!ROOM||!ROOM.code)return;
   const text=STR.TEXT.shareText(ROOM.code,STR.TEXT.masthead),url=K.roomShareUrl(location.href,ROOM.code);
   if(typeof navigator.share==="function"){
-    try{await navigator.share({title:STR.TEXT.masthead,text,url})}catch(e){if(!e||e.name!=="AbortError")setRoomMsg(STR.TEXT.shareFailed)} // 閉じただけ（AbortError）は何も出さない
-    return;
+    try{await navigator.share({title:STR.TEXT.masthead,text,url});return}catch(e){if(e&&e.name==="AbortError")return} // 閉じただけ（AbortError）は何も出さない。ほかの失敗はコピーに回る
   }
   const both=text+"\n"+url;
   try{await navigator.clipboard.writeText(both);setRoomMsg(STR.TEXT.shareCopied)}
