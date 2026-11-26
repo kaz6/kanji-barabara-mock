@@ -51,7 +51,7 @@ def ui_chars():
     txt = ""
     for p in ["index.html", "js/strings.js", "js/core.js", "data/tutorial.json", "data/rules.json"]:
         txt += read(p)
-    return wide(txt) | card_chars() | set(chr(c) for c in range(0x20, 0x7F)) | set(chr(c) for c in range(0x30A1, 0x30F7)) | {"ー"}  # カタカナ全部（戦況の読み。KJ-094）
+    return wide(txt) | card_chars() | set(chr(c) for c in range(0x20, 0x7F)) | set(chr(c) for c in range(0x30A1, 0x30F7)) | {"ー", "—"}  # カタカナ全部（戦況の読み。KJ-094）／— は表紙の副題（KJ-109。U+3000 より下なので wide に入らない）
 
 
 def lead_chars():

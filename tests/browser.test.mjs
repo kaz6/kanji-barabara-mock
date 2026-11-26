@@ -150,7 +150,7 @@ test("画面", { skip }, async (t) => {
       // ログ
       await page.click("#bLog");
       const log = await page.inputValue("#logText");
-      assert.match(log, /^# 漢字版（仮）モック ログ/);
+      assert.match(log, /^# 漢対普請瓦版 ログ/);
       assert.match(log, /# 仮置き 場=3枚 最初の手札=8枚 手札の上限=8枚＋ストック8枚/);
       assert.match(log, /# 相手 とても弱い（CPU は 30〜45秒に1回動く/);
       assert.match(log, /\tためした\t口 十\t\t0\t.*\t並べる順が逆/);
@@ -1627,7 +1627,7 @@ test("画面", { skip }, async (t) => {
     assert.match(body.result, /^あなたの勝ち（10分 51対\d+）$/);
     assert.equal(body.level, "N4");
     assert.equal(body.opponent, "weak");
-    assert.match(body.log, /^# 漢字版（仮）モック ログ/);
+    assert.match(body.log, /^# 漢対普請瓦版 ログ/);
     assert.match(body.log, /\t終わり\t/);
     assert.match(body.device_id, /^[0-9a-f]{24}$/);
     assert.equal(await page.evaluate(() => localStorage.getItem("kj-device")), body.device_id);
@@ -2119,7 +2119,7 @@ test("画面", { skip }, async (t) => {
     await page.goto(url);
     await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
     // はじめる前：題に「モック」がない・ラジオはブラウザの青ではなく札の形。選んだものが弁柄の地に紙色の字
-    assert.doesNotMatch(await page.textContent("h1"), /モック/);
+    assert.doesNotMatch(await page.textContent("#mastTitle"), /モック/); // KJ-109：見出し h1 は消した。題字（表紙）に「モック」が無い
     const lab = (v) => page.evaluate((val) => { const l = document.querySelector(`#opp input[value="${val}"], #pow input[value="${val}"]`).closest("label"), cs = getComputedStyle(l); return { bg: cs.backgroundColor, color: cs.color, edge: cs.borderTopWidth, op: getComputedStyle(l.querySelector("input")).opacity }; }, v);
     await page.check('#opp input[value="cpu"]');
     const on = await lab("cpu"), off = await lab("room");

@@ -92,7 +92,9 @@ test("字体：画面の字（Zen）は、ボタンの英字・数字と、画�
   for (const c of "PlaySplitJoinFlipCycleSamereadingBackRedraw0123456789") assert.ok(zen.has(c.codePointAt(0)), c);
   for (const c of "はじめる前に選ぶ遊び方強さレベル時間振動札の字しくみもう一度設定を変えるログ放った言葉") assert.ok(zen.has(c.codePointAt(0)), c);
   // 表紙の題字・号数・日付（漢数字・〇）・卓の見出し（レビュー P-093：第・號が漏れていた）
-  for (const c of "バラバラ新報第號〇一二三四五六七八九十百千年月日卓　場と台") assert.ok(zen.has(c.codePointAt(0)), `${c} が Zen に無い。python3 tools/build_paper_fonts.py を回す`);
+  for (const c of "漢対普請瓦版かんたいふしんかわらばん第號〇一二三四五六七八九十百千年月日卓　場と台") assert.ok(zen.has(c.codePointAt(0)), `${c} が Zen に無い。python3 tools/build_paper_fonts.py を回す`);
+  // KJ-109：英字の副題「Split & Join — a Kanji Duel」（— も）は、題字の字体（Zen 400・700）に入っている
+  for (const w of [400, 700]) { const z = faces().find((x) => x.fam === "KJ Zen" && x.weight === w).set; for (const c of "Split & Join — a Kanji Duel") assert.ok(z.has(c.codePointAt(0)), `${c}（太さ ${w}）が Zen に無い`); }
   for (const w of [700]) assert.ok(faces().find((x) => x.fam === "KJ Zen" && x.weight === w).set.has("第".codePointAt(0)), "太字にも第がある");
 });
 

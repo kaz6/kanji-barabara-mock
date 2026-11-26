@@ -60,10 +60,11 @@
   };
   // ボタン以外の短い文言（KJ-042。作者「文は仮」。ここ1か所で直せる）。ボタンではないので日本語のまま
   const TEXT = Object.freeze({
-    title: "漢字版（仮）",
     lead: (score, min) => `漢字を割ってくっつけて、言葉を放つ。先に ${score} 点か ${min} 分で、多い方が勝ち。`,
     tray: (n, max) => `ストック ${n} / ${max}`,
-    masthead: "バラバラ新報", // 表紙の題字（KJ-093。作者「題字は表紙に回します〜」。名は仮）
+    masthead: "漢対普請瓦版", // 表紙の題字（KJ-093。KJ-109 で替えた。作者「漢対普請瓦版 / Split & Join — a Kanji Duel でいきます」）。題は共有の文（KJ-107／KJ-108）もここから取る
+    mastheadRuby: "かんたいふしんかわらばん", // 題字の上のルビ（KJ-109）
+    mastheadSub: "Split & Join — a Kanji Duel", // 題字の下の英字の副題（KJ-109）
     faceLabel: "札の字", // 設定：札の字体（KJ-093。初期は大正風）
     faceTaisho: "大正風", // Kaisei Tokumin
     faceMincho: "明朝", // Shippori Mincho

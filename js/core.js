@@ -1,4 +1,4 @@
-/* 漢字版（仮）モックの遊びの決まり。画面（DOM）には触らない。
+/* 漢対普請瓦版（漢字版〔仮〕モック。KJ-109）の遊びの決まり。画面（DOM）には触らない。
    ブラウザでは window.KJ、Node では require("./js/core.js") で使う（tests/ から）。
    KJ-003：「役づくりの競争」（D-017・D-018）。手札で言葉を作って放つと点が入り、場から字を取れる */
 (function (root, factory) {
@@ -1344,7 +1344,7 @@
       const d = g.startedAt;
       const ds = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
       const head = [
-        "# 漢字版（仮）モック ログ（KJ-003 役づくりの競争・KJ-008 1字は放てない・KJ-006 レベル）",
+        "# 漢対普請瓦版 ログ（KJ-003 役づくりの競争・KJ-008 1字は放てない・KJ-006 レベル）",
         `# はじめた時刻 ${ds}（端末の時計）`,
         `# レベル ${levelLabel(g.level)}`,
         `# 相手 ${opponentLabel(D, g.opponent, g.timeLimit)}`,

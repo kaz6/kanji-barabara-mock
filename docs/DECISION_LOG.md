@@ -1359,3 +1359,12 @@ R-025〜R-027 はカードに書いてあった仮置き、R-028〜R-031 は係�
 - 係の仮決め：`<html data-btn>` の属性は消し、CSS は属性なしで効く形（`:root .table .ops-set button.op`）にした
 - 変えていない：下線の色・太さ・押せない字の薄さ 0.35・ヒントの光り・待ち時間のゲージ・Play／Back／Redraw
 - 戻し方：この PR の merge コミットを revert（index.html・js/strings.js・tests・docs）。端末に残る `kj-btn` は元から読まないので害なし（revert すれば、残っていれば再び効く）
+
+### R-130 タイトルを「漢対普請瓦版」に替える（KJ-109。受け箱 P-109。作者 2026-11-26 19:56）
+
+- 作者の言葉：「漢対普請瓦版 / Split & Join — a Kanji Duel でいきます。タイトル変更したものの作成お願いします」
+- 作り：表紙の題字の枠（`#mastName`）を3行にした（上：ルビ「かんたいふしんかわらばん」9px・字間をあける・細字／真ん中：題字「漢対普請瓦版」／下：副題「Split & Join — a Kanji Duel」11px・細字）。見出し「漢字版（仮）」（`#title`・`TEXT.title`）は消した（説明文 `#lead` は残す）。`<title>` は「漢対普請瓦版 — Split & Join」、ログの1行目は「# 漢対普請瓦版 ログ（…」
+- 題・ルビ・副題は `js/strings.js` の `TEXT.masthead`・`TEXT.mastheadRuby`・`TEXT.mastheadSub` の1か所。「バラバラ新報」と書いてあった所（js・docs・テスト）はこの題に替えた。P-107／P-108 の共有の文はここから題を取る。数（ルビ 9px・副題 11px）は `.mast` の変数（`--mast-ruby`・`--mast-sub`）
+- 字体：`tools/build_paper_fonts.py` を回し直した（`—` は U+3000 より下で拾われないので画面の字に足した）。Zen に 漢対普請瓦版・ルビのかな・— が入る
+- 変えていない：リポジトリ名・Pages の URL・localStorage の名前・表紙の絵柄（日と放射）・号数・日付・CLAUDE.md の企画の呼び名（1行足しただけ）
+- 戻し方：この PR の merge コミットを revert（index.html・js・fonts・tests・docs）。端末に残るものは無い
