@@ -60,6 +60,11 @@ def lead_chars():
     return {c for c in (m.group(0) if m else "") if ord(c) >= 0x3000} | set("0123456789")
 
 
+def stamp_chars():
+    """はじかれたときの判子（#nope .no-ic。KJ-104）の字「否」。札の字の切り替えに関わらず、いつも大正風（Kaisei）で出す"""
+    return {"否"}
+
+
 def build(name, weight, out, family, chars):
     d = glob.glob(os.path.join(SRC, "*" + name + "*", "package", "files"))
     if not d:
@@ -102,7 +107,7 @@ def main():
     for name, weight, out, family in FONTS:
         chars = ui if family == "KJ Zen" else cards
         if family == "KJ Kaisei":
-            chars = cards | lead_chars()  # 説明文（#lead。KJ-101）の字を足す
+            chars = cards | lead_chars() | stamp_chars()  # 説明文（#lead。KJ-101）の字と、判子の「否」（KJ-104）を足す
         got, miss, size = build(name, weight, out, family, chars)
         rng = ",".join("U+%X" % ord(c) for c in sorted(got))
         css.append('@font-face{font-family:"%s";font-weight:%d;src:url("%s") format("woff2");unicode-range:%s;font-display:swap}' % (family, weight, out, rng))

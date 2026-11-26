@@ -1998,7 +1998,7 @@ test("画面", { skip }, async (t) => {
   // KJ-069：押せない見た目のボタンを押すと理由が画面に出る・Same reading の一覧は、もう一度 Same reading で閉じる
   await t.test("KJ-069：押せない見た目のボタンを押すと、はじかれた理由が画面に出る。Same reading の一覧はもう一度押すと閉じる（待ち時間なし・ログなし）", async () => {
     const { ctx, page, errors } = await open(browser, url, { width: 375, height: 700 }, "weak");
-    const msg = () => page.textContent("#nopeWhy"); // はじかれた理由（KJ-022：画面の真ん中の 🚫 の下）
+    const msg = () => page.textContent("#nopeWhy"); // はじかれた理由（KJ-022：画面の真ん中の 否 の判子の下）
     const hand = () => page.locator("#meHand .tile").evaluateAll((els) => els.map((e) => e.title).join(""));
     const pick = async (c) => { await page.locator("#meHand .tile:not(.sel)", { hasText: c }).first().click(); };
     const click = (id) => page.evaluate((i) => document.getElementById(i).click(), id);
