@@ -1803,7 +1803,7 @@
   // o＝{ tpl: SHARE_RESULT, title: 題字, issue: 号数の文字, level: レベルの略称, opponent: 相手のキー（weak・fair・normal・room）}
   // 返り値 { title, text }。text は「題 号数／（勝ち負け）／決め手／（レベル）」を sep でつないだもの。決め手は、自分が放った言葉のうち点がいちばん高い1つ（同点は先のもの）。放った言葉が無ければ決め手の行は出さない
   function shareResultText(d, o) {
-    const tpl = o.tpl, n = (x) => (Number(x) === 0 ? "〇" : kansuji(x));
+    const tpl = o.tpl, n = (x) => (Number(x) < 0 ? tpl.minus + kansuji(-Number(x)) : Number(x) === 0 ? "〇" : kansuji(x)); // 点は引き直しでマイナスになりうる（「一」と出さない）
     const fill = (str, vals) => String(str).replace(/\{(\w+)\}/g, (m, k) => (vals[k] === undefined ? "" : String(vals[k])));
     const who = o.opponent === ROOM_OPPONENT.key ? tpl.whoRoom : (tpl.whoCpu[o.opponent] || tpl.whoCpu.weak);
     const vals = { title: o.title, issue: o.issue, who, me: n(d.me), opp: n(d.cpu === null || d.cpu === undefined ? 0 : d.cpu), level: o.level };

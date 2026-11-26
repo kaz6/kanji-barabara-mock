@@ -60,3 +60,8 @@ test("共有のリンク：ページの URL から ? と # を除く（?room= �
   assert.equal(K.siteUrl("https://kaz6.github.io/kanji-barabara-mock/"), "https://kaz6.github.io/kanji-barabara-mock/");
   assert.equal(K.siteUrl(undefined), "");
 });
+
+test("点がマイナス（引き直しの払いすぎ）：一 と出さず「負」を付ける（KJ-108）", () => {
+  assert.equal(K.shareResultText(d("lose", -5, 50), o("normal")).text, "漢対普請瓦版 第三號／CPU（ツヨイ）ニ敗ル 負五対五十／（N4）");
+  assert.ok(K.shareResultText(d("solo", -10, null), o("solo")).text.includes("一人デ負十点"));
+});

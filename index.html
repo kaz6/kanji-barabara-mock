@@ -695,6 +695,7 @@ function start(){
   leaveRoom();leaveTutorial();
   T=tablesFor(level);buildHowto();
   G=K.createGame(D,T,{now:clock,opponent,timeLimit});
+  LASTEND=null;
   countIssue();
   row=[];lastTried="";vibSpecial=false;hideNope();
   $("msg").textContent="";$("msg").className="msg";
@@ -888,6 +889,7 @@ async function sendLog(g){
 function sendAbandoned(){if(G&&!G.over)sendLog(G)}
 function end(winner,solo){
   clearTimeout(cpuTimer);
+  LASTEND={d:K.endShow(G,T,winner),level:G.level,opponent:G.opponent}; // 戦果の共有（KJ-108）の文のもと。演出（#fx）を待たずに、終わった時点で決める
   sendLog(G);
   if(MC){MC.stop();MC=null;LINK.closeAll();ROOM=null}
   const m=$("msg"),sc=`${G.me.score} 対 ${G.cpu.score}`;
@@ -933,7 +935,6 @@ function esDone(){
 }
 function showEnd(winner){
   const d=K.endShow(G,T,winner),el=$("endShow");
-  LASTEND={d,level:G.level,opponent:G.opponent}; // 戦果の共有（KJ-108）が使う
   closeEnd();
   const lab=$("esLabel");lab.textContent=d.label;lab.className=d.kind;
   $("esScore").innerHTML=d.kind==="solo"?`<span class="you">${d.me}</span><span class="t">点</span>`
@@ -1142,6 +1143,7 @@ function beginRoom(startRow){
   clearTimeout(cpuTimer);sendAbandoned();leaveTutorial();
   const startAt=K.roomStartAt(startRow.created_at,Date.now()/1000,clock());
   T=tablesFor(rm.level);
+  LASTEND=null;
   G=K.createGame(D,T,{now:clock,timeLimit:rm.timeLimit,match:{id:rm.matchId,role:rm.role,startAt}});
   MC=K.createMatchClient(G,CLAIMS,{rand:cryptoRand});
   countIssue();
