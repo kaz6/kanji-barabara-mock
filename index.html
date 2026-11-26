@@ -38,7 +38,13 @@ main{max-width:760px;margin:0 auto;padding:16px 14px 48px}
 #bgnews{position:fixed;inset:0;z-index:-1;pointer-events:none;user-select:none;-webkit-user-select:none;overflow:hidden;contain:strict;transform:translateZ(0);writing-mode:vertical-rl;font-size:10px;line-height:1.55;color:rgba(42,38,34,.2);text-align:justify;padding:6px;overflow-wrap:anywhere}
 html[data-news="off"] #bgnews{display:none}
 h1{font-size:17px;margin:0 0 2px;font-weight:700}
-.lead{color:var(--sub);font-size:13px;margin:0 0 14px}
+/* 説明文（KJ-101）：札の字の切り替え（data-face）に関わらず、いつも大正風（Kaisei Tokumin）。無い字は 画面の字 → 今の字体へ落ちる */
+.lead{color:var(--ink);font-size:13px;margin:0 0 14px;font-family:"KJ Kaisei",var(--ui)}
+/* ▼（KJ-101）：はじめる前の画面の右下に固定。下にまだ見えていない所があるときだけ出す（#scrollHint.on。いちばん下で消える）。押せない（下のボタンを邪魔しない）。動きを減らす設定のときは動かさず置くだけ */
+#scrollHint{display:none;position:fixed;right:14px;bottom:10px;z-index:5;pointer-events:none;user-select:none;-webkit-user-select:none;font-size:22px;line-height:1;color:var(--accent);animation:kjHintBob 1.6s ease-in-out infinite}
+#scrollHint.on{display:block}
+@keyframes kjHintBob{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
+@media (prefers-reduced-motion:reduce){#scrollHint{animation:none}}
 .side{margin:14px 0}
 .side-head{display:flex;align-items:baseline;gap:10px;margin-bottom:6px;height:34px;white-space:nowrap;overflow:hidden}
 .side-head b{font-size:15px}
@@ -138,15 +144,16 @@ button.op.cutopen .sp-a{animation:kjSpA .3s ease-in-out}button.op.cutopen .sp-b{
   .tile .mk{font-size:10px}
 }
 /* 表紙の題字（KJ-093。作者「題字は表紙に回します〜」）：題字を二重罫線で挟み、すぐ下の行に 第○號（左）・今日の日付（中）。行の下にも二重罫線。試合の画面には出さない。題字の後ろの絵柄は KJ-095（昇る日と放射。下の .mast-sun） */
-.mast{margin:0 0 12px}
-.mast-title{position:relative;height:190px;overflow:hidden;background:var(--tile);border:6px double var(--ink)}
+/* KJ-101：表紙を詰めた。数はここ（.mast）の3つだけで直せる＝絵柄の箱の高さ・題字の枠の上からの間・題字の大きさ（374px 以下は --mast-fs-s） */
+.mast{--mast-h:130px;--mast-top:12px;--mast-fs:28px;--mast-fs-s:24px;margin:0 0 12px}
+.mast-title{position:relative;height:var(--mast-h);overflow:hidden;background:var(--tile);border:6px double var(--ink)}
 .mast-sun{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
-.mast-name{position:absolute;left:0;right:0;top:40px;z-index:1;text-align:center}
-.mast-name span{display:inline-block;background:var(--tile);border:2px solid var(--ink);padding:6px 8px 6px calc(8px + .12em);font-size:38px;font-weight:900;letter-spacing:.12em;line-height:1.3;white-space:nowrap}
+.mast-name{position:absolute;left:0;right:0;top:var(--mast-top);z-index:1;text-align:center}
+.mast-name span{display:inline-block;background:var(--tile);border:2px solid var(--ink);padding:6px 8px 6px calc(8px + .12em);font-size:var(--mast-fs);font-weight:900;letter-spacing:.12em;line-height:1.3;white-space:nowrap}
 .mast-line{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;font-size:13px;padding:5px 2px;border-bottom:6px double var(--ink)}
 .mast-line #mastNo{justify-self:start;font-weight:700;white-space:nowrap}
 body.playing .mast{display:none}
-@media (max-width:374px){.mast-line{font-size:12px}.mast-name span{font-size:32px}}
+@media (max-width:374px){.mast-line{font-size:12px}.mast-name span{font-size:var(--mast-fs-s)}}
 /* 台（高さを固定する） */
 /* 卓（KJ-042）：場と台が乗る真ん中を墨色の単色の面に。囲み線はやめ、色の面で分ける */
 .table{position:relative;background:transparent;color:var(--on-table);border-radius:0;border-top:3px solid var(--ink);border-bottom:3px solid var(--ink);padding:10px 0 12px 28px;margin:10px 0}
@@ -422,6 +429,7 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
 </head>
 <body>
 <div id="bgnews" aria-hidden="true"></div>
+<div id="scrollHint" aria-hidden="true">▼</div> <!-- KJ-101：下にまだ見えていない所があると、右下でゆっくり上下する。押せない -->
 <main>
   <header class="mast" id="mast">
     <div class="mast-title" id="mastTitle"><svg class="mast-sun" viewBox="0 0 362 190" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false"><g fill="#9c3b2e" fill-opacity=".85"><path d="M181.0,210 L-339.0,210.0 L-337.0,164.7 Z"/><path d="M181.0,210 L-331.1,119.7 L-321.3,75.4 Z"/><path d="M181.0,210 L-307.6,32.1 L-290.3,-9.8 Z"/><path d="M181.0,210 L-269.3,-50.0 L-245.0,-88.3 Z"/><path d="M181.0,210 L-217.3,-124.2 L-186.7,-157.7 Z"/><path d="M181.0,210 L-153.2,-188.3 L-117.3,-216.0 Z"/><path d="M181.0,210 L-79.0,-240.3 L-38.8,-261.3 Z"/><path d="M181.0,210 L3.1,-278.6 L46.4,-292.3 Z"/><path d="M181.0,210 L90.7,-302.1 L135.7,-308.0 Z"/><path d="M181.0,210 L181.0,-310.0 L226.3,-308.0 Z"/><path d="M181.0,210 L271.3,-302.1 L315.6,-292.3 Z"/><path d="M181.0,210 L358.9,-278.6 L400.8,-261.3 Z"/><path d="M181.0,210 L441.0,-240.3 L479.3,-216.0 Z"/><path d="M181.0,210 L515.2,-188.3 L548.7,-157.7 Z"/><path d="M181.0,210 L579.3,-124.2 L607.0,-88.3 Z"/><path d="M181.0,210 L631.3,-50.0 L652.3,-9.8 Z"/><path d="M181.0,210 L669.6,32.1 L683.3,75.4 Z"/><path d="M181.0,210 L693.1,119.7 L699.0,164.7 Z"/></g><circle cx="181" cy="210" r="62" fill="#9c3b2e"/></svg><div class="mast-name"><span id="mastName"></span></div></div> <!-- 表紙の絵柄（KJ-095）：題字の枠の後ろに昇る日と放射 -->
@@ -620,6 +628,17 @@ function setFace(f){face=f==="mincho"?"mincho":"taisho";document.documentElement
 // ---------- 表紙の号数（KJ-093）：その端末で始めた試合の数＋1。端末に覚える（読めなければ 第一號）。チュートリアルは数えない ----------
 function issuesPlayed(){const n=parseInt(lsGet(ISSUE_KEY),10);return n>=0?n:0}
 function countIssue(){lsSet(ISSUE_KEY,issuesPlayed()+1);refreshMast()}
+// ---------- ▼（KJ-101）：はじめる前の画面で、下にまだ見えていない所があるときだけ右下に出す。試合中・チュートリアル中・終わりの画面では出さない ----------
+function updateScrollHint(){
+  const el=$("scrollHint");if(!el)return;
+  const b=document.body,de=document.documentElement;
+  const more=de.scrollHeight-(window.scrollY+window.innerHeight)>8;
+  el.classList.toggle("on",more&&!b.classList.contains("playing")&&!b.classList.contains("tutorial")&&!b.classList.contains("esOn"));
+}
+window.addEventListener("scroll",updateScrollHint,{passive:true});window.addEventListener("resize",updateScrollHint);
+if(window.MutationObserver)new MutationObserver(updateScrollHint).observe(document.body,{attributes:true,attributeFilter:["class"]});
+if(window.ResizeObserver)new ResizeObserver(updateScrollHint).observe(document.body);
+updateScrollHint();
 function refreshMast(){$("mastNo").textContent=K.issueLabel(issuesPlayed());$("mastDate").textContent=K.kansujiDate(new Date())}
 // ---------- 振動（KJ-074。D-092）：自分の手のときだけ。形は rules.vibrate（K.vibratePattern）。navigator.vibrate が無い端末（iOS の Safari など）では何もしない ----------
 let vibeOn=true;

@@ -14,7 +14,7 @@
   字：札の字＝data/*.json に出る漢字・かな・記号／画面の字＝index.html・js/・data/tutorial.json に出る字と、札の字（点・語の表示用）。足したら作り直す
   要る分の字体を作る道具だけを足す。ブラウザでは使わない（pip install fonttools brotli）
 """
-import glob, json, os, sys
+import glob, json, os, re, sys
 from fontTools import subset, merge
 from fontTools.ttLib import TTFont
 
@@ -52,6 +52,12 @@ def ui_chars():
     for p in ["index.html", "js/strings.js", "js/core.js", "data/tutorial.json", "data/rules.json"]:
         txt += read(p)
     return wide(txt) | card_chars() | set(chr(c) for c in range(0x20, 0x7F)) | set(chr(c) for c in range(0x30A1, 0x30F7)) | {"ー"}  # カタカナ全部（戦況の読み。KJ-094）
+
+
+def lead_chars():
+    """表紙の説明文（js/strings.js の TEXT.lead。KJ-101）の字と 0〜9。札の字の切り替えに関わらず、いつも大正風（Kaisei）で出す"""
+    m = re.search(r"^\s*lead:.*$", read("js/strings.js"), re.M)
+    return {c for c in (m.group(0) if m else "") if ord(c) >= 0x3000} | set("0123456789")
 
 
 def build(name, weight, out, family, chars):
@@ -95,6 +101,8 @@ def main():
     css = ["/* KJ-093：tools/build_paper_fonts.py が作る。新聞紙風の見た目の字体（要る字だけ）。Zen Old Mincho・Shippori Mincho・Kaisei Tokumin（SIL OFL 1.1。fonts/OFL-Paper.txt） */"]
     for name, weight, out, family in FONTS:
         chars = ui if family == "KJ Zen" else cards
+        if family == "KJ Kaisei":
+            chars = cards | lead_chars()  # 説明文（#lead。KJ-101）の字を足す
         got, miss, size = build(name, weight, out, family, chars)
         rng = ",".join("U+%X" % ord(c) for c in sorted(got))
         css.append('@font-face{font-family:"%s";font-weight:%d;src:url("%s") format("woff2");unicode-range:%s;font-display:swap}' % (family, weight, out, rng))
