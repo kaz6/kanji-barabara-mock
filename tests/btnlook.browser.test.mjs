@@ -134,9 +134,8 @@ for (const look of [null, "white", "outline", "line", "zzz"]) {
       await play(page);
       const others = () => page.evaluate(() => ["bRelease", "bBack", "bRedraw"].map((id) => { const c = getComputedStyle(document.getElementById(id)); return [id, c.backgroundColor, c.color, c.fontWeight]; }));
       const a = await others();
-      // Play・Back・Redraw は KJ-102 の前と同じ色（Play＝弁柄の地に紙色の字・Back と Redraw は地なし）
-      assert.equal(a[0][1], "rgb(122, 58, 47)", "Play の地は KJ-102 の前のまま");
-      assert.equal(a[0][0], "bRelease");
+      // Play・Back・Redraw は KJ-102 の前と同じ（地・字の色・太さ。Play は押せない見え方のとき）
+      assert.deepEqual(a, [["bRelease", "rgb(122, 58, 47)", "rgb(244, 221, 215)", "700"], ["bBack", "rgba(0, 0, 0, 0)", "rgb(98, 90, 80)", "400"], ["bRedraw", "rgba(0, 0, 0, 0)", "rgb(42, 38, 34)", "400"]]); // Play は押せない見え方（--play-off）
       // ヒントの光り：押せない Split も、押せる Flip も、薄い金の地・墨の字・縁の光り
       await page.evaluate(() => { const G = __KJ.game; G.hint = null; G.me.cards = [..."日分"].map((ch, i) => ({ id: 7200 + i, c: ch, t: 0, fresh: false })); window.__shift(G); __KJ.render(); });
       assert.equal(await page.evaluate(() => __KJ.game.hintActive().button), "bSplit");
