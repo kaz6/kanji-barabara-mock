@@ -373,7 +373,7 @@ details ul{padding-left:18px}
 .credit{color:var(--sub);font-size:12px}
 /* はじかれたとき（KJ-022）：画面の真ん中に 否 の判子と、短い理由。1.5秒で消える。音なし・操作は邪魔しない */
 /* はじかれた印（KJ-104。見本「はじかれたときの印」案2）：朱の角判「否」と、その下の理由の小札。数は仮。ここで直す */
-#nope{--stamp-size:72px;--stamp-char:50px;--stamp-tilt:-8deg;--stamp-pop:.12s;--stamp-from:1.25;position:fixed;left:50%;top:42%;transform:translate(-50%,-50%);z-index:12;display:none;flex-direction:column;align-items:center;gap:8px;max-width:90vw;box-sizing:border-box;pointer-events:none;text-align:center}
+#nope{--stamp-size:72px;--stamp-char:50px;--stamp-tilt:-8deg;--stamp-pop:.12s;--stamp-from:1.25;position:fixed;left:50%;top:42%;transform:translate(-50%,-50%);z-index:12;display:none;flex-direction:column;align-items:center;gap:8px;width:max-content;max-width:90vw;box-sizing:border-box;pointer-events:none;text-align:center}
 #nope.on{display:flex}
 #nope .no-ic{width:var(--stamp-size);height:var(--stamp-size);box-sizing:border-box;display:flex;align-items:center;justify-content:center;border:4px double var(--accent);color:var(--accent);background:rgba(246,238,214,.5);font-family:"KJ Kaisei",var(--ui);font-size:var(--stamp-char);font-weight:400;line-height:1;opacity:.92;transform:rotate(var(--stamp-tilt))}
 #nope.on .no-ic{animation:stampIn var(--stamp-pop) ease-out}

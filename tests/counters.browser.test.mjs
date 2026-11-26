@@ -131,4 +131,17 @@ test("数＋助数詞と 否 の判子", { skip }, async (t) => {
     assert.deepEqual(errors, []);
     await ctx.close();
   });
+  await t.test("理由の小札は画面の右半分で折れない：320px で短い理由が1行・長い理由も 90vw に収まる（KJ-104）", async () => {
+    for (const w of [320, 375]) {
+      const { ctx, page, errors } = await begin(browser, url, "日水天口");
+      await page.setViewportSize({ width: w, height: 900 });
+      for (const why of ["くっつかない！", "手札もストックもいっぱい！"]) {
+        const r = await page.evaluate((x) => { showWhy(x); const e = document.getElementById("nopeWhy"), b = e.getBoundingClientRect(), lh = parseFloat(getComputedStyle(e).lineHeight); return { w: b.width, h: b.height, lh, vw: innerWidth, text: e.textContent }; }, why);
+        assert.ok(r.w <= r.vw * 0.9 + 1, `${w}px「${r.text}」が 90vw に収まる（${r.w}）`);
+        if (why === "くっつかない！") assert.ok(r.h < r.lh * 1.6 + 8, `${w}px で短い理由は1行（高さ ${r.h}）`);
+      }
+      assert.deepEqual(errors, []);
+      await ctx.close();
+    }
+  });
 });
