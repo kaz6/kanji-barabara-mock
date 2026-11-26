@@ -110,6 +110,12 @@ button.op.cutopen .sp-a{animation:kjSpA .3s ease-in-out}button.op.cutopen .sp-b{
 .jn-seam{display:inline-block;position:relative;width:0;height:0;vertical-align:baseline;margin:0 .06em} /* 継ぎ目：幅ゼロ。左右に .06em ずつ（見本の in の margin-left 2px ≒ .12em のすき間）。放射はここから上に出す */
 .jn-fx{position:absolute;left:-.47em;bottom:.82em;width:.94em;height:.47em;overflow:visible;pointer-events:none} /* 墨の放射3本（16×8 を 17px の字のときの割合で em）。根元が字の上端のすぐ上 */
 button.op:disabled .jn-fx,button.op[aria-disabled=true] .jn-fx{opacity:.35} /* 押せないときは字と同じく薄く */
+/* くっつけた瞬間、放射だけ一度弾む（KJ-105）。根元（下の中央）を軸に 1→1.6倍→1。時間と倍率はここ1か所（仮）。押せない見え方になっても最後まで見せる。字・ほかのボタン・札は動かさない */
+:root{--jn-pop-time:.3s;--jn-pop-scale:1.6}
+.jn-fx{transform-origin:50% 100%}
+button.op.joinpop .jn-fx{animation:kjJnPop var(--jn-pop-time) ease-out}
+@keyframes kjJnPop{50%{transform:scale(var(--jn-pop-scale))}}
+@media (prefers-reduced-motion:reduce){button.op.joinpop .jn-fx{animation:none}}
 .ic{display:inline-block;vertical-align:-.22em;overflow:visible} /* 印の SVG（KJ-048）：字の高さに合わせる。色は文字と同じ（currentColor） */
 .tile .mk .mi{display:inline-block;line-height:1}
 .tile .orig{position:absolute;bottom:1px;left:3px;font:10px/1 system-ui,sans-serif;color:var(--sub)}
@@ -1183,7 +1189,7 @@ function attachDrag(b,id){
         if(why){G.triedOp(G.me,"面でくっつける",[myChar(),tc].filter(Boolean),why);showWhy(why);afterChange();return}
       }
       if(hit){
-        const tid=+t.dataset.id,done=(r)=>{hideChoices();if(r&&r.ok){lastTried="";if(TUT)TUT.advance("join")}else if(r&&r.why){G.triedOp(G.me,"面でくっつける",[myChar(),(G.byId(G.me,tid)||{}).c].filter(Boolean),r.why);showWhy(r.why)}afterChange()};
+        const tid=+t.dataset.id,done=(r)=>{hideChoices();if(r&&r.ok){lastTried="";popJoin();if(TUT)TUT.advance("join")}else if(r&&r.why){G.triedOp(G.me,"面でくっつける",[myChar(),(G.byId(G.me,tid)||{}).c].filter(Boolean),r.why);showWhy(r.why)}afterChange()};
         if(hit.chars.length>1){showChoices([{label:"できる字",chars:hit.chars,pick:x=>done(G.joinFace(G.me,id,tid,hit.face,x))}]);return}
         done(G.joinFace(G.me,id,tid,hit.face));return;
       }
@@ -1232,12 +1238,13 @@ $("bRelease").onclick=()=>{
   if(r&&r.ok===false)buzz("reject");
   afterOp(r);
 };
+function popJoin(){if(reduceMotion())return;const b=$("bJoin");b.classList.remove("joinpop");void b.offsetWidth;b.classList.add("joinpop")}$("bJoin").addEventListener("animationend",e=>{if(e.animationName==="kjJnPop")$("bJoin").classList.remove("joinpop")}); // 弾みが終わったら印を外す（時間は CSS の --jn-pop-time だけで決まる） // 自分がくっつけに成功したとき、Join の放射が一度だけ弾む（KJ-105）。失敗・CPU や相手のくっつけでは呼ばない
 function openCut(){if(reduceMotion())return;const b=$("bSplit");b.classList.remove("cutopen");void b.offsetWidth;b.classList.add("cutopen");setTimeout(()=>b.classList.remove("cutopen"),400)} // 割れたとき、ボタンの割れ目が一瞬開く（KJ-059）。はじかれたときは動かさない
 $("bSplit").onclick=()=>press("bSplit","split","割る",()=>{const r=G.split(G.me,row);afterOp(r);if(r&&r.ok){openCut();buzz("split")}return r});
 $("bJoin").onclick=()=>press("bJoin","join","くっつける",()=>{
   const s=rowState();
-  if(s.joins.length>1){showChoices([{label:"できる字",chars:s.joins,pick:x=>{const r=G.join(G.me,row,x);afterOp(r);if(r&&r.ok)buzz("join");else if(r&&r.ok===false){buzz("reject");showWhy(r.why)}}}]);return null}
-  const r=G.join(G.me,row);afterOp(r);if(r&&r.ok)buzz("join");return r;
+  if(s.joins.length>1){showChoices([{label:"できる字",chars:s.joins,pick:x=>{const r=G.join(G.me,row,x);afterOp(r);if(r&&r.ok){buzz("join");popJoin()}else if(r&&r.ok===false){buzz("reject");showWhy(r.why)}}}]);return null}
+  const r=G.join(G.me,row);afterOp(r);if(r&&r.ok){buzz("join");popJoin()}return r;
 });
 $("bInvert").onclick=()=>press("bInvert","invert","反転",()=>{const r=G.invert(G.me,row);afterOp(r);return r});
 $("bCycle").onclick=()=>press("bCycle","cycle","巡り",()=>{const r=G.cycle(G.me,row);afterOp(r);return r});
