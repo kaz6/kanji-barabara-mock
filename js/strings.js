@@ -38,10 +38,14 @@
   // Split（KJ-059。D-075）だけ印は SVG ではなく「割れ目」（札の割れ目と同じ縦の点線）：Sp｜lit。傾きと色は index.html の .sp-a・.sp-b・.sp-cut
   const LOGO = Object.freeze({
     bSplit: Object.freeze(["Sp", "cut", "lit"]),
+    bJoin: Object.freeze(["Jo", "burst", "in"]),
     bInvert: Object.freeze(["Fl", "invert", "p"]),
     bCycle: Object.freeze(["", "cycle", "ycle"]),
     bHomo: Object.freeze(["", "homophone", "ame reading"]),
   });
+  // Join（KJ-103。作者の決め：見本「Join の印」の案B＋衝撃 放射）：Jo｜in を上がくっつくハの字に寄りかからせ（線は入れない）、継ぎ目の真上に墨の放射3本（漫画の「ぶつかり」）。
+  // 放射の SVG は 16×8（ボタンの字 17px のとき）：線3本・太さ1.6・端は丸・色は墨（--ink）。傾き・置き場・押せないときの薄さは index.html の .jn-a・.jn-b・.jn-fx
+  const BURST_SVG = '<svg class="jn-fx" viewBox="0 0 16 8" aria-hidden="true" focusable="false"><g fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-linecap="round"><path d="M8 7.5V1"/><path d="M6.2 7.5L2 2.5"/><path d="M9.8 7.5L14 2.5"/></g></svg>';
   // Back の左向きの矢印（KJ-078。矢印の形は仮決め）。文字と同じ高さ・色（currentColor）。読み上げには出さない（文字は Back のまま）
   const BACK_ARROW = '<svg class="ic ic-back" viewBox="0 0 16 24" style="width:1.1em;height:1.2em" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M14 12H3M7.5 7.5L3 12L7.5 16.5"/></g></svg>';
   // ボタンの中身の HTML（LOGO のあるボタンは印の SVG 入り。無いボタンは文字だけ。Back だけ左向きの矢印＋文字）
@@ -49,6 +53,7 @@
     if (id === "bBack") return `${BACK_ARROW}<span class="bk">${BUTTONS.bBack}</span>`;
     const lg = LOGO[id];
     if (lg && lg[1] === "cut") return `<span class="sp-a">${lg[0]}</span><span class="sp-cut" aria-hidden="true"></span><span class="sp-b">${lg[2]}</span>`;
+    if (lg && lg[1] === "burst") return `<span class="jn-a">${lg[0]}</span><span class="jn-seam" aria-hidden="true">${BURST_SVG}</span><span class="jn-b">${lg[2]}</span>`;
     return lg ? `${lg[0]}${iconSvg(lg[1])}${lg[2]}` : BUTTONS[id];
   }
   // 引き直しの添え字（KJ-049）：次の値段と残りの回数（例：Redraw 0pt あと5回・Redraw -10pt あと3回。回数の言い方は仮）。
