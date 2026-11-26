@@ -285,7 +285,7 @@ button.op.full{animation:kjGaugeFull .6s ease-out}
 .tut button.op{font-size:12px;padding:2px 10px;min-width:0;background:var(--tile);border-color:#7a5600;color:#7a5600}
 .tut p{margin:2px 0 0;font-size:14px;line-height:1.45;color:var(--ink);min-height:41px}
 .tut button.op.go{display:block;width:100%;margin-top:6px;padding:9px 12px;font-size:15px;font-weight:700;background:var(--ink);border-color:var(--ink);color:var(--bg)}
-body.tutorial #clock,body.tutorial #again,body.tutorial #bLog,body.tutorial #bCopyEnd,body.tutorial .lead{display:none}
+body.tutorial #clock,body.tutorial #again,body.tutorial #bLog,body.tutorial #bCopyEnd,body.tutorial #bShareEnd,body.tutorial .lead{display:none}
 .choices button.hint{border-color:var(--hint);box-shadow:0 0 0 2px var(--hint),0 0 10px 2px rgba(217,154,0,.55)}
 .setup #bTutorial{display:block;width:100%;margin-top:8px;padding:10px 12px}
 /* 合言葉の部屋（KJ-033 後半）：部屋を作る・合言葉で入る・待つ */
@@ -558,6 +558,7 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
       <button class="op" id="again">もう一度</button>
       <button class="op" id="bSetup">設定を変える</button>
       <button class="op" id="bLog">ログ</button>
+      <button class="op" id="bShareEnd" hidden></button>
       <button class="op" id="bCopyEnd" hidden>ログをコピー</button>
     </span></summary>
     <ul id="howto"></ul>
@@ -697,7 +698,7 @@ function start(){
   countIssue();
   row=[];lastTried="";vibSpecial=false;hideNope();
   $("msg").textContent="";$("msg").className="msg";
-  $("bCopyEnd").hidden=true;
+  $("bCopyEnd").hidden=$("bShareEnd").hidden=true;
   hideChoices();
   showScreen(true);
   if(!G.solo)scheduleCpu();
@@ -750,7 +751,7 @@ function startTutorial(){
   TUT=K.createTutorial(D,T,{now:clock});G=TUT.g;
   row=[];lastTried="";hideNope();
   $("msg").textContent="";$("msg").className="msg";
-  $("bCopyEnd").hidden=true;$("logPanel").classList.remove("on");
+  $("bCopyEnd").hidden=$("bShareEnd").hidden=true;$("logPanel").classList.remove("on");
   hideChoices();buildHowto();
   document.body.classList.add("tutorial");
   showScreen(true);render();
@@ -893,20 +894,21 @@ function end(winner,solo){
   if(solo){
     m.textContent=`ひとりで ${G.me.score} 点`;
     m.className="msg";
-    $("bCopyEnd").hidden=false;
+    $("bCopyEnd").hidden=$("bShareEnd").hidden=false;
     showEndAfterFx(winner);
     return;
   }
   if(winner===G.me){m.textContent=`勝ち（${sc}）`;m.className="msg win";buzz("win")}
   else if(winner===G.cpu){m.textContent=`負け（${sc}）`;m.className="msg lose";buzz("lose")}
   else{m.textContent=`引き分け（${sc}）`;m.className="msg"}
-  $("bCopyEnd").hidden=false;
+  $("bCopyEnd").hidden=$("bShareEnd").hidden=false;
   showEndAfterFx(winner);
 }
 // 試合が終わったときの表示（KJ-018・D-036／D-039）：最初に「勝ち！」「負け…」「引き分け」（ひとりでは「おわり」）と両方の点を大きく、
 // そのあと自分が放った言葉を放った順に1つずつ（長いほど派手）。タップで全部いっぺんに出す。出し終わって少したつか、もう一度タップで閉じて、いまの終わりの画面を見せる。
 // 時間の長さは表示のためのもの（遊びの数値ではないので rules.json には置かない。仮決め）
 const END_PACE={first:350,gap:175,hold:4000}; // hold＝言葉を出し終わってから閉じるまで（KJ-066。D-086。1.8秒→4秒。仮置き）
+let LASTEND=null; // 最後に出した終わりの画面の結果（K.endShow）・レベル・相手。「共有」（#bShareEnd）の文のもと
 let ES=null; // {items:[li], timers:[], done:bool}
 function esClear(){if(ES){for(const t of ES.timers)clearTimeout(t)}}
 let esWait=null;
@@ -931,6 +933,7 @@ function esDone(){
 }
 function showEnd(winner){
   const d=K.endShow(G,T,winner),el=$("endShow");
+  LASTEND={d,level:G.level,opponent:G.opponent}; // 戦果の共有（KJ-108）が使う
   closeEnd();
   const lab=$("esLabel");lab.textContent=d.label;lab.className=d.kind;
   $("esScore").innerHTML=d.kind==="solo"?`<span class="you">${d.me}</span><span class="t">点</span>`
@@ -1074,20 +1077,35 @@ function cancelRoom(){if(MC)return;LINK.closeAll();ROOM=null;roomUi()}
 // 遊んでいる部屋から抜ける（もう一度・設定を変える）。相手の画面には「相手の通信が切れた」と出る
 function leaveRoom(){if(MC){if(G&&!G.over)MC.leave();MC.stop();MC=null}LINK.closeAll();ROOM=null}
 // 合言葉の共有（KJ-107）：navigator.share で文とリンク（?room=合言葉）を渡す。無い端末は同じ文とリンクをクリップボードに写す
-$("bShare").textContent=STR.TEXT.shareButton;
-$("bShare").onclick=async()=>{
-  if(!ROOM||!ROOM.code)return;
-  const text=STR.TEXT.shareText(ROOM.code,STR.TEXT.masthead),url=K.roomShareUrl(location.href,ROOM.code);
+// 共有の手伝い（KJ-107・KJ-108）：navigator.share で文とリンクを渡す。無い端末・閉じた以外の失敗は、同じ文とリンクをクリップボードに写す。
+// 戻り値："shared"（渡した）／"aborted"（閉じただけ。何も出さない）／"copied"（写した）／"failed"（どちらもできない）
+async function shareOrCopy(title,text,url){
   if(typeof navigator.share==="function"){
-    try{await navigator.share({title:STR.TEXT.masthead,text,url});return}catch(e){if(e&&e.name==="AbortError")return} // 閉じただけ（AbortError）は何も出さない。ほかの失敗はコピーに回る
+    try{await navigator.share({title,text,url});return"shared"}catch(e){if(e&&e.name==="AbortError")return"aborted"} // ほかの失敗はコピーに回る
   }
   const both=text+"\n"+url;
-  try{await navigator.clipboard.writeText(both);setRoomMsg(STR.TEXT.shareCopied)}
+  try{await navigator.clipboard.writeText(both);return"copied"}
   catch(e){
     const ta=document.createElement("textarea");ta.value=both;document.body.appendChild(ta);ta.select();
     let ok=false;try{ok=document.execCommand("copy")}catch(e2){}
-    ta.remove();setRoomMsg(ok?STR.TEXT.shareCopied:STR.TEXT.shareFailed);
+    ta.remove();return ok?"copied":"failed";
   }
+}
+$("bShare").textContent=STR.TEXT.shareButton;
+$("bShare").onclick=async()=>{
+  if(!ROOM||!ROOM.code)return;
+  const r=await shareOrCopy(STR.TEXT.masthead,STR.TEXT.shareText(ROOM.code,STR.TEXT.masthead),K.roomShareUrl(location.href,ROOM.code));
+  if(r==="copied")setRoomMsg(STR.TEXT.shareCopied);else if(r==="failed")setRoomMsg(STR.TEXT.shareFailed);
+};
+// 戦果の共有（KJ-108）：終わったあと、結果を新聞の見出し風の文にして、ページの URL（?room= なし）と一緒に渡す。文の型は js/strings.js の SHARE_RESULT、組み立ては K.shareResultText
+$("bShareEnd").textContent=STR.TEXT.shareButton;
+$("bShareEnd").onclick=async()=>{
+  if(!LASTEND)return;
+  const b=$("bShareEnd"),o={tpl:STR.SHARE_RESULT,title:STR.TEXT.masthead,issue:K.issueLabel(issuesPlayed()),level:K.levelShort(LASTEND.level),opponent:LASTEND.opponent};
+  const m=K.shareResultText(LASTEND.d,o);
+  const r=await shareOrCopy(m.title,m.text,K.siteUrl(location.href));
+  const flash=t=>{b.textContent=t;setTimeout(()=>b.textContent=STR.TEXT.shareButton,1500)};
+  if(r==="copied")flash(STR.TEXT.shareCopied);else if(r==="failed")flash(STR.TEXT.shareEndFailed);
 };
 $("bRoomCancel").onclick=()=>{cancelRoom();setRoomMsg("やめた")};
 $("bHost").onclick=async()=>{
@@ -1129,7 +1147,7 @@ function beginRoom(startRow){
   countIssue();
   row=[];lastTried="";hideNope();
   showMsg(rm.role==="guest"?`作った人の設定：レベル ${K.levelShort(rm.level)}・${K.timeLabel(rm.timeLimit)}`:"");
-  $("bCopyEnd").hidden=true;hideChoices();setRoomMsg("");
+  $("bCopyEnd").hidden=$("bShareEnd").hidden=true;hideChoices();setRoomMsg("");
   buildHowto();showScreen(true);render();
 }
 

@@ -74,6 +74,7 @@
     shareText: (code, title) => `${title}で対戦しよう。合言葉 ${code}`, // 共有の文（仮。KJ-107）。title は masthead（題は KJ-109 のもの）
     shareCopied: "コピーした", // navigator.share が無い端末で、文とリンクをクリップボードに写したとき
     shareFailed: "共有できなかった。合言葉を口で伝えてください", // 共有もコピーもできなかったとき
+    shareEndFailed: "共有できなかった", // 戦果の共有（KJ-108）：共有もコピーもできなかったとき（ボタンの字を一時これにする）
     faceLabel: "札の字", // 設定：札の字体（KJ-093。初期は大正風）
     faceTaisho: "大正風", // Kaisei Tokumin
     faceMincho: "明朝", // Shippori Mincho
@@ -85,6 +86,21 @@
   // 戦況の欄（KJ-094。P-094。作者「戦況は読まないけど賑やかしにいいので好きです」「戦況で使われるひらがなに相当する箇所はカタカナにしたい。読めたらすごいよってことで」）
   // 放った言葉を、漢字カタカナ交じりの文にする。文の型はここ1か所（仮）。{who}＝あなた→アナタ・CPU はそのまま／{word}＝放った言葉（漢字のまま）／{yomi}＝読み（カタカナ。語の表に無ければ出さない）／
   // {n}・{pts}＝字数・点（漢数字）／{cards}＝場から取った字（取ったぶんだけ。まだ取っていなければ文ごと出さない）。字は js/core.js の K.senkyoLines が組む
+  // 戦果の共有の文（KJ-108。作者「戦果を共有できるように」。文は新聞の見出し風・仮。作者が直す。ここ1か所）。字は js/core.js の K.shareResultText が組む。
+  // 戦況（SENKYO）と同じく漢字カタカナ交じり・数は漢数字。{issue}＝号数／{who}＝相手／{me}・{opp}＝点／{word}・{pts}＝いちばん点の高かった言葉と点／{level}＝レベル。
+  // 行は、勝ち・負け・引き分け・ひとりのどれか1行（head）→決め手（best。放った言葉が無ければ出さない）→レベル。相手の呼び名は who
+  const SHARE_RESULT = Object.freeze({
+    title: "{title} {issue}", // 1行目（{title}＝TEXT.masthead）
+    win: "{who}ニ勝ツ {me}対{opp}",
+    lose: "{who}ニ敗ル {me}対{opp}",
+    draw: "{who}ト引キ分ケ {me}対{opp}",
+    solo: "一人デ{me}点",
+    best: "決メ手ハ『{word}』{pts}点",
+    level: "（{level}）",
+    sep: "／", // 行と行の間
+    whoCpu: { weak: "CPU（トテモヨワイ）", fair: "CPU（フツウ）", normal: "CPU（ツヨイ）" }, // CPU の強さ（画面の呼び名のカタカナ）
+    whoRoom: "友ダチ", // 合言葉の部屋の相手
+  });
   const SENKYO = Object.freeze({
     head: "戦況", // 欄の左の縦書きの見出し
     release: "{who}、{word}{yomi}ヲ放ツ。",
@@ -95,5 +111,5 @@
   });
   // 背景の記事（KJ-094。見本「新聞21」の文。遊びの決まりを新聞の文体にしたもの。文は仮）。画面の背景いっぱいに繰り返す。点は決まり（data/rules.json）と同じ：三字九点・四字十二点・四字熟語は倍・引き直しは五度まで
   const NEWS = "本紙特報。漢字ヲ割リ、回シ、裏返シ、合セテ別ノ字ト為シ、言葉ヲ放ツ遊戯、市中ニ大流行ス。相手ノ放チタル言葉ハ其ノ儘返ス能ハズ、必ズ一工夫ヲ要ス。場ニ出デタル札ハ早キ者ノ物ナリ。三字ノ言葉ハ九点、四字ハ十二点、四字熟語ハ其ノ倍ナリ。引直シハ五度マデ、回ヲ重ヌル毎ニ値上ル。記者曰ク、待ツモ一手、攻ムルモ一手、勝敗ハ十分ニシテ決ス。";
-  return Object.freeze({ ICON_SHAPES, iconSvg, BUTTONS, LOGO, buttonHtml, redrawNote, TEXT, SENKYO, NEWS });
+  return Object.freeze({ ICON_SHAPES, iconSvg, BUTTONS, LOGO, buttonHtml, redrawNote, TEXT, SENKYO, SHARE_RESULT, NEWS });
 });
