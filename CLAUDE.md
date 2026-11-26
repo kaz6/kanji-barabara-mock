@@ -64,6 +64,7 @@ npm test
 - `tests/paper.test.js`・`tests/paper.browser.test.mjs`：新聞紙風の見た目（KJ-093。漢数字・号数・日付・字体の同梱と落とし先・札に出る字がどれかの字体にある／画面：表紙の題字と号数と日付・号数が試合ごとに増える・札の字の切り替えと覚える・字と地の明暗差 4.5 以上・卓の罫線と見出し・選んだ札の弁柄の縁・角丸なし・375／320px で押せる）
 - `tests/senkyo.test.js`・`tests/senkyo.browser.test.mjs`：戦況の欄・背景の記事・紙のざらつき（KJ-094。文の型〔`SENKYO`〕・あなた→アナタ・取った字が文のおわりに増える・新しい順・点と字数は漢数字・読みはカタカナ／画面：縦書きの欄と見出し・あなたの行は弁柄の太字・古い行が左へ流れる・375×700 に収まる〔空のあいだ 40px。KJ-106：見出しは1列〕・記事は押せない／札の下・入り切りを覚える〔localStorage が使えなくても落ちない〕・ざらつきの背景・空きマスは透けない）
 - `tests/btnlook.browser.test.mjs`：卓の操作5つの押せる／押せないの見え方（KJ-099・KJ-102。見え方は下線だけ。設定「ボタン」は無い・`<html data-btn>` も無い・localStorage `kj-btn` は読まない〔端末に white・outline が残っていても下線〕・押せる字は 4.5 以上・押せないは紙の地に墨 0.35・Play／Back／Redraw は変わらない・ヒントの光りと待ち時間のゲージが見える）。`KJ_SHOT_BTN=<フォルダ>` で画像を書く
+- `tests/share.test.js`・`tests/share.browser.test.mjs`：合言葉の共有（KJ-107。`K.roomCodeFromSearch`・`K.roomShareUrl`・共有の文／画面：部屋を作ると「共有」が出る・`navigator.share` に ?room= 付きのリンクが渡る・share が無いとクリップボードに写る・?room= で開くと友だちとが選ばれ合言葉が入る〔まだ入らない〕・合わない合言葉は入らない）。文は `js/strings.js` の `TEXT.shareText` ほか。`KJ_SHOT_SHARE=<フォルダ>` で画像を書く
 - `tests/browser.test.mjs`：画面（合言葉の部屋を2つのページで1試合〔kj_claims は page.route で偽物に回し、Realtime は差し替え〕・台に札を置いても手札と場が動かない・並べる順が逆・放つ→取る・引き直し・ログをコピー・選ぶと札はマスに残り台に写しが並ぶ・入れ替え）。Playwright の Chromium がないと skip になる。skip は「通った」ではない
 - 変えたら必ず `npm test` を回し、件数と結果を PR に書く
 
