@@ -106,6 +106,10 @@ html[data-news="off"] #bgnews{display:none}
 button.op.cutopen .sp-a{animation:kjSpA .3s ease-in-out}button.op.cutopen .sp-b{animation:kjSpB .3s ease-in-out} /* 割れたとき、割れ目が一瞬開く（9度→16度→9度） */
 @keyframes kjSpA{50%{transform:rotate(-16deg)}}@keyframes kjSpB{50%{transform:rotate(16deg)}}
 @media (prefers-reduced-motion:reduce){button.op.cutopen .sp-a,button.op.cutopen .sp-b{animation:none}}
+.jn-a,.jn-b{display:inline-block}.jn-a{transform-origin:100% 100%;transform:rotate(5deg)}.jn-b{transform-origin:0% 100%;transform:rotate(-5deg)} /* Join のロゴ（KJ-103）：Jo｜in。下の角を軸に、上がくっつくハの字（Split の逆）。線は入れない */
+.jn-seam{display:inline-block;position:relative;width:0;height:0;vertical-align:baseline;margin:0 .06em} /* 継ぎ目：幅ゼロ。左右に .06em ずつ（見本の in の margin-left 2px ≒ .12em のすき間）。放射はここから上に出す */
+.jn-fx{position:absolute;left:-.47em;bottom:.82em;width:.94em;height:.47em;overflow:visible;pointer-events:none} /* 墨の放射3本（16×8 を 17px の字のときの割合で em）。根元が字の上端のすぐ上 */
+button.op:disabled .jn-fx,button.op[aria-disabled=true] .jn-fx{opacity:.35} /* 押せないときは字と同じく薄く */
 .ic{display:inline-block;vertical-align:-.22em;overflow:visible} /* 印の SVG（KJ-048）：字の高さに合わせる。色は文字と同じ（currentColor） */
 .tile .mk .mi{display:inline-block;line-height:1}
 .tile .orig{position:absolute;bottom:1px;left:3px;font:10px/1 system-ui,sans-serif;color:var(--sub)}

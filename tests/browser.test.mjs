@@ -1767,7 +1767,8 @@ test("画面", { skip }, async (t) => {
       for (const [id, text] of Object.entries(want)) assert.equal(await label(id), text, `${id} の文字`);
       const aria = { bSplit: "Split", bInvert: "Flip", bCycle: "Cycle", bHomo: "Same reading" };
       for (const [id, text] of Object.entries(aria)) assert.equal(await page.getAttribute(`#${id}`, "aria-label"), text, `${id} の読み上げ`);
-      for (const id of ["bRelease", "bJoin", "bBack", "bRedraw"]) assert.equal(await page.getAttribute(`#${id}`, "aria-label"), null, `${id} は印の無いボタン。aria-label を付けない（Redraw の添え字を読み上げから消さない）`);
+      for (const id of ["bRelease", "bBack", "bRedraw"]) assert.equal(await page.getAttribute(`#${id}`, "aria-label"), null, `${id} は印の無いボタン。aria-label を付けない（Redraw の添え字を読み上げから消さない）`);
+      assert.equal(await page.getAttribute("#bJoin", "aria-label"), "Join", "Join は印（Jo｜in。KJ-103）を字に組み込むので、読み上げは Join のまま");
       if (vp.width === 375) {
         const rows = await page.evaluate(() => ["bSplit", "bJoin", "bInvert", "bCycle", "bHomo"].map((i) => { const b = document.getElementById(i); const lb = b.querySelector(".lb"); return { i, lines: lb.getClientRects().length, right: b.getBoundingClientRect().right }; }));
         for (const r of rows) assert.ok(r.lines === 1 && r.right <= 375, `375×700 でボタンが1行に収まる（${r.i} の行 ${r.lines}・右端 ${r.right}）`);
@@ -1775,7 +1776,7 @@ test("画面", { skip }, async (t) => {
       assert.equal(await page.locator("#bInvert .lb svg.ic-invert").count(), 1, "Flip の印は SVG");
       assert.equal(await page.locator("#bCycle .lb svg.ic-cycle").count(), 1, "Cycle の印は SVG");
       assert.equal(await page.locator("#bHomo .lb svg.ic-homophone").count(), 1, "Same reading の印は SVG");
-      assert.equal(await page.locator(".ops svg").count(), 3, "ボタンの印はこの3つだけ");
+      assert.equal(await page.locator(".ops svg").count(), 4, "ボタンの印はこの4つだけ（Flip・Cycle・Same reading の印と、Join の放射。KJ-103）");
       for (const g of ["⇄", "↻", "♪", "Sound conversion"]) assert.ok(!(await page.evaluate(() => document.body.innerText)).includes(g), `${g} が画面に残っていない`);
       // ボタンの中に日本語（かな・漢字）が無い。待ち時間・引き直しの添え字が入っても
       await page.evaluate(() => { __KJ.game.me.score = 9; __KJ.render(); });
