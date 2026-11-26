@@ -1352,3 +1352,10 @@ R-025〜R-027 はカードに書いてあった仮置き、R-028〜R-031 は係�
 - 字体を作り直した影響：`build_paper_fonts.py` を回し直したので、前に作ってから data／js に足された字が Zen・Shippori にも入った（kj-zen-*.woff2・kj-shippori-400.woff2 も変わった）
 - 戻し方：この PR の merge コミットを revert（端末に残るものは無い）
 
+### R-129 卓の操作5つの見え方を下線に決める（KJ-102。受け箱 P-102。作者 2026-11-26 18:57）
+
+- 作者の言葉：「ボタンは下線がよい。白抜きはボタン同士の境が分からなかった。」
+- 作り：卓の操作5つ（Split・Join・Flip・Cycle・Same reading）の見え方を、KJ-099 の「下線」だけにした。設定「ボタン（白抜き／下線）」・白抜きの CSS・`setBtn`・`kj-btn` の読み書き・`TEXT.btnLabel`／`btnWhite`／`btnLine` を消した。KJ-089 の `kj-layout` と同じく、端末に `kj-btn` が残っていても読まない
+- 係の仮決め：`<html data-btn>` の属性は消し、CSS は属性なしで効く形（`:root .table .ops-set button.op`）にした
+- 変えていない：下線の色・太さ・押せない字の薄さ 0.35・ヒントの光り・待ち時間のゲージ・Play／Back／Redraw
+- 戻し方：この PR の merge コミットを revert（index.html・js/strings.js・tests・docs）。端末に残る `kj-btn` は元から読まないので害なし（revert すれば、残っていれば再び効く）

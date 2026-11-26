@@ -1,5 +1,5 @@
-// 卓の操作5つ（Split・Join・Flip・Cycle・Same reading）の押せる／押せないの見え方（KJ-099）：設定「ボタン：白抜き／下線」。
-// 初期は白抜き・端末に覚える（kj-btn）・押せる字は明暗差 4.5 以上・押せないは紙の地に墨 .35 の字・Play／Back／Redraw は変わらない・ヒントの光りと待ち時間が見える。
+// 卓の操作5つ（Split・Join・Flip・Cycle・Same reading）の押せる／押せないの見え方（KJ-099・KJ-102）：見え方は下線だけ。
+// 設定「ボタン」は無い・端末に kj-btn が残っていても（white・outline・line・読めない値）下線・押せる字は明暗差 4.5 以上・押せないは紙の地に墨 .35 の字・Play／Back／Redraw は変わらない・ヒントの光りと待ち時間が見える。
 // Playwright の Chromium がないと skip になる。KJ_SHOT_BTN=<フォルダ> を付けると 375px の画像（押せる2つ・押せない3つ）を書く
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -70,44 +70,33 @@ const SNAP = (ids) => page => page.evaluate((ids) => {
 }, ids);
 const snap = (page) => SNAP(OPS)(page);
 
-test("ボタン：設定は「白抜き／下線」。初期は白抜き。選ぶと <html data-btn> が替わり、端末に覚える。読めない値・localStorage が使えない端末でも白抜きで動く", { skip }, async () => {
+test("ボタン：設定「ボタン」は無い。localStorage が使えない端末でも下線で動く（data-btn も kj-btn も使わない）", { skip }, async () => {
   const srv = await serve(); const browser = await chromium.launch();
   try {
     const url = `http://127.0.0.1:${srv.address().port}/index.html`;
     const { ctx, page, errors } = await open(browser, url);
-    assert.equal((await page.textContent("#btnLabel")).trim(), "ボタン");
-    assert.deepEqual(await page.$$eval("#btn label", (a) => a.map((x) => x.textContent.trim())), ["白抜き", "下線"]);
-    assert.equal(await page.evaluate(() => document.querySelector("#btn input:checked").value), "white");
-    assert.equal(await page.evaluate(() => document.documentElement.getAttribute("data-btn")), "white");
-    await page.check('#btn input[value="line"]');
-    assert.equal(await page.evaluate(() => document.documentElement.getAttribute("data-btn")), "line");
-    assert.equal(await page.evaluate(() => localStorage.getItem("kj-btn")), "line");
-    await page.reload();
-    await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
-    assert.equal(await page.evaluate(() => document.documentElement.getAttribute("data-btn")), "line", "開き直しても下線");
-    assert.equal(await page.evaluate(() => document.querySelector("#btn input:checked").value), "line");
-    await page.check('#btn input[value="white"]');
-    assert.equal(await page.evaluate(() => localStorage.getItem("kj-btn")), "white");
+    assert.equal(await page.$("#btn"), null, "設定の「ボタン」の行は無い");
+    assert.equal(await page.$("#btnLabel"), null);
+    assert.equal(await page.$("#grpBtn"), null);
+    assert.equal(await page.evaluate(() => document.documentElement.hasAttribute("data-btn")), false, "data-btn は付けない");
+    assert.equal(await page.evaluate(() => localStorage.getItem("kj-btn")), null, "kj-btn は書かない");
     assert.deepEqual(errors, []);
     await ctx.close();
-    const o = await open(browser, url, { init: { "kj-btn": "zzz" } });
-    assert.equal(await o.page.evaluate(() => document.documentElement.getAttribute("data-btn")), "white", "読めない値は白抜き");
-    await o.ctx.close();
     const n = await open(browser, url, { blockStorage: true });
-    assert.equal(await n.page.evaluate(() => document.documentElement.getAttribute("data-btn")), "white", "localStorage が使えなくても白抜き");
-    await n.page.check('#btn input[value="line"]'); // 書けなくても落ちない・見た目は替わる
-    assert.equal(await n.page.evaluate(() => document.documentElement.getAttribute("data-btn")), "line");
     assert.deepEqual(n.errors, []);
+    assert.equal(await n.page.$("#btn"), null, "localStorage が使えなくても設定の行は無い");
+    assert.equal(await n.page.evaluate(() => document.documentElement.hasAttribute("data-btn")), false);
     await n.ctx.close();
   } finally { await browser.close(); srv.close(); }
 });
 
-for (const look of ["white", "line"]) {
-  test(`ボタン（${look === "white" ? "白抜き" : "下線"}）：押せる字は明暗差 4.5 以上・押せないは紙の地に墨 0.35 の字・押せる2つ／押せない3つが見分けられる`, { skip }, async () => {
+// 端末に残る kj-btn：なし／白抜きの名残（white・outline）／下線（line）／読めない値。どれでも下線
+for (const look of [null, "white", "outline", "line", "zzz"]) {
+  test(`ボタンは下線（端末の kj-btn＝${look}）：押せる字は明暗差 4.5 以上・押せないは紙の地に墨 0.35 の字・押せる2つ／押せない3つが見分けられる`, { skip }, async () => {
     const srv = await serve(); const browser = await chromium.launch();
     try {
       const url = `http://127.0.0.1:${srv.address().port}/index.html`;
-      const { ctx, page, errors } = await open(browser, url, { init: { "kj-btn": look } });
+      const { ctx, page, errors } = await open(browser, url, { init: look === null ? {} : { "kj-btn": look } });
       await play(page);
       const PAPER = "rgb(232, 219, 180)", INK = "rgb(42, 38, 34)", TILE = "rgb(246, 238, 214)", ACCENT = "rgb(156, 59, 46)";
       // 何も選ばない：5つとも押せない
@@ -127,31 +116,27 @@ for (const look of ["white", "line"]) {
       for (const r of on) {
         assert.ok(r.ratio >= 4.5, `${look} ${r.id} 押せる字と地の明暗差 4.5 以上（${r.ratio.toFixed(2)}）`);
         assert.ok(Number(r.weight) >= 700, `${r.id} 押せる＝太字`);
-        if (look === "white") { assert.equal(r.bg, INK, `${r.id} 白抜き：墨の地`); assert.equal(r.color, TILE, `${r.id} 白抜き：札の色の字`); assert.equal(r.shadow, "none"); }
-        else { assert.equal(r.bg, TILE, `${r.id} 下線：札の色の地`); assert.equal(r.color, INK, `${r.id} 下線：墨の字`); assert.match(r.shadow, new RegExp(`${ACCENT.replace(/[()]/g, "\\$&")} 0px -3px 0px 0px inset`), `${r.id} 下線：弁柄の 3px の下線`); }
+        { assert.equal(r.bg, TILE, `${r.id} 下線：札の色の地`); assert.equal(r.color, INK, `${r.id} 下線：墨の字`); assert.match(r.shadow, new RegExp(`${ACCENT.replace(/[()]/g, "\\$&")} 0px -3px 0px 0px inset`), `${r.id} 下線：弁柄の 3px の下線`); }
       }
       for (const r of off) { assert.equal(r.bg, PAPER); assert.ok(r.ratio < 4.5, `${r.id} 押せない字は薄い（${r.ratio.toFixed(2)}）`); assert.ok(r.ratio < on[0].ratio / 2, "押せると押せないで濃さがはっきり違う"); }
-      if (process.env.KJ_SHOT_BTN) await page.locator(".table .ops").first().screenshot({ path: path.join(process.env.KJ_SHOT_BTN, `kj-099-${look}-375.png`) });
-      if (process.env.KJ_SHOT_BTN) await page.screenshot({ path: path.join(process.env.KJ_SHOT_BTN, `kj-099-${look}-375-full.png`) });
+      if (process.env.KJ_SHOT_BTN) await page.locator(".table .ops").first().screenshot({ path: path.join(process.env.KJ_SHOT_BTN, `kj-102-375.png`) });
+      if (process.env.KJ_SHOT_BTN) await page.screenshot({ path: path.join(process.env.KJ_SHOT_BTN, `kj-102-375-full.png`) });
       assert.deepEqual(errors, []);
       await ctx.close();
     } finally { await browser.close(); srv.close(); }
   });
 
-  test(`ボタン（${look === "white" ? "白抜き" : "下線"}）：Play・Back・Redraw は今のまま。ヒントの光りと待ち時間のゲージは見える`, { skip }, async () => {
+  test(`ボタンは下線（端末の kj-btn＝${look}）：Play・Back・Redraw は今のまま。ヒントの光りと待ち時間のゲージは見える`, { skip }, async () => {
     const srv = await serve(); const browser = await chromium.launch();
     try {
       const url = `http://127.0.0.1:${srv.address().port}/index.html`;
-      const { ctx, page, errors } = await open(browser, url, { init: { "kj-btn": look } });
+      const { ctx, page, errors } = await open(browser, url, { init: look === null ? {} : { "kj-btn": look } });
       await play(page);
       const others = () => page.evaluate(() => ["bRelease", "bBack", "bRedraw"].map((id) => { const c = getComputedStyle(document.getElementById(id)); return [id, c.backgroundColor, c.color, c.fontWeight]; }));
       const a = await others();
-      await page.evaluate(() => document.documentElement.setAttribute("data-btn", "white")); // もう一方の形に替えても Play・Back・Redraw は同じ
-      const b = await others();
-      await page.evaluate(() => document.documentElement.setAttribute("data-btn", "line"));
-      const c = await others();
-      assert.deepEqual(b, a); assert.deepEqual(c, a);
-      await page.evaluate((l) => document.documentElement.setAttribute("data-btn", l), look);
+      // Play・Back・Redraw は KJ-102 の前と同じ色（Play＝弁柄の地に紙色の字・Back と Redraw は地なし）
+      assert.equal(a[0][1], "rgb(122, 58, 47)", "Play の地は KJ-102 の前のまま");
+      assert.equal(a[0][0], "bRelease");
       // ヒントの光り：押せない Split も、押せる Flip も、薄い金の地・墨の字・縁の光り
       await page.evaluate(() => { const G = __KJ.game; G.hint = null; G.me.cards = [..."日分"].map((ch, i) => ({ id: 7200 + i, c: ch, t: 0, fresh: false })); window.__shift(G); __KJ.render(); });
       assert.equal(await page.evaluate(() => __KJ.game.hintActive().button), "bSplit");
@@ -165,7 +150,7 @@ for (const look of ["white", "line"]) {
       await page.evaluate(() => document.getElementById("bCycle").classList.add("hint"));
       const sh = await page.evaluate(() => getComputedStyle(document.getElementById("bCycle")).boxShadow);
       assert.match(sh, /rgb\(217, 154, 0\)/, "ヒントの金の縁が残る（押せる・.lift なし）");
-      if (look === "line") assert.match(sh, /rgb\(156, 59, 46\) 0px -3px 0px 0px inset/, "下線の形は金の縁と下線が並ぶ");
+      assert.match(sh, /rgb\(156, 59, 46\) 0px -3px 0px 0px inset/, "下線の形は金の縁と下線が並ぶ");
       await page.evaluate(() => document.getElementById("bCycle").classList.remove("hint"));
       // 待ち時間のゲージ：使ったあと、字は墨でゲージの上で読める。ゲージ（::before）が出る
       await page.evaluate(() => { const G = __KJ.game; G.hint = null; G.me.cards = [..."上天休口辶十日下"].map((ch, i) => ({ id: 9100 + i, c: ch, t: 0, fresh: false })); window.__shift(G); __KJ.render(); });
