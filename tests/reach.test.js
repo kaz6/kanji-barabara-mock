@@ -70,7 +70,7 @@ test("ほかの組は動かない：行き先を足した行を除くと、く�
     const multi = [...L.JOIN].filter(([, v]) => v.length > 1).map(([k]) => k);
     assert.ok(multi.every((k) => k === "十口" || k === "大丶" || k === "日一"), multi.join());
   }
-  assert.deepEqual([TG1, T, T4].map((L) => Object.keys(L.parts).length - L.REACH.size), [75, 68, 220], "割り方の数（小1・N5・N4）は足す前のまま（N4 は 旦 の1行が増えた。KJ-098）");
+  assert.deepEqual([TG1, T, T4].map((L) => Object.keys(L.parts).length - L.REACH.size), [75, 68, 221], "割り方の数（小1・N5・N4）は足す前のまま（N4 は 旦〔KJ-098〕と 耂〔KJ-114〕の2行が増えた）");
 });
 
 test("面で落とす：氷は 水 の右に 丶（水を丶の左へ）、凡は 丶 を 几 の中央へ", () => {
