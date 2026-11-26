@@ -15,78 +15,78 @@
  },
  "stats": {
   "hold_by_level": {
-   "N5": 143,
-   "N4": 357,
-   "G1": 140
+   "N5": 144,
+   "N4": 358,
+   "G1": 141
   },
   "by_level": {
    "N5": {
-    "total": 2663,
+    "total": 2679,
     "by_length": {
      "1": 97,
-     "2": 1807,
-     "3": 586,
+     "2": 1821,
+     "3": 588,
      "4": 173
     },
-    "common": 755,
+    "common": 757,
     "yoji": 44,
     "pn": 17,
     "kana": {
      "な": 1,
      "の": 119,
-     "る": 35
+     "る": 36
     }
    },
    "N4": {
-    "total": 10987,
+    "total": 11036,
     "by_length": {
      "1": 253,
-     "2": 6672,
-     "3": 2855,
-     "4": 1207
+     "2": 6710,
+     "3": 2864,
+     "4": 1209
     },
-    "common": 2483,
-    "yoji": 203,
+    "common": 2487,
+    "yoji": 204,
     "pn": 57,
     "kana": {
      "な": 4,
      "の": 315,
-     "る": 124
+     "る": 125
     }
    },
    "G1": {
-    "total": 2799,
+    "total": 2817,
     "by_length": {
      "1": 78,
-     "2": 1906,
-     "3": 623,
+     "2": 1921,
+     "3": 626,
      "4": 192
     },
-    "common": 751,
+    "common": 754,
     "yoji": 48,
     "pn": 29,
     "kana": {
      "な": 1,
      "の": 107,
-     "る": 35
+     "る": 36
     }
    }
   },
-  "total": 11033,
+  "total": 11082,
   "by_length": {
    "1": 261,
-   "2": 6693,
-   "3": 2867,
-   "4": 1212
+   "2": 6731,
+   "3": 2876,
+   "4": 1214
   },
-  "common": 2495,
-  "yoji": 205,
+  "common": 2499,
+  "yoji": 206,
   "pn": 57,
   "pn_added": 25,
   "kana": {
    "な": 4,
    "の": 315,
-   "る": 124
+   "る": 125
   },
   "kana_skipped": {
    "かなが2つ以上": 17,
@@ -13253,6 +13253,16 @@
    "common": true
   },
   {
+   "w": "新旧",
+   "lv": "N5",
+   "kana": "しんきゅう",
+   "en": [
+    "new and old; incoming and outgoing"
+   ],
+   "g1": true,
+   "common": true
+  },
+  {
    "w": "新春",
    "lv": "N4",
    "kana": "しんしゅん",
@@ -13535,6 +13545,25 @@
    "kana": "にっしょく",
    "en": [
     "solar eclipse"
+   ],
+   "g1": true,
+   "common": true
+  },
+  {
+   "w": "旧式",
+   "lv": "N4",
+   "kana": "きゅうしき",
+   "en": [
+    "old type; old style"
+   ],
+   "common": true
+  },
+  {
+   "w": "旧来",
+   "lv": "N5",
+   "kana": "きゅうらい",
+   "en": [
+    "traditional; from ancient times"
    ],
    "g1": true,
    "common": true
@@ -42842,6 +42871,303 @@
    ]
   },
   {
+   "w": "旧る",
+   "lv": "N5",
+   "kana": "ふる",
+   "en": [
+    "to age; to get old"
+   ],
+   "kana_at": 1,
+   "g1": true
+  },
+  {
+   "w": "旧主",
+   "lv": "N4",
+   "kana": "きゅうしゅ",
+   "en": [
+    "former lord"
+   ]
+  },
+  {
+   "w": "旧事",
+   "lv": "N4",
+   "kana": "きゅうじ",
+   "en": [
+    "past events; bygones"
+   ]
+  },
+  {
+   "w": "旧交",
+   "lv": "N5",
+   "kana": "きゅうこう",
+   "en": [
+    "old friendship"
+   ],
+   "g1": true
+  },
+  {
+   "w": "旧人",
+   "lv": "N5",
+   "kana": "ふるびと",
+   "en": [
+    "the deceased; old friend"
+   ],
+   "g1": true
+  },
+  {
+   "w": "旧作",
+   "lv": "N4",
+   "kana": "きゅうさく",
+   "en": [
+    "old work; existing work"
+   ]
+  },
+  {
+   "w": "旧冬",
+   "lv": "N4",
+   "kana": "きゅうとう",
+   "en": [
+    "former winters; the last winter"
+   ]
+  },
+  {
+   "w": "旧友",
+   "lv": "N5",
+   "kana": "きゅうゆう",
+   "en": [
+    "old friend; old pal"
+   ],
+   "g1": true
+  },
+  {
+   "w": "旧名",
+   "lv": "N5",
+   "kana": "きゅうめい",
+   "en": [
+    "former name; maiden name"
+   ],
+   "g1": true
+  },
+  {
+   "w": "旧図",
+   "lv": "N4",
+   "kana": "きゅうと",
+   "en": [
+    "old plan"
+   ]
+  },
+  {
+   "w": "旧国",
+   "lv": "N5",
+   "kana": "きゅうこく",
+   "en": [
+    "ancient nation",
+    "homeland; one's native land"
+   ],
+   "g1": true
+  },
+  {
+   "w": "旧土",
+   "lv": "N5",
+   "kana": "きゅうど",
+   "en": [
+    "former property or territory"
+   ],
+   "g1": true
+  },
+  {
+   "w": "旧地",
+   "lv": "N4",
+   "kana": "きゅうち",
+   "en": [
+    "former property; former territory"
+   ]
+  },
+  {
+   "w": "旧好",
+   "lv": "N4",
+   "kana": "きゅうこう",
+   "en": [
+    "old friendship"
+   ]
+  },
+  {
+   "w": "旧字",
+   "lv": "N4",
+   "kana": "きゅうじ",
+   "en": [
+    "old character form; traditional form of kanji used in Japan before 1946"
+   ],
+   "g1": true
+  },
+  {
+   "w": "旧官",
+   "lv": "N4",
+   "kana": "きゅうかん",
+   "en": [
+    "former government official"
+   ]
+  },
+  {
+   "w": "旧家",
+   "lv": "N4",
+   "kana": "きゅうか",
+   "en": [
+    "old family; old-established family",
+    "one's old home; one's childhood home"
+   ]
+  },
+  {
+   "w": "旧市",
+   "lv": "N4",
+   "kana": "きゅうし",
+   "en": [
+    "old town; former town"
+   ]
+  },
+  {
+   "w": "旧年",
+   "lv": "N5",
+   "kana": "きゅうねん",
+   "en": [
+    "the old year; last year"
+   ],
+   "g1": true
+  },
+  {
+   "w": "旧悪",
+   "lv": "N4",
+   "kana": "きゅうあく",
+   "en": [
+    "past misdeeds; old crimes"
+   ]
+  },
+  {
+   "w": "旧教",
+   "lv": "N4",
+   "kana": "きゅうきょう",
+   "en": [
+    "(Roman) Catholicism"
+   ]
+  },
+  {
+   "w": "旧族",
+   "lv": "N4",
+   "kana": "きゅうぞく",
+   "en": [
+    "ancient clan"
+   ]
+  },
+  {
+   "w": "旧時",
+   "lv": "N5",
+   "kana": "きゅうじ",
+   "en": [
+    "ancient times"
+   ],
+   "g1": true
+  },
+  {
+   "w": "旧村",
+   "lv": "N4",
+   "kana": "きゅうそん",
+   "en": [
+    "old village"
+   ],
+   "g1": true
+  },
+  {
+   "w": "旧物",
+   "lv": "N4",
+   "kana": "きゅうぶつ",
+   "en": [
+    "old things; ancient things"
+   ]
+  },
+  {
+   "w": "旧知",
+   "lv": "N4",
+   "kana": "きゅうち",
+   "en": [
+    "old friend; old acquaintance"
+   ]
+  },
+  {
+   "w": "旧習",
+   "lv": "N4",
+   "kana": "きゅうしゅう",
+   "en": [
+    "old customs"
+   ]
+  },
+  {
+   "w": "旧聞",
+   "lv": "N5",
+   "kana": "きゅうぶん",
+   "en": [
+    "old news"
+   ],
+   "g1": true
+  },
+  {
+   "w": "旧説",
+   "lv": "N4",
+   "kana": "きゅうせつ",
+   "en": [
+    "old theory; ancient ideas"
+   ]
+  },
+  {
+   "w": "旧車",
+   "lv": "N5",
+   "kana": "きゅうしゃ",
+   "en": [
+    "old car; classic car"
+   ],
+   "g1": true
+  },
+  {
+   "w": "旧道",
+   "lv": "N5",
+   "kana": "きゅうどう",
+   "en": [
+    "old road"
+   ]
+  },
+  {
+   "w": "旧都",
+   "lv": "N4",
+   "kana": "きゅうと",
+   "en": [
+    "old capital; former capital"
+   ]
+  },
+  {
+   "w": "旧里",
+   "lv": "N4",
+   "kana": "ふるさと",
+   "en": [
+    "home town; birthplace",
+    "ruins; historic remains"
+   ]
+  },
+  {
+   "w": "旧風",
+   "lv": "N4",
+   "kana": "きゅうふう",
+   "en": [
+    "old customs"
+   ]
+  },
+  {
+   "w": "旧館",
+   "lv": "N4",
+   "kana": "きゅうかん",
+   "en": [
+    "old building; older building"
+   ]
+  },
+  {
    "w": "早る",
    "lv": "N4",
    "kana": "はやる",
@@ -63643,6 +63969,16 @@
    "common": true
   },
   {
+   "w": "旧正月",
+   "lv": "N4",
+   "kana": "きゅうしょうがつ",
+   "en": [
+    "lunar New Year (esp. the Chinese New Year)"
+   ],
+   "g1": true,
+   "common": true
+  },
+  {
    "w": "明後日",
    "lv": "N4",
    "kana": "あさって",
@@ -76807,6 +77143,73 @@
    "kana": "ひのな",
    "en": [
     "hinona (Japanese variety of long-rooted pickling turnip, Brassica rapa var. akana)"
+   ]
+  },
+  {
+   "w": "旧世界",
+   "lv": "N4",
+   "kana": "きゅうせかい",
+   "en": [
+    "Old World (i.e., Asia, Africa, Europe)"
+   ]
+  },
+  {
+   "w": "旧主人",
+   "lv": "N4",
+   "kana": "きゅうしゅじん",
+   "en": [
+    "former lord"
+   ]
+  },
+  {
+   "w": "旧北区",
+   "lv": "N4",
+   "kana": "きゅうほっく",
+   "en": [
+    "Palearctic (region); Palaearctic"
+   ]
+  },
+  {
+   "w": "旧国名",
+   "lv": "N5",
+   "kana": "きゅうこくめい",
+   "en": [
+    "place names used during the Ritsuryo period"
+   ],
+   "g1": true
+  },
+  {
+   "w": "旧字体",
+   "lv": "N4",
+   "kana": "きゅうじたい",
+   "en": [
+    "old character form; kyūjitai"
+   ]
+  },
+  {
+   "w": "旧漢字",
+   "lv": "N4",
+   "kana": "きゅうかんじ",
+   "en": [
+    "old-style kanji"
+   ]
+  },
+  {
+   "w": "旧車会",
+   "lv": "N5",
+   "kana": "きゅうしゃかい",
+   "en": [
+    "classic vehicle club (cars, motorcycles); antique vehicle club",
+    "biker group in which members ride customized classic motorcycles"
+   ],
+   "g1": true
+  },
+  {
+   "w": "旧軍人",
+   "lv": "N4",
+   "kana": "きゅうぐんじん",
+   "en": [
+    "ex-soldier"
    ]
   },
   {
@@ -92208,6 +92611,15 @@
    ]
   },
   {
+   "w": "新旧交代",
+   "lv": "N4",
+   "kana": "しんきゅうこうたい",
+   "en": [
+    "replacing the old with the new; the old giving way to the new"
+   ],
+   "yoji": true
+  },
+  {
    "w": "新社会人",
    "lv": "N5",
    "kana": "しんしゃかいじん",
@@ -92461,6 +92873,14 @@
     "steady progress; rapid advance"
    ],
    "yoji": true
+  },
+  {
+   "w": "旧口動物",
+   "lv": "N4",
+   "kana": "きゅうこうどうぶつ",
+   "en": [
+    "protostome"
+   ]
   },
   {
    "w": "早朝の着",
