@@ -561,3 +561,84 @@ test("合言葉の部屋（KJ-022）：二人がほぼ同時に同じ助数詞�
   // そのあとは、二人とも 円 をもう使えない
   assert.equal(A.g.canRelease(A.g.me, setHand(A.g, A.g.me, "百円")).ok, false);
 });
+
+// ---- KJ-140：合言葉の部屋でも相手の上の段を見せる（字の並びを 'event' の hand 行で送る） ----
+test("KJ-140 送る中身の形：上の段の字だけ（ストック・割れ目の印は無い）・最大 hand_max・形の確かめ", () => {
+  const cards = [..."山川玉"].map((c, i) => ({ id: i, c })).concat([{ id: 9, c: "龍", tray: true }]);
+  const tiles = K.handTiles(cards, R.hand_max);
+  assert.deepEqual(tiles, ["山", "川", "玉"], "ストックは入らない");
+  assert.deepEqual(K.handPayload(tiles, 4), { type: "hand", seq: 4, tiles: ["山", "川", "玉"] });
+  assert.equal(K.handTiles(Array.from({ length: 12 }, (_, i) => ({ id: i, c: "木" })), R.hand_max).length, R.hand_max);
+  assert.deepEqual(K.parseHandTiles(["山", "𠮷"], R.hand_max), ["山", "𠮷"], "拡張の字（2コード単位）も1字");
+  for (const bad of [null, "山川", [1], ["山川"], [""], Array(R.hand_max + 1).fill("木"), [["山"]]]) assert.equal(K.parseHandTiles(bad, R.hand_max), null, JSON.stringify(bad));
+  assert.deepEqual(K.parseHandTiles([], R.hand_max), [], "空っぽの上の段もよい");
+});
+
+test("KJ-140 相手の上の段：変わると相手に届く。続けて変わるときは間をあけてまとめる。ストックは届かない", async () => {
+  const { clock, claims, A, B } = pair();
+  assert.equal(B.g.cpu.peek, undefined, "届くまでは何も無い（画面は空きマス）");
+  setHand(A.g, A.g.me, "山川玉");
+  A.g.me.cards.push({ id: 9999, c: "龍", t: 0, fresh: false, tray: true });
+  await A.c.sendHand();
+  assert.deepEqual(B.g.cpu.peek, ["山", "川", "玉"], "上の段だけ。ストックの 龍 は届かない");
+  assert.equal(B.g.cpu.cards.length, 0, "相手の札そのものは持たない");
+  // 続けて変わる：0.3秒あくまで送らない。あいてから最後の並びだけ
+  const n0 = (await claims.select("m-test-1", "event")).rows.length;
+  setHand(A.g, A.g.me, "山川"); assert.equal((await A.c.sendHand()).wait, true);
+  clock.t += 0.1; setHand(A.g, A.g.me, "山"); assert.equal((await A.c.sendHand()).wait, true);
+  assert.equal((await claims.select("m-test-1", "event")).rows.length, n0, "待っているあいだは送らない");
+  assert.deepEqual(B.g.cpu.peek, ["山", "川", "玉"]);
+  clock.t += K.MATCH_HAND_SEC;
+  await A.c.sendHand();
+  assert.deepEqual(B.g.cpu.peek, ["山"], "まとめた最後の並び");
+  assert.equal((await claims.select("m-test-1", "event")).rows.length, n0 + 1, "1行にまとまった");
+  assert.equal((await A.c.sendHand()).skipped, true, "変わらなければ送らない");
+  // 空っぽ
+  clock.t += 1; A.g.me.cards = []; await A.c.sendHand();
+  assert.deepEqual(B.g.cpu.peek, []);
+});
+
+test("KJ-140 tick が入ったときと変わったときに送る。ping にも並びが載り、古い行・壊れた行・送らない相手でも落ちない", async () => {
+  const { clock, claims, A, B } = pair();
+  setHand(A.g, A.g.me, "木林森"); setHand(B.g, B.g.me, "日月");
+  await A.c.tick();
+  assert.deepEqual(B.g.cpu.peek, ["木", "林", "森"], "入ったとき（最初の tick）に今の並びを送る");
+  // 送らない相手（古い版）：B が hand を送っていなくても A は落ちない・peek は空のまま
+  assert.equal(A.g.cpu.peek, undefined);
+  await B.c.ping(); // 古い版の ping（tiles なし）を想定して、payload を直接入れる
+  await claims.insert({ match_id: "m-test-1", kind: "event", key: "guest-old-p0", player: "guest", payload: { type: "ping" } });
+  assert.equal(A.g.cpu.peek, undefined, "並びの無い ping では変わらない");
+  // 壊れた行は捨てる
+  const bad = [{ type: "hand", seq: 1, tiles: "日月" }, { type: "hand", seq: -1, tiles: ["日"] }, { type: "hand", tiles: ["日"] }, { type: "hand", seq: 1, tiles: ["日月"] }, { type: "ping", tiles: ["日"] }, { type: "ping", hs: 0, tiles: [3] }];
+  for (const [i, payload] of bad.entries()) await claims.insert({ match_id: "m-test-1", kind: "event", key: `guest-bad-h${i}`, player: "guest", payload });
+  assert.equal(A.g.cpu.peek, undefined, "壊れた行は無視");
+  // 古い番号は無視（同じ送り主で seq が戻る）
+  await claims.insert({ match_id: "m-test-1", kind: "event", key: "guest-zz-h5", player: "guest", payload: { type: "hand", seq: 5, tiles: ["日", "月"] } });
+  await claims.insert({ match_id: "m-test-1", kind: "event", key: "guest-zz-h3", player: "guest", payload: { type: "hand", seq: 3, tiles: ["火"] } });
+  assert.deepEqual(A.g.cpu.peek, ["日", "月"], "新しい番号が先に届いたら、古い番号では戻さない");
+  // ping が並びを運ぶ：届かなかった hand の穴を埋める
+  clock.t += 20;
+  setHand(A.g, A.g.me, "石"); await A.c.sendHand();
+  B.g.cpu.peek = ["x"]; // B が取りこぼした状態
+  await A.c.ping();
+  assert.deepEqual(B.g.cpu.peek, ["石"], "ping の並びで補う");
+});
+
+test("KJ-140 相手が入り直した（nonce が変わった）ら、今の並びをもう一度送る", async () => {
+  const { clock, claims, A } = pair();
+  setHand(A.g, A.g.me, "田力");
+  await A.c.sendHand();
+  const hands = async () => (await claims.select("m-test-1", "event")).rows.filter((r) => r.payload.type === "hand").length;
+  assert.equal(await hands(), 1);
+  await claims.insert({ match_id: "m-test-1", kind: "event", key: "guest-aaa-p0", player: "guest", payload: { type: "ping" } });
+  clock.t += 1; await A.c.sendHand();
+  assert.equal(await hands(), 1, "最初の相手の行では送り直さない");
+  await claims.insert({ match_id: "m-test-1", kind: "event", key: "guest-bbb-p0", player: "guest", payload: { type: "ping" } });
+  clock.t += 1; await A.c.sendHand();
+  assert.equal(await hands(), 2, "別の nonce の行が来たら同じ並びでも送り直す");
+});
+
+test("KJ-140 CPU 戦・ひとりの試合は変えない（remoteHand を使わない・cpu.cards が本物）", () => {
+  const g = newGame(1, "weak");
+  assert.ok(g.cpu.cards.length > 0 && !g.cpu.remote && g.cpu.peek === undefined);
+});

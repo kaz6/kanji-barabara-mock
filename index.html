@@ -134,7 +134,7 @@ button.op.joinpop .jn-fx{animation:kjJnPop var(--jn-pop-time) ease-out}
 .cpu .tile{font-size:clamp(14px,3.4vw,22px);cursor:default}
 .cpu .tile:hover{border-color:var(--line)}
 .cpu .tile .mk,.cpu .tile .cut{display:none} /* 相手の札は字だけ（割れ目の点線・角の印は出さない。KJ-092） */
-/* 相手（CPU）の上の段を見せる（KJ-092。作者 2026-11-25）：CPU 対戦のときだけ（render が .peek を付ける）。見るだけ（押せない）。ストックは見せない。小さく並べて、スマホ幅でも自分の手札・ストックが画面に収まるようにする */
+/* 相手（CPU）の上の段を見せる（KJ-092。作者 2026-11-25）：CPU 対戦と合言葉の部屋（KJ-140）のときだけ（render が .peek を付ける）。見るだけ（押せない）。ストックは見せない。小さく並べて、スマホ幅でも自分の手札・ストックが画面に収まるようにする */
 .cpu #cpuHand:not(.peek){display:none}
 .cpu #cpuHand{gap:3px;pointer-events:none}
 .cpu #cpuHand .tile,.cpu #cpuHand .slot{aspect-ratio:auto;height:26px}
@@ -1738,8 +1738,9 @@ function render(){
   row=row.filter(id=>G.byId(G.me,id));
   $("cpuSide").hidden=G.solo;
   $("cpuName").textContent=G.cpu.name;
-  $("cpuHand").classList.toggle("peek",!G.solo&&!G.match&&!G.cpu.remote); // 相手の上の段を見せるのは CPU 対戦だけ（ひとり・チュートリアル・合言葉の部屋では出さない。KJ-092）
-  renderHand($("cpuHand"),G.cpu,false,false);
+  $("cpuHand").classList.toggle("peek",!G.solo); // 相手の上の段を見せるのは CPU 対戦と合言葉の部屋（ひとり・チュートリアルでは出さない。KJ-092・KJ-140）
+  // 合言葉の部屋の相手の札はこの端末に無い。相手の端末が送ってきた字の並び（G.cpu.peek）だけを見せる。届くまでは空きマス（KJ-140）
+  renderHand($("cpuHand"),G.cpu.remote?{cards:(G.cpu.peek||[]).map((c,i)=>({id:"o"+i,c}))}:G.cpu,false,false);
   renderHand($("meHand"),G.me,true,false);
   renderHand($("meTray"),G.me,true,true);
   renderField();
