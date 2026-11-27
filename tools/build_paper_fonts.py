@@ -69,6 +69,11 @@ def stamp_chars():
     return {"否"}
 
 
+def issue_chars():
+    """表紙の號数（#mastNo。KJ-124）の字。第・號・大字（壱弐参肆伍陸漆捌玖拾佰阡）。説明文と同じ大正風（Kaisei）で出す"""
+    return set("第號壱弐参肆伍陸漆捌玖拾佰阡")
+
+
 def build(name, weight, out, family, chars):
     d = glob.glob(os.path.join(SRC, "*" + name + "*", "package", "files"))
     if not d:
@@ -111,7 +116,7 @@ def main():
     for name, weight, out, family in FONTS:
         chars = ui if family == "KJ Zen" else cards
         if family == "KJ Kaisei":
-            chars = cards | lead_chars() | stamp_chars()  # 説明文（#lead。KJ-101）の字と、判子の「否」（KJ-104）を足す
+            chars = cards | lead_chars() | stamp_chars() | issue_chars()  # 號数（KJ-124）と、 説明文（#lead。KJ-101）の字と、判子の「否」（KJ-104）を足す
         got, miss, size = build(name, weight, out, family, chars)
         rng = ",".join("U+%X" % ord(c) for c in sorted(got - NO_PAPER))
         css.append('@font-face{font-family:"%s";font-weight:%d;src:url("%s") format("woff2");unicode-range:%s;font-display:swap}' % (family, weight, out, rng))

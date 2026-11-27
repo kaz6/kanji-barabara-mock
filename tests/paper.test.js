@@ -14,13 +14,16 @@ test("漢数字：1〜9999。十・百・千の前の一は付けない。範囲
   assert.equal(K.kansuji("12"), "十二", "文字の数も読む");
 });
 
-test("号数：第○號（○＝その端末で始めた試合の数＋1）。読めない・負・大きすぎるときは 第一號", () => {
-  assert.equal(K.issueLabel(0), "第一號");
-  assert.equal(K.issueLabel(1), "第二號");
-  assert.equal(K.issueLabel(9), "第十號");
-  assert.equal(K.issueLabel(11), "第十二號");
-  assert.equal(K.issueLabel(99), "第百號");
-  for (const bad of [-1, NaN, "x", null, undefined, 99999]) assert.equal(K.issueLabel(bad), "第一號", `${bad}`);
+test("号数：第○號（○＝その端末で始めた試合の数＋1 の大字。KJ-124）。読めない・負・大きすぎるときは 第壱號", () => {
+  const cases = { 0: "第壱號", 1: "第弐號", 2: "第参號", 3: "第肆號", 4: "第伍號", 5: "第陸號", 6: "第漆號", 7: "第捌號", 8: "第玖號", 9: "第拾號", 10: "第拾壱號", 19: "第弐拾號", 20: "第弐拾壱號", 98: "第玖拾玖號", 99: "第佰號", 100: "第佰壱號", 109: "第佰拾號", 199: "第弐佰號", 999: "第阡號" };
+  for (const [n, want] of Object.entries(cases)) assert.equal(K.issueLabel(+n), want, `${n}`);
+  for (const bad of [-1, NaN, "x", null, undefined, 99999]) assert.equal(K.issueLabel(bad), "第壱號", `${bad}`);
+});
+
+test("大字：1・10・11・20・21・99・100・101・110・200・1000（100 以上は仮）。漢数字の kansuji は今のまま", () => {
+  const cases = { 1: "壱", 2: "弐", 3: "参", 4: "肆", 5: "伍", 6: "陸", 7: "漆", 8: "捌", 9: "玖", 10: "拾", 11: "拾壱", 20: "弐拾", 21: "弐拾壱", 99: "玖拾玖", 100: "佰", 101: "佰壱", 110: "佰拾", 200: "弐佰", 1000: "阡" };
+  for (const [n, want] of Object.entries(cases)) assert.equal(K.daiji(+n), want, `${n}`);
+  assert.equal(K.kansuji(11), "十一", "点・字数・日付の漢数字は大字にしない");
 });
 
 test("日付：年は1字ずつ（〇が入る）・月日は十の位つきの漢数字", () => {
@@ -100,6 +103,13 @@ test("字体（KJ-110）：説明文の英訳（TEXT.leadEn）の字（— を�
 test("字体（KJ-104）：はじかれたときの判子の字「否」は、Kaisei Tokumin の字体にある", () => {
   const kai = faces().find((x) => x.fam === "KJ Kaisei").set;
   assert.ok(kai.has("否".codePointAt(0)), "否 が Kaisei に無い。python3 tools/build_paper_fonts.py を回す");
+});
+
+test("字体：號数の大字（KJ-124。第號壱弐参肆伍陸漆捌玖拾佰阡）は、號数の字体（Kaisei）と Zen の両方に入っている", () => {
+  for (const [fam, w] of [["KJ Kaisei", 400], ["KJ Zen", 400]]) {
+    const set = faces().find((x) => x.fam === fam && x.weight === w).set;
+    for (const c of "第號壱弐参肆伍陸漆捌玖拾佰阡") assert.ok(set.has(c.codePointAt(0)), `${c} が ${fam} に無い。python3 tools/build_paper_fonts.py を回す`);
+  }
 });
 
 test("字体：画面の字（Zen）は、ボタンの英字・数字と、画面の日本語の文に出る字を持つ", () => {

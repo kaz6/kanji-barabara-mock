@@ -1836,11 +1836,27 @@
     if (n > 0) out += KANSUJI_DIGITS[n];
     return out;
   }
-  // 号数の文字。played＝その端末で始めた試合の数（読めない・負・整数でないときは 0）。第○號（○＝played+1）
+  // 號数の大字（KJ-124。壱弐参肆伍陸漆捌玖。十＝拾・百＝佰・千＝阡・万＝萬。100 以上は仮）。1〜9999。範囲の外は 壱
+  const DAIJI_DIGITS = ["", "壱", "弐", "参", "肆", "伍", "陸", "漆", "捌", "玖"];
+  function daiji(n) {
+    n = Math.floor(Number(n));
+    if (!(n >= 1 && n <= 9999)) return "壱";
+    const units = [[1000, "阡"], [100, "佰"], [10, "拾"]];
+    let out = "";
+    for (const [u, ch] of units) {
+      const d = Math.floor(n / u);
+      n -= d * u;
+      if (d === 0) continue;
+      out += (d === 1 ? "" : DAIJI_DIGITS[d]) + ch;
+    }
+    if (n > 0) out += DAIJI_DIGITS[n];
+    return out;
+  }
+  // 号数の文字。played＝その端末で始めた試合の数（読めない・負・整数でないときは 0）。第○號（○＝played+1 の大字。第拾壱號）
   function issueLabel(played) {
     let n = Math.floor(Number(played));
     if (!(n >= 0) || n > 9998) n = 0;
-    return `第${kansuji(n + 1)}號`;
+    return `第${daiji(n + 1)}號`;
   }
   // 今日の日付（漢数字）。年は 1字ずつ（二〇二六年）、月・日は十の位を使う（十一月二十五日）
   function kansujiDate(d) {
@@ -1914,7 +1930,7 @@
   }
 
   return {
-    kansuji, issueLabel, kansujiDate, shareResultText, siteUrl, toKatakana, senkyoLines,
+    kansuji, daiji, issueLabel, kansujiDate, shareResultText, siteUrl, toKatakana, senkyoLines,
     FILES, OPPONENTS, PLAY_MODES, CPU_POWERS, readOpponent, opponentKey, LEVELS, timeChoices, normTime, vibratePattern, timeLabel, levelLabel, levelShort, makeTables, isN5, isLevelChar, isChar, radicalNote, radicalFormNote, joinPartners, joinNote, JOIN_NOTE_MODES, splitOnce, canSplit, delivered, joinResults, joinReversed,
     releasable, effectText, counterParts, usedCounters, counterBlocked, counterReading, rejectText, scoreOf, kanaOf, kanaText, wordCharOk, KANA_ONLY_WHY, homoChars, marks, markKinds, cutSpec, FACES, FACE_LABEL, faceJoins, faceResults, rulesLabel, opponentLabel, createGame, createTutorial, TUTORIAL_OPPONENT, playLogRow, endShow, kotobankUrl, END_LABELS, logSendAllowed, playLogResult, PLAY_LOG_LIMITS,
     strSeed, seededRand, matchRand, ROLES, ROOM_OPPONENT, MATCH_END_GRACE_SEC, MATCH_INSERT_TIMEOUT_SEC, MATCH_PING_SEC, MATCH_GONE_SEC, ROOM_LOBBY_TTL_SEC,
