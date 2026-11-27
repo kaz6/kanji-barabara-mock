@@ -75,10 +75,13 @@ test("KJ-108 画面：終わりに「共有」が出る・share に 文と URL�
     await page.click("#bShareEnd");
     await page.waitForFunction(() => window.__shared.length === 1);
     const s = await page.evaluate(() => window.__shared[0]);
-    assert.equal(s.url, base.replace(/index\.html.*$/, "index.html"), "?room= も ? も # も付かない");
-    assert.ok(!s.url.includes("room"));
-    assert.match(s.text, /^漢対普請瓦版 第.+號／CPU（トテモヨワイ）ニ(勝ツ|敗ル|ト引キ分ケ)/);
-    assert.match(s.text, /決メ手ハ『十円』.点／（N5）$/);
+    // KJ-126：リンクとタグは文の中（タグが URL の行の次）。share には url を別に渡さない（端末で二重に出ない）
+    assert.equal(s.url, undefined);
+    const site = base.replace(/index\.html.*$/, "index.html");
+    assert.ok(!s.text.includes("room"), "?room= は付かない");
+    assert.match(s.text, /^漢対普請瓦版 第.+號／.+／CPU（トテモヨワイ）ニ(勝ツ|敗ル|ト引キ分ケ)/);
+    assert.match(s.text, /決メ手ハ『十円』.点／（N5）\n[^\n]+\n#漢対普請瓦版$/, s.text);
+    assert.ok(s.text.endsWith("（N5）\n" + site + "\n#漢対普請瓦版"), s.text);
     assert.equal(s.title, "漢対普請瓦版");
     assert.deepEqual(errors, []);
   } finally { await browser.close(); srv.close(); }
@@ -94,7 +97,8 @@ test("KJ-108 画面：share が無い端末はクリップボードに写して�
     await page.click("#bShareEnd");
     await page.waitForFunction(() => document.getElementById("bShareEnd").textContent === "コピーした");
     const clip = await page.evaluate(() => navigator.clipboard.readText());
-    assert.match(clip, /決メ手ハ『十円』.点／（N5）\n.*index\.html$/);
+    assert.match(clip, /決メ手ハ『十円』.点／（N5）\n.*index\.html\n#漢対普請瓦版$/);
+    assert.equal(clip.split("index.html").length, 2, "リンクは1回だけ");
     await page.waitForFunction(() => document.getElementById("bShareEnd").textContent === "共有");
   } finally { await browser.close(); srv.close(); }
 });

@@ -77,6 +77,7 @@
     masthead: "漢対普請瓦版", // 表紙の題字（KJ-093。KJ-109 で替えた。作者「漢対普請瓦版 / Split & Join — a Kanji Duel でいきます」）。題は共有の文（KJ-107／KJ-108）もここから取る
     mastheadRuby: "かんたいふしんかわらばん", // 題字の上のルビ（KJ-109）
     mastheadSub: "Split & Join — a Kanji Duel", // 題字の下の英字の副題（KJ-109）
+    hashtag: "#漢対普請瓦版", // 戦果の共有の文の最後の行（KJ-126。URL の行の次。合言葉の共有には付けない）
     shareButton: "共有", // 合言葉の共有（KJ-107）。部屋を作って合言葉が出たら、合言葉の横に出す
     shareText: (code, title, sub, url) => `${title} ${sub}\n漢字を組み合わせて、言葉づくり対戦しよう。合言葉 ${code} ${url}`, // 共有の文（KJ-122。作者の文。題＝masthead・副題＝mastheadSub・リンクは K.roomShareUrl。全部この1本に入るので navigator.share では url を別に渡さない）
     shareCopied: "コピーした", // navigator.share が無い端末で、文とリンクをクリップボードに写したとき
@@ -115,7 +116,35 @@
     whoCpu: { weak: "CPU（トテモヨワイ）", fair: "CPU（フツウ）", normal: "CPU（ツヨイ）" }, // CPU の強さ（画面の呼び名のカタカナ）
     whoRoom: "友ダチ", // 合言葉の部屋の相手
   });
+  // 煽り文句（KJ-126。作者「いまのResult、少し寂しかったので入れたいです」「外野っつうか、記者かな。野球や相撲のみたいな」「號外」）。話し手：記者（スポーツ新聞の見出し）。文は全部仮。話し手も仮。作者が直す。ここ1か所。
+  // 選ぶのは js/core.js の K.aoriLine（終わりの画面）・K.aoriShareLine（戦果の共有）。上から順に見て最初に合ったもの。{word}＝語・{n}＝字数（漢数字）・{me}{opp}＝点（漢数字）
+  // closeMax＝大接戦とみる点差（以下）・longMin＝大技とみる字数（以上）
+  // 終わりの画面：遊んだ本人を褒める（勝ち負けの見出しのすぐ下）
+  const AORI = Object.freeze({
+    closeMax: 10,
+    longMin: 4,
+    silent: "沈黙の一戦、語らずして幕", // 言葉を1つも放っていない
+    winSpecial: "{word}、ここに極まれり！", // 勝ち・特別な語を放った
+    winLong: "{n}字の大技、炸裂！", // 勝ち・一番長い語が longMin 字以上
+    winFast: "電光石火の快勝！", // 勝ち・時間切れの前に勝ちの点に届いた
+    winClose: "手に汗握る大接戦！", // 勝ち・点差が closeMax 以下
+    win: "堂々の一番勝ち！",
+    draw: "互角の名勝負、決着は次号へ！",
+    loseClose: "惜敗！雪辱は次の一番で", // 負け・点差が closeMax 以下
+    lose: "涙の敗走、されど再起を誓う",
+  });
+  // 戦果の共有：見た人を呼び込む（見出しの行のすぐ下）。勝ち負けより、面白い語・接戦を先に見る。言葉を1つも放っていないときは出さない
+  const AORI_SHARE = Object.freeze({
+    closeMax: 10,
+    longMin: 4,
+    special: "號外！『{word}』現る", // 特別な語を放った
+    long: "號外！{n}字の大技『{word}』", // 一番長い語が longMin 字以上
+    draw: "互角！決着は次号へ",
+    close: "{me}対{opp}、手に汗握る大接戦！", // 点差が closeMax 以下
+    win: "快勝！決め手は『{word}』", // {word}＝その試合で一番点の高い語
+    lose: "無念。されど『{word}』を放つ",
+  });
   // 背景の記事（KJ-094。見本「新聞21」の文。遊びの決まりを新聞の文体にしたもの。文は仮）。画面の背景いっぱいに繰り返す。点は決まり（data/rules.json）と同じ：三字九点・四字十二点・四字熟語は倍・引き直しは五度まで
   const NEWS = "本紙特報。漢字ヲ割リ、回シ、裏返シ、合セテ別ノ字ト為シ、言葉ヲ放ツ遊戯、市中ニ大流行ス。相手ノ放チタル言葉ハ其ノ儘返ス能ハズ、必ズ一工夫ヲ要ス。山札ニ出デタル札ハ早キ者ノ物ナリ。三字ノ言葉ハ九点、四字ハ十二点、四字熟語ハ其ノ倍ナリ。引直シハ五度マデ、回ヲ重ヌル毎ニ値上ル。記者曰ク、待ツモ一手、攻ムルモ一手、勝敗ハ十分ニシテ決ス。";
-  return Object.freeze({ ICON_SHAPES, iconSvg, BUTTONS, LOGO, buttonHtml, redrawNote, TEXT, GEAR_SVG, SENKYO, SHARE_RESULT, NEWS });
+  return Object.freeze({ ICON_SHAPES, iconSvg, BUTTONS, LOGO, buttonHtml, redrawNote, TEXT, GEAR_SVG, SENKYO, SHARE_RESULT, AORI, AORI_SHARE, NEWS });
 });

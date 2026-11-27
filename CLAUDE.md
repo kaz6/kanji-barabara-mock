@@ -73,6 +73,7 @@ npm test
 - `tests/btnlook.browser.test.mjs`：卓の操作5つの押せる／押せないの見え方（KJ-099・KJ-102。見え方は下線だけ。設定「ボタン」は無い・`<html data-btn>` も無い・localStorage `kj-btn` は読まない〔端末に white・outline が残っていても下線〕・押せる字は 4.5 以上・押せないは紙の地に墨 0.35・Play の押せないも札の地に墨 0.35〔KJ-117。台が1枚のときも押せない見え方で、押すと 否 と理由〕・押せるときは弁柄の地・Redraw は変わらない・Back は押せるときだけ弁柄の下線〔KJ-115〕・ヒントの光りと待ち時間のゲージが見える）。`KJ_SHOT_BTN=<フォルダ>` で画像を書く
 - `tests/share.test.js`・`tests/share.browser.test.mjs`：合言葉の共有（KJ-107。`K.roomCodeFromSearch`・`K.roomShareUrl`・共有の文／画面：部屋を作ると「共有」が出る・`navigator.share` に ?room= 付きのリンクが渡る・share が無いとクリップボードに写る・?room= で開くと友達と対戦・部屋に入るが選ばれ合言葉が入る〔まだ入らない〕・合わない合言葉は入らない）。文は `js/strings.js` の `TEXT.shareText` ほか。`KJ_SHOT_SHARE=<フォルダ>` で画像を書く
 - `tests/shareend.test.js`・`tests/shareend.browser.test.mjs`：戦果の共有（KJ-108。`K.shareResultText`・`K.siteUrl`・勝ち／負け／引き分け／ひとり／言葉なし・型は `SHARE_RESULT` の1か所／画面：終わりに「共有」が出る・`navigator.share` に文と URL〔?room= なし〕・share が無いとクリップボード・チュートリアルでは出ない）。`KJ_SHOT_SHAREEND=<フォルダ>` で画像を書く
+- `tests/aori.test.js`・`tests/aori.browser.test.mjs`：煽り文句（KJ-126。`K.aoriLine`〔終わりの画面。9通り〕・`K.aoriShareLine`〔共有。6通り〕・言葉なしは共有の行なし・ひとりは出ない・共有の文の最後が リンク→`#漢対普請瓦版`・合言葉の共有にタグなし・型は `js/strings.js` の `AORI`・`AORI_SHARE`／画面：見出しの下に1行・墨・Zen・飾りなし・375／320px・「、」「！」の後ろでだけ折る）。`KJ_SHOT_AORI=<フォルダ>` で画像を書く
 - `tests/browser.test.mjs`：画面（合言葉の部屋を2つのページで1試合〔kj_claims は page.route で偽物に回し、Realtime は差し替え〕・台に札を置いても手札と場が動かない・並べる順が逆・放つ→取る・引き直し・ログをコピー・選ぶと札はマスに残り台に写しが並ぶ・入れ替え）。Playwright の Chromium がないと skip になる。skip は「通った」ではない
 - 変えたら必ず `npm test` を回し、件数と結果を PR に書く
 
