@@ -133,3 +133,20 @@ test("KJ-126 画面：言葉を1つも放っていないと「沈黙の一戦」
     assert.equal(await page.locator("#esAori").textContent(), "沈黙の一戦、語らずして幕");
   } finally { await browser.close(); srv.close(); }
 });
+
+test("KJ-126 画面：チュートリアルでは終わりの画面を出しても煽りは空", { skip }, async () => {
+  const srv = await serve();
+  const base = `http://127.0.0.1:${srv.address().port}/index.html`;
+  const browser = await chromium.launch();
+  try {
+    const ctx = await browser.newContext({ viewport: { width: 375, height: 667 } });
+    await ctx.addInitScript(() => { try { localStorage.removeItem("kj-tutorial"); } catch (e) { /* */ } });
+    const page = await ctx.newPage();
+    await page.goto(base);
+    await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
+    await page.click("#bTutorial");
+    await page.waitForFunction(() => document.body.classList.contains("tutorial"));
+    await page.evaluate(() => { document.getElementById("esAori").textContent = "x"; showEnd(null); });
+    assert.equal(await page.locator("#esAori").textContent(), "");
+  } finally { await browser.close(); srv.close(); }
+});
