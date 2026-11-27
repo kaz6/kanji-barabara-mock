@@ -135,7 +135,7 @@ for (const look of [null, "white", "outline", "line", "zzz"]) {
       const others = () => page.evaluate(() => ["bRelease", "bBack", "bRedraw"].map((id) => { const c = getComputedStyle(document.getElementById(id)); return [id, c.backgroundColor, c.color, c.fontWeight]; }));
       const a = await others();
       // Play・Back・Redraw は KJ-102 の前と同じ（地・字の色・太さ。Play は押せない見え方のとき）
-      assert.deepEqual(a, [["bRelease", "rgb(122, 58, 47)", "rgb(244, 221, 215)", "700"], ["bBack", "rgba(0, 0, 0, 0)", "rgb(98, 90, 80)", "400"], ["bRedraw", "rgba(0, 0, 0, 0)", "rgb(42, 38, 34)", "400"]]); // Play は押せない見え方（--play-off）
+      assert.deepEqual(a, [["bRelease", "rgb(246, 238, 214)", "rgba(42, 38, 34, 0.35)", "400"], ["bBack", "rgba(0, 0, 0, 0)", "rgb(98, 90, 80)", "400"], ["bRedraw", "rgba(0, 0, 0, 0)", "rgb(42, 38, 34)", "400"]]); // KJ-117：Play の押せないは札の地・墨 0.35 の字（操作5つと同じ考え）
       // KJ-115：Back は押せないとき下線なし・押せるとき操作5つと同じ弁柄の下線（Redraw に下線は無い）
       const bs = () => page.evaluate(() => ["bBack", "bRedraw"].map((id) => getComputedStyle(document.getElementById(id)).boxShadow));
       assert.equal(await page.evaluate(() => document.getElementById("bBack").disabled), true);
@@ -179,3 +179,38 @@ for (const look of [null, "white", "outline", "line", "zzz"]) {
     } finally { await browser.close(); srv.close(); }
   });
 }
+
+// KJ-117：Play の押せる／押せない。押せない＝札の地・墨の枠・墨 0.35 の字。押せる＝弁柄の地。台が1枚のときは押せない見え方で、押すと 否 と「1字では放てない」
+test("Play：0枚・1枚は押せない見え方（札の地・墨 0.35）、1枚で押すと 否 と理由が出る、2枚で放てる並びは弁柄の地", { skip }, async () => {
+  const srv = await serve(); const browser = await chromium.launch();
+  try {
+    const url = `http://127.0.0.1:${srv.address().port}/index.html`;
+    const { ctx, page, errors } = await open(browser, url);
+    await play(page);
+    await page.evaluate(() => { const G = __KJ.game; G.me.cards = [..."日本上下山川口木"].map((c, i) => ({ id: 9000 + i, c, t: 0, fresh: false })); __KJ.render(); });
+    const look = () => page.evaluate(() => { const b = document.getElementById("bRelease"), c = getComputedStyle(b); return { bg: c.backgroundColor, color: c.color, weight: c.fontWeight, off: b.disabled || b.getAttribute("aria-disabled") === "true", aria: b.getAttribute("aria-disabled"), dis: b.disabled }; });
+    const OFF = { bg: "rgb(246, 238, 214)", color: "rgba(42, 38, 34, 0.35)", weight: "400" };
+    const shot = (n) => process.env.KJ_SHOT_BTN ? page.screenshot({ path: path.join(process.env.KJ_SHOT_BTN, `kj-117-${n}.png`) }) : null;
+    let l = await look();
+    assert.deepEqual({ bg: l.bg, color: l.color, weight: l.weight }, OFF, "台が0枚：押せない見え方"); assert.equal(l.off, true);
+    await shot("0");
+    await page.locator("#meHand .tile", { hasText: "日" }).first().click();
+    l = await look();
+    assert.deepEqual({ bg: l.bg, color: l.color, weight: l.weight }, OFF, "台が1枚：押せない見え方（弁柄の地にしない・光らない）");
+    assert.equal(l.aria, "true"); assert.equal(l.dis, false, "押すと理由を出すので disabled にはしない");
+    await shot("1");
+    await page.click("#bRelease", { force: true }); // aria-disabled は Playwright が「押せない」とみなす
+    await page.waitForSelector("#nope.on");
+    assert.equal(await page.textContent("#nopeWhy"), "2字から！", "今までどおり：1字では放てない（rejectText の言い方）");
+    await page.evaluate(() => { const G = __KJ.game; G.me.cards = [..."日本上下山川口木"].map((c, i) => ({ id: 9100 + i, c, t: 0, fresh: false })); __KJ.render(); });
+    await page.evaluate(() => document.getElementById("bBack").click());
+    await page.locator("#meHand .tile", { hasText: "日" }).first().click();
+    await page.locator("#meHand .tile", { hasText: "本" }).first().click();
+    l = await look();
+    assert.equal(l.off, false, "日本：放てる並びは押せる");
+    assert.equal(l.bg, "rgb(156, 59, 46)", "押せる＝弁柄の地"); assert.equal(l.weight, "700");
+    await shot("2");
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  } finally { await browser.close(); srv.close(); }
+});
