@@ -790,7 +790,8 @@ function showScreen(playing){syncFace();closeEnd();$("setup").hidden=playing;$("
 // 数え下げの字（参・弐・壱）は曲が切でも出す。数え下げのあいだは時計を動かさない（CPU 戦は数えたあとに試合を作る。合言葉の部屋は始まりの時刻を数え下げのぶんだけ後ろへ）。チュートリアルでは数えない・鳴らさない。
 // 端末のテスト（webdriver）では数えない（window.__KJ_COUNT_FORCE を立てたときだけ数える）
 const BGM={ctx:null,buf:{},loading:null,noise:null,song:null,token:0,logs:[]};
-let countTok=0;
+let countTok=0,countSeq=0; // countTok＝いま数えている数え下げの番号（0＝数えていない）。countSeq は増やすだけ（やめて数え直しても、古い tick が新しい数え下げと取り違えない）
+const COUNT_LOCK=['setup','game','endShow']; // 数え下げのあいだ、下の画面はキーボードでも動かせない（inert）
 const bgmCfg=()=>(D.rules&&D.rules.bgm)||null;
 function countOn(){
   if(!bgmCfg()||TUT)return false;
@@ -839,11 +840,12 @@ function bgmGo(plan){
   try{if(c.state==="suspended"&&c.resume)c.resume()}catch(e){}
   const off=t=>c.currentTime+(t-clock()); // 画面の時計 → 音の時計
   bgmNoiseStop(plan.needleAt);
+  BGM.pend=[];
   const sched=(buf,gain,at,loop)=>{ // 予約の時刻が過ぎていたら、その分だけ途中から
     const src=c.createBufferSource(),g=bgmGainNode(c,gain),when=off(at),late=Math.max(0,c.currentTime-when);
     src.buffer=buf;src.connect(g);if(loop){src.loop=true;src.loopStart=0;src.loopEnd=buf.duration}
     if(late>=buf.duration&&!loop)return null;
-    src.start(Math.max(c.currentTime,when),late%buf.duration);return{src,g};
+    src.start(Math.max(c.currentTime,when),late%buf.duration);(BGM.pend=BGM.pend||[]).push(src);return{src,g};
   };
   sched(BGM.buf.needle,cfg.gain.needle,plan.needleAt,false);
   const song=sched(BGM.buf.song,cfg.gain.song,plan.songAt,true);
@@ -866,7 +868,9 @@ function bgmWatch(){
 }
 // 数え下げ：startAt（画面の時計）から step 秒ずつ 参・弐・壱。数え終えたら done。countTok が変わった（やめた）ら出ない
 function runCount(startAt,tl,done){
-  const cfg=bgmCfg(),tok=++countTok,plan=K.bgmPlan(D.rules,startAt,tl);
+  const cfg=bgmCfg(),tok=++countSeq,plan=K.bgmPlan(D.rules,startAt,tl);countTok=tok;
+  for(const id of COUNT_LOCK){const e=$(id);if(e)e.inert=true}
+  try{if(document.activeElement&&document.activeElement.blur)document.activeElement.blur()}catch(e){}
   document.documentElement.classList.add("counting");
   $("count").hidden=false;
   bgmGo(plan);
@@ -874,19 +878,26 @@ function runCount(startAt,tl,done){
   const tick=()=>{
     if(countTok!==tok)return;
     const e=clock()-startAt,i=Math.floor(e/plan.step);
-    if(i>=plan.count){$("count").hidden=true;document.documentElement.classList.remove("counting");countTok=0;done();return}
+    if(i>=plan.count){$("count").hidden=true;document.documentElement.classList.remove("counting");countTok=0;for(const id of COUNT_LOCK){const e=$(id);if(e)e.inert=false}done();return}
     if(i!==shown){shown=i;const sp=$("countChar");sp.textContent=cfg.count[Math.max(0,i)];sp.style.animation="none";void sp.offsetWidth;sp.style.animation=""}
     setTimeout(tick,Math.max(10,((Math.max(0,i)+1)*plan.step-e)*1000+5));
   };
   tick();
 }
-function cancelCount(){if(!countTok)return;countTok=0;$("count").hidden=true;document.documentElement.classList.remove("counting")}
+function cancelCount(){ // 数え下げをやめる：予約した針の音・曲も止める
+  if(!countTok)return;countTok=0;$("count").hidden=true;document.documentElement.classList.remove("counting");
+  for(const id of COUNT_LOCK){const e=$(id);if(e)e.inert=false}
+  for(const s of BGM.pend||[]){try{s.stop(0)}catch(e){}}
+  BGM.pend=[];BGM.song=null;
+}
 ["pointerdown","keydown","touchend"].forEach(ev=>document.addEventListener(ev,()=>bgmUnlock(),{capture:true,passive:true}));
 function start(){
+  if(countTok)return; // 数え下げのあいだの「はじめる」「もう一度」（Enter のくり返しなど）は無視
   clearTimeout(cpuTimer);
   sendAbandoned();
-  leaveRoom();leaveTutorial();cancelCount();
-  if(countOn()){const t0=clock();runCount(t0,timeLimit,()=>begin());return} // 数えたあとに試合を作る（数え下げのあいだ時計は動かない）
+  leaveRoom();leaveTutorial();bgmSongStop();cancelCount();
+  if(countOn()){if(G&&!G.over)G.over=true; // 前の試合は捨てた（ログは送った）。数え下げのあいだに時間切れで二重に終わらない
+    const t0=clock();runCount(t0,timeLimit,()=>begin());return} // 数えたあとに試合を作る（数え下げのあいだ時計は動かない）
   begin();
 }
 function begin(){

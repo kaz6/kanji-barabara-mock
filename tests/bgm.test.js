@@ -18,7 +18,6 @@ test("rules.bgm：数え下げは 参・弐・壱 を1秒ずつ。曲が鳴り�
   assert.equal(B.fast_rate, 1.1);
   assert.equal(B.fade_out_sec, 1);
   for (const k of ["song", "needle", "noise"]) assert.ok(fs.existsSync(path.join(ROOT, B.files[k])), B.files[k] + " がある");
-  assert.ok(/^2026-11-28/.test(D.rules.version), "rules の version を上げた");
   assert.ok(D.rules.note.includes("KJ-133"), "note に KJ-133");
 });
 

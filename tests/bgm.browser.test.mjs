@@ -206,6 +206,26 @@ test("曲：数え下げ（参・弐・壱）と、針の音・曲の予約の�
       }
     });
 
+
+    await t.test("試合の途中で「もう一度」：前の曲は止まり（二重に鳴らない）、数え下げのあと新しい曲。数え下げ中にもう一度押しても、数え下げは1本だけ（キーボードでも）", async () => {
+      const A = await open(browser, base); await loaded(A.page);
+      await A.page.click("#start");
+      await A.page.waitForFunction(() => __KJ.game && __KJ.game.elapsed() >= 0.2, null, { timeout: 8000 });
+      const songs = async () => (await audio(A.page)).filter((e) => e.type === "start" && e.kind === "song").length;
+      assert.equal(await songs(), 1);
+      await A.page.click("#again");
+      await A.page.waitForSelector("#count:not([hidden])");
+      assert.ok((await audio(A.page)).some((e) => e.type === "stop" && e.kind === "song"), "前の曲は止めた");
+      assert.equal(await A.page.evaluate(() => ["setup", "game", "endShow"].every((id) => document.getElementById(id).inert)), true, "数え下げのあいだ下の画面は動かせない（inert）");
+      await A.page.keyboard.press("Enter"); await A.page.waitForTimeout(200); await A.page.keyboard.press("Enter");
+      await A.page.waitForFunction(() => __KJ.game && !__KJ.game.over && __KJ.game.elapsed() >= 0.1, null, { timeout: 8000 });
+      assert.equal(await songs(), 2, "曲は新しい1本だけ増える（数え下げが2本走らない）");
+      const ev = await audio(A.page);
+      const alive = ev.filter((e) => e.type === "start" && e.kind === "song").length - ev.filter((e) => e.type === "stop" && e.kind === "song").length;
+      assert.equal(alive, 1, "鳴っている曲は1本");
+      assert.equal(await A.page.evaluate(() => document.getElementById("setup").inert || document.getElementById("game").inert), false, "数え終えたら inert は外れる");
+      await A.ctx.close();
+    });
     await t.test("曲を切にすると、数え下げの字だけ出して音は鳴らさない。歯車の欄に「曲」の入／切があり、覚える（kj-bgm）", async () => {
       const A = await open(browser, base); await loaded(A.page);
       await A.page.click("#bGear");
