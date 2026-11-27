@@ -958,11 +958,11 @@ test("並べ方の切り替えはない（KJ-030）：選び方は1つ。ログ�
 });
 
 // ---------- KJ-007：制限時間を選ぶ ----------
-test("時間：選べるのは rules の 5・10・15分。知らない値は既定の10分。選んだ時間で終わる時刻が変わる", () => {
-  assert.deepEqual(K.timeChoices(D), [300, 600, 900]);
-  assert.equal(K.normTime(D, 900), 900);
+test("時間：選べるのは rules の 5・10分（KJ-123 で15分をやめた）。知らない値・覚えてあった15分は既定の10分。選んだ時間で終わる時刻が変わる", () => {
+  assert.deepEqual(K.timeChoices(D), [300, 600]);
+  assert.equal(K.normTime(D, 900), 600, "端末に 900 が覚えてあっても 10分");
   assert.equal(K.normTime(D, "300"), 300, "端末に覚えた文字列も読める");
-  for (const bad of [7, 0, null, undefined, "", "でたらめ", 1200]) assert.equal(K.normTime(D, bad), D.rules.win.time_limit_sec, String(bad));
+  for (const bad of [7, 0, null, undefined, "", "でたらめ", 1200, "900"]) assert.equal(K.normTime(D, bad), D.rules.win.time_limit_sec, String(bad));
   assert.equal(newGame(1).timeLimit, 600, "省くと既定");
   for (const sec of K.timeChoices(D)) {
     const clock = { t: 1000 };
@@ -984,23 +984,23 @@ test("時間：選べるのは rules の 5・10・15分。知らない値は既�
 
 test("時間：はじめたらすぐ時間が動く（はじめの1枚は KJ-016 でやめた）。選んだ時間が数えられる", () => {
   const g = newGame(1, "solo", "N5");
-  const g2 = K.createGame(D, T, { now: () => g.clock.t, rand: () => 0.5, opponent: "solo", timeLimit: 900 });
+  const g2 = K.createGame(D, T, { now: () => g.clock.t, rand: () => 0.5, opponent: "solo", timeLimit: 600 });
   assert.equal(g2.picking, undefined, "止まっている状態は無い");
-  assert.equal(g2.timeLeft(), 900);
+  assert.equal(g2.timeLeft(), 600);
   g.clock.t += 100;
-  assert.equal(g2.timeLeft(), 800, "はじめた時から減る");
+  assert.equal(g2.timeLeft(), 500, "はじめた時から減る");
   assert.equal(g2.elapsed(), 100);
 });
 
 test("ログの頭に レベル・相手・時間 の3つが出る（KJ-007。並べ方は KJ-030 でなくした）", () => {
   const clock = { t: 1000 };
-  const g = K.createGame(D, T, { now: () => clock.t, rand: () => 0.5, opponent: "solo", timeLimit: 900, date: () => new Date(2026, 10, 21, 9, 0, 0) });
+  const g = K.createGame(D, T, { now: () => clock.t, rand: () => 0.5, opponent: "solo", timeLimit: 300, date: () => new Date(2026, 10, 21, 9, 0, 0) });
   const head = g.logText().split("\n").filter((l) => /^# (レベル|相手|時間) /.test(l));
   assert.equal(head.length, 3);
   assert.deepEqual(head.map((l) => l.split(" ")[1]), ["レベル", "相手", "時間"]);
-  assert.match(g.logText(), /# 時間 15分\n/);
-  assert.match(g.logText(), /# 相手 ひとりで（CPU なし。場の取り合いなし。50点では終わらず、15分たったら終わって点を出す/);
-  assert.match(g.logText(), /# 仮置き 勝ち 先に50点、または15分で点の多い方（同点は引き分け）。ひとりでは50点で終わらず15分で終わる/);
+  assert.match(g.logText(), /# 時間 5分\n/);
+  assert.match(g.logText(), /# 相手 ひとりで（CPU なし。場の取り合いなし。50点では終わらず、5分たったら終わって点を出す/);
+  assert.match(g.logText(), /# 仮置き 勝ち 先に50点、または5分で点の多い方（同点は引き分け）。ひとりでは50点で終わらず5分で終わる/);
 });
 
 test("選んだ順がそのまま効く。放つ・くっつける・割る の結果（KJ-005。KJ-030 で選び方は1つ）", () => {
@@ -2239,7 +2239,7 @@ test("足＝口＋止：割ると 口 と 止。口＋止 で 足（N5・N4・�
 });
 
 test("相手の選び（KJ-045・KJ-056）：遊び方は2つ（ひとりで は画面から外した）・強さは3つ。前の形のキーを新しい形に読み替える。中のキーとログの書き方は変えない", () => {
-  assert.deepEqual(K.PLAY_MODES.map((o) => o.label), ["CPU と", "友だちと（合言葉）"]);
+  assert.deepEqual(K.PLAY_MODES.map((o) => o.label), ["CPU戦", "友達と対戦"]);
   assert.deepEqual(K.CPU_POWERS.map((o) => [o.key, o.label]), [["weak", "とても弱い"], ["fair", "ふつう"], ["normal", "つよい"]]);
   // 中のキーは前のまま（ログ・CPU の間隔・部屋が使う）
   assert.deepEqual(K.OPPONENTS.map((o) => o.key), ["solo", "weak", "fair", "normal"]);

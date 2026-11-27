@@ -212,10 +212,10 @@ test("画面", { skip }, async (t) => {
     await ctx.close();
   });
 
-  await t.test("相手の選び方（KJ-045）：初期値は CPU と＋とても弱い。遊び方は2つ（ひとりで は無い）、強さは CPU とのときだけ3つ", async () => {
+  await t.test("相手の選び方（KJ-045）：初期値は CPU戦＋とても弱い。遊び方は2つ（CPU戦・友達と対戦）（ひとりで は無い）、強さは CPU とのときだけ3つ", async () => {
     const { ctx, page, errors } = await open(browser, url, { width: 760, height: 1100 });
     const labels = await page.locator("#opp label").allTextContents();
-    assert.deepEqual(labels.map((x) => x.trim()), ["CPU と", "友だちと（合言葉）"]);
+    assert.deepEqual(labels.map((x) => x.trim()), ["CPU戦", "友達と対戦"]);
     assert.deepEqual((await page.locator("#pow label").allTextContents()).map((x) => x.trim()), ["とても弱い", "ふつう", "つよい"]);
     assert.equal(await page.locator("#opp input:checked").getAttribute("value"), "cpu");
     assert.equal(await page.locator("#pow input:checked").getAttribute("value"), "weak");
@@ -225,7 +225,7 @@ test("画面", { skip }, async (t) => {
     await ctx.close();
   });
 
-  await t.test("はじめる前の画面（KJ-007）：3つが上から並び、初期値は 遊び方=CPU と・強さ=とても弱い・レベル=N4・時間=10分。下に「はじめる」（並べ方の選びは KJ-030 でなくした）", async () => {
+  await t.test("はじめる前の画面（KJ-007）：3つが上から並び、初期値は 遊び方=CPU戦・強さ=とても弱い・レベル=N4・時間=10分。下に「はじめる」（並べ方の選びは KJ-030 でなくした）", async () => {
     const ctx = await browser.newContext({ viewport: { width: 375, height: 800 } });
     const page = await ctx.newPage();
     const errors = [];
@@ -237,10 +237,10 @@ test("画面", { skip }, async (t) => {
     const ys = await page.evaluate(() => ["opp", "pow", "lvl", "tim", "start"].map((id) => document.getElementById(id).getBoundingClientRect().top));
     assert.deepEqual([...ys].sort((a, b) => a - b), ys, "遊び方・強さ・レベル・時間・はじめる の順に上から並ぶ");
     const labels = (id) => page.locator(`#${id} label`).allTextContents().then((a) => a.map((x) => x.trim()));
-    assert.deepEqual(await labels("opp"), ["CPU と", "友だちと（合言葉）"]);
+    assert.deepEqual(await labels("opp"), ["CPU戦", "友達と対戦"]);
     assert.deepEqual(await labels("pow"), ["とても弱い", "ふつう", "つよい"]);
     assert.deepEqual(await labels("lvl"), ["小1", "N5", "N4"]);
-    assert.deepEqual(await labels("tim"), ["5分", "10分", "15分"]);
+    assert.deepEqual(await labels("tim"), ["5分", "10分"]);
     assert.equal(await page.locator("#lay").count(), 0, "並べ方の選びはない（KJ-030）");
     for (const [id, v] of [["opp", "cpu"], ["pow", "weak"], ["lvl", "N4"], ["tim", "600"]]) assert.equal(await page.locator(`#${id} input:checked`).getAttribute("value"), v, id);
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, "横にはみ出さない");
@@ -248,13 +248,13 @@ test("画面", { skip }, async (t) => {
     await ctx.close();
   });
 
-  await t.test("はじめる前の画面（KJ-007）：時間の3択で終わる時刻が変わる。4つが端末に残り、ログの頭に出る", async () => {
+  await t.test("はじめる前の画面（KJ-007）：時間の2択（5分・10分。KJ-123 で15分をやめた）で終わる時刻が変わる。4つが端末に残り、ログの頭に出る", async () => {
     const { ctx, page, errors } = await open(browser, url, { width: 375, height: 900 });
     await page.click("#bSetup");
     assert.equal(await page.isVisible("#setup"), true, "設定を変えるで はじめる前の画面へ戻る");
     assert.equal(await page.isVisible("#game"), false);
     assert.equal(await page.evaluate(() => __KJ.game), null, "遊びは捨てる");
-    for (const sec of [300, 600, 900]) {
+    for (const sec of [300, 600]) {
       await page.check(`#tim input[value="${sec}"]`);
       await page.click("#start");
       assert.equal(await page.evaluate(() => __KJ.game.timeLimit), sec);
@@ -316,22 +316,30 @@ test("画面", { skip }, async (t) => {
     assert.deepEqual([await vis("#pow"), await vis("#roomBox"), await vis("#start"), await vis("#lvl"), await vis("#tim")], [true, false, true, true, true]);
     // ひとりで は画面にない（KJ-056）
     assert.equal(await page.locator('#opp input[value="solo"]').count(), 0);
-    // 友だちと：部屋を作る・合言葉で入るが出る。強さは出ない。レベル・時間は「部屋を作る」の側にあり、入る側（合言葉の欄）には無い
+    // 友達と対戦（KJ-123）：強さの段の場所に［部屋を作る］［部屋に入る］が横並びで出る。初めはどちらも選ばれていない。強さは出ない。レベル・時間は作る前に選べるよう、その下に出たまま
     await page.check('#opp input[value="room"]');
-    assert.deepEqual([await vis("#pow"), await vis("#roomBox"), await vis("#start"), await vis("#bHost"), await vis("#bEnter"), await vis("#lvl"), await vis("#tim")], [false, true, false, true, true, true, true]);
+    assert.deepEqual([await vis("#pow"), await vis("#roomBox"), await vis("#start"), await vis("#act"), await vis("#lvl"), await vis("#tim"), await vis("#roomCode"), await vis("#bEnter")], [false, true, false, true, true, true, false, false]);
+    assert.deepEqual(await page.locator("#act label").allTextContents().then((a) => a.map((x) => x.trim())), ["部屋を作る", "部屋に入る"]);
+    assert.equal(await page.locator("#act input:checked").count(), 0, "初めはどちらも選ばれていない");
     assert.equal(await page.evaluate(() => localStorage.getItem("kj-opponent")), "room");
     const place = await page.evaluate(() => {
-      const y = (id) => document.getElementById(id).getBoundingClientRect().top;
+      const r = (id) => document.getElementById(id).getBoundingClientRect(), a = [...document.querySelectorAll("#act label")].map((l) => l.getBoundingClientRect());
       return { inHost: document.getElementById("hostSlot").contains(document.getElementById("lvl")) && document.getElementById("hostSlot").contains(document.getElementById("tim")),
-        order: y("lvl") < y("bHost") && y("tim") < y("bHost") && y("bHost") < y("roomCode") };
+        order: r("opp").top < r("act").top && r("act").top < r("lvl").top && r("lvl").top < r("tim").top, sameRow: Math.abs(a[0].top - a[1].top) < 2 && a[0].right <= a[1].left };
     });
-    assert.deepEqual(place, { inHost: true, order: true });
+    assert.deepEqual(place, { inHost: true, order: true, sameRow: true }, "遊び方→作る／入る→レベル→時間 の順。作る／入るは横並び");
+    // 部屋に入る：合言葉の入力と「合言葉で入る」が出る。レベル・時間は出ない（作った人のもので遊ぶ）。「入る側は…」の文が下に1行
+    await page.check('#act input[value="enter"]');
+    assert.deepEqual([await vis("#roomCode"), await vis("#bEnter"), await vis("#lvl"), await vis("#tim")], [true, true, false, false]);
+    assert.match(await page.locator("#enterBox .gt").textContent(), /入る側は、作った人のレベル・時間で遊ぶ/);
+    assert.equal(await page.evaluate(() => { const r = (id) => document.getElementById(id).getBoundingClientRect(); return r("roomCode").bottom <= document.querySelector("#enterBox .gt").getBoundingClientRect().top + 1; }), true, "文は入る側の下");
     // CPU と に戻すと、前に選んだ強さを覚えている。レベル・時間はもとの場所に戻る
     await page.check('#opp input[value="cpu"]');
     await page.check('#pow input[value="normal"]');
     await page.check('#opp input[value="room"]');
     await page.check('#opp input[value="cpu"]');
     assert.equal(await page.locator("#pow input:checked").getAttribute("value"), "normal");
+    assert.equal(await page.locator("#act input:checked").count(), 0, "遊び方を替えると、作る／入るの選びは外れる");
     assert.equal(await page.evaluate(() => localStorage.getItem("kj-opponent")), "normal");
     assert.equal(await page.evaluate(() => document.getElementById("setSlot").contains(document.getElementById("lvl"))), true);
     // 375×700 で、はじめる前の画面が横にはみ出さない（2つの遊び方・3つの強さが折り返して収まる）
@@ -379,9 +387,9 @@ test("画面", { skip }, async (t) => {
     await page.goto(url);
     await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
     for (const [id, v] of [["opp", "cpu"], ["pow", "weak"], ["lvl", "N4"], ["tim", "600"]]) assert.equal(await page.locator(`#${id} input:checked`).getAttribute("value"), v, id);
-    await page.check('#tim input[value="900"]'); // 選んでも壊れない（覚えないだけ）
+    await page.check('#tim input[value="300"]'); // 選んでも壊れない（覚えないだけ）
     await clickStart(page); // 印が残せない端末はチュートリアルから。とばして本番へ
-    assert.equal(await page.evaluate(() => __KJ.game.timeLimit), 900);
+    assert.equal(await page.evaluate(() => __KJ.game.timeLimit), 300);
     assert.equal(await page.evaluate(() => __KJ.game.opponent), "weak");
     assert.deepEqual(errors, []);
     await ctx.close();
@@ -1882,15 +1890,16 @@ test("画面", { skip }, async (t) => {
     };
     const A = await mk(), B = await mk();
     assert.equal(await A.page.isVisible("#start"), false, "人と（合言葉）では「はじめる」の代わりに部屋の選び");
-    assert.equal(await A.page.isVisible("#bHost"), true);
+    assert.equal(await A.page.isVisible("#act"), true);
     await A.page.check('#lvl input[value="N5"]');
     await A.page.check('#tim input[value="300"]');
-    await A.page.click("#bHost");
+    await A.page.check('#act input[value="host"]');
     await A.page.waitForSelector("#roomShow:not([hidden])");
     const code = (await A.page.textContent("#roomShow")).trim();
     assert.match(code, /^[0-9]{4}$/);
     assert.match(await A.page.textContent("#roomMsg"), /相手を待っています/);
     // 入る側（設定は N4・10分のまま。作った人の N5・5分 で遊ぶ）
+    await B.page.check('#act input[value="enter"]');
     await B.page.fill("#roomCode", "99");
     await B.page.click("#bEnter");
     await B.page.waitForFunction(() => /数字4けた/.test(document.getElementById("roomMsg").textContent));
@@ -1953,7 +1962,8 @@ test("画面", { skip }, async (t) => {
     // 「もう一度」は、はじめる前の画面へ（部屋を作り直す）
     await A.page.click("#again");
     assert.equal(await A.page.isVisible("#setup"), true);
-    assert.equal(await A.page.isVisible("#bHost"), true);
+    assert.equal(await A.page.isVisible("#act"), true);
+    assert.equal(await A.page.locator("#act input:checked").count(), 0, "作る／入るはどちらも選ばれていない");
     assert.equal(await A.page.evaluate(() => __KJ.mc), null);
     await A.ctx.close(); await B.ctx.close();
   });
@@ -1985,8 +1995,9 @@ test("画面", { skip }, async (t) => {
       return { ctx, page };
     };
     const A = await mk(), B = await mk();
-    await A.page.click("#bHost");
+    await A.page.check('#act input[value="host"]');
     await A.page.waitForSelector("#roomShow:not([hidden])");
+    await B.page.check('#act input[value="enter"]');
     await B.page.fill("#roomCode", (await A.page.textContent("#roomShow")).trim());
     await B.page.click("#bEnter");
     for (const P of [A, B]) await P.page.waitForSelector("#game:not([hidden])", { timeout: 8000 });
@@ -2132,7 +2143,7 @@ test("画面", { skip }, async (t) => {
     assert.ok(parseFloat(on.edge) >= 1, "札の形（縁がある）");
     assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById("setup")).backgroundColor), PAPER, "卓は紙の色（暗い面はやめた）");
     assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById("setup")).borderTopWidth), "3px", "上下に太い罫線");
-    const host = (d) => page.evaluate((dis) => { const b = document.getElementById("bHost"); b.disabled = dis; const cs = getComputedStyle(b); return [cs.backgroundColor, cs.color]; }, d);
+    const host = (d) => page.evaluate((dis) => { const b = document.getElementById("bEnter"); b.disabled = dis; const cs = getComputedStyle(b); return [cs.backgroundColor, cs.color]; }, d);
     const [hOn, hOff] = [await host(false), await host(true)];
     assert.notDeepEqual(hOn, hOff, "はじめる前でも、押せないボタンは見分けられる");
     assert.ok(ratio(hOff[1], hOff[0]) >= 4.5, "押せなくても文字が読める");

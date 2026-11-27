@@ -271,7 +271,7 @@ test("決まり：数値がそろっている（KJ-003 の仮置き）", () => {
   assert.equal(r.win.score, 50);
   assert.equal(r.win.time_limit_sec, 600, "制限時間は10分（追記 P-005）");
   assert.equal(r.layout_default, undefined, "並べ方の切り替えはなくした（KJ-030）");
-  assert.deepEqual(r.win.time_choices_sec, [300, 600, 900], "制限時間は 5・10・15分から選ぶ（KJ-007）");
+  assert.deepEqual(r.win.time_choices_sec, [300, 600], "制限時間は 5・10分から選ぶ（KJ-007。KJ-123 で15分をやめた）");
   assert.ok(r.win.time_choices_sec.includes(r.win.time_limit_sec), "既定（10分）は選べる値の中にある");
   const [a, b] = r.cpu.interval_sec;
   assert.deepEqual([a, b], [15, 20], "つよい：15〜20秒（KJ-058。前は 8〜12）");

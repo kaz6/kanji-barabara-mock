@@ -84,7 +84,7 @@ test("合言葉の共有の画面（KJ-107）", { skip }, async (t) => {
       const A = await open(browser, base, { share: "ok", handler: fakeClaims() });
       await A.page.check('#opp input[value="room"]');
       assert.equal(await A.page.isVisible("#bShare"), false, "部屋を作る前は出ない");
-      await A.page.click("#bHost");
+      await A.page.check('#act input[value="host"]');
       await A.page.waitForSelector("#roomShow:not([hidden])");
       assert.equal(await A.page.isVisible("#bShare"), true);
       assert.equal((await A.page.textContent("#bShare")).trim(), "共有");
@@ -105,7 +105,7 @@ test("合言葉の共有の画面（KJ-107）", { skip }, async (t) => {
     await t.test("共有を押すと navigator.share に文とリンク（?room=合言葉）が渡る。閉じただけなら何も出ない", async () => {
       const A = await open(browser, base, { share: "ok", handler: fakeClaims() });
       await A.page.check('#opp input[value="room"]');
-      await A.page.click("#bHost");
+      await A.page.check('#act input[value="host"]');
       await A.page.waitForSelector("#roomShow:not([hidden])");
       const code = (await A.page.textContent("#roomShow")).trim();
       await A.page.click("#bShare");
@@ -119,7 +119,7 @@ test("合言葉の共有の画面（KJ-107）", { skip }, async (t) => {
       await A.ctx.close();
       const B = await open(browser, base, { share: "abort", handler: fakeClaims() });
       await B.page.check('#opp input[value="room"]');
-      await B.page.click("#bHost");
+      await B.page.check('#act input[value="host"]');
       await B.page.waitForSelector("#roomShow:not([hidden])");
       const before = await B.page.textContent("#roomMsg");
       await B.page.click("#bShare");
@@ -132,7 +132,7 @@ test("合言葉の共有の画面（KJ-107）", { skip }, async (t) => {
     await t.test("navigator.share が無い端末では、同じ文とリンクをクリップボードに写して「コピーした」", async () => {
       const A = await open(browser, base, { share: "none", handler: fakeClaims() });
       await A.page.check('#opp input[value="room"]');
-      await A.page.click("#bHost");
+      await A.page.check('#act input[value="host"]');
       await A.page.waitForSelector("#roomShow:not([hidden])");
       const code = (await A.page.textContent("#roomShow")).trim();
       await A.page.click("#bShare");
@@ -146,7 +146,7 @@ test("合言葉の共有の画面（KJ-107）", { skip }, async (t) => {
     await t.test("navigator.share が閉じた以外（NotAllowedError など）で失敗したら、コピーに回る", async () => {
       const A = await open(browser, base, { share: "fail", handler: fakeClaims() });
       await A.page.check('#opp input[value="room"]');
-      await A.page.click("#bHost");
+      await A.page.check('#act input[value="host"]');
       await A.page.waitForSelector("#roomShow:not([hidden])");
       const code = (await A.page.textContent("#roomShow")).trim();
       await A.page.click("#bShare");
@@ -155,12 +155,15 @@ test("合言葉の共有の画面（KJ-107）", { skip }, async (t) => {
       await A.ctx.close();
     });
 
-    await t.test("?room=合言葉 で開く：「友だちと」が選ばれ、入る側の欄に合言葉が入っている。まだ入っていない", async () => {
+    await t.test("?room=合言葉 で開く：「友達と対戦」と［部屋に入る］が選ばれ、入る側の欄に合言葉が入っている。まだ入っていない", async () => {
       const claimsHits = [];
       const handler = async (route) => { claimsHits.push(route.request().method()); return fakeClaims()(route); };
       const B = await open(browser, base + "?room=4821", { handler, pre: "localStorage.setItem('kj-opponent', 'normal')" });
       assert.equal(await B.page.isChecked('#opp input[value="room"]'), true);
       assert.equal(await B.page.isVisible("#roomBox"), true);
+      assert.equal(await B.page.isChecked('#act input[value="enter"]'), true, "［部屋に入る］が選ばれている（KJ-123）");
+      assert.equal(await B.page.isChecked('#act input[value="host"]'), false);
+      assert.equal(await B.page.isVisible("#lvl"), false, "入る側にレベル・時間は出ない");
       assert.equal(await B.page.inputValue("#roomCode"), "4821");
       assert.equal(await B.page.isVisible("#game"), false, "勝手に入らない");
       await B.page.waitForTimeout(400);
@@ -178,7 +181,7 @@ test("合言葉の共有の画面（KJ-107）", { skip }, async (t) => {
       for (const q of ["?room=12", "?room=abcd", "?room=", "?room=123456"]) {
         const B = await open(browser, base + q);
         assert.equal(await B.page.inputValue("#roomCode"), "", q);
-        assert.equal(await B.page.isChecked('#opp input[value="cpu"]'), true, q + "：CPU と のまま");
+        assert.equal(await B.page.isChecked('#opp input[value="cpu"]'), true, q + "：CPU戦 のまま");
         assert.equal(await B.page.isVisible("#roomBox"), false, q);
         assert.deepEqual(B.errors, [], q);
         await B.ctx.close();
@@ -190,7 +193,7 @@ test("合言葉の共有の画面（KJ-107）", { skip }, async (t) => {
       const A = await open(browser, base, { share: "ok", handler });
       await A.page.addInitScript(() => { window.__KJ_POLL_MS = 150; });
       await A.page.check('#opp input[value="room"]');
-      await A.page.click("#bHost");
+      await A.page.check('#act input[value="host"]');
       await A.page.waitForSelector("#roomShow:not([hidden])");
       const code = (await A.page.textContent("#roomShow")).trim();
       await A.page.click("#bShare");

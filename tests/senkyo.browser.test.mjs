@@ -243,37 +243,31 @@ test("背景の記事：画面いっぱいに縦書き 10px・墨の不透明度
   } finally { await browser.close(); srv.close(); }
 });
 
-test("設定「背景の記事」：入／切（初期は入）。切なら記事だけ消える（ざらつきは残る）。端末に覚える。覚えられない端末でも落ちない", { skip }, async () => {
+test("背景の記事：いつも入（KJ-123）。入／切の段は無い。端末に kj-news=0 が残っていても記事を出す。localStorage が使えなくても出る", { skip }, async () => {
   const srv = await serve(); const browser = await chromium.launch();
   try {
     const url = `http://127.0.0.1:${srv.address().port}/index.html`;
     const { ctx, page, errors } = await open(browser, url);
     const state = () => page.evaluate(() => ({
       attr: document.documentElement.getAttribute("data-news"), disp: getComputedStyle(document.getElementById("bgnews")).display, ls: localStorage.getItem("kj-news"),
-      checked: document.querySelector('#news input:checked').value, label: document.getElementById("newsLabel").textContent,
+      len: document.getElementById("bgnews").textContent.length, ui: [document.getElementById("news"), document.getElementById("grpNews"), document.getElementById("newsLabel")].filter(Boolean).length,
       grain: (getComputedStyle(document.body).backgroundImage.match(/url\("data:image\/svg\+xml/g) || []).length,
     }));
-    assert.deepEqual(await page.$$eval("#news label", (a) => a.map((x) => x.textContent.trim())), ["入", "切"]);
-    assert.deepEqual(await state(), { attr: "on", disp: "block", ls: null, checked: "1", label: "背景の記事", grain: 2 }, "初期は入");
-    await page.check('#news input[value="0"]');
-    assert.deepEqual(await state(), { attr: "off", disp: "none", ls: "0", checked: "0", label: "背景の記事", grain: 2 }, "切：記事だけ消える。ざらつき（背景の粒と繊維）は残る");
-    await page.reload();
-    await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
-    assert.deepEqual(await state(), { attr: "off", disp: "none", ls: "0", checked: "0", label: "背景の記事", grain: 2 }, "開き直しても切");
-    await page.check('#news input[value="1"]');
-    assert.deepEqual(await state(), { attr: "on", disp: "block", ls: "1", checked: "1", label: "背景の記事", grain: 2 });
-    await page.reload();
-    await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
-    assert.equal((await state()).attr, "on", "開き直しても入");
-    assert.deepEqual(errors, []);
+    let st = await state();
+    assert.deepEqual({ ...st, len: st.len > 100 }, { attr: null, disp: "block", ls: null, len: true, ui: 0, grain: 2 }, "記事は出ていて、切り替えの段は無い");
+    assert.equal(await page.locator('input[name="news"]').count(), 0);
     await ctx.close();
-    // 覚えられない端末（localStorage が読めない・書けない）：入のまま動き、切り替えても落ちない
+    // 端末に切（"0"）が残っていても記事を出す（kj-news は読まない）
+    const O = await open(browser, url, { init: { "kj-news": "0" } });
+    st = await O.page.evaluate(() => ({ ls: localStorage.getItem("kj-news"), disp: getComputedStyle(document.getElementById("bgnews")).display, attr: document.documentElement.getAttribute("data-news") }));
+    assert.deepEqual(st, { ls: "0", disp: "block", attr: null }, "kj-news=0 でも記事は出る");
+    assert.deepEqual(O.errors, []);
+    await O.ctx.close();
     const B = await open(browser, url, { blockStorage: true });
-    assert.equal(await B.page.evaluate(() => document.documentElement.getAttribute("data-news")), "on");
-    await B.page.check('#news input[value="0"]');
-    assert.equal(await B.page.evaluate(() => document.documentElement.getAttribute("data-news")), "off");
+    assert.equal(await B.page.evaluate(() => getComputedStyle(document.getElementById("bgnews")).display), "block");
     assert.deepEqual(B.errors, []);
     await B.ctx.close();
+    assert.deepEqual(errors, []);
   } finally { await browser.close(); srv.close(); }
 });
 
