@@ -348,6 +348,9 @@ body.esOn details>summary .bar{position:fixed;top:6px;left:10px;right:10px;z-ind
 #esLabel.win{color:var(--win)}
 #esLabel.lose{color:var(--lose)}
 #esLabel.draw,#esLabel.solo{color:var(--ink)}
+#esAori{max-width:340px;padding:0 8px;font-family:var(--ui);font-size:17px;font-weight:700;line-height:1.4;color:var(--ink);text-align:center} /* KJ-126：煽り文句（記者の見出し。飾りなし・色は墨のまま）。意味のまとまり（、と！の後ろ）でだけ折る */
+#esAori:empty{display:none}
+#esAori .seg{display:inline-block}
 #esScore{font-size:44px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums;display:flex;align-items:baseline;gap:.35em}
 #esScore .t{font-size:18px;font-weight:400;color:var(--sub)}
 #esScore .you{color:var(--ink)}
@@ -505,6 +508,7 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
   <!-- 試合が終わったときの表示（KJ-018）。タップで全部いっぺんに出す／出し終わったあとのタップで閉じる。文は js/core.js の END_LABELS -->
   <div id="endShow" role="status" aria-live="polite">
     <div id="esLabel"></div>
+    <div id="esAori"></div>
     <div id="esScore"></div>
     <ul id="esWords"></ul>
     <div id="esMissed" class="esm"></div>
@@ -958,6 +962,7 @@ function showEnd(winner){
   const d=K.endShow(G,T,winner),el=$("endShow");
   closeEnd();
   const lab=$("esLabel");lab.textContent=d.label;lab.className=d.kind;
+  const ao=$("esAori");ao.textContent="";if(!G.tutorial)for(const part of (K.aoriLine(d,STR.AORI).match(/[^、！]+[、！]?/g)||[])){if(!part)continue;const sp=document.createElement("span");sp.className="seg";sp.textContent=part;ao.append(sp)} // KJ-126
   $("esScore").innerHTML=d.kind==="solo"?`<span class="you">${d.me}</span><span class="t">点</span>`
     :`<span class="you">${d.me}</span><span class="t">対</span><span class="them">${d.cpu}</span>`;
   const ul=$("esWords");ul.innerHTML="";
@@ -1131,9 +1136,9 @@ $("bShare").onclick=async()=>{
 $("bShareEnd").textContent=STR.TEXT.shareButton;
 $("bShareEnd").onclick=async()=>{
   if(!LASTEND)return;
-  const b=$("bShareEnd"),o={tpl:STR.SHARE_RESULT,title:STR.TEXT.masthead,issue:K.issueLabel(issuesPlayed()),level:K.levelShort(LASTEND.level),opponent:LASTEND.opponent};
+  const b=$("bShareEnd"),o={tpl:STR.SHARE_RESULT,title:STR.TEXT.masthead,issue:K.issueLabel(issuesPlayed()),level:K.levelShort(LASTEND.level),opponent:LASTEND.opponent,aori:STR.AORI_SHARE,url:K.siteUrl(location.href),hashtag:STR.TEXT.hashtag}; // KJ-126：リンクとタグは文の中（タグが URL の行の次に来るように）
   const m=K.shareResultText(LASTEND.d,o);
-  const r=await shareOrCopy(m.title,m.text,K.siteUrl(location.href));
+  const r=await shareOrCopy(m.title,m.text,null);
   const flash=t=>{b.textContent=t;setTimeout(()=>b.textContent=STR.TEXT.shareButton,1500)};
   if(r==="copied")flash(STR.TEXT.shareCopied);else if(r==="failed")flash(STR.TEXT.shareEndFailed);
 };

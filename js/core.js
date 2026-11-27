@@ -1246,6 +1246,7 @@
     function finish(winner, why) {
       g.over = true;
       g.winner = winner;
+      g.endWhy = why; // 終わった理由の文（「先に50点」か時間切れ）。KJ-126：K.endShow の by50 のもと
       const missed = g.missedWord();
       addLog("—", "終わり", [], [], 0, (g.solo ? `ひとりで ${g.me.score}点（${why}）` : (winner ? `${winner.name}の勝ち` : "引き分け") + `（${why}）`) + (missed ? `。見逃した言葉：${missed}` : ""));
       g.events.push({ type: "over", winner, solo: g.solo });
@@ -1788,7 +1789,7 @@
     const kind = g.solo ? "solo" : winner === g.me ? "win" : winner === g.cpu ? "lose" : "draw";
     const items = g.log.filter((e) => e.op === "放つ" && e.who === g.me.name).map((e) => {
       const text = e.from.join(""), w = T && T.WORDS ? T.WORDS.get(text) : null;
-      return { text, kana: w ? w.kana : "", pts: e.pts, tier: Math.max(1, Math.min(3, [...text].length - 1)), ...endWordInfo(T, text, w) };
+      return { text, kana: w ? w.kana : "", pts: e.pts, tier: Math.max(1, Math.min(3, [...text].length - 1)), special: !!(T && T.SPECIAL && T.SPECIAL.has(text)), ...endWordInfo(T, text, w) };
     });
     // KJ-082：見逃した言葉（ヒントで光ったのに放たれなかった1つ）。字・読み・意味は台の行と同じもの。無ければ null
     const mw = g.missedWord ? g.missedWord() : null;
@@ -1799,7 +1800,46 @@
       const en = w && w.en ? w.en.join(" / ") : "";
       missed = { text: mw, kana, en, ...endWordInfo(T, mw, w), line: `見逃した言葉：${mw}${kana ? `（${kana}）` : ""}${en ? ` ${en}` : ""}` };
     }
-    return { kind, label: END_LABELS[kind], me: g.me.score, cpu: g.solo ? null : g.cpu.score, items, missed };
+    const by50 = !g.solo && /^先に/.test(String(g.endWhy || "")); // KJ-126：時間切れの前に勝ちの点に届いて終わったか
+    return { kind, label: END_LABELS[kind], me: g.me.score, cpu: g.solo ? null : g.cpu.score, items, missed, by50 };
+  }
+
+  // ---------- 煽り文句（KJ-126。DOM に触らない）----------
+  // 終わりの画面（遊んだ本人を褒める。型は js/strings.js の AORI）と、戦果の共有（見た人を呼び込む。型は AORI_SHARE）。
+  // どちらも endShow の結果 d から、上から順に見て最初に合ったものを選ぶ（文は全部仮。話し手も仮）。ひとり（solo）は出さない（作者の言葉に無い。仮）。
+  // 「一番長い語」「点が一番高い語」は、同じなら先に放ったもの。「点差」は |自分の点−相手の点|
+  const aoriFill = (str, vals) => String(str).replace(/\{(\w+)\}/g, (m, k) => (vals[k] === undefined ? "" : String(vals[k])));
+  function aoriFacts(d) {
+    let sp = null, lg = null, best = null;
+    for (const it of d.items || []) {
+      if (it.special && (!sp || it.pts > sp.pts)) sp = it;
+      if (!lg || [...it.text].length > [...lg.text].length) lg = it;
+      if (!best || it.pts > best.pts) best = it;
+    }
+    return { sp, lg, best, diff: Math.abs((d.me || 0) - (d.cpu || 0)) };
+  }
+  function aoriLine(d, tpl) {
+    if (!d || d.kind === "solo" || !tpl) return "";
+    if (!d.items || !d.items.length) return tpl.silent;
+    const f = aoriFacts(d), close = f.diff <= tpl.closeMax, len = [...f.lg.text].length;
+    if (d.kind === "win") {
+      if (f.sp) return aoriFill(tpl.winSpecial, { word: f.sp.text });
+      if (len >= tpl.longMin) return aoriFill(tpl.winLong, { n: kansuji(len) });
+      if (d.by50) return tpl.winFast;
+      return close ? tpl.winClose : tpl.win;
+    }
+    if (d.kind === "draw") return tpl.draw;
+    return close ? tpl.loseClose : tpl.lose;
+  }
+  // n：点を漢数字にする関数（shareResultText の n。マイナスは負を付ける）
+  function aoriShareLine(d, tpl, n) {
+    if (!d || d.kind === "solo" || !tpl || !d.items || !d.items.length) return "";
+    const f = aoriFacts(d), len = [...f.lg.text].length;
+    if (f.sp) return aoriFill(tpl.special, { word: f.sp.text });
+    if (len >= tpl.longMin) return aoriFill(tpl.long, { n: kansuji(len), word: f.lg.text });
+    if (d.kind === "draw") return tpl.draw;
+    if (f.diff <= tpl.closeMax) return aoriFill(tpl.close, { me: n(d.me), opp: n(d.cpu) });
+    return aoriFill(d.kind === "win" ? tpl.win : tpl.lose, { word: f.best.text });
   }
 
   // ---------- 戦果の共有（KJ-108。DOM に触らない）----------
@@ -1811,12 +1851,18 @@
     const fill = (str, vals) => String(str).replace(/\{(\w+)\}/g, (m, k) => (vals[k] === undefined ? "" : String(vals[k])));
     const who = o.opponent === ROOM_OPPONENT.key ? tpl.whoRoom : (tpl.whoCpu[o.opponent] || tpl.whoCpu.weak);
     const vals = { title: o.title, issue: o.issue, who, me: n(d.me), opp: n(d.cpu === null || d.cpu === undefined ? 0 : d.cpu), level: o.level };
-    const lines = [fill(tpl.title, vals), fill(tpl[d.kind] || tpl.draw, vals)];
+    const lines = [fill(tpl.title, vals)];
+    const ao = o.aori ? aoriShareLine(d, o.aori, n) : ""; // KJ-126：見出しの行のすぐ下に煽り文句（無ければ出さない）
+    if (ao) lines.push(ao);
+    lines.push(fill(tpl[d.kind] || tpl.draw, vals));
     let best = null;
     for (const it of d.items || []) if (!best || it.pts > best.pts) best = it;
     if (best) lines.push(fill(tpl.best, { word: best.text, pts: n(best.pts) }));
     lines.push(fill(tpl.level, vals));
-    return { title: o.title, text: lines.join(tpl.sep) };
+    let text = lines.join(tpl.sep);
+    if (o.url) text += "\n" + o.url; // KJ-126：リンクは文の中に入れる（タグを URL の行の次に置くため。navigator.share には url を別に渡さない）
+    if (o.hashtag) text += "\n" + o.hashtag;
+    return { title: o.title, text };
   }
   // 戦果の共有のリンク：ページの URL から ? と # を除いたもの（?room= は付けない）
   const siteUrl = (base) => String(base || "").replace(/[?#].*$/, "");
@@ -1932,7 +1978,7 @@
   }
 
   return {
-    kansuji, daiji, issueLabel, kansujiDate, shareResultText, siteUrl, toKatakana, senkyoLines,
+    kansuji, daiji, aoriLine, aoriShareLine, issueLabel, kansujiDate, shareResultText, siteUrl, toKatakana, senkyoLines,
     FILES, OPPONENTS, PLAY_MODES, CPU_POWERS, readOpponent, opponentKey, LEVELS, timeChoices, normTime, vibratePattern, timeLabel, levelLabel, levelShort, makeTables, isN5, isLevelChar, isChar, radicalNote, radicalFormNote, joinPartners, joinNote, JOIN_NOTE_MODES, splitOnce, canSplit, delivered, joinResults, joinReversed,
     releasable, effectText, counterParts, usedCounters, counterBlocked, counterReading, rejectText, scoreOf, kanaOf, kanaText, wordCharOk, KANA_ONLY_WHY, homoChars, marks, markKinds, cutSpec, FACES, FACE_LABEL, faceJoins, faceResults, rulesLabel, opponentLabel, createGame, createTutorial, TUTORIAL_OPPONENT, playLogRow, endShow, kotobankUrl, END_LABELS, logSendAllowed, playLogResult, PLAY_LOG_LIMITS,
     strSeed, seededRand, matchRand, ROLES, ROOM_OPPONENT, MATCH_END_GRACE_SEC, MATCH_INSERT_TIMEOUT_SEC, MATCH_PING_SEC, MATCH_GONE_SEC, ROOM_LOBBY_TTL_SEC,
