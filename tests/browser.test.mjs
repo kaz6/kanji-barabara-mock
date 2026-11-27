@@ -304,7 +304,7 @@ test("画面", { skip }, async (t) => {
     await ctx.close();
   });
 
-  await t.test("相手の整理（KJ-045）：遊び方で出る段が変わる（強さは CPU と のときだけ・部屋は 友だちと のときだけ・レベル時間は部屋を作る側）", async () => {
+  await t.test("相手の整理（KJ-045）：遊び方で出る段が変わる（強さは CPU と のときだけ・部屋は 友だちと のときだけ・レベル時間は作る／入るの上・入るでは隠れる）", async () => {
     const ctx = await browser.newContext({ viewport: { width: 375, height: 700 } });
     const page = await ctx.newPage();
     const errors = [];
@@ -316,7 +316,7 @@ test("画面", { skip }, async (t) => {
     assert.deepEqual([await vis("#pow"), await vis("#roomBox"), await vis("#start"), await vis("#lvl"), await vis("#tim")], [true, false, true, true, true]);
     // ひとりで は画面にない（KJ-056）
     assert.equal(await page.locator('#opp input[value="solo"]').count(), 0);
-    // 友達と対戦（KJ-123）：強さの段の場所に［部屋を作る］［部屋に入る］が横並びで出る。初めはどちらも選ばれていない。強さは出ない。レベル・時間は作る前に選べるよう、その下に出たまま
+    // 友達と対戦（KJ-123）：強さの段の場所に［部屋を作る］［部屋に入る］が横並びで出る。初めはどちらも選ばれていない。強さは出ない。レベル・時間は作る／入るの上に出たまま（KJ-136）
     await page.check('#opp input[value="room"]');
     assert.equal(await page.evaluate(() => !document.getElementById("roomBox").hidden), true, "部屋の欄は出ている（中は選ぶまで空）");
     assert.deepEqual([await vis("#pow"), await vis("#start"), await vis("#act"), await vis("#lvl"), await vis("#tim"), await vis("#roomCode"), await vis("#bEnter")], [false, false, true, true, true, false, false]);
@@ -342,7 +342,7 @@ test("画面", { skip }, async (t) => {
     assert.equal(await page.locator("#pow input:checked").getAttribute("value"), "normal");
     assert.equal(await page.locator("#act input:checked").count(), 0, "遊び方を替えると、作る／入るの選びは外れる");
     assert.equal(await page.evaluate(() => localStorage.getItem("kj-opponent")), "normal");
-    assert.equal(await page.evaluate(() => document.getElementById("setSlot").contains(document.getElementById("lvl"))), true);
+    assert.deepEqual([await vis("#lvl"), await vis("#tim")], [true, true], "入るで隠したあと CPU と に戻すと、レベル・時間は出る");
     // 375×700 で、はじめる前の画面が横にはみ出さない（2つの遊び方・3つの強さが折り返して収まる）
     for (const m of ["cpu", "room"]) {
       await page.check(`#opp input[value="${m}"]`);
