@@ -209,7 +209,7 @@
     shareEndFailed: { ja: TEXT.shareEndFailed, en: "Couldn't share" },
     // 合言葉の共有の文（KJ-122。ja は作者の文）。題＝masthead・副題＝mastheadSub・リンクは K.roomShareUrl。全部この1本に入る（navigator.share では url を別に渡さない）
     shareText: { ja: TEXT.shareText, en: (code, title, sub, url) => `${title} ${sub}\nCombine kanji and make words — a word duel! Room code ${code} ${url}` },
-    hashtag: { ja: TEXT.hashtag, en: "#漢対普請瓦版 #KanjiDuel" }, // 戦果の共有の最後の行（KJ-126・KJ-127。合言葉の共有には付けない）
+    hashtag: { ja: TEXT.hashtag, en: `${TEXT.hashtag} #KanjiDuel` }, // 戦果の共有の最後の行（KJ-126・KJ-127。合言葉の共有には付けない）
     msgWin: { ja: (a, b) => `勝ち（${a} 対 ${b}）`, en: (a, b) => `You win (${a}-${b})` },
     msgLose: { ja: (a, b) => `負け（${a} 対 ${b}）`, en: (a, b) => `You lose (${a}-${b})` },
     msgDraw: { ja: (a, b) => `引き分け（${a} 対 ${b}）`, en: (a, b) => `Draw (${a}-${b})` },
@@ -241,7 +241,7 @@
     "手札もストックもいっぱい！": "Hand and stock are full!", "手札がいっぱい！": "Hand is full!", "ストックがいっぱい！": "Stock is full!",
     "くっつかない！": "Doesn't join!", "割れない！": "Can't split!", "できない字！": "Not a valid kanji!", "待ち時間！": "Cooling down!",
     "同じ読みの字がない！": "No kanji with the same reading!", "取れる枚数がない！": "Nothing left to take!",
-    "相手が先に放った！": "Opponent played it first!", "相手が先に取った！": "Opponent took it first!", "引き直しは5回まで！": "Redraw limit: 5!",
+    "相手が先に放った！": "Opponent played it first!", "1枚だけ！": "Select exactly 1 card!", "2枚だけ！": "Select exactly 2 cards!", "その字にはならない！": "That isn't the result!", "その面ではくっつかない！": "Doesn't join on that side!", "同じ読みではない！": "Not the same reading!", "札がない！": "No such card!", "通信中！": "Please wait!", "終わった！": "The game is over!", "相手が先に取った！": "Opponent took it first!", "引き直しは5回まで！": "Redraw limit: 5!",
     "合言葉は数字4けた": "The room code is 4 digits", "つながらない": "Can't connect", "その合言葉の部屋がない": "No room with that code",
     "合言葉を作れなかった（もう一度）": "Couldn't make a room code (try again)", "その部屋はもう始まっている": "That room has already started",
   });
@@ -260,7 +260,7 @@
     lose: "Lost to {who} {me}-{opp}",
     draw: "Drew with {who} {me}-{opp}",
     solo: "Solo: {me} pts",
-    best: "Winning word: '{word}' {pts} pts",
+    best: "Best word: '{word}' {pts} pts",
     level: "({level})",
     minus: "-",
     sep: " / ",
@@ -294,7 +294,7 @@
     `<b>Select</b>: tap cards in your hand or stock. A selected card stays in its slot, changes colour and gets a number (1, 2, 3, ...) in its corner. Copies of the selected cards line up on the stand from the left, in the order you picked them. Tap again (the card or its copy) to deselect. The buttons act on the selected cards in that order.`,
     `<b>Swap / move</b>: drag a card onto another card and release to swap places (hand and stock too). Release on an empty slot to move it there.`,
     `<b>Play</b>: a word on the stand can be played if it is in the dictionary (2-4 characters). <b>A single character can't be played</b> (even one you made by joining). A word that has been played can't be used again by either player. Played cards disappear (they don't reach your opponent).`,
-    `<b>Points</b>: ${Object.entries(S.by_length).map(([n,p])=>`${n} characters ${p} pts`).join(" · ")}. Four-character idioms x${S.yoji_mult}; the special word (天上天下) another x${S.special_mult}.`,
+    `<b>Points</b>: ${Object.entries(S.by_length).map(([n,p])=>`${n} characters ${p} pts`).join(" / ")}. Four-character idioms x${S.yoji_mult}; the special word (天上天下) another x${S.special_mult}.`,
     `<b>Take</b>: after you play, take as many cards from the <b>deck</b> as the word had characters (until the ${R.hand_max} top slots and ${R.split_extra} stock slots, ${R.hand_max+R.split_extra} in all, are full). <b>You can't do anything else until you have taken them all</b> (the deck glows). Unused takes can't be saved. A new kanji appears from the pile where you took one. Your opponent takes from the same deck, so it's first come, first served (no rush when you play solo).`,
     `<b>Stock</b>: the ${R.split_extra} slots below your hand (${R.hand_max} slots). They hold kanji and parts. Cards made by splitting or joining go to the stock when the hand is full (up to ${R.hand_max+R.split_extra} cards in all). Cards taken from the deck go to the stock when the top row is full. You can select and use stock cards too.`,
     `<b>Start</b>: you begin with ${R.start_hand} cards in hand, and the clock starts right away. The stock begins with ${R.start_stock_parts} handy parts.`,

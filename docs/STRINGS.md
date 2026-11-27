@@ -245,6 +245,14 @@
 | その合言葉の部屋がない | No room with that code |
 | 合言葉を作れなかった（もう一度） | Couldn't make a room code (try again) |
 | その部屋はもう始まっている | That room has already started |
+| 1枚だけ！ | Select exactly 1 card! |
+| 2枚だけ！ | Select exactly 2 cards! |
+| その字にはならない！ | That isn't the result! |
+| その面ではくっつかない！ | Doesn't join on that side! |
+| 同じ読みではない！ | Not the same reading! |
+| 札がない！ | No such card! |
+| 通信中！ | Please wait! |
+| 終わった！ | The game is over! |
 | 〇円は一度きり！（円は使った助数詞。人・本・日… も同じ） | Only one 円 per match! |
 
-遊び方の説明（しくみ）17行の English は `js/strings.js` の `HOWTO.en`。戦果の共有の English の型は `SHARE_RESULT_EN`（例：`漢対普請瓦版 第壱號 / （煽り文句。日本語のまま） / Beat CPU (very weak) 48-30 / Winning word: '十円' 9 pts / (N5)⏎URL⏎#漢対普請瓦版 #KanjiDuel`）。
+遊び方の説明（しくみ）17行の English は `js/strings.js` の `HOWTO.en`。戦果の共有の English の型は `SHARE_RESULT_EN`（例：`漢対普請瓦版 第壱號 / （煽り文句。日本語のまま） / Beat CPU (very weak) 48-30 / Best word: '十円' 9 pts / (N5)⏎URL⏎#漢対普請瓦版 #KanjiDuel`）。

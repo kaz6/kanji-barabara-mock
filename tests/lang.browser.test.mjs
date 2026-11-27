@@ -204,7 +204,7 @@ test("KJ-127 English：終わりの画面（見出し・点・+点・見逃し�
         await page.locator("#esWords .esw .w").first().click();
         const info = await txt(page, "#endShow .esd");
         assert.match(info, /Kotobank/);
-        assert.ok(!KANA.test(info.replace(/Reading: [^\s]*/, "").replace(/Meaning:.*/, "")) || /Reading: /.test(info), info);
+        assert.match(info, /^Reading: .*Look up on Kotobank$/s);
         if (process.env.KJ_SHOT_LANG) await page.screenshot({ path: path.join(process.env.KJ_SHOT_LANG, "end-en-375x667.png") });
         // 戦果の共有
         await page.click("#bShareEnd");
@@ -212,7 +212,7 @@ test("KJ-127 English：終わりの画面（見出し・点・+点・見逃し�
         const s = await page.evaluate(() => window.__shared[0]);
         assert.match(s.text, /^漢対普請瓦版 第.+號 \/ /);
         assert.match(s.text, /(Beat|Lost to|Drew with) CPU \(very weak\) \d+-\d+/);
-        assert.match(s.text, /Winning word: '十円' 3 pts \/ \(N5\)\n[^\n]+index\.html\n#漢対普請瓦版 #KanjiDuel$/, s.text);
+        assert.match(s.text, /Best word: '十円' 3 pts \/ \(N5\)\n[^\n]+index\.html\n#漢対普請瓦版 #KanjiDuel$/, s.text);
       } else {
         assert.ok(["勝ち！", "負け…", "引き分け"].includes(lab), lab);
         assert.ok(p.every((x) => /^\+\d+点$/.test(x)), p.join("|"));

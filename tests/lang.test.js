@@ -70,7 +70,7 @@ test("KJ-127 core.js が日本語で返す画面向けの文を、en のとき�
   assert.equal(S.tr(K.levelShort("G1")), "Grade 1");
   assert.equal(S.tr("知らない文"), "知らない文");
   // はじかれた理由（K.rejectText の結果）：docs/REJECT_MESSAGES.md の表
-  for (const why of ["1字では放てない（2字以上の言葉）", "かなだけでは放てない（漢字の札が1枚以上いる）", "放った言葉", "並べる順が逆", "辞書にない", "手札もストックもいっぱい", "手札がいっぱい", "ストックがいっぱい", "くっつかない", "割れない", "できない字", "待ち時間", "同じ読みの字がない", "取れる枚数がない", "相手が先に放った", "相手が先に取った", "引き直しは5回まで", "場から取りきるまで動けない", "場にない"]) {
+  for (const why of ["1字では放てない（2字以上の言葉）", "かなだけでは放てない（漢字の札が1枚以上いる）", "放った言葉", "並べる順が逆", "辞書にない", "手札もストックもいっぱい", "手札がいっぱい", "ストックがいっぱい", "くっつかない", "割れない", "できない字", "待ち時間", "同じ読みの字がない", "取れる枚数がない", "相手が先に放った", "相手が先に取った", "引き直しは5回まで", "場から取りきるまで動けない", "場にない", "1枚だけ", "2枚だけ", "その字にはならない", "その面ではくっつかない", "同じ読みではない", "札がない", "通信中", "終わった"]) {
     const out = S.tr(K.rejectText(why));
     assert.ok(!/[぀-ヿ㐀-鿿]/.test(out), `${why} → ${out}`);
   }
@@ -103,7 +103,7 @@ test("KJ-127 戦果の共有の文：en は算用数字・英語の型・最後�
   const en = K.shareResultText(d, { ...base, tpl: S.shareResult(), hashtag: S.hashtag() });
   assert.match(en.text, /^漢対普請瓦版 第壱號 \/ /);
   assert.match(en.text, /Beat CPU \(very weak\) 48-30/);
-  assert.match(en.text, /Winning word: '十円' 9 pts \/ \(N5\)\nhttps:\/\/example.test\/\n#漢対普請瓦版 #KanjiDuel$/);
+  assert.match(en.text, /Best word: '十円' 9 pts \/ \(N5\)\nhttps:\/\/example.test\/\n#漢対普請瓦版 #KanjiDuel$/);
   assert.match(en.text, /^[^\/]+ \/ 快勝！決め手は『十円』 \/ Beat /, "煽り文句の行（P-126）は日本語のまま〔段1の範囲外〕");
   const lose = K.shareResultText({ kind: "lose", me: -5, cpu: 12, items: [], by50: false }, { ...base, tpl: S.shareResult(), hashtag: S.hashtag() });
   assert.match(lose.text, /Lost to CPU \(very weak\) -5-12/);
