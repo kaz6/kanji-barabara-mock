@@ -125,6 +125,8 @@ test("はじかれたときの言い方（rejectText）：〇円は一度きり�
   assert.equal(K.rejectText("放った言葉"), "もう放った言葉！");
   assert.equal(K.rejectText("辞書にない"), "辞書にない！");
   assert.equal(K.rejectText("割れない"), "割れない！");
+  assert.equal(K.rejectText("場にない"), "山札にない！", "KJ-118：画面は 山札（ログの理由は 場 のまま）");
+  assert.equal(K.rejectText("場から取りきるまで動けない"), "山札から取りきるまで動けない！");
   assert.equal(K.rejectText("手札もストックもいっぱい"), "手札もストックもいっぱい！");
   assert.equal(K.rejectText("もう！"), "もう！", "すでに ！ で終わっていれば足さない");
   const long = D.tutorial.ui.wrongCards.replace("{use}", "天");

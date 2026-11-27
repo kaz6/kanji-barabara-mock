@@ -77,7 +77,7 @@
 | Split & Join — a Kanji Duel | 題字の下の英字の副題（`TEXT.mastheadSub`。11px） | 作者（KJ-109） |
 | 第○號・二〇二六年十一月二十五日 | 表紙の題字の下の行（`K.issueLabel`・`K.kansujiDate`） | 作者「案入れてみよう」 |
 | 札の字 ／ 大正風 ・ 明朝 | はじめる前の画面（`#grpFace`。`TEXT.faceLabel`・`faceTaisho`・`faceMincho`） | 作者「札の字、大正風と、切り替えられるように」 |
-| 卓に並ぶ | 卓の左の縦書きの見出し（index.html の CSS `.table::before`） | 見本「新聞21」 |
+| 卓に並ぶ | 卓の左の縦書きの見出し（index.html の CSS `.table::before`） | 作者（KJ-118。前は見本「新聞21」の「卓　場と台」） |
 
 ## 戦況の欄・背景の記事（KJ-094。ボタンではないので日本語。文の型と記事の文は仮）
 
