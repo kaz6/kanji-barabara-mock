@@ -6,10 +6,10 @@ const { K, D, T, T4, TG1, newGame, setHand, hintNow } = require("./helpers");
 
 const chars = (cards) => cards.map((x) => x.c).join("");
 const cardsAll = (g) => [...g.deck, ...g.me.cards.map((x) => x.c), ...g.cpu.cards.map((x) => x.c), ...g.field.map((x) => x.c)];
-const REACH = { 氷: ["水", "丶"], 丸: ["九", "丶"], 刃: ["刀", "丶"], 凡: ["几", "丶"], 勺: ["勹", "丶"], 旧: ["｜", "日"] };
+const REACH = { 氷: ["水", "丶"], 丸: ["九", "丶"], 刃: ["刀", "丶"], 凡: ["几", "丶"], 勺: ["勹", "丶"], 旧: ["｜", "日"], 良: ["丶", "艮"] };
 // KJ-113：旧＝｜＋日 も行き先だけの字（reach に足した）。｜ は 中・引 を割ると出る部品
 
-test("行き先だけの字：データは6つ（KJ-113 で 旧 を足した）。並べる順は 水丶・九丶・刀丶・几丶・勹丶・｜日。字として見せる（jouyou）。山に入る字ではない", () => {
+test("行き先だけの字：データは7つ（KJ-113 で 旧、KJ-137 で 良 を足した）。並べる順は 水丶・九丶・刀丶・几丶・勹丶・｜日・丶艮。字として見せる（jouyou）。山に入る字ではない", () => {
   assert.deepEqual(D.parts.reach, REACH);
   for (const c of Object.keys(REACH)) {
     assert.ok(D.parts.jouyou.includes(c), `${c} は jouyou（字として見せる）`);
@@ -24,7 +24,7 @@ test("行き先だけの字：データは6つ（KJ-113 で 旧 を足した）�
 test("レベルごとの出番：小1・N5 は 氷・丸・刃、N4 は さらに 凡。勺（勹 が手に入らない）はどのレベルでも出番なし", () => {
   assert.deepEqual([...TG1.REACH].sort(), ["丸", "刃", "旧", "氷"].sort());
   assert.deepEqual([...T.REACH].sort(), ["丸", "刃", "旧", "氷"].sort());
-  assert.deepEqual([...T4.REACH].sort(), ["丸", "刃", "凡", "旧", "氷"].sort());
+  assert.deepEqual([...T4.REACH].sort(), ["丸", "刃", "凡", "旧", "氷", "良"].sort());
   for (const L of [TG1, T, T4]) {
     assert.deepEqual(L.JOIN.get("勹丶"), undefined, "勹丶 は どのレベルでも使えない");
     assert.ok(!L.parts["勺"]);
@@ -161,4 +161,48 @@ test("旧：1字では放てない。旧友 は放てる。CPU も 旧 を使う
   const h = g4.hintActive();
   assert.equal(h.word, "旧友");
   assert.deepEqual([...h.ids].sort(), [...ids].sort());
+});
+
+// KJ-137：丶＋艮＝良（行き先だけの字。丶 が上）。艮 は N4 で 銀 を割ると出る部品
+test("良：N4 でだけ出番（艮 が N4 でしか手に入らない）。小1・N5 では くっつかない", () => {
+  assert.ok(T4.REACH.has("良") && !T.REACH.has("良") && !TG1.REACH.has("良"));
+  assert.deepEqual(K.joinResults(T4, "丶", "艮"), ["良"]);
+  assert.deepEqual(K.joinResults(T4, "艮", "丶"), [], "逆順（艮＋丶）は通らない");
+  for (const L of [T, TG1]) assert.deepEqual(K.joinResults(L, "丶", "艮"), []);
+  assert.deepEqual(D.parts.reach["良"], ["丶", "艮"]);
+  assert.ok(D.parts.jouyou.includes("良") && !D.parts.parts["良"] && !D.kanji.kanji.some((k) => k.c === "良"));
+  assert.deepEqual(D.split_shapes.shapes["良"], { s: "tb", at: 0.2, q: true });
+});
+
+test("良：銀 を割って 艮 を出し、丶 とくっつけて 良。割ると 丶 と 艮 に戻る。山に入る字ではない", () => {
+  const g = newGame(1, "normal", "N4");
+  const [id] = setHand(g, g.me, "銀");
+  assert.equal(chars(g.split(g.me, [id]).cards), "金艮");
+  const g2 = newGame(1, "normal", "N4");
+  assert.equal(chars(g2.join(g2.me, setHand(g2, g2.me, "丶艮")).cards), "良");
+  const g3 = newGame(1, "normal", "N4");
+  assert.equal(g3.join(g3.me, setHand(g3, g3.me, "艮丶")).ok, false, "艮丶 ではくっつかない");
+  const g4 = newGame(1, "normal", "N4");
+  const [rid] = setHand(g4, g4.me, "良");
+  assert.equal(chars(g4.split(g4.me, [rid]).cards), "丶艮");
+  const g5 = newGame(1, "normal", "N4");
+  assert.ok(!cardsAll(g5).includes("良"), "良 は山・場・手札に出ない");
+});
+
+test("良：面で落とす（丶 を 艮 の上へ・艮 を 丶 の下へ）。手に持てる字（N4）", () => {
+  assert.deepEqual(K.faceJoins(T4, "丶", "艮"), { top: ["良"] });
+  assert.deepEqual(K.faceJoins(T4, "艮", "丶"), { bottom: ["良"] });
+  assert.ok(K.isChar(T4, "良") && T4.HOLD.has("良"));
+});
+
+test("良：語が放てる（N4 で 37 語。小1・N5 では増えない）。不良・良好・野良犬 など", () => {
+  const n = (L) => [...L.WORDS.keys()].filter((w) => w.includes("良")).length;
+  assert.deepEqual([n(TG1), n(T), n(T4)], [0, 0, 37]);
+  assert.ok(T4.WORDS.has("不良") && T4.WORDS.has("良好") && T4.WORDS.has("野良犬"));
+  assert.ok(!T.WORDS.has("不良") && !TG1.WORDS.has("不良"));
+  const g = newGame(1, "normal", "N4");
+  assert.equal(g.release(g.me, setHand(g, g.me, "不良")).ok, true, "不良 は N4 で放てる");
+  const g2 = newGame(1, "normal", "N4");
+  const [one] = setHand(g2, g2.me, "良");
+  assert.equal(g2.release(g2.me, [one]).ok, false, "1字は放てない");
 });

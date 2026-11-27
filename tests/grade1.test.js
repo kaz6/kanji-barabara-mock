@@ -38,7 +38,7 @@ test("小1：N5・N4 は小1 を足したことでは動かない（N4 の数は
   // 語の数は KJ-032（地名・名字を足す・買春 売春 を外す）で N5 2458→2466・N4 10438→10460。KJ-068（D-087）で 売女・売色 も全レベルで外し N5 2465・N4 10458。
   // KJ-053（D-069）で、かな（の・る・な。部品 ノ・儿・ナ の札）を1つ含む語を足し N5 2465→2614・N4 10458→10897。字と手に持てる字は動かない KJ-072 で 火病る・夜の女 を外し N4 10895。
   assert.deepEqual([T.CHARS.size, T.WORDS.size, T.HOLD.size], [103, 2679, 144]);
-  assert.deepEqual([T4.CHARS.size, T4.WORDS.size, T4.HOLD.size], [284, 11036, 358]);
+  assert.deepEqual([T4.CHARS.size, T4.WORDS.size, T4.HOLD.size], [284, 11073, 359]);
   for (const w of T4.WORDS.values()) assert.ok(w.lv === "N5" || w.lv === "N4", w.w);
   for (const w of D.words.words.filter((x) => x.lv === null)) assert.ok(w.g1 && !T4.WORDS.has(w.w) && !T.WORDS.has(w.w), `${w.w} は小1 だけの語`);
 });
@@ -236,7 +236,7 @@ test("小1・同音：N5・N4 は今まで通り（N5 は N5 の字の中、N4 �
   assert.equal(T4.HOMO_ONLY.size, 0);
   for (const L of [T, T4]) for (const [, groups] of L.HOMO) for (const g of groups) for (const c of g.chars) assert.ok(L.CHARS.has(c) || L.OUTSIDE.has(c), `${L.level}：${c}`);
   assert.deepEqual([T.CHARS.size, T.WORDS.size, T.HOLD.size], [103, 2679, 144]);
-  assert.deepEqual([T4.CHARS.size, T4.WORDS.size, T4.HOLD.size], [284, 11036, 358]);
+  assert.deepEqual([T4.CHARS.size, T4.WORDS.size, T4.HOLD.size], [284, 11073, 359]);
 });
 
 
@@ -289,7 +289,7 @@ test("小1・同音（KJ-071）：同音で手に入れた 後 を割る・く�
 
 test("小1・同音（KJ-071）：N5・N4 は動かない。語は 小1 の山の字と手に持てる字だけで書けて、N5 の字だけの語は出ない", () => {
   assert.deepEqual([T.CHARS.size, T.WORDS.size, T.HOLD.size], [103, 2679, 144]);
-  assert.deepEqual([T4.CHARS.size, T4.WORDS.size, T4.HOLD.size], [284, 11036, 358]);
+  assert.deepEqual([T4.CHARS.size, T4.WORDS.size, T4.HOLD.size], [284, 11073, 359]);
   assert.equal(T.N5HELD.size, 0);
   assert.equal(T4.N5HELD.size, 0);
   assert.equal(TG1.HOLD.size, 141, "手に持てる字 121→137（KJ-077 で 氷・丸・刃 が入って 140）→141（KJ-113 で 旧）");
