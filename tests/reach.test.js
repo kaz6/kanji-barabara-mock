@@ -198,7 +198,6 @@ test("良：面で落とす（丶 を 艮 の上へ・艮 を 丶 の下へ）�
 test("良：語が放てる（N4 で 37 語。小1・N5 では増えない）。不良・良好・野良犬 など", () => {
   const n = (L) => [...L.WORDS.keys()].filter((w) => w.includes("良")).length;
   assert.deepEqual([n(TG1), n(T), n(T4)], [0, 0, 37]);
-  for (const w of ["不良", "良好", "良心", "野良犬", "改良"].filter((w) => T4.WORDS.has(w))) assert.ok(T4.WORDS.has(w), w);
   assert.ok(T4.WORDS.has("不良") && T4.WORDS.has("良好") && T4.WORDS.has("野良犬"));
   assert.ok(!T.WORDS.has("不良") && !TG1.WORDS.has("不良"));
   const g = newGame(1, "normal", "N4");
