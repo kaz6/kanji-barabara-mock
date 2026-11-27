@@ -168,7 +168,7 @@ test("合言葉の共有の画面（KJ-107）", { skip }, async (t) => {
       assert.equal(await B.page.isDisabled("#bEnter"), true, "入っている間は押せない");
       if (shots) await B.page.screenshot({ path: path.join(shots, "link-joining-375x667.png") });
       // 3つ目：開いた直後の間でも「しくみ」の開き口が見える（待っている間の画面）
-      assert.equal(await B.page.isVisible("details > summary"), true, "待っている間も「しくみ」の開き口が見える");
+      assert.equal(await B.page.isVisible("details > summary"), true, "「しくみ」の開き口はページの下にある（スクロールすれば見える。375×667 の最初の画面には入らない。KJ-149 の報告）");
       await B.page.waitForFunction(() => { const m = document.getElementById("roomMsg").textContent; return m && m !== "部屋に入っています…"; }, null, { timeout: 8000 });
       const why = (await B.page.textContent("#roomMsg")).trim();
       assert.ok(why.length > 0 && !/入っています/.test(why), "入れなかった理由が出る：" + why);

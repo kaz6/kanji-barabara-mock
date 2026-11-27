@@ -671,7 +671,7 @@ function loadSettings(){
   bgmOn=lsGet(BGM_KEY)!=="0"; // 試合の曲の入り切り（KJ-133）。覚えていなければ入
   setFace(lsGet(FACE_KEY)==="mincho"?"mincho":"taisho"); // 札の字（KJ-093）。覚えていなければ大正風
 }
-// 共有のリンク ?room=合言葉（KJ-107）で開いたら、遊び方を「友達と対戦」にし、入る側の欄に合言葉を入れておく。入るのは遊び手が「合言葉で入る」を押してから。合言葉の決まりに合わなければ何もしない。端末に覚えた遊び方は書き換えない
+// 共有のリンク ?room=合言葉（KJ-107）で開いたら、遊び方を「友達と対戦」にし、入る側の欄に合言葉を入れておく。入るのは読み込みのあと自動で（KJ-149。enterRoom(true)）。合言葉の決まりに合わなければ何もしない。端末に覚えた遊び方は書き換えない
 // KJ-123：「友達と対戦」＋［部屋に入る］が選ばれた状態にする。入り方の統計のため、リンクの合言葉を覚えておく（打ち直さずに入ったら「リンク」）
 function applyRoomLink(){
   let code=null;try{code=K.roomCodeFromSearch(location.search)}catch(e){}
