@@ -127,7 +127,7 @@ test("表紙の絵柄（KJ-095）：題字の枠の後ろに昇る弁柄の日�
           aria: svg.getAttribute("aria-hidden"),
         };
       });
-      assert.deepEqual(st, { rays: 18, rayFill: "#9c3b2e", rayOp: ".85", sunFill: "#9c3b2e", sunCx: "181", svgInBox: true, boxBg: "rgb(246, 238, 214)", nameBg: "rgb(246, 238, 214)", nameBorder: "solid 2px rgb(42, 38, 34)", nameInside: true, noHScroll: true, overflow: "hidden", aria: "true" }, `${w}px：日と放射と題字の枠`);
+      assert.deepEqual(st, { rays: 36, rayFill: "#9c3b2e", rayOp: ".85", sunFill: "#9c3b2e", sunCx: "181", svgInBox: true, boxBg: "rgb(246, 238, 214)", nameBg: "rgb(246, 238, 214)", nameBorder: "solid 2px rgb(42, 38, 34)", nameInside: true, noHScroll: true, overflow: "hidden", aria: "true" }, `${w}px：日と放射と題字の枠`);
       // 題字が放射の上に重なっている（題字の中心の点で最前面が題字）
       const top = await page.evaluate(() => { const nm = document.querySelector(".mast-name"), sv = document.querySelector(".mast-sun"); return { z: getComputedStyle(nm).zIndex, pos: getComputedStyle(nm).position, after: !!(sv.compareDocumentPosition(nm) & Node.DOCUMENT_POSITION_FOLLOWING), svgPe: getComputedStyle(sv).pointerEvents }; });
       assert.deepEqual(top, { z: "1", pos: "absolute", after: true, svgPe: "none" }, `${w}px：題字は放射の上（z-index・DOM の順）`);
