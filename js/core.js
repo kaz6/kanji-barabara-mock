@@ -1803,6 +1803,14 @@
     if (!Number.isFinite(lag) || lag < 0 || lag > m) return clockNowSec;
     return clockNowSec - lag;
   }
+  // 試合の曲と針の音の時刻（KJ-133。秒。画面の時計 clock() の目盛り）。startAt＝数え下げの「参」が出る時刻。
+  //   needleAt＝針の音（「参」）／goAt＝「壱」が消えて試合が始まる時刻／songAt＝元の録音を頭から鳴らし始める時刻（曲が鳴り出す所〔onset_sec〕が goAt に重なる）／fastAt＝最後の1分で速くする時刻（fast_last_sec）
+  //   合言葉の部屋では startAt が二人で同じ（'start' 行の created_at から）ので、二人の数え下げは同じ時刻に終わる
+  function bgmPlan(R, startAt, timeLimit) {
+    const B = (R && R.bgm) || {}, n = (B.count || []).length, step = B.step_sec || 1, onset = typeof B.onset_sec === "number" ? B.onset_sec : 0;
+    const goAt = startAt + n * step;
+    return { count: n, step, startAt, needleAt: startAt, goAt, songAt: goAt - onset, fastAt: goAt + timeLimit - (B.fast_last_sec || 0), fastRate: B.fast_rate || 1, fadeOut: B.fade_out_sec || 1 };
+  }
   // 部屋の待ち（作る側・入る側）。届いた行を渡すと、作る側は相手が入ったら始め、二人とも 'start' 行で onStart を呼ぶ
   function roomWaiter(claims, role, matchId, onStart, payload) {
     let starting = false, started = false;
@@ -2083,6 +2091,6 @@
     FILES, OPPONENTS, PLAY_MODES, CPU_POWERS, readOpponent, opponentKey, LEVELS, timeChoices, normTime, vibratePattern, timeLabel, levelLabel, levelShort, makeTables, isN5, isLevelChar, isChar, radicalNote, radicalFormNote, joinPartners, joinNote, JOIN_NOTE_MODES, splitOnce, canSplit, delivered, joinResults, joinReversed,
     releasable, effectText, counterParts, usedCounters, counterBlocked, counterReading, rejectText, scoreOf, kanaOf, kanaText, romaji, charReading, charReadingLine, wordReadingLine, wordCharOk, KANA_ONLY_WHY, homoChars, marks, markKinds, cutSpec, FACES, FACE_LABEL, faceJoins, faceResults, rulesLabel, opponentLabel, createGame, createTutorial, TUTORIAL_OPPONENT, playLogRow, endShow, kotobankUrl, END_LABELS, logSendAllowed, playLogResult, PLAY_LOG_LIMITS,
     strSeed, seededRand, matchRand, ROLES, ROOM_OPPONENT, MATCH_END_GRACE_SEC, MATCH_INSERT_TIMEOUT_SEC, MATCH_PING_SEC, MATCH_GONE_SEC, ROOM_LOBBY_TTL_SEC,
-    createMatchClient, memoryClaims, newMatchId, newRoomCode, roomCodeFromSearch, roomShareUrl, roomLobbyId, findRoom, hostRoom, joinRoom, startRoom, roomStartAt, roomWaiter,
+    createMatchClient, memoryClaims, newMatchId, newRoomCode, roomCodeFromSearch, roomShareUrl, roomLobbyId, findRoom, hostRoom, joinRoom, startRoom, roomStartAt, bgmPlan, roomWaiter,
   };
 });

@@ -190,11 +190,14 @@ test("はじめる前の画面の組み直し（KJ-123）", { skip }, async (t) 
       await A.ctx.close();
     });
 
-    await t.test("navigator.vibrate が無い端末では歯車ごと出ない", async () => {
+    await t.test("navigator.vibrate が無い端末では、歯車は出る（曲の入／切があるため。KJ-133）が、振動の欄だけ出ない", async () => {
       const A = await open(browser, base, { pre: "Object.defineProperty(navigator,'vibrate',{configurable:true,value:undefined})" });
       assert.equal(await A.page.evaluate(() => typeof navigator.vibrate), "undefined");
-      assert.equal(await A.page.isVisible("#bGear"), false);
+      assert.equal(await A.page.isVisible("#bGear"), true, "曲の入／切があるので歯車はいつも出る（KJ-133）");
       assert.equal(await A.page.isVisible("#setPanel"), false);
+      await A.page.click("#bGear");
+      assert.equal(await A.page.isVisible("#grpVib"), false, "振動の欄だけ出ない");
+      assert.equal(await A.page.isVisible("#grpBgm"), true, "曲の欄は出る");
       assert.deepEqual(A.errors, []);
       await A.ctx.close();
     });

@@ -170,6 +170,7 @@
     lblLevel: { ja: "レベル", en: "Level" },
     lblTime: { ja: "時間", en: "Time" },
     lblVib: { ja: "振動", en: "Vibration" },
+    lblBgm: { ja: "曲", en: "Music" }, // KJ-133：試合の曲と針の音の入／切（歯車の欄）
     lblFace: { ja: TEXT.faceLabel, en: "Card font" },
     faceTaisho: { ja: TEXT.faceTaisho, en: "Taisho style" },
     faceMincho: { ja: TEXT.faceMincho, en: "Mincho" },
@@ -300,6 +301,7 @@
     `${p.radKeys.join("・")} を左に置いてくっつけられるときは、${p.radVals.join("・")} の形で見せる（札はもとの字のまま）。色の薄い札は部品（字ではない）。`,
     `<b>ヒント</b>：${R.hint.timed_sec ? `${R.hint.timed_sec} 秒なにも放たない・引き直さないと` : ""}${R.hint.fail_streak ? `${R.hint.timed_sec ? "、または続けて " : "続けて "}${R.hint.fail_streak} 回はじかれると` : ""}、使う札と操作のボタンが光る（${R.hint.glow_sec} 秒。ほかの手をしても残る。光らせた言葉を放つ・光らせた札が無くなる・引き直しを使うと消える）。言葉は文字では出ない。点はかからない。`,
     `<b>ログ</b>：一手ごとの記録。上の「ログ」で見てコピーできる。終わったら「ログをコピー」が出る。`,
+    `<b>曲</b>：試合の曲は The Japanese Sandman（Paul Whiteman 楽団、1920。Public domain、Wikimedia Commons）、針の音は Vinyl（Aidan Walker。CC0、OpenGameArt）。はじまりの前に「参・弐・壱」と数える（歯車で曲を切にすると音は鳴らない）。最後の1分は曲が少し速くなる。`,
     ]; },
     en: (p) => { const R = p.R, S = R.score; return [
     `<b>Select</b>: tap cards in your hand or stock. A selected card stays in its slot, changes colour and gets a number (1, 2, 3, ...) in its corner. Copies of the selected cards line up on the stand from the left, in the order you picked them. Tap again (the card or its copy) to deselect. The buttons act on the selected cards in that order.`,
@@ -319,6 +321,7 @@
     `When ${p.radKeys.join(", ")} sit on the left and can be joined, they are shown as ${p.radVals.join(", ")} (the card is still the original kanji). Pale cards are parts, not kanji.`,
     `<b>Hint</b>: ${R.hint.timed_sec ? `if you play nothing and don't redraw for ${R.hint.timed_sec} s` : ""}${R.hint.fail_streak ? `${R.hint.timed_sec ? ", or after " : "after "}${R.hint.fail_streak} rejections in a row` : ""}, the cards to use and the button glow (for ${R.hint.glow_sec} s; the glow stays if you do something else, and goes away when you play the hinted word, lose the hinted cards, or redraw). The word itself is never shown. It costs no points.`,
     `<b>Log</b>: a record of every move. Open it with "Log" above and copy it. When the game ends, "Copy log" appears.`,
+    `<b>Music</b>: the game music is "The Japanese Sandman" (Paul Whiteman and his Orchestra, 1920; public domain, Wikimedia Commons) and the needle sound is "Vinyl" by Aidan Walker (CC0, OpenGameArt). A 3-2-1 count (参, 弐, 壱) runs before the game starts (no sound if Music is off in the gear menu). The music speeds up a little in the last minute.`,
     ]; },
   };
   const howto = (p) => HOWTO[lang === "en" ? "en" : "ja"](p);

@@ -79,9 +79,9 @@ test("KJ-127 core.js が日本語で返す画面向けの文を、en のとき�
   for (const why of ["合言葉は数字4けた", "つながらない", "その合言葉の部屋がない", "合言葉を作れなかった（もう一度）", "その部屋はもう始まっている"]) assert.ok(!kana.test(S.tr(why)), why);
 });
 
-test("KJ-127 遊び方の説明（しくみ）：ja は17行のまま・en は同じ行数で、かな・読点が残らない", () => {
+test("KJ-127 遊び方の説明（しくみ）：ja は18行のまま（KJ-133 で曲のクレジットを1行足した）・en は同じ行数で、かな・読点が残らない", () => {
   const ja = S.howto(howtoArg);
-  assert.equal(ja.length, 17);
+  assert.equal(ja.length, 18);
   assert.ok(ja[0].startsWith("<b>選ぶ</b>：手札・ストックの札をタップすると"));
   assert.ok(ja.some((x) => x.includes(`先に ${rules.win.score} 点`)));
   S.setLang("en");

@@ -180,7 +180,7 @@ test("振動", { skip }, async (t) => {
   await t.test("navigator.vibrate が無い端末（iOS など）：入り切りは出ず、遊んでも落ちない", async () => {
     const { ctx, page, errors } = await open(browser, url, { vibrate: false });
     assert.equal(await page.locator("#grpVib").isVisible(), false);
-    assert.equal(await page.locator("#bGear").isVisible(), false, "歯車ごと出ない（KJ-123）");
+    assert.equal(await page.locator("#bGear").isVisible(), true, "歯車は出る（曲の入／切があるため。KJ-133）");
     await begin(page);
     await page.locator("#field .tile").first().click();
     for (const ch of "天上天下") await tap(page, ch);
