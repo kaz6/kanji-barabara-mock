@@ -452,7 +452,7 @@
       `引き直し 1試合${R.redraw.costs.length}回まで・${R.redraw.costs.map((c) => c + "点").join("→")}と回数で上がる・手札を全部入れ替え（${R.start_hand}枚）。点はマイナスになってよい（足りなくても払える）`,
       `勝ち 先に${R.win.score}点、または${limit / 60}分で点の多い方（同点は引き分け）。ひとりでは50点で終わらず${limit / 60}分で終わる`,
       `ヒント ${R.hint.timed_sec ? `人が${R.hint.timed_sec}秒なにも放たない（放つ・引き直しで数え直し）と` : "時限は無し。"}${R.hint.fail_streak ? `${R.hint.timed_sec ? "、または" : ""}人が続けて${R.hint.fail_streak}回はじかれると` : ""}、自動で札とボタンを光らせる（${R.hint.glow_sec}秒のあいだ、ほかの手をしても残る。光らせた言葉を放つか、光らせた札が（1枚でも）手札から無くなる・引き直しを使うと消える。言葉は文字で出さない。点はかけない）`,
-      `待ち時間 反転=${R.cooldown_sec.invert}秒 巡り=${R.cooldown_sec.cycle}秒 同音=${R.cooldown_sec.homophone}秒（その人の操作ごと）`,
+      `待ち時間 割る=${R.cooldown_sec.split}秒 反転=${R.cooldown_sec.invert}秒 巡り=${R.cooldown_sec.cycle}秒 同音=${R.cooldown_sec.homophone}秒（その人の操作ごと）`,
       key === "solo" || key === ROOM_OPPONENT.key ? "CPU なし" : `CPU ${a}〜${b}秒に1回動く`,
     ];
   }
@@ -598,14 +598,14 @@
       return out;
     }
     function player(key, name, n) {
-      return { key, name, cards: draw(n).map((c) => card(c)), cd: { invert: 0, cycle: 0, homophone: 0 },
+      return { key, name, cards: draw(n).map((c) => card(c)), cd: { split: 0, invert: 0, cycle: 0, homophone: 0 },
         score: 0, takes: 0, redraws: 0, lastSpecial: null, pendingFx: [], stuck: false };
     }
     g.me = player("me", "あなた", R.start_hand);
     if (M) {
       // 相手は人。札はこの端末に無い（枚数だけ。相手が送る 'event' で更新）。山からも引かない
       g.cpu = { key: "cpu", name: ROOM_OPP_NAME, cards: [], remote: true, hand: R.start_hand, count: R.start_hand + (env.startStock !== false ? R.start_stock_parts || 0 : 0),
-        cd: { invert: 0, cycle: 0, homophone: 0 }, score: 0, takes: 0, redraws: 0, lastSpecial: null, pendingFx: [], stuck: false };
+        cd: { split: 0, invert: 0, cycle: 0, homophone: 0 }, score: 0, takes: 0, redraws: 0, lastSpecial: null, pendingFx: [], stuck: false };
     } else {
       g.cpu = player("cpu", "CPU", g.solo ? 0 : R.start_hand); // ひとりで：CPU は出さない（山からも引かない）
     }
@@ -722,7 +722,7 @@
     g.movesInHand = (p) => {
       const cs = p.cards.map((x) => x.c);
       const out = [];
-      if (cs.some((c) => canSplit(T, c)) && counted(p) < totalMax) out.push("割る");
+      if (cs.some((c) => canSplit(T, c)) && counted(p) < totalMax) { const left = g.cdLeft(p, "split"); out.push(left > 0 ? `割る（待ち ${Math.ceil(left)}秒）` : "割る"); }
       if (p.cards.some((a) => p.cards.some((b) => a !== b && joinResults(T, a.c, b.c).length))) out.push("くっつける");
       for (const [name, k, ok] of [["反転", "invert", (c) => T.INV.has(c)], ["巡り", "cycle", (c) => T.NEXT.has(c)], ["同音", "homophone", (c) => T.HOMO.has(c)]]) {
         if (!cs.some(ok)) continue;
@@ -828,7 +828,7 @@
       const commonSet = new Set(T.COMMON_WORDS.map((x) => x.w));
       let best = null;
       for (const [opName, k, btn] of HINT_OPS) {
-        if (k !== "split" && !g.ready(p, k)) continue;
+        if (!g.ready(p, k)) continue; // 割る（split）も待ち時間がある（KJ-138）
         const seenChars = new Set();
         for (const x of cards) {
           if (seenChars.has(x.c)) continue;
@@ -921,8 +921,10 @@
       const t = cs[cs.length - 1]; // 2枚以上選んでいるときは、最後に選んだ札を割る（KJ-054・D-070）
       const c = t.c;
       if (!canSplit(T, c)) return fail("割れない");
+      if (!g.ready(p, "split")) return fail("待ち時間"); // KJ-138：割るにも待ち時間（反転・巡り・同音と同じ形）
       const parts = splitOnce(T, c);
       if (!fits(p, [t], parts.length)) return fail("手札もストックもいっぱい");
+      useCd(p, "split");
       const nc = replaceCards(p, [t.id], parts);
       addLog(p.name, "割る", [c], nc.map((x) => x.c));
       solved(p);
@@ -1289,6 +1291,7 @@
       const t = [cs[cs.length - 1]], c = t[0].c; // 1枚に効く操作は、最後に選んだ札を見る（KJ-054）
       if (op === "split") {
         if (!canSplit(T, c)) return "割れない";
+        if (!g.ready(p, "split")) return "待ち時間";
         return fits(p, t, splitOnce(T, c).length) ? null : "手札もストックもいっぱい";
       }
       if (op === "homophone") {
@@ -1388,12 +1391,12 @@
       };
       const found = [];
       for (const [k, outsOf] of [["cycle", (c) => (T.NEXT.has(c) ? [[T.NEXT.get(c)]] : [])], ["invert", (c) => (T.INV.has(c) ? [[T.INV.get(c)]] : [])], ["homophone", (c) => homoChars(T, c).map((h) => [h])],
-        // 割る（KJ-019・D-037）：割れる字だけ。割った部品が手札・ストックに入るときだけ（人と同じ置き場の決まり）。待ち時間はない
+        // 割る（KJ-019・D-037）：割れる字だけ。割った部品が手札・ストックに入るときだけ（人と同じ置き場の決まり）。待ち時間は人と同じ（KJ-138）
         ["split", (c, x) => (canSplit(T, c) && fits(p, [x], splitOnce(T, c).length) ? [splitOnce(T, c)] : [])]]) {
         if (!allowed.includes(k)) continue;
         for (const x of p.cards) for (const to of outsOf(x.c, x)) {
           const after = p.cards.filter((y) => y !== x).map((y) => y.c).concat(to).map((c) => kanaOf(T, c));
-          if (words.some((w) => covers(after, w.w))) found.push({ k, x, to: k === "split" ? to : to[0], isReady: k === "split" ? true : g.ready(p, k) });
+          if (words.some((w) => covers(after, w.w))) found.push({ k, x, to: k === "split" ? to : to[0], isReady: g.ready(p, k) });
         }
       }
       return found.length ? { ready: found.filter((m) => m.isReady) } : null;

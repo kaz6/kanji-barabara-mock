@@ -1799,14 +1799,14 @@ function press(id,op,name,run){
 function renderOps(){
   const s=rowState(),lc=lastCard(),one=lc?lc.c:null,me=G.me,live=!G.over&&!G.locked(G.me); // 放ったあと、場から取りきるまでは、ほかのボタンは全部押せない（KJ-039）
   const fit1=G.fits(me,row,1),lid=lc?[lc.id]:[],fitL=n=>G.fits(me,lid,n); // 1枚に効く操作の空きは、最後に選んだ札で見る（KJ-054）
-  const cds=[["反転","invert"],["巡り","cycle"],["同音","homophone"]].map(([n,k])=>cdText(G.cpu,k)&&`${n} ${cdText(G.cpu,k)}`).filter(Boolean);
+  const cds=[["割る","split"],["反転","invert"],["巡り","cycle"],["同音","homophone"]].map(([n,k])=>cdText(G.cpu,k)&&`${n} ${cdText(G.cpu,k)}`).filter(Boolean);
   const gone=!!(MC&&MC.oppGone()&&!G.over);
   $("cpuCds").textContent=gone?"相手の通信が切れた":cds.length?"待ち："+cds.join("・"):"";
   $("cpuCds").classList.toggle("gone",gone);
   $("bRelease").disabled=!(live&&(s.rl.ok||isTry(s)))||(!!TUT&&!TUT.buttonOn("bRelease")); // チュートリアル：いまの段の手のボタンだけ
   setOff("bRelease",live&&!s.rl.ok&&s.rc.length===1&&[...s.text].length===1); // KJ-117：台が1枚（1字では放てない）は押せない見え方。押すと 否 と理由は今までどおり（onclick の isTry）
   // 押せない見た目の操作ボタンは disabled でなく aria-disabled（見た目は同じ）。押すと何も起きず、「ためした」に理由が残る（KJ-041）
-  setOff("bSplit",!(live&&one&&K.canSplit(T,one)&&fitL(2)));
+  setOff("bSplit",!(live&&one&&K.canSplit(T,one)&&G.ready(me,"split")&&fitL(2)));
   setOff("bJoin",!(live&&s.joins.length&&fit1));
   setOff("bInvert",!(live&&one&&T.INV.has(one)&&G.ready(me,"invert")&&fitL(1)));
   setOff("bCycle",!(live&&one&&T.NEXT.has(one)&&G.ready(me,"cycle")&&fitL(1)));
@@ -1815,6 +1815,7 @@ function renderOps(){
   setOff("bRedraw",!(live&&G.redrawsLeft(me)>0)); // 5回まで（KJ-049）。使いきったら押せない見た目
   if(TUT)for(const id of ["bSplit","bJoin","bInvert","bCycle","bHomo","bRedraw"])if(!TUT.buttonOn(id))setOff(id,true); // チュートリアル：いまの段の手のボタン以外は押せない見た目
   // 待ち時間はボタンの地のゲージで見せる（KJ-034。秒数の文字は出さない）
+  gauge($("bSplit"),G.cdLeft(me,"split")>0,G.cdFrac(me,"split")); // KJ-138
   gauge($("bInvert"),G.cdLeft(me,"invert")>0,G.cdFrac(me,"invert"));
   gauge($("bCycle"),G.cdLeft(me,"cycle")>0,G.cdFrac(me,"cycle"));
   gauge($("bHomo"),G.cdLeft(me,"homophone")>0,G.cdFrac(me,"homophone"));

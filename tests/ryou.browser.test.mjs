@@ -73,6 +73,7 @@ test("良（KJ-137）：N4 で 銀 を割って 艮 を出し、丶 と並べて
     const h2 = await hand(page);
     assert.ok(h2.includes("良") && !h2.includes("艮") && !h2.includes("丶"), h2);
     await shot(page, "ryou-3-joined-375x667.png");
+    await page.evaluate(() => { __KJ.game.me.cd.split = 0; __KJ.render(); }); // KJ-138：割るの待ち時間は満ちたことにする（時間に頼らない）
     await page.click("#bSplit");
     const h3 = await hand(page);
     assert.ok(h3.includes("丶") && h3.includes("艮") && !h3.includes("良"), h3);

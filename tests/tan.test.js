@@ -28,6 +28,7 @@ test("割る：昼 → 尺 旦、旦 → 日 一（割れない！ではない�
   const g = newGame(1, "normal", "N4");
   const [h] = setHand(g, g.me, "昼");
   assert.equal(chars(g.split(g.me, [h]).cards), "尺旦");
+  g.clock.t += D.rules.cooldown_sec.split; // KJ-138：割るの待ち時間が満ちてから次を割る
   const [t] = setHand(g, g.me, "旦");
   const r = g.split(g.me, [t]);
   assert.ok(r.ok);
