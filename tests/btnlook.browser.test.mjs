@@ -230,7 +230,8 @@ test("卓の地：不透明な --table-ground・紙より濃い・卓の中の�
       const ground = rgb(ts.backgroundColor), paper = rgb(getComputedStyle(document.body).backgroundColor), tile = rgb("rgb(246, 238, 214)");
       const decl = getComputedStyle(document.documentElement).getPropertyValue("--table-ground").trim();
       const text = (el) => { const c = rgb(getComputedStyle(el).color); const a = c.length > 3 ? c[3] : 1; return [0, 1, 2].map((i) => c[i] * a + ground[i] * (1 - a)); };
-      const heads = [...t.querySelectorAll(".side-head b, .side-head")].filter((e) => e.textContent.trim()).map((e) => ({ t: e.textContent.trim().slice(0, 6), r: ratio(text(e), ground) }));
+      document.querySelector(".info").innerHTML = '<span class="no">（1字では放てない）</span>';
+      const heads = [...t.querySelectorAll(".side-head b, .side-head, .info .no")].filter((e) => e.textContent.trim()).map((e) => ({ t: e.textContent.trim().slice(0, 6), r: ratio(text(e), ground) }));
       return { bg: ts.backgroundColor, decl, groundTile: ratio(ground, tile), groundPaper: ratio(ground, paper), heads };
     });
     assert.equal(m.decl.toLowerCase(), "#d3c391", "色は --table-ground の1か所");
