@@ -171,7 +171,7 @@ for (const look of [null, "white", "outline", "line", "zzz"]) {
       await page.waitForTimeout(350);
       const cd = await page.evaluate(() => { const bt = document.getElementById("bInvert"), cs = getComputedStyle(bt), bef = getComputedStyle(bt, "::before"); return { cd: bt.classList.contains("cd"), off: bt.disabled || bt.getAttribute("aria-disabled") === "true", color: cs.color, bg: cs.backgroundColor, gauge: parseFloat(bef.width) > 0, gaugeColor: bef.backgroundColor }; });
       assert.equal(cd.cd, true, "待ち中の印"); assert.equal(cd.off, true, "待ち中は押せない");
-      assert.equal(cd.gauge, true, "ゲージが出ている"); assert.notEqual(cd.gaugeColor, "rgba(0, 0, 0, 0)");
+      assert.equal(cd.gauge, true, "ゲージが出ている"); assert.notEqual(cd.gaugeColor, "rgba(0, 0, 0, 0)"); assert.equal(cd.gaugeColor, "rgb(68, 112, 90)", "待ち時間のゲージは緑のまま（KJ-115）");
       assert.equal(cd.color, "rgb(42, 38, 34)", "待ち中の字は墨（ゲージの上で読める）");
       assert.equal(cd.bg, "rgb(232, 219, 180)", "待ち中の地は紙");
       assert.deepEqual(errors, []);

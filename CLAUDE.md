@@ -53,7 +53,7 @@ npm test
 - `tests/g1help.test.js`：小1 の手当て（KJ-067。`data/rules.json` の `g1`。基本の10字は山に3枚・N5/N4 は2枚のまま／手札に放てる語があり30秒なにも手をしないと光る・N5/N4 と放てる語なしでは光らない）
 - `tests/attack.test.js`：特別攻撃ワード（KJ-080。語ごとの効く操作と枚数・大回転は2枚・大集合は最大の組数・空振り・ストックには効かない・CPU が放っても人に効く・自刃は自分のまま・ログ・ヒントが消える）
 - `tests/tutorial.test.js`・`tests/tutorial.browser.test.mjs`：チュートリアル（8段を通せる・その手だけ通す・時間なし CPU なし・ログ／画面で通し・とばす・ボタンから・合言葉では出ない）
-- `tests/layout.browser.test.mjs`：試合の画面の置き場（KJ-078・KJ-090。Back は「あなた」の行の Redraw の左・上の3つは「しくみ」の行・残り時間は CPU の行の右端・Play は幅いっぱい・Redraw は卓の外／Redraw の1回タップ・長押し・途中で離す）
+- `tests/layout.browser.test.mjs`：試合の画面の置き場（KJ-078・KJ-090。Back は「あなた」の行の Redraw の左・上の3つは「しくみ」の行・残り時間は CPU の行の右端・Play は幅いっぱい・Redraw は卓の外／Redraw の1回タップ・長押し〔ゲージは弁柄。KJ-115〕・途中で離す）
 - `tests/cpuhand.browser.test.mjs`：CPU 対戦で相手の上の段を見せる（KJ-092。CPU の行の下に8マス・字だけ・ストックは出さない・押せない・CPU が動くと変わる・375×667 に自分の手札が収まる・ひとりとチュートリアルでは出ない。合言葉の部屋で出ないことは tests/browser.test.mjs）
 - `tests/joinmark.browser.test.mjs`：Join のボタンの印（KJ-103。Jo｜in が Split の逆に傾く〔+5／−5 度〕・継ぎ目の真上に墨の放射3本〔線3本・太さ1.6・端は丸〕・根元と字の上端の間 0〜3px・字に重ならない・押せないとき 0.35・375／320px ではみ出さない・読み上げは Join・押せばくっつく）。`KJ_SHOT_JOIN=<フォルダ>` で画像を書く
 - `tests/oigashira.test.js`・`tests/oigashira.browser.test.mjs`：耂 を 土＋ノ に割る（KJ-114。N4 でだけ・輪がない・割る／くっつける〔土＋ノ→耂。逆順は通らない〕・面では落とせない・台の行・CPU が 土ノ子 を 耂子 に・ヒント／画面：教→孝→耂→土ノ→耂 を 375×667 で）。`KJ_SHOT_OIGASHIRA=<フォルダ>` で画像を書く
@@ -64,7 +64,7 @@ npm test
 - `tests/endword.test.js`・`tests/endword.browser.test.mjs`：終わりの画面の言葉をタップ（KJ-087。`K.endShow` の items・missed に reading・ens〔2つまで〕・url〔コトバンク〕・en の無い語・辞書に無い語で落ちない／画面：欄が語の下に開く・もう一度で閉じる・開けるのは1つ・画面が閉じない〔時計が止まる〕・外を押すと閉じる・見逃した言葉にも・リンクの URL と target）
 - `tests/paper.test.js`・`tests/paper.browser.test.mjs`：新聞紙風の見た目（KJ-093。漢数字・号数・日付・字体の同梱と落とし先・札に出る字がどれかの字体にある／画面：表紙の題字と号数と日付・号数が試合ごとに増える・札の字の切り替えと覚える・字と地の明暗差 4.5 以上・卓の罫線と見出し・選んだ札の弁柄の縁・角丸なし・375／320px で押せる）
 - `tests/senkyo.test.js`・`tests/senkyo.browser.test.mjs`：戦況の欄・背景の記事・紙のざらつき（KJ-094。文の型〔`SENKYO`〕・あなた→アナタ・取った字が文のおわりに増える・新しい順・点と字数は漢数字・読みはカタカナ／画面：縦書きの欄と見出し・あなたの行は弁柄の太字・古い行が左へ流れる・375×700 に収まる〔空のあいだ 40px。KJ-106：見出しは1列〕・記事は押せない／札の下・入り切りを覚える〔localStorage が使えなくても落ちない〕・ざらつきの背景・空きマスは透けない）
-- `tests/btnlook.browser.test.mjs`：卓の操作5つの押せる／押せないの見え方（KJ-099・KJ-102。見え方は下線だけ。設定「ボタン」は無い・`<html data-btn>` も無い・localStorage `kj-btn` は読まない〔端末に white・outline が残っていても下線〕・押せる字は 4.5 以上・押せないは紙の地に墨 0.35・Play／Back／Redraw は変わらない・ヒントの光りと待ち時間のゲージが見える）。`KJ_SHOT_BTN=<フォルダ>` で画像を書く
+- `tests/btnlook.browser.test.mjs`：卓の操作5つの押せる／押せないの見え方（KJ-099・KJ-102。見え方は下線だけ。設定「ボタン」は無い・`<html data-btn>` も無い・localStorage `kj-btn` は読まない〔端末に white・outline が残っていても下線〕・押せる字は 4.5 以上・押せないは紙の地に墨 0.35・Play／Redraw は変わらない・Back は押せるときだけ弁柄の下線〔KJ-115〕・ヒントの光りと待ち時間のゲージが見える）。`KJ_SHOT_BTN=<フォルダ>` で画像を書く
 - `tests/share.test.js`・`tests/share.browser.test.mjs`：合言葉の共有（KJ-107。`K.roomCodeFromSearch`・`K.roomShareUrl`・共有の文／画面：部屋を作ると「共有」が出る・`navigator.share` に ?room= 付きのリンクが渡る・share が無いとクリップボードに写る・?room= で開くと友だちとが選ばれ合言葉が入る〔まだ入らない〕・合わない合言葉は入らない）。文は `js/strings.js` の `TEXT.shareText` ほか。`KJ_SHOT_SHARE=<フォルダ>` で画像を書く
 - `tests/shareend.test.js`・`tests/shareend.browser.test.mjs`：戦果の共有（KJ-108。`K.shareResultText`・`K.siteUrl`・勝ち／負け／引き分け／ひとり／言葉なし・型は `SHARE_RESULT` の1か所／画面：終わりに「共有」が出る・`navigator.share` に文と URL〔?room= なし〕・share が無いとクリップボード・チュートリアルでは出ない）。`KJ_SHOT_SHAREEND=<フォルダ>` で画像を書く
 - `tests/browser.test.mjs`：画面（合言葉の部屋を2つのページで1試合〔kj_claims は page.route で偽物に回し、Realtime は差し替え〕・台に札を置いても手札と場が動かない・並べる順が逆・放つ→取る・引き直し・ログをコピー・選ぶと札はマスに残り台に写しが並ぶ・入れ替え）。Playwright の Chromium がないと skip になる。skip は「通った」ではない

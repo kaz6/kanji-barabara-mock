@@ -10,7 +10,7 @@
 <style>
 :root{
   /* 色の役割（KJ-042。KJ-093：新聞紙風。値は仮。ここだけ変えれば全体が変わる）
-     紙（--bg 黄ばんだ紙）・札（--tile）・墨（--ink）・弁柄（--accent）＝Play・選んだ札の縁・あなたの印。補助（--sub／--dim）・点線（--line）
+     紙（--bg 黄ばんだ紙）・札（--tile）・墨（--ink）・弁柄（--accent）＝Play・選んだ札の縁・あなたの印・Back の下線・Redraw の長押しのゲージ（KJ-115）。補助（--sub／--dim）・点線（--line）
      青（--join）＝くっつけられる・合体の面 ／ 緑（--gauge）＝待ち時間のゲージ ／ 金（--hint）＝ヒント
      卓（--table）は紙と同じ色（暗い面はやめた）。札の下の縁（--edge）は紙の濃い色。角の印（Flip・Cycle・Same reading の SVG）＝墨色（--ink） */
   --bg:#e8dbb4; --ink:#2a2622; --sub:#625a50; --line:#a0957b; --tile:#f6eed6; --cut:#b48f62; --cut-op:.6;
@@ -224,7 +224,7 @@ button.op.main:disabled,button.op.main[aria-disabled=true]{background:var(--tile
 .table .ops-set{gap:0;border:1px solid var(--ink)}
 .table .ops-set button.op{flex:1 1 auto;padding:7px 6px;min-height:44px;white-space:nowrap;border-right:1px solid var(--ink)} /* 指で押す高さ 44px 以上（KJ-097。Back・Redraw・Play と同じ） */
 .table .ops-set button.op:last-child{border-right:0}
-/* KJ-099：卓の操作5つ（Split・Join・Flip・Cycle・Same reading）の押せる／押せないの見え方。見え方は下線の1つだけ（KJ-102。白抜きと設定「ボタン」は消した。kj-btn は読まない）。Play・Back・Redraw・はじめる前の画面のボタンは今のまま。
+/* KJ-099：卓の操作5つ（Split・Join・Flip・Cycle・Same reading）の押せる／押せないの見え方。見え方は下線の1つだけ（KJ-102。白抜きと設定「ボタン」は消した。kj-btn は読まない）。Play・Redraw・はじめる前の画面のボタンは今のまま（Back は押せるときだけ弁柄の下線。KJ-115）。
    押せない＝紙の地に墨の不透明度 .35 の字（地は濃くしない。押せない部品は明暗差の決まりの外）。押せる＝札の色の地に墨の太字＋弁柄の太い下線 */
 :root .table .ops-set button.op{background:var(--tile);color:var(--ink);font-weight:700;box-shadow:inset 0 -3px 0 var(--accent)}
 :root .table .ops-set button.op:disabled,:root .table .ops-set button.op[aria-disabled=true]{background:var(--table);color:rgba(42,38,34,.35);font-weight:400;box-shadow:none}
