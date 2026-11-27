@@ -137,6 +137,20 @@ test("Redraw（KJ-078）：1回タップでは引き直さず「長押しで引�
   assert.equal(w.cls, true);
   assert.ok(w.fill > 4 && w.fill < w.full - 2, `押している間、地が途中まで埋まっている（${Math.round(w.fill)} / ${Math.round(w.full)}）`);
   assert.equal(await handIds(page), h0, "まだ引き直さない");
+  // KJ-115：長押しのゲージは弁柄（待ち時間の緑ではない）。いちばん埋まったときも、墨の字は 4.5 以上で読める
+  const gz = await page.evaluate(() => {
+    const bt = document.getElementById("bRedraw"), bef = getComputedStyle(bt, "::before"), cs = getComputedStyle(bt);
+    const rgb = (t) => t.match(/[\d.]+/g).map(Number), lin = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+    const lum = (c) => 0.2126 * lin(c[0]) + 0.7152 * lin(c[1]) + 0.0722 * lin(c[2]);
+    const g = rgb(bef.backgroundColor), o = parseFloat(bef.opacity), paper = rgb(getComputedStyle(document.body).backgroundColor), ink = rgb(cs.color);
+    const mix = [0, 1, 2].map((i) => g[i] * o + paper[i] * (1 - o));
+    const [p, q] = [lum(ink), lum(mix)].sort((m, n) => n - m);
+    return { bg: bef.backgroundColor, ratio: (p + 0.05) / (q + 0.05), shadow: cs.boxShadow, color: cs.color };
+  });
+  assert.equal(gz.bg, "rgb(156, 59, 46)", "Redraw の長押しのゲージは弁柄");
+  assert.ok(gz.ratio >= 4.5, `ゲージの上でも Redraw の字が読める（${gz.ratio.toFixed(2)}）`);
+  assert.equal(gz.shadow, "none", "Redraw に下線は足さない");
+  assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--gauge").trim()), "#44705a", "--gauge（待ち時間の緑）は変えない");
   await shot(page, "kj-078-375-redraw-holding.png");
   await page.waitForTimeout(500);
   assert.notEqual(await handIds(page), h0, "埋まりきったら引き直す");

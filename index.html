@@ -184,6 +184,7 @@ body.playing .mast{display:none}
 /* Back（KJ-090。作者 2026-11-25「バックまで、指が遠い」）：卓から出して、「あなた ○点 手札」の行の Redraw のすぐ左へ。高さは Redraw と同じ（行を伸ばして揃える）・幅は 44px 以上・Redraw との間は 8px 以上 */
 .bkrd{display:flex;align-items:stretch;gap:10px;margin-left:auto;flex:none}
 #bBack{flex:none;display:inline-flex;align-items:center;justify-content:center;gap:4px;min-width:56px;min-height:40px;padding:4px 10px;background:transparent;border:1px solid var(--ink);color:var(--ink);font-size:14px;line-height:1.25}
+#bBack:not(:disabled){box-shadow:inset 0 -3px 0 var(--accent)} /* KJ-115：押せるときだけ、操作5つと同じ弁柄の下線 */
 #bBack:disabled{background:transparent;border-color:var(--line);color:var(--dim);cursor:default}
 #bBack .ic{flex:none}
 /* Redraw（KJ-078）：卓の外。「あなた ○点 手札 ○/8」の行の右端。長押しで引き直す＝押している間、地が左から埋まり、埋まりきったら引き直す（長さは index.html の REDRAW_HOLD_MS） */
@@ -191,7 +192,7 @@ body.playing .mast{display:none}
 .rdwrap{position:relative;flex:none;display:flex}
 #bRedraw{position:relative;isolation:isolate;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;min-width:64px;min-height:40px;padding:4px 10px;line-height:1.25;background:transparent;border:1px solid var(--ink);color:var(--ink);touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 #bRedraw:disabled,#bRedraw[aria-disabled=true]{background:transparent;border-color:var(--line);color:var(--dim)}
-#bRedraw::before{content:"";position:absolute;left:0;top:0;bottom:0;width:0;background:var(--gauge);opacity:.45;z-index:-1;pointer-events:none}
+#bRedraw::before{content:"";position:absolute;left:0;top:0;bottom:0;width:0;background:var(--accent);opacity:.45;z-index:-1;pointer-events:none}
 #bRedraw.holding::before{width:100%;transition:width var(--holdms,600ms) linear}
 #bRedraw .cdv{display:block;width:auto;white-space:nowrap;font-size:11px;text-align:center}
 .rdnote{position:absolute;right:0;bottom:calc(100% + 4px);z-index:5;white-space:nowrap;font-size:12px;line-height:1.3;padding:2px 8px;border-radius:0;background:var(--ink);color:var(--bg);pointer-events:none}
