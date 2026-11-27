@@ -17,7 +17,7 @@ test("ひらがな→カタカナ：あなた→アナタ。CPU・漢字・カ�
 });
 
 test("文の型は js/strings.js の SENKYO 1か所（仮）。放った言葉は漢字のまま・点と字数は漢数字・助詞や名前はカタカナ", () => {
-  assert.deepEqual(Object.keys(STR.SENKYO).sort(), ["head", "release", "sep", "score", "take", "yomi"].sort());
+  assert.deepEqual(Object.keys(STR.SENKYO).sort(), ["face", "head", "release", "sep", "score", "take", "yomi"].sort());
   assert.equal(STR.SENKYO.head, "戦況");
   const r = K.senkyoLines([L("あなた", "空白", 3)], { me: "あなた", tpl: STR.SENKYO, kana });
   assert.equal(r.length, 1);

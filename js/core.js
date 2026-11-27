@@ -151,7 +151,7 @@
     const partsSeen = new Set(Object.entries(T.parts).flatMap(([k, v]) => [k, ...v]));
     T.KANA_OK = new Set([...T.KANA].filter(([pt]) => partsSeen.has(pt)).map(([, k]) => k));
     T.SPECIAL = new Map(D.special.special.map((s) => [s.w, s]));
-    T.EFFECTS = new Map(Object.entries(D.special.effects || {}).filter(([w]) => T.WORDS.has(w)).map(([w, e]) => [w, { op: e.op, target: e.target, n: e.n === undefined ? 1 : e.n }])); // 放つと効く語（KJ-079・KJ-080。語→{op, target, n}。レベルの語の表にある語だけ。点・演出は変えない）
+    T.EFFECTS = new Map(Object.entries(D.special.effects || {}).filter(([w]) => T.WORDS.has(w)).map(([w, e]) => [w, e.value === undefined ? { op: e.op, target: e.target, n: e.n === undefined ? 1 : e.n } : { op: e.op, target: e.target, n: e.n === undefined ? 1 : e.n, value: e.value }])); // 放つと効く語（KJ-079・KJ-080。語→{op, target, n}。レベルの語の表にある語だけ。点・演出は変えない）
     T.FX_WORDS = new Map((D.special.fx_words || []).map((s) => [s.w, s])); // 演出だけ特別の語（KJ-064。金玉。点・倍率・つながりは special と別で、変えない）
     // CPU が知っている語＝よく使う語（このレベルの語の表にあるものだけ。KJ-015：表にない語を知っていると、放てずに止まる）
     T.COMMON_WORDS = D.words.words.filter((w) => w.common && w.w.length >= 2 && T.WORDS.has(w.w));
@@ -550,7 +550,7 @@
     let uid = 0;
     const TUT = env.tutorial && !M ? env.tutorial : null; // チュートリアル（KJ-043）：決まった手札・ストック・場。時間なし・CPU なし
     const opponent = M ? ROOM_OPPONENT.key : TUT ? TUTORIAL_OPPONENT.key : OPPONENTS.some((o) => o.key === env.opponent) ? env.opponent : R.opponent_default;
-    const g = { D, T, level: T.level, opponent, solo: opponent === "solo" || !!TUT, tutorial: !!TUT, log: [], events: [], used: new Set(), over: false, winner: null,
+    const g = { D, T, level: T.level, opponent, solo: opponent === "solo" || !!TUT, tutorial: !!TUT, log: [], events: [], used: new Set(), over: false, winner: null, face: null,
       startedAt: (env.date || (() => new Date()))() };
     // 使えない語か：放った言葉、または 数＋助数詞 でその助数詞がもう使われている（KJ-022）。CPU・ヒント・動けない の語えらびはこれで見る
     let ucN = -1, ucS = new Set();
@@ -680,9 +680,9 @@
     g.cdFrac = (p, k) => frac(g.cdLeft(p, k), R.cooldown_sec[k]);
     const useCd = (p, k) => { p.cd[k] = now() + R.cooldown_sec[k]; };
 
-    const QUIET = new Set(["はじまり", "ためした", "ヒント", "終わり", "動けない", "動ける", "入れ替え", "移す", "段", "とばす"]);
+    const QUIET = new Set(["はじまり", "ためした", "ヒント", "終わり", "動けない", "動ける", "入れ替え", "移す", "段", "とばす", "札の字"]);
     // 小1 の見逃しの光り（KJ-067）：人が最後に手をした時刻。ヒント・動けない・終わりなど、手でないログは数えない
-    const NOT_MOVE = new Set(["はじめ", "はじまり", "ヒント", "終わり", "動けない", "動ける"]);
+    const NOT_MOVE = new Set(["はじめ", "はじまり", "ヒント", "終わり", "動けない", "動ける", "札の字"]);
     let idleFrom = t0;
     let timedFrom = t0; // 時限ヒント（KJ-086）：人が最後に放った・引き直した・ヒントが出た時刻（はじめは試合のはじめ）
     function addLog(who, op, from, to, pts, note) {
@@ -1018,6 +1018,8 @@
         const n = [...text].length;
         if (!g.over) addLog(g.cpu.name, "放つ", [...text], [], pts || 0, `${scoreOf(D, T, text).how}。場から${n * R.take_per_char}枚取れる`);
         g.events.push({ type: "release", who: g.cpu.name, text, pts: pts || 0 });
+        const ef = T.EFFECTS.get(text);
+        if (ef && ef.op === "face" && !g.over) g.applyFace(g.cpu, text, ef); // 相手が 明朝体 を放ったら、こちらの札の字も替わる（KJ-131）
         return true;
       };
       // 言葉の先着で負けた（相手が先に放った）。点は入らない。札は手元に残る
@@ -1054,7 +1056,8 @@
       else if (T.FX_WORDS.has(text)) { const f = T.FX_WORDS.get(text); g.events.push({ type: "fx", who: p.name, text, together: !!f.together, tone: f.tone || null }); } // 演出だけ（点は scoreOf のまま）
       p.lastSpecial = T.SPECIAL.has(text) ? text : null;
       const ef = T.EFFECTS.get(text);
-      if (ef && ef.target === "self") p.pendingFx.push({ text, op: ef.op }); // 自分の札に効く語：場から取り終わったあとに効く（runPendingFx）
+      if (ef && ef.op === "face") applyFace(p, text, ef); // 二人の札の字が替わる語（KJ-131。明朝体）：点・演出・振動は普通の語のまま
+      else if (ef && ef.target === "self") p.pendingFx.push({ text, op: ef.op }); // 自分の札に効く語：場から取り終わったあとに効く（runPendingFx）
       else if (ef) hitOpponent(p, text, ef); // 相手の札に効く語：放った瞬間に効く（放った側が場から取る前。KJ-080）
       solved(p);
       g.events.push({ type: "release", who: p.name, text, pts });
@@ -1062,6 +1065,16 @@
       return { ok: true, text, pts };
     };
 
+    // ---------- 札の字が替わる語（KJ-131）：「明朝体」を放つと、その試合の終わりまで、二人とも札の字が明朝（g.face＝"mincho"）になる ----------
+    // 試合の中だけ。端末の設定（kj-face）は書き換えない（画面が g.face を見て、試合が終わったら設定に戻す）。2回目は何もしない（演出も出さない）。CPU が放っても・合言葉の部屋で相手が放っても同じ
+    function applyFace(p, text, ef) {
+      if (g.face === ef.value) return false;
+      g.face = ef.value;
+      addLog(p.name, "札の字", [], [], 0, `${text}で札の字が替わった（${ef.value === "mincho" ? "明朝" : ef.value}）`);
+      g.events.push({ type: "face", who: p.name, text, face: ef.value });
+      return true;
+    }
+    g.applyFace = applyFace;
     // ---------- 放つと効く語（KJ-080・D-099）：相手の上の段の札に効く。放った瞬間に（放った側が場から取る前に）。待ち時間はかけない・使わない ----------
     // 効く札は、相手の上の段（ストックは含めない）のうち、その操作が効く札から無作為。足りなければ効くぶんだけ・1枚も無ければ空振り。
     // ひとりで・合言葉の部屋（相手の札がこの端末に無い）では何も起きない（イベントも出さない）。ログ：効かされた側の行（手は 割る・巡り・反転・くっつける・同音。メモに「CPU の 切る で」）
@@ -2024,6 +2037,7 @@
     const L = Array.isArray(log) ? log : [];
     for (let i = 0; i < L.length; i++) {
       const e = L[i];
+      if (e && e.op === "札の字" && tpl.face) { out.push({ who: e.who, mine: e.who === o.me, word: "", pts: 0, takes: [], face: true, text: tpl.face, segs: [{ k: "p", t: tpl.face }] }); continue; } // 札の字が替わった行（KJ-131）
       if (!e || e.op !== "放つ") continue;
       const takes = [];
       for (let j = i + 1; j < L.length; j++) { // 同じ人のこの放ちのあとの 取る（次の放ち・取る以外の手まで）
