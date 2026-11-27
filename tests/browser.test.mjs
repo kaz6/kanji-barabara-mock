@@ -318,22 +318,23 @@ test("画面", { skip }, async (t) => {
     assert.equal(await page.locator('#opp input[value="solo"]').count(), 0);
     // 友達と対戦（KJ-123）：強さの段の場所に［部屋を作る］［部屋に入る］が横並びで出る。初めはどちらも選ばれていない。強さは出ない。レベル・時間は作る前に選べるよう、その下に出たまま
     await page.check('#opp input[value="room"]');
-    assert.deepEqual([await vis("#pow"), await vis("#roomBox"), await vis("#start"), await vis("#act"), await vis("#lvl"), await vis("#tim"), await vis("#roomCode"), await vis("#bEnter")], [false, true, false, true, true, true, false, false]);
+    assert.equal(await page.evaluate(() => !document.getElementById("roomBox").hidden), true, "部屋の欄は出ている（中は選ぶまで空）");
+    assert.deepEqual([await vis("#pow"), await vis("#start"), await vis("#act"), await vis("#lvl"), await vis("#tim"), await vis("#roomCode"), await vis("#bEnter")], [false, false, true, true, true, false, false]);
     assert.deepEqual(await page.locator("#act label").allTextContents().then((a) => a.map((x) => x.trim())), ["部屋を作る", "部屋に入る"]);
     assert.equal(await page.locator("#act input:checked").count(), 0, "初めはどちらも選ばれていない");
     assert.equal(await page.evaluate(() => localStorage.getItem("kj-opponent")), "room");
     const place = await page.evaluate(() => {
       const r = (id) => document.getElementById(id).getBoundingClientRect(), a = [...document.querySelectorAll("#act label")].map((l) => l.getBoundingClientRect());
-      return { inHost: document.getElementById("hostSlot").contains(document.getElementById("lvl")) && document.getElementById("hostSlot").contains(document.getElementById("tim")),
-        order: r("opp").top < r("act").top && r("act").top < r("lvl").top && r("lvl").top < r("tim").top, sameRow: Math.abs(a[0].top - a[1].top) < 2 && a[0].right <= a[1].left };
+      return { inSlot: document.getElementById("setSlot").contains(document.getElementById("lvl")) && document.getElementById("setSlot").contains(document.getElementById("tim")),
+        order: r("opp").top < r("lvl").top && r("lvl").top < r("tim").top && r("tim").top < r("act").top, sameRow: Math.abs(a[0].top - a[1].top) < 2 && a[0].right <= a[1].left };
     });
-    assert.deepEqual(place, { inHost: true, order: true, sameRow: true }, "遊び方→作る／入る→レベル→時間 の順。作る／入るは横並び");
+    assert.deepEqual(place, { inSlot: true, order: true, sameRow: true }, "遊び方→レベル→時間→作る／入る の順（KJ-136）。作る／入るは横並び");
     // 部屋に入る：合言葉の入力と「合言葉で入る」が出る。レベル・時間は出ない（作った人のもので遊ぶ）。「入る側は…」の文が下に1行
     await page.check('#act input[value="enter"]');
     assert.deepEqual([await vis("#roomCode"), await vis("#bEnter"), await vis("#lvl"), await vis("#tim")], [true, true, false, false]);
     assert.match(await page.locator("#enterBox .gt").textContent(), /入る側は、作った人のレベル・時間で遊ぶ/);
     assert.equal(await page.evaluate(() => { const r = (id) => document.getElementById(id).getBoundingClientRect(); return r("roomCode").bottom <= document.querySelector("#enterBox .gt").getBoundingClientRect().top + 1; }), true, "文は入る側の下");
-    // CPU と に戻すと、前に選んだ強さを覚えている。レベル・時間はもとの場所に戻る
+    // CPU と に戻すと、前に選んだ強さを覚えている
     await page.check('#opp input[value="cpu"]');
     await page.check('#pow input[value="normal"]');
     await page.check('#opp input[value="room"]');
@@ -1898,6 +1899,8 @@ test("画面", { skip }, async (t) => {
     const code = (await A.page.textContent("#roomShow")).trim();
     assert.match(code, /^[0-9]{4}$/);
     assert.match(await A.page.textContent("#roomMsg"), /相手を待っています/);
+    // KJ-136：作った側ではレベル・時間が［部屋を作る］の上に出たまま、やめるまで押せない
+    assert.deepEqual(await A.page.evaluate(() => [document.getElementById("lvl").offsetParent !== null, document.getElementById("tim").offsetParent !== null, document.querySelector("#lvl input").disabled, document.getElementById("tim").getBoundingClientRect().top < document.getElementById("act").getBoundingClientRect().top]), [true, true, true, true]);
     // 入る側（設定は N4・10分のまま。作った人の N5・5分 で遊ぶ）
     await B.page.check('#act input[value="enter"]');
     await B.page.fill("#roomCode", "99");

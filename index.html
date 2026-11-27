@@ -503,13 +503,12 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
     <div class="setpanel" id="setPanel" hidden><div class="grp" id="grpBgm"><p class="gt" data-t="lblBgm"></p><span class="opp" id="bgm" role="radiogroup" data-t-aria="lblBgm"></span></div><div class="grp" id="grpVib"><p class="gt" data-t="lblVib"></p><span class="opp" id="vib" role="radiogroup" data-t-aria="lblVib"></span></div></div>
     <div class="grp"><p class="gt" data-t="lblPlay"></p><span class="opp" id="opp" role="radiogroup" data-t-aria="lblPlay"></span></div>
     <div class="grp" id="powBox" hidden><p class="gt" data-t="lblPower"></p><span class="opp" id="pow" role="radiogroup" data-t-aria="lblPower"></span></div>
-    <div class="grp" id="actBox" hidden><p class="gt" data-t="lblRoom"></p><span class="opp" id="act" role="radiogroup" data-t-aria="lblRoom"></span></div><!-- KJ-123：友達と対戦のとき、強さの段の場所に［部屋を作る］［部屋に入る］。初めはどちらも選ばれていない -->
-    <div id="setSlot">
+    <div id="setSlot"><!-- レベル・時間。友達と対戦のときも作る／入るの上のまま。［部屋に入る］のときだけ隠す（KJ-136） -->
       <div class="grp" id="grpLvl"><p class="gt" data-t="lblLevel"></p><span class="opp" id="lvl" role="radiogroup" data-t-aria="lblLevel"></span></div>
       <div class="grp" id="grpTim"><p class="gt" data-t="lblTime"></p><span class="opp" id="tim" role="radiogroup" data-t-aria="lblTime"></span></div>
     </div>
+    <div class="grp" id="actBox" hidden><p class="gt" data-t="lblRoom"></p><span class="opp" id="act" role="radiogroup" data-t-aria="lblRoom"></span></div><!-- KJ-123：友達と対戦のとき［部屋を作る］［部屋に入る］。初めはどちらも選ばれていない。KJ-136：レベル・時間の下 -->
     <div class="grp" id="roomBox" hidden>
-      <div id="hostSlot"></div><!-- 友達と対戦のとき、レベル・時間をここ（部屋を作る前・作る側）に置く。［部屋に入る］のときは出さない（作った人のレベル・時間で遊ぶため）。KJ-045・KJ-123 -->
       <div id="enterBox" hidden>
         <div class="roomrow"><input id="roomCode" inputmode="numeric" autocomplete="off" maxlength="4" data-t-ph="codePh" data-t-aria="codeAria"><button class="op" id="bEnter" data-t="enterBtn"></button></div>
         <p class="gt" data-t="enterNote"></p>
@@ -1282,8 +1281,7 @@ function roomUi(){
   $("powBox").hidden=playMode()!=="cpu";               // 強さは「CPU戦」のときだけ（KJ-045）
   $("actBox").hidden=!on;
   $("roomBox").hidden=!on;
-  (on?$("hostSlot"):$("setSlot")).append($("grpLvl"),$("grpTim")); // 友達と対戦のときは、レベル・時間は作る／入るの段の下（KJ-123）
-  $("hostSlot").hidden=roomAct==="enter";               // ［部屋に入る］のときは出さない（作った人のレベル・時間で遊ぶ）
+  $("setSlot").hidden=on&&roomAct==="enter";             // レベル・時間は［部屋を作る］［部屋に入る］の上（KJ-136）。［部屋に入る］のときだけ隠す（作った人のレベル・時間で遊ぶ）
   $("enterBox").hidden=roomAct!=="enter";
   for(const i of document.querySelectorAll("#act input"))i.checked=i.value===roomAct;
   for(const i of document.querySelectorAll("#act input,#lvl input,#tim input"))i.disabled=wait; // 部屋ができたら、やめるまで押せない見え方（仮）
