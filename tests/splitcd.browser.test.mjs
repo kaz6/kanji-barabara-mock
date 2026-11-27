@@ -59,7 +59,7 @@ test("Split：割ったあとゲージが出て押せない・理由は 待ち�
     });
     const st = () => page.evaluate(() => { const b = document.getElementById("bSplit"); return { cd: b.classList.contains("cd"), off: b.disabled || b.getAttribute("aria-disabled") === "true", g: parseFloat(b.style.getPropertyValue("--g") || "NaN"), gauge: parseFloat(getComputedStyle(b, "::before").width) > 0 }; });
     const total = await page.evaluate(() => __KJ.data.rules.cooldown_sec.split);
-    assert.equal(total, 5, "割るの待ち時間は rules.json の 5 秒");
+    assert.ok(total > 0, "割るの待ち時間は rules.json の値");
     await page.locator("#meHand .tile", { hasText: "休" }).first().click();
     let s = await st();
     assert.equal(s.off, false, "割る前は押せる"); assert.equal(s.cd, false);

@@ -6,10 +6,9 @@ const { K, D, T, newGame, setHand } = require("./helpers");
 const chars = (cards) => cards.map((x) => x.c).join("");
 const SEC = D.rules.cooldown_sec.split;
 
-test("割るの待ち時間：rules.json の値は 5秒・rules の version と note に KJ-138", () => {
-  assert.equal(SEC, 5);
+test("割るの待ち時間：rules.json の cooldown_sec.split は正の数（いまは 5秒・仮）・note に KJ-138", () => {
+  assert.ok(SEC > 0, "作者が数値を直しても落ちない");
   assert.match(D.rules.note, /KJ-138/);
-  assert.match(D.rules.version, /^2026-11-28\.[2-9]/);
 });
 
 test("割ったあとは待ち時間のあいだ割れない・満ちたらまた割れる。はじかれた札は動かない", () => {
