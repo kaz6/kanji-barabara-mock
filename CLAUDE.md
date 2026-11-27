@@ -6,6 +6,7 @@
 
 - docs/DECISION_LOG.md（R-番号。「却下」とある案は再提案しない）。正本は Notion の DECISION_LOG（漢字版）41da8a5d-fd45-8184-b0e9-c164462b1808
 - docs/SESSION_STATE.md（進捗・次にやること・未確定）
+- 全文は docs/archive/ にある。経緯は検索で引く（毎回は読まない）
 - ひらがな分解（仮）のリポジトリには触らない
 
 ## 中身の分け方
