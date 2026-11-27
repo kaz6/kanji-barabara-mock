@@ -68,7 +68,10 @@ test("振動", { skip }, async (t) => {
 
   await t.test("手ごとに決めた形で震える（はじかれた→放つ→取る→割る→くっつける）", async () => {
     const { ctx, page, errors } = await open(browser, url);
-    assert.equal(await page.locator("#grpVib").isVisible(), true, "navigator.vibrate がある端末には「振動」の入り切りが出る");
+    assert.equal(await page.locator("#bGear").isVisible(), true, "navigator.vibrate がある端末には歯車が出る（KJ-123）");
+    assert.equal(await page.locator("#grpVib").isVisible(), false, "設定の欄は歯車を押すまで閉じている");
+    await page.click("#bGear");
+    assert.equal(await page.locator("#grpVib").isVisible(), true, "歯車を押すと「振動」の入り切りが出る");
     assert.equal(await page.locator('#vib input[value="1"]').isChecked(), true, "初期は入");
     await begin(page, "一上一下休人木日"); // 一上一下＝四字熟語（特別な語ではない）
     await page.evaluate(() => { window.__vib.length = 0; });
@@ -154,6 +157,7 @@ test("振動", { skip }, async (t) => {
 
   await t.test("切にすると震えない（端末に覚える）。入に戻すと1回だけ試しに震える", async () => {
     const { ctx, page, errors } = await open(browser, url);
+    await page.click("#bGear");
     await page.check('#vib input[value="0"]');
     assert.equal(await page.evaluate(() => localStorage.getItem("kj-vibe")), "0");
     await begin(page);
@@ -162,11 +166,12 @@ test("振動", { skip }, async (t) => {
     for (const ch of "天上天下") await tap(page, ch);
     await page.click("#bRelease");
     assert.deepEqual(await vib(page), [], "切のあいだは呼ばれない");
-    await page.click("#bSetup");
+    await page.click("#bSetup"); // 設定の欄は開いたまま
     await page.check('#vib input[value="1"]');
     assert.deepEqual(await vib(page), [10], "入にしたとき、取ると同じ短い振動を1回");
     await ctx.close();
     const again = await open(browser, url, { pref: "0" });
+    await again.page.click("#bGear");
     assert.equal(await again.page.locator('#vib input[value="0"]').isChecked(), true, "覚えた切が次に開いたときも効く");
     await again.ctx.close();
     assert.deepEqual(errors, []);
@@ -175,6 +180,7 @@ test("振動", { skip }, async (t) => {
   await t.test("navigator.vibrate が無い端末（iOS など）：入り切りは出ず、遊んでも落ちない", async () => {
     const { ctx, page, errors } = await open(browser, url, { vibrate: false });
     assert.equal(await page.locator("#grpVib").isVisible(), false);
+    assert.equal(await page.locator("#bGear").isVisible(), false, "歯車ごと出ない（KJ-123）");
     await begin(page);
     await page.locator("#field .tile").first().click();
     for (const ch of "天上天下") await tap(page, ch);

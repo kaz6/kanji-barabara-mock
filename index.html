@@ -36,7 +36,6 @@ body{margin:0;background:
 main{max-width:760px;margin:0 auto;padding:16px 14px 48px}
 /* 背景の記事（KJ-094）：画面の背景いっぱいに、縦書き 10px・墨の不透明度 20% で遊びの決まりを新聞の文体にした文を繰り返す（js/strings.js の NEWS。仮）。札・ボタンの下に隠れる（z-index:-1 の層。main に z-index は付けない＝点の演出 #fxPts が #fx の上に出る決まりを守る）・押せない・読み上げない。設定「背景の記事」が切のときは <html data-news="off"> で消える（ざらつきは残る） */
 #bgnews{position:fixed;inset:0;z-index:-1;pointer-events:none;user-select:none;-webkit-user-select:none;overflow:hidden;contain:strict;transform:translateZ(0);writing-mode:vertical-rl;font-size:10px;line-height:1.55;color:rgba(42,38,34,.2);text-align:justify;padding:6px;overflow-wrap:anywhere}
-html[data-news="off"] #bgnews{display:none}
 /* 説明文（KJ-101）：札の字の切り替え（data-face）に関わらず、いつも大正風（Kaisei Tokumin）。無い字は 画面の字 → 今の字体へ落ちる */
 .lead{color:var(--ink);font-size:13px;margin:0 0 4px;font-family:"KJ Kaisei",var(--ui);white-space:pre-line}
 .lead-en{color:var(--ink);font-size:11.5px;line-height:1.4;margin:0 0 14px;font-family:var(--ui)}
@@ -278,12 +277,22 @@ button.op.full{animation:kjGaugeFull .6s ease-out}
 .choices button{font-family:var(--kanji);font-size:22px;width:44px;height:44px;border:1px solid var(--edge);background:var(--tile);color:var(--ink);border-radius:0;cursor:pointer}
 /* はじめる前の画面（KJ-007。KJ-042：墨色の面に、ラジオ（ブラウザの青）をやめて札の形の選択ボタン。選んだものが赤地に白） */
 .setup{background:var(--table);color:var(--on-table);border-radius:0;border-top:3px solid var(--ink);border-bottom:3px solid var(--ink);padding:16px 14px 16px;margin:8px 0}
-.setup h2{font-size:15px;margin:0 0 12px}
+.setup h2{font-size:15px;margin:0}
+/* KJ-123：見出しの行の右端に歯車（墨の線だけ。箱・影・光彩なし）。押すと小さな設定の欄（いまは振動の入／切）が開く */
+.sethead{display:flex;align-items:center;justify-content:space-between;margin:0 0 12px;min-height:24px}
+.sethead .gear{flex:none;width:44px;height:44px;margin:-10px -10px -10px 0;padding:0;border:0;background:transparent;color:var(--on-table);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.sethead .gear[hidden]{display:none}
+.sethead .gear .gear-ic{width:24px;height:24px;display:block}
+.sethead .gear:focus-visible{outline:2px solid var(--on-table);outline-offset:-4px}
+.setpanel{margin:0 0 14px;padding:10px 12px 0;border:1px solid var(--edge)}
+.setpanel[hidden]{display:none}
 .setup .grp{margin:0 0 14px}
 .setup .gt{font-size:12px;color:var(--on-table-sub);margin:0 0 6px}
 .setup .opp{gap:6px}
 .setup .opp label{position:relative;padding:9px 14px;background:var(--tile);color:var(--ink);border:1px solid var(--edge);border-radius:0;line-height:1.3}
 .setup .opp label input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.setup .opp label:has(input:disabled){opacity:.45;cursor:default} /* KJ-123：部屋を作ったあと、やめるまでレベル・時間・作る／入るは押せない見え方（仮） */
+.setup .opp label:has(input:disabled) input{cursor:default}
 .setup .opp label:has(input:checked){background:var(--accent);color:var(--bg);border-color:var(--ink);font-weight:700}
 .setup .opp label:has(input:focus-visible){outline:2px solid var(--on-table);outline-offset:2px}
 .setup .note{color:var(--on-table-sub)}
@@ -467,26 +476,26 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
   <p class="lead-en" id="leadEn" lang="en"></p>
 
   <section class="setup" id="setup">
-    <h2>はじめる前に選ぶ</h2>
+    <div class="sethead"><h2>はじめる前に選ぶ</h2><button type="button" class="gear" id="bGear" hidden aria-expanded="false" aria-controls="setPanel"></button></div>
+    <div class="setpanel" id="setPanel" hidden><div class="grp" id="grpVib"><p class="gt">振動</p><span class="opp" id="vib" role="radiogroup" aria-label="振動"></span></div></div>
     <div class="grp"><p class="gt">遊び方</p><span class="opp" id="opp" role="radiogroup" aria-label="遊び方"></span></div>
     <div class="grp" id="powBox" hidden><p class="gt">強さ</p><span class="opp" id="pow" role="radiogroup" aria-label="強さ"></span></div>
+    <div class="grp" id="actBox" hidden><p class="gt">合言葉の部屋</p><span class="opp" id="act" role="radiogroup" aria-label="合言葉の部屋"></span></div><!-- KJ-123：友達と対戦のとき、強さの段の場所に［部屋を作る］［部屋に入る］。初めはどちらも選ばれていない -->
     <div id="setSlot">
       <div class="grp" id="grpLvl"><p class="gt">レベル</p><span class="opp" id="lvl" role="radiogroup" aria-label="レベル"></span></div>
       <div class="grp" id="grpTim"><p class="gt">時間</p><span class="opp" id="tim" role="radiogroup" aria-label="時間"></span></div>
     </div>
     <div class="grp" id="roomBox" hidden>
-      <p class="gt">合言葉の部屋（友だちと対戦）</p>
-      <div id="hostSlot"></div><!-- 友だちと のときは、レベル・時間をここ（部屋を作る側）に置く。入る側には出さない（作った人のレベル・時間で遊ぶため）。KJ-045 -->
-      <div class="roomrow"><button class="op" id="bHost">部屋を作る</button></div>
-      <p class="gt">入る側は、作った人のレベル・時間で遊ぶ</p>
-      <div class="roomrow"><input id="roomCode" inputmode="numeric" autocomplete="off" maxlength="4" placeholder="数字4けた" aria-label="合言葉"><button class="op" id="bEnter">合言葉で入る</button></div>
+      <div id="hostSlot"></div><!-- 友達と対戦のとき、レベル・時間をここ（部屋を作る前・作る側）に置く。［部屋に入る］のときは出さない（作った人のレベル・時間で遊ぶため）。KJ-045・KJ-123 -->
+      <div id="enterBox" hidden>
+        <div class="roomrow"><input id="roomCode" inputmode="numeric" autocomplete="off" maxlength="4" placeholder="数字4けた" aria-label="合言葉"><button class="op" id="bEnter">合言葉で入る</button></div>
+        <p class="gt">入る側は、作った人のレベル・時間で遊ぶ</p>
+      </div>
       <div class="roomrow" id="codeRow" hidden><p class="roomcode" id="roomShow" hidden></p><button class="op" id="bShare" hidden></button></div>
       <p class="note" id="roomMsg"></p>
       <button class="op" id="bRoomCancel" hidden>やめる</button>
     </div>
-    <div class="grp" id="grpVib" hidden><p class="gt">振動</p><span class="opp" id="vib" role="radiogroup" aria-label="振動"></span></div>
     <div class="grp" id="grpFace"><p class="gt" id="faceLabel"></p><span class="opp" id="face" role="radiogroup" aria-label="札の字"></span></div>
-        <div class="grp" id="grpNews"><p class="gt" id="newsLabel"></p><span class="opp" id="news" role="radiogroup" aria-label="背景の記事"></span></div>
     <p class="note" id="setupInfo"></p>
     <button class="op main" id="start">はじめる</button>
     <button class="op" id="bTutorial" hidden></button>
@@ -591,7 +600,7 @@ const K=window.KJ;
 const STR=window.KJ_STR; // 画面の文言（ボタンの文字・角の印。KJ-024）
 for(const id of Object.keys(STR.BUTTONS)){const b=document.getElementById(id);if(STR.LOGO[id])b.setAttribute("aria-label",STR.BUTTONS[id]);b.querySelector(".lb").innerHTML=STR.buttonHtml(id)} // 印を字に組み込んだボタン（Fl＋印＋p など）は SVG 入り。読み上げは aria-label（KJ-048）
 document.getElementById("mastMain").textContent=STR.TEXT.masthead;document.getElementById("mastRuby").textContent=STR.TEXT.mastheadRuby;document.getElementById("mastSub").textContent=STR.TEXT.mastheadSub;document.getElementById("faceLabel").textContent=STR.TEXT.faceLabel; // 表紙の題字・設定の見出し（KJ-093）
-document.getElementById("newsLabel").textContent=STR.TEXT.newsLabel;document.getElementById("skHead").textContent=STR.SENKYO.head; // 設定の見出し・戦況の見出し（KJ-094）
+document.getElementById("bGear").innerHTML=STR.GEAR_SVG;document.getElementById("bGear").setAttribute("aria-label",STR.TEXT.settings);document.getElementById("skHead").textContent=STR.SENKYO.head; // 設定の見出し・戦況の見出し（KJ-094）
 const D={};
 let T=null, G=null; // 表・ゲームの状態
 let autoTok=null;  // チュートリアルの自動取りが走っているあいだの印（下の autoTakeRun）
@@ -601,9 +610,9 @@ const LVL_KEY="kj-level";
 let level=null;     // レベル（"G1"〔小1〕／"N5"／"N4"）。はじめるときに効く。端末に覚える
 let row=[];         // 選んだ札の id（選んだ順。台にはその写しを左から並べる）
 let lastTried="";
-const OPP_KEY="kj-opponent",TIME_KEY="kj-time",VIB_KEY="kj-vibe",FACE_KEY="kj-face",ISSUE_KEY="kj-issue",NEWS_KEY="kj-news";
+const OPP_KEY="kj-opponent",TIME_KEY="kj-time",VIB_KEY="kj-vibe",FACE_KEY="kj-face",ISSUE_KEY="kj-issue";
 let opponent=null;  // 相手のキー（weak・fair・normal・room。solo は画面から外した〔KJ-056〕）。端末に覚える（KJ-007）。画面では「遊び方」と「強さ」の2段で選ぶ（KJ-045）
-let cpuPower="weak"; // 「CPU と」のときの強さ。遊び方を行き来しても覚えている
+let cpuPower="weak"; // 「CPU戦」のときの強さ。遊び方を行き来しても覚えている
 let timeLimit=null; // 制限時間（秒）。端末に覚える（KJ-007）
 const $=id=>document.getElementById(id);
 const clock=()=>performance.now()/1000;
@@ -634,18 +643,17 @@ function loadSettings(){
   timeLimit=K.normTime(D,lsGet(TIME_KEY));
   vibeOn=lsGet(VIB_KEY)!=="0"; // 振動の入り切り（KJ-074）。覚えていなければ入
   setFace(lsGet(FACE_KEY)==="mincho"?"mincho":"taisho"); // 札の字（KJ-093）。覚えていなければ大正風
-  setNews(lsGet(NEWS_KEY)==="0"?"0":"1"); // 背景の記事（KJ-094）。覚えていなければ入
 }
-// 共有のリンク ?room=合言葉（KJ-107）で開いたら、遊び方を「友だちと（合言葉）」にし、入る側の欄に合言葉を入れておく。入るのは遊び手が「合言葉で入る」を押してから。合言葉の決まりに合わなければ何もしない。端末に覚えた遊び方は書き換えない
+// 共有のリンク ?room=合言葉（KJ-107）で開いたら、遊び方を「友達と対戦」にし、入る側の欄に合言葉を入れておく。入るのは遊び手が「合言葉で入る」を押してから。合言葉の決まりに合わなければ何もしない。端末に覚えた遊び方は書き換えない
+// KJ-123：「友達と対戦」＋［部屋に入る］が選ばれた状態にする。入り方の統計のため、リンクの合言葉を覚えておく（打ち直さずに入ったら「リンク」）
 function applyRoomLink(){
   let code=null;try{code=K.roomCodeFromSearch(location.search)}catch(e){}
   if(!code)return;
   opponent=K.ROOM_OPPONENT.key;
+  roomAct="enter";linkCode=code;
   $("roomCode").value=code;
 }
-// ---------- 背景の記事（KJ-094）：入／切（初期は入）。<html data-news="off"> で消える。端末に覚える（localStorage kj-news。切＝"0"）。記事は画面の大きさに合わせて繰り返す ----------
-let newsOn=true;
-function setNews(v){newsOn=v!=="0";document.documentElement.setAttribute("data-news",newsOn?"on":"off")}
+// ---------- 背景の記事（KJ-094）：いつも入（KJ-123 で入／切をなくした。localStorage kj-news は読まない）。記事は画面の大きさに合わせて繰り返す ----------
 function fillNews(){
   const box=$("bgnews");if(!box||!STR.NEWS)return;
   const need=Math.min(200,Math.max(2,Math.ceil((window.innerWidth*window.innerHeight)/(10*15.5)/STR.NEWS.length)+1)); // 10px・行 15.5px の1字ぶんの面積で、画面が埋まるぶん（上限 200 回）
@@ -689,12 +697,12 @@ function radios(box,name,items,cur,onPick){
   }
 }
 function buildPickers(){
-  radios($("opp"),"opp",K.PLAY_MODES.map(o=>({value:o.key,label:o.label})),playMode(),v=>{cancelRoom();opponent=K.opponentKey(v,cpuPower);lsSet(OPP_KEY,opponent);roomUi()});
+  radios($("opp"),"opp",K.PLAY_MODES.map(o=>({value:o.key,label:o.label})),playMode(),v=>{cancelRoom();roomAct=null;opponent=K.opponentKey(v,cpuPower);lsSet(OPP_KEY,opponent);roomUi()});
   radios($("pow"),"pow",K.CPU_POWERS.map(o=>({value:o.key,label:o.label})),cpuPower,v=>{cpuPower=v;opponent=K.opponentKey("cpu",v);lsSet(OPP_KEY,opponent)});
   radios($("lvl"),"lvl",K.LEVELS.map(o=>({value:o.key,label:o.short,title:o.label})),level,v=>{level=v;lsSet(LVL_KEY,v);T=tablesFor(level);showCounts()});
   radios($("face"),"face",[{value:"taisho",label:STR.TEXT.faceTaisho},{value:"mincho",label:STR.TEXT.faceMincho}],face,v=>{setFace(v);lsSet(FACE_KEY,v)});
-  radios($("news"),"news",[{value:"1",label:STR.TEXT.newsOn},{value:"0",label:STR.TEXT.newsOff}],newsOn?"1":"0",v=>{setNews(v);lsSet(NEWS_KEY,v)}); // 背景の記事の入り切り（KJ-094）
-  if(canVibe()){$("grpVib").hidden=false;radios($("vib"),"vib",[{value:"1",label:"入"},{value:"0",label:"切"}],vibeOn?"1":"0",v=>{vibeOn=v==="1";lsSet(VIB_KEY,v);if(vibeOn)buzz("take")})} // 振動が使えない端末には出さない。入にしたとき、1回だけ試しに震える
+  radios($("act"),"act",[{value:"host",label:"部屋を作る"},{value:"enter",label:"部屋に入る"}],roomAct,pickAct); // KJ-123：初めはどちらも選ばれていない（?room= のときだけ［部屋に入る］）
+  if(canVibe()){$("bGear").hidden=false;radios($("vib"),"vib",[{value:"1",label:"入"},{value:"0",label:"切"}],vibeOn?"1":"0",v=>{vibeOn=v==="1";lsSet(VIB_KEY,v);if(vibeOn)buzz("take")})} // 振動が使えない端末には出さない。入にしたとき、1回だけ試しに震える
   radios($("tim"),"tim",K.timeChoices(D).map(sec=>({value:sec,label:K.timeLabel(sec)})),timeLimit,v=>{timeLimit=+v;lsSet(TIME_KEY,v);buildHowto()});
 }
 const playMode=()=>K.readOpponent(D,opponent).mode; // cpu／room
@@ -1072,16 +1080,24 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden)LINK.pollN
 const CLAIMS={insert:claimsInsert,subscribe:(mid,fn)=>LINK.subscribe(mid,fn),
   select:async(mid,kind)=>{const rows=await claimsGet(mid,kind);return rows?{ok:true,rows}:{ok:false,error:"つながらない"}}};
 
+let roomAct=null;  // 友達と対戦の［部屋を作る］"host"／［部屋に入る］"enter"。初めは null（KJ-123）
+let linkCode=null; // ?room= のリンクで入っていた合言葉（入り方の統計。KJ-123）
 let MC=null;   // 合言葉の部屋の試合のつなぎ（KJ.createMatchClient）
 let ROOM=null; // 待っている部屋 { role, matchId, code, level, timeLimit }
 function setRoomMsg(t){$("roomMsg").textContent=t||""}
 function roomUi(){
   const on=opponent===K.ROOM_OPPONENT.key,wait=!!ROOM;
-  $("powBox").hidden=playMode()!=="cpu";               // 強さは「CPU と」のときだけ（KJ-045）
+  if(!ROOM&&roomAct==="host")roomAct=null; // 部屋ができなかった・やめた・試合が終わった：もう一度［部屋を作る］を押せるように選びを外す
+  $("powBox").hidden=playMode()!=="cpu";               // 強さは「CPU戦」のときだけ（KJ-045）
+  $("actBox").hidden=!on;
   $("roomBox").hidden=!on;
-  (on?$("hostSlot"):$("setSlot")).append($("grpLvl"),$("grpTim")); // 友だちと のときは、レベル・時間は部屋を作る側に置く
+  (on?$("hostSlot"):$("setSlot")).append($("grpLvl"),$("grpTim")); // 友達と対戦のときは、レベル・時間は作る／入るの段の下（KJ-123）
+  $("hostSlot").hidden=roomAct==="enter";               // ［部屋に入る］のときは出さない（作った人のレベル・時間で遊ぶ）
+  $("enterBox").hidden=roomAct!=="enter";
+  for(const i of document.querySelectorAll("#act input"))i.checked=i.value===roomAct;
+  for(const i of document.querySelectorAll("#act input,#lvl input,#tim input"))i.disabled=wait; // 部屋ができたら、やめるまで押せない見え方（仮）
   $("start").hidden=on;
-  $("bHost").disabled=wait;$("bEnter").disabled=wait;$("roomCode").disabled=wait;
+  $("bEnter").disabled=wait;$("roomCode").disabled=wait;
   $("bRoomCancel").hidden=!wait;
   $("codeRow").hidden=$("bShare").hidden=!(wait&&ROOM.role==="host"&&ROOM.code);
   $("roomShow").hidden=!(wait&&ROOM.role==="host"&&ROOM.code);$("roomShow").textContent=ROOM&&ROOM.code?ROOM.code:"";
@@ -1122,7 +1138,14 @@ $("bShareEnd").onclick=async()=>{
   if(r==="copied")flash(STR.TEXT.shareCopied);else if(r==="failed")flash(STR.TEXT.shareEndFailed);
 };
 $("bRoomCancel").onclick=()=>{cancelRoom();setRoomMsg("やめた")};
-$("bHost").onclick=async()=>{
+// 作る／入る（KJ-123）：［部屋を作る］は押すとすぐ、いま選んでいるレベル・時間で部屋を作る。［部屋に入る］は合言葉の入力を出す
+$("bGear").onclick=()=>{const p=$("setPanel"),open=p.hidden;p.hidden=!open;$("bGear").setAttribute("aria-expanded",open?"true":"false")}; // 歯車（KJ-123）：設定の欄を開け閉めする
+function pickAct(v){
+  if(ROOM)return;
+  roomAct=v;setRoomMsg("");
+  if(v==="host")hostNow();else roomUi();
+}
+async function hostNow(){
   if(ROOM)return;
   const matchId=K.newMatchId(cryptoRand),me={role:"host",matchId,code:null,level,timeLimit};
   ROOM=me;roomUi();setRoomMsg("部屋を作っている…");
@@ -1132,11 +1155,12 @@ $("bHost").onclick=async()=>{
   if(!h.ok){cancelRoom();setRoomMsg(h.why);return}
   me.code=h.code;roomUi();
   setRoomMsg(`合言葉を相手に伝えてください（レベル ${K.levelShort(level)}・${K.timeLabel(timeLimit)}）。相手を待っています`);
-};
+}
 $("bEnter").onclick=async()=>{
   if(ROOM)return;
   const code=$("roomCode").value.trim().replace(/[０-９]/g,d=>String.fromCharCode(d.charCodeAt(0)-0xFEE0)); // 全角の数字も受ける
-  const me={role:"guest",code};ROOM=me;roomUi();setRoomMsg("部屋を探している…");
+  const me={role:"guest",code,entry:linkCode&&code===linkCode?"link":"typed"}; // 入り方（KJ-123）：?room= の合言葉のまま入った＝リンク／打った＝手入力
+  ROOM=me;roomUi();setRoomMsg("部屋を探している…");
   const f=await K.findRoom(CLAIMS,code,Date.now()/1000);
   if(ROOM!==me)return;
   if(!f.ok){ROOM=null;roomUi();setRoomMsg(f.why);return}
@@ -1157,7 +1181,7 @@ function beginRoom(startRow){
   const startAt=K.roomStartAt(startRow.created_at,Date.now()/1000,clock());
   T=tablesFor(rm.level);
   LASTEND=null;
-  G=K.createGame(D,T,{now:clock,timeLimit:rm.timeLimit,match:{id:rm.matchId,role:rm.role,startAt}});
+  G=K.createGame(D,T,{now:clock,timeLimit:rm.timeLimit,match:{id:rm.matchId,role:rm.role,startAt,entry:rm.entry}});
   MC=K.createMatchClient(G,CLAIMS,{rand:cryptoRand});
   countIssue();
   row=[];lastTried="";hideNope();
@@ -1652,7 +1676,7 @@ function buildHowto(){
     `<b>はじまり</b>：はじめの手札は ${R.start_hand} 枚。はじめたらすぐ時間が動く。ストックには、使いやすい部品が ${R.start_stock_parts} 枚、最初から入っている。`,
     `<b>台</b>は並べて見る場所：選んだ札は手札・ストックのマスにいるまま、台にはその写しが出る（枚数は変わらない）。`,
     `<b>レベル</b>：はじめる前に選ぶ（小1／N5／N4。小1 は小学1年の漢字80字、N4 は N5＋N4 の字）。山に入る字・語・割り方・対義・巡り・同音がレベルで変わる。いまは ${K.levelLabel(T.level)}（字 ${T.CHARS.size}・語 ${T.WORDS.size}）。`,
-    `<b>遊び方・強さ</b>：はじめる前に選ぶ。CPU と：とても弱い（CPU は ${R.cpu.weak_interval_sec[0]}〜${R.cpu.weak_interval_sec[1]} 秒に1回）／ふつう（${R.cpu.fair_interval_sec[0]}〜${R.cpu.fair_interval_sec[1]} 秒に1回）／つよい（${R.cpu.interval_sec[0]}〜${R.cpu.interval_sec[1]} 秒に1回）。`,
+    `<b>遊び方・強さ</b>：はじめる前に選ぶ。CPU戦：とても弱い（CPU は ${R.cpu.weak_interval_sec[0]}〜${R.cpu.weak_interval_sec[1]} 秒に1回）／ふつう（${R.cpu.fair_interval_sec[0]}〜${R.cpu.fair_interval_sec[1]} 秒に1回）／つよい（${R.cpu.interval_sec[0]}〜${R.cpu.interval_sec[1]} 秒に1回）。`,
     `<b>割る</b>：台の1枚を部品表で一段だけ割る。<b>くっつける</b>：台の2枚を、左→右の順でくっつける。逆に並べたときは「並べる順が逆」と出る。十・口（古・田）や 大・丶（太・犬）のように2通りの字になるときは選ぶ。`,
     `<b>反転</b>（印：${STR.iconSvg("invert")}）対義の字に。${R.cooldown_sec.invert} 秒待ち。<b>巡り</b>（印：${STR.iconSvg("cycle")}）${T.CYCLES.map(c=>c.name).join("・")}を1つ先へ。${R.cooldown_sec.cycle} 秒待ち。<b>同音</b>：同じ読みの字から選ぶ。${R.cooldown_sec.homophone} 秒待ち。待ち時間は操作ごとで、二人は別々。`,
     `<b>引き直し</b>：手札を全部入れ替える（${R.start_hand} 枚）。値段は、その試合で何回目かで上がる（${R.redraw.costs.map(c=>c+" 点").join("→")}）。${R.redraw.costs.length} 回まで。点が足りなくても払える（マイナスになってよい）。`,

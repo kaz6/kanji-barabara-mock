@@ -30,8 +30,8 @@ function serve() {
 async function openEnd(page, url) {
   await page.goto(url);
   await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
+  await page.check('#opp input[value="cpu"]'); // ?room= で開くと「友達と対戦」＋［部屋に入る］が選ばれ、レベルは出ない（KJ-123）
   await page.check('#lvl input[value="N5"]');
-  await page.check('#opp input[value="cpu"]');
   await page.check('#pow input[value="weak"]');
   await page.click("#start");
   await page.evaluate(() => {

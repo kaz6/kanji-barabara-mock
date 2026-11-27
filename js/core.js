@@ -405,13 +405,14 @@
   // match_id と用途（"field"＝場の列、"host"／"guest"＝その人の手札と引き直し）ごとの乱数
   const matchRand = (matchId, tag) => seededRand(strSeed(matchId + ":" + tag));
   const ROLES = ["host", "guest"];
+  const ENTRY_LABELS = { link: "リンク", typed: "手入力" }; // 合言葉の部屋への入り方（KJ-123）：?room= のリンクで入った／部屋に入る で数字を打った
   const ROOM_OPPONENT = { key: "room", label: "人と（合言葉）" }; // 画面の「遊び方」の「友だちと（合言葉）」（KJ-033 後半・KJ-045）
   // はじめる前の画面の「相手」は2段（KJ-045）。1段目「遊び方」：CPU と／友だちと（合言葉）。「CPU と」のときだけ2段目「強さ」。
   // 「ひとりで」は画面から外した（KJ-056・D-072）。中の「CPU なしで動く」作り（solo。チュートリアル・テストが使う）は残してある
   // 中で使う相手のキー（solo・weak・fair・normal・room）と OPPONENTS・ROOM_OPPONENT の label は変えない（ログの頭の「相手」の行は opponentLabel が画面の呼び名で書く。KJ-019）。画面の呼び名だけ別に持つ
   const PLAY_MODES = [
-    { key: "cpu", label: "CPU と" },
-    { key: ROOM_OPPONENT.key, label: "友だちと（合言葉）" },
+    { key: "cpu", label: "CPU戦" },
+    { key: ROOM_OPPONENT.key, label: "友達と対戦" }, // KJ-123：「CPU戦」「友達と対戦」（作者の字）
   ];
   const CPU_POWERS = [
     { key: "weak", label: "とても弱い" },
@@ -488,7 +489,7 @@
       return ucS.has(p.counter);
     };
     g.timeLimit = normTime(D, env.timeLimit); // 制限時間（秒。KJ-007）
-    g.match = M ? { id: M.id, role: M.role, oppRole: M.role === "host" ? "guest" : "host" } : null;
+    g.match = M ? { id: M.id, role: M.role, oppRole: M.role === "host" ? "guest" : "host", entry: M.role === "guest" && ENTRY_LABELS[M.entry] ? M.entry : null } : null; // entry：入った側の入り方（KJ-123。"link"＝?room= のリンク・"typed"＝部屋に入る で打った。作る側は null）
     g.hold = false; // 合言葉の部屋：先着の返事を待っているあいだ、自分の手を止める（createMatchClient が立てる）
     g.closed = false; // 合言葉の部屋：時間切れで点を送ったあと（相手の点を待つあいだ）。もう手を打てない
     const t0 = M && typeof M.startAt === "number" ? M.startAt : now();
@@ -1355,6 +1356,7 @@
       const d = g.startedAt;
       const ds = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
       const head = [
+        ...(g.match && g.match.entry ? [`# 入り方：${ENTRY_LABELS[g.match.entry]}`] : []), // KJ-123：合言葉の部屋に入った側だけ、ログの頭に1行（統計。play_logs の列は増やさない）
         "# 漢対普請瓦版 ログ（KJ-003 役づくりの競争・KJ-008 1字は放てない・KJ-006 レベル）",
         `# はじめた時刻 ${ds}（端末の時計）`,
         `# レベル ${levelLabel(g.level)}`,

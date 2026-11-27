@@ -56,7 +56,7 @@
 - 文の型は `js/strings.js` の `SENKYO`（仮）。組むのは `js/core.js` の `K.senkyoLines(log, {me, tpl, kana})`（DOM に触らない。あなた→アナタ。場から取った字は、その人のその放ちのあとの 取る を並べる。取るたびに文のおわりが増える）。画面は index.html の `renderReleased`
 - 欄の高さ：空のあいだは 40px（見出し「戦況」が1列に入る高さ。KJ-106。375×700 に収める決まり＝KJ-010 を守る）・1つ放ったら 150px（`--sk-h`）
 - 背景の記事：`#bgnews`。画面いっぱい（position:fixed）・縦書き 10px・墨の不透明度 20%・main より下の層（札・ボタンの下に隠れる）・押せない（pointer-events:none）・読み上げない。文は `js/strings.js` の `NEWS`（仮）を、画面が埋まるぶん（上限 200 回）繰り返す。卓の地を透かした（`.table` の背景を透明に。下は同じ紙の色）。ストックなどの空きマス（点線）は紙の色を濃く敷いて（`--slot-fill`）記事が透けないようにした
-- 設定「背景の記事：入／切」（初期は入。localStorage `kj-news`。切＝`0`。`<html data-news="off">` で記事だけ消える。ざらつきは残る）
+- 背景の記事はいつも入（KJ-123。入／切の段・localStorage `kj-news`・`<html data-news>` は無くした。端末に `kj-news` が残っていても読まない）。ざらつきも常にある
 - 紙のざらつき：見本の feTurbulence（粒 baseFrequency 0.9・繊維 0.012 0.09）を SVG の小さな敷き紙（160px・320px。継ぎ目なし）にして body の背景に重ねた。タイルは1回だけ描いて使い回す。固定の背景にはしていない
 
 ## 補足（レビューのあと）

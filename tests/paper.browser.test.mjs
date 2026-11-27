@@ -438,9 +438,9 @@ test("説明文（KJ-110）：作者の文の2行（数は決まりと選んだ�
       let t = await read();
       assert.equal(t.ja, `漢字を割ってくっつけて、放つ。\n${R.win.score}点先取か5分経過時に、得点の多い方が勝ち。`, "作者の文のとおり");
       assert.equal(t.en, `Split kanji, join them, and play words. First to ${R.win.score} points — or the higher score after 5 minutes — wins.`);
-      await page.check('#tim input[value="900"]');
+      await page.check('#tim input[value="600"]');
       t = await read();
-      assert.ok(t.ja.includes("15分経過時") && t.en.includes("after 15 minutes"), "時間を選ぶと数が変わる");
+      assert.ok(t.ja.includes("10分経過時") && t.en.includes("after 10 minutes"), "時間を選ぶと数が変わる");
       // 2行：改行で2行に見える（高さ＝行の高さの2倍前後）／英訳は日本語の下にある
       const g = await page.evaluate(() => { const a = document.getElementById("lead"), b = document.getElementById("leadEn"); const lh = parseFloat(getComputedStyle(a).lineHeight) || 13 * 1.5; return { h: a.getBoundingClientRect().height, lh, aBottom: a.getBoundingClientRect().bottom, bTop: b.getBoundingClientRect().top, size: parseFloat(getComputedStyle(b).fontSize), sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth }; });
       assert.ok(g.h >= g.lh * 1.8 && g.h <= g.lh * 2.2, `日本語はちょうど2行 ${g.h}/${g.lh}`);

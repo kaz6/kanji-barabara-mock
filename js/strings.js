@@ -67,6 +67,8 @@
     left: (n) => `あと${n}回`,
     text: (pt, n) => (pt === null ? redrawNote.left(0) : `${redrawNote.cost(pt)} ${redrawNote.left(n)}`),
   };
+  // 歯車の印（KJ-123。作者「何処かに歯車マークつけて設定で変えられるように」）：墨の線だけ（currentColor）。角丸の箱・影・光彩はつけない。形・大きさは仮。読み上げには出さない（ボタンは aria-label＝TEXT.settings）
+  const GEAR_SVG = '<svg class="gear-ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M10.4 5.4L10.4 2.5L13.6 2.5L13.6 5.4L15.5 6.2L17.6 4.2L19.8 6.4L17.8 8.5L18.6 10.4L21.5 10.4L21.5 13.6L18.6 13.6L17.8 15.5L19.8 17.6L17.6 19.8L15.5 17.8L13.6 18.6L13.6 21.5L10.4 21.5L10.4 18.6L8.5 17.8L6.4 19.8L4.2 17.6L6.2 15.5L5.4 13.6L2.5 13.6L2.5 10.4L5.4 10.4L6.2 8.5L4.2 6.4L6.4 4.2L8.5 6.2Z"/><circle cx="12" cy="12" r="3"/></g></svg>';
   // ボタン以外の短い文言（KJ-042。作者「文は仮」。ここ1か所で直せる）。ボタンではないので日本語のまま
   const TEXT = Object.freeze({
     lead: (score, min) => `漢字を割ってくっつけて、放つ。\n${score}点先取か${min}分経過時に、得点の多い方が勝ち。`, // 作者の文（KJ-110。2行。作者の言葉のまま。\n は画面で改行）
@@ -83,9 +85,7 @@
     faceLabel: "札の字", // 設定：札の字体（KJ-093。初期は大正風）
     faceTaisho: "大正風", // Kaisei Tokumin
     faceMincho: "明朝", // Shippori Mincho
-    newsLabel: "背景の記事", // 設定：背景の記事の入り切り（KJ-094。初期は入）
-    newsOn: "入",
-    newsOff: "切",
+    settings: "設定", // 歯車のボタンの読み上げ（KJ-123）
     redrawHold: "長押しで引き直し", // Redraw を1回タップしたときに小さく出す（KJ-078。引き直しは長押し。🚫 ではない）
   });
   // 戦況の欄（KJ-094。P-094。作者「戦況は読まないけど賑やかしにいいので好きです」「戦況で使われるひらがなに相当する箇所はカタカナにしたい。読めたらすごいよってことで」）
@@ -117,5 +117,5 @@
   });
   // 背景の記事（KJ-094。見本「新聞21」の文。遊びの決まりを新聞の文体にしたもの。文は仮）。画面の背景いっぱいに繰り返す。点は決まり（data/rules.json）と同じ：三字九点・四字十二点・四字熟語は倍・引き直しは五度まで
   const NEWS = "本紙特報。漢字ヲ割リ、回シ、裏返シ、合セテ別ノ字ト為シ、言葉ヲ放ツ遊戯、市中ニ大流行ス。相手ノ放チタル言葉ハ其ノ儘返ス能ハズ、必ズ一工夫ヲ要ス。山札ニ出デタル札ハ早キ者ノ物ナリ。三字ノ言葉ハ九点、四字ハ十二点、四字熟語ハ其ノ倍ナリ。引直シハ五度マデ、回ヲ重ヌル毎ニ値上ル。記者曰ク、待ツモ一手、攻ムルモ一手、勝敗ハ十分ニシテ決ス。";
-  return Object.freeze({ ICON_SHAPES, iconSvg, BUTTONS, LOGO, buttonHtml, redrawNote, TEXT, SENKYO, SHARE_RESULT, NEWS });
+  return Object.freeze({ ICON_SHAPES, iconSvg, BUTTONS, LOGO, buttonHtml, redrawNote, TEXT, GEAR_SVG, SENKYO, SHARE_RESULT, NEWS });
 });
