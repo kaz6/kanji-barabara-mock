@@ -339,3 +339,10 @@
 - 仮決め（係）：①`data/special.json` の `effects` に `"明朝体": {op: face, target: both, value: mincho}`（n は無い）。`T.EFFECTS` は value があるときだけ value を持つ（自刃などの形は変えない）。version `2026-11-27.1`。語は N4 の語の表にあるので N4 だけ（小1・N5 に 明朝体 は無い）②決まりは `js/core.js`：試合の状態 `g.face`（`null`／`"mincho"`）・`g.applyFace`・出来事 `{type:"face", who, text, face}`・ログの手 `札の字`（QUIET・NOT_MOVE に足した。人の「動いていない時間」を動かさない）。放った瞬間に決まり（人・CPU とも `g.release`。合言葉の部屋では相手の `word` 行が届いた `remoteRelease` でも）。点・特別な語の演出・振動は普通の語のまま③画面：`G.face` を見て `<html data-face>` を替える（`index.html` の `shownFace`・`syncFace`。render の頭・`showScreen`・`end` で合わせる）。試合が終わる・はじめる前の画面へ戻る・新しい試合になると設定（`face`）に戻る。端末の設定の変数・localStorage は触らない④めくり：`#game` 全体の写しを（描き直したあとの見た目で）`.flip` として body の末尾に重ね、下を明朝に替えてから、写しを `transform-origin: 100% 50%` で `rotateY(0→180deg)`（0.8 秒・`FLIP_MS` と `--flip-ms`）。`backface-visibility: hidden` の表（写し）と裏（紙の色 `--bg`）の2面。影は `.flip-sh`（透明度 0→1→0）。写しは `pointer-events:none`・`inert`・`aria-hidden`。写しの中の id は本物と重なる（本物が先。見つける側は先頭を取る）。`prefers-reduced-motion` では写しを出さず（CSS でも `display:none`）一度に替える⑤戦況の1行は `STR.SENKYO.face`（`明朝体！札ノ字ガ明朝ニ`）を `K.senkyoLines` が `札の字` の行から出す（`SENKYO` の型の数が1つ増えた）。ログの行は core.js の日本語（`明朝体で札の字が替わった（明朝）`）⑥めくる写しの範囲は `#game` 全体（相手の上の段・山札・卓・自分の手札・ストック・戦況）。札が見えている所だけを選んで写す形にはしていない
 - 作者に聞くこと：0.8 秒の長さと右端を軸にした向き（実機で）／めくっている間、戦況の欄も一緒にめくれるのでよいか（札の所だけにするか）／明朝体を放った人の画面にだけ短い文を出すか（いまは戦況の1行だけ）
 - 戻し方：このコミットを revert（`data/special.json` の version が戻る。localStorage に新しく残るものは無い。`kj-face` は元から読むだけ）
+
+### R-156 卓に無地の濃い地を敷く（KJ-145。受け箱 P-145。作者 2026-11-28 00:19・00:23。案A）
+- 作者の言葉：「デザイナーの友人からの意見。背景と赤丸のらへんのコントラストが近すぎて分かりづらい」「aで試してみる」。色は仮（作者が見て直す）
+- 決めたこと（作者）：案A。KJ-102 の「押せないは紙の地に墨 0.35」を「卓の中では札の地に墨 0.35」に変える
+- 係の仮決め：①`:root` に `--table-ground:#d3c391`（紙 `--bg` #e8dbb4 より一段濃い）を1つ足し、`.table` の地をこれにした（不透明。背景の記事は卓の中で透けない。縦の見出し「卓に並ぶ」の列も卓の中）②卓の中の操作5つの押せない見え方の地を `var(--table)`（紙）→ `var(--tile)`（札）に。字（と印）は墨 0.35 のまま・押せるときの弁柄の下線・太字・Play の弁柄の地は変えない ③山札の3枚・台・空きマス（`--slot-fill`）は変えていない。濃い地の上でも読める（測った明暗差：卓の地／札の地 1.51・卓の地／紙 1.27・卓の中の見出しの字／卓の地 8.6）④卓の外（Back・Redraw・手札・戦況・相手の行）は変えない
+- 試験：tests/btnlook.browser.test.mjs（押せない＝札の地に直す・「卓の地」の試験を足す）、tests/browser.test.mjs（卓の地は不透明・押せる／押せないは字と下線で見分ける）
+- 戻し方：このコミットを revert（データ・localStorage に残るものは無い）
