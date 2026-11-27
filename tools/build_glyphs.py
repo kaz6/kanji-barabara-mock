@@ -21,6 +21,9 @@ SRC = "/usr/share/fonts/opentype/noto/NotoSerifCJK-Regular.ttc"
 COMPOSED = {
     "𢀖": [("幺", 0.72, 0.5, 140, 410), ("夂", 0.86, 0.52, 70, 20)],  # 後 の右。幺 の下に 夂
 }
+# 字形の差し替え（KJ-116）。データの文字コードはそのまま、同梱する字形だけ別の字の字形にする。字＝元のコード（出力のコード）：字形を取るコードの字
+# 辶 U+8FB6 を単独で出すと日本向けの字体では点2つの形になる。道・週 など常用漢字の点1つの形（⻌ U+2ECC）にそろえる
+SUBSTITUTE = {"辶": "\u2ecc"}
 
 
 def load(p):
@@ -69,7 +72,7 @@ def main():
     jp = [f for f in tc.fonts if f["name"].getDebugName(1) == "Noto Serif CJK JP"][0]
     cmap = jp.getBestCmap()
     gs = jp.getGlyphSet()
-    missing = [c for c in embed if ord(c) not in cmap and c not in COMPOSED]
+    missing = [c for c in embed if ord(SUBSTITUTE.get(c, c)) not in cmap and c not in COMPOSED]
     if missing:
         sys.exit("フォントにも無く、重ね方も決めていない字：" + "".join(missing))
 
@@ -89,7 +92,7 @@ def main():
             for (src, sx, sy, dx, dy) in COMPOSED[c]:
                 gs[cmap[ord(src)]].draw(TransformPen(pen, (sx, 0, 0, sy, dx, dy)))
         else:
-            gs[cmap[ord(c)]].draw(pen)
+            gs[cmap[ord(SUBSTITUTE.get(c, c))]].draw(pen)
         charstrings[name] = pen.getCharString()
         metrics[name] = (1000, 0)
         cm[ord(c)] = name
@@ -122,6 +125,7 @@ def main():
         "font": "fonts/kj-glyphs.otf",
         "embed": embed,
         "composed": {k: [v[0] for v in vs] for k, vs in COMPOSED.items()},
+        "substitute": SUBSTITUTE,
         "device_count": len(chars) - len(embed),
         "all": "".join(chars),
     }, open(os.path.join(ROOT, "data", "glyphs.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
@@ -140,7 +144,8 @@ def main():
     L.append("- 「出る」＝JIS X 0208 の中の字。日本の端末（iOS の ヒラギノ・Android の Noto CJK JP など）の標準字体に必ずある。%d 字" % (len(chars) - len(embed)))
     L.append("- 「同梱」＝JIS X 0208 の外の字。JIS X 0213 だけの字（亻・氵・艹 など）・部首補助（⺌ ⺍）・簡体字の形（电・产 など）・拡張B（𠂉 など）。端末によって出ない・中国の字形になるので、字形を同梱して必ず出す。%d 字" % len(embed))
     L.append("- 同梱のしかた：Noto Serif CJK JP（明朝。画面の字体を明朝にそろえるため。SIL OFL 1.1。本文は fonts/OFL.txt）から必要な字の字形だけ取り、`fonts/kj-glyphs.otf`（名前は KJ Glyphs）にした。画面は、この字のときだけこの字体を先に使う（`@font-face` の unicode-range）。字は文字のまま（選んでコピー・ログは今までどおり）")
-    L.append("- フォントに無い字（𢀖）は、フォントの字形 幺 と 夂 を重ねて作った（後 の右側）\n")
+    L.append("- フォントに無い字（𢀖）は、フォントの字形 幺 と 夂 を重ねて作った（後 の右側）")
+    L.append("- 字形の差し替え（KJ-116）：辶 U+8FB6 は、データの文字コードのまま、同梱の字形を ⻌ U+2ECC の字形（点1つ。道・週・通 などの常用漢字の形）にした。U+8FB6 を単独で出すと日本向けの字体では点2つになるため。札の字体の Shippori Mincho も U+8FB6 を持っていて先に効くので、fonts/kj-paper.css（tools/build_paper_fonts.py の NO_PAPER）の範囲から U+8FB6 を外し、kj-glyphs の形が出るようにした\n")
     L.append("## 作者が見つけた字（いちばん上）\n")
     L.append("| 字 | 前 | 後 | 直し方 |\n|---|---|---|---|")
     L.append("| 後 | 彳＋𢀖（U+22016。拡張B。端末の字体に無く、フォントにも無い） | 彳＋𢀖（割り方は同じ） | (b) 𢀖 を 幺 と 夂 の字形を重ねて作り、同梱した字体で出す。注：U+22016 は Unicode では後 の右（幺の下に夂）に当たる字ではない別の字の番号の見込み（出典で未確認）。data は前から この番号を借りている（ログ・コピーでは別の字の番号のまま）。番号を替えるか（私用領域など）は作者の確認待ち。(a) の割り方の変更は、後 を 彳＋幺＋夂 の3つにするしかなく、一段の割りに収まらないため見送り |")
@@ -151,7 +156,7 @@ def main():
     parts = {**pj["parts"], **pj.get("reach", {})}
     for c in embed:
         use = [k + "＝" + "＋".join(v) for k, v in parts.items() if c == k or c in v]
-        how = "(b) 字形を重ねて作って同梱" if c in COMPOSED else "(b) 字形を同梱"
+        how = "(b) 字形を重ねて作って同梱" if c in COMPOSED else ("(b) 字形を同梱（字形は %s U+%04X に差し替え。点1つ。KJ-116）" % (SUBSTITUTE[c], ord(SUBSTITUTE[c])) if c in SUBSTITUTE else "(b) 字形を同梱")
         L.append("| %s | U+%04X | %s | %s | %s |" % (c, ord(c), "・".join(where[c]), "、".join(use) or "—", how))
     L.append("\n## 出る字（%d 字）\n" % (len(chars) - len(embed)))
     L.append("JIS X 0208 の中の字。端末の字体のまま。一覧は data/glyphs.json の all から引ける。")

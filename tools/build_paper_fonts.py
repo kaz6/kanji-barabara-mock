@@ -29,6 +29,10 @@ FONTS = [  # (元の名前, 太さ, 出力名, font-family 名)
 ]
 
 
+# 札の字体の範囲から外す字（KJ-116）。辶 U+8FB6 は Shippori にあるが点2つの形なので、kj-glyphs（点1つ）に落とす。範囲から外すだけで、字体ファイルの中身は今のまま
+NO_PAPER = {"\u8fb6"}
+
+
 def wide(s):
     return {c for c in s if ord(c) >= 0x3000 or c in "　、。「」（）"}
 
@@ -109,7 +113,7 @@ def main():
         if family == "KJ Kaisei":
             chars = cards | lead_chars() | stamp_chars()  # 説明文（#lead。KJ-101）の字と、判子の「否」（KJ-104）を足す
         got, miss, size = build(name, weight, out, family, chars)
-        rng = ",".join("U+%X" % ord(c) for c in sorted(got))
+        rng = ",".join("U+%X" % ord(c) for c in sorted(got - NO_PAPER))
         css.append('@font-face{font-family:"%s";font-weight:%d;src:url("%s") format("woff2");unicode-range:%s;font-display:swap}' % (family, weight, out, rng))
         print("%s %d：%d字 %d バイト／この字体に無い字 %d：%s" % (name, weight, len(got), size, len(miss), "".join(miss)[:80]))
     open(os.path.join(ROOT, "fonts", "kj-paper.css"), "w", encoding="utf-8").write("\n".join(css) + "\n")
