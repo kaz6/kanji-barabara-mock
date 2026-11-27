@@ -1,5 +1,5 @@
 // 卓の操作5つ（Split・Join・Flip・Cycle・Same reading）の押せる／押せないの見え方（KJ-099・KJ-102）：見え方は下線だけ。
-// 設定「ボタン」は無い・端末に kj-btn が残っていても（white・outline・line・読めない値）下線・押せる字は明暗差 4.5 以上・押せないは紙の地に墨 .35 の字・Play／Back／Redraw は変わらない・ヒントの光りと待ち時間が見える。
+// 設定「ボタン」は無い・端末に kj-btn が残っていても（white・outline・line・読めない値）下線・押せる字は明暗差 4.5 以上・押せないは札の地に墨 .35 の字（KJ-145：卓の中。卓は無地の濃い地）・Play／Back／Redraw は変わらない・ヒントの光りと待ち時間が見える。
 // Playwright の Chromium がないと skip になる。KJ_SHOT_BTN=<フォルダ> を付けると 375px の画像（押せる2つ・押せない3つ）を書く
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -92,18 +92,18 @@ test("ボタン：設定「ボタン」は無い。localStorage が使えない�
 
 // 端末に残る kj-btn：なし／白抜きの名残（white・outline）／下線（line）／読めない値。どれでも下線
 for (const look of [null, "white", "outline", "line", "zzz"]) {
-  test(`ボタンは下線（端末の kj-btn＝${look}）：押せる字は明暗差 4.5 以上・押せないは紙の地に墨 0.35 の字・押せる2つ／押せない3つが見分けられる`, { skip }, async () => {
+  test(`ボタンは下線（端末の kj-btn＝${look}）：押せる字は明暗差 4.5 以上・押せないは札の地に墨 0.35 の字・押せる2つ／押せない3つが見分けられる`, { skip }, async () => {
     const srv = await serve(); const browser = await chromium.launch();
     try {
       const url = `http://127.0.0.1:${srv.address().port}/index.html`;
       const { ctx, page, errors } = await open(browser, url, { init: look === null ? {} : { "kj-btn": look } });
       await play(page);
-      const PAPER = "rgb(232, 219, 180)", INK = "rgb(42, 38, 34)", TILE = "rgb(246, 238, 214)", ACCENT = "rgb(156, 59, 46)";
+      const INK = "rgb(42, 38, 34)", TILE = "rgb(246, 238, 214)", ACCENT = "rgb(156, 59, 46)";
       // 何も選ばない：5つとも押せない
       let rows = await snap(page);
       for (const r of rows) {
         assert.equal(r.off, true, `${r.id} 押せない`);
-        assert.equal(r.bg, PAPER, `${r.id} 押せない＝紙の地（地を濃くしない）`);
+        assert.equal(r.bg, TILE, `${r.id} 押せない＝札の地（KJ-145：卓の中は札の地）`);
         assert.equal(r.color, "rgba(42, 38, 34, 0.35)", `${r.id} 押せない＝墨の不透明度 0.35 の字`);
         assert.ok(Number(r.weight) < 600, `${r.id} 押せない＝太字にしない`);
         assert.equal(r.shadow, "none", `${r.id} 押せない＝下線なし`);
@@ -118,7 +118,7 @@ for (const look of [null, "white", "outline", "line", "zzz"]) {
         assert.ok(Number(r.weight) >= 700, `${r.id} 押せる＝太字`);
         { assert.equal(r.bg, TILE, `${r.id} 下線：札の色の地`); assert.equal(r.color, INK, `${r.id} 下線：墨の字`); assert.match(r.shadow, new RegExp(`${ACCENT.replace(/[()]/g, "\\$&")} 0px -3px 0px 0px inset`), `${r.id} 下線：弁柄の 3px の下線`); }
       }
-      for (const r of off) { assert.equal(r.bg, PAPER); assert.ok(r.ratio < 4.5, `${r.id} 押せない字は薄い（${r.ratio.toFixed(2)}）`); assert.ok(r.ratio < on[0].ratio / 2, "押せると押せないで濃さがはっきり違う"); }
+      for (const r of off) { assert.equal(r.bg, TILE); assert.ok(r.ratio < 4.5, `${r.id} 押せない字は薄い（${r.ratio.toFixed(2)}）`); assert.ok(r.ratio < on[0].ratio / 2, "押せると押せないで濃さがはっきり違う"); }
       if (process.env.KJ_SHOT_BTN) await page.locator(".table .ops").first().screenshot({ path: path.join(process.env.KJ_SHOT_BTN, `kj-102-375.png`) });
       if (process.env.KJ_SHOT_BTN) await page.screenshot({ path: path.join(process.env.KJ_SHOT_BTN, `kj-102-375-full.png`) });
       assert.deepEqual(errors, []);
@@ -172,7 +172,7 @@ for (const look of [null, "white", "outline", "line", "zzz"]) {
       assert.equal(cd.cd, true, "待ち中の印"); assert.equal(cd.off, true, "待ち中は押せない");
       assert.equal(cd.gauge, true, "ゲージが出ている"); assert.notEqual(cd.gaugeColor, "rgba(0, 0, 0, 0)"); assert.equal(cd.gaugeColor, "rgb(68, 112, 90)", "待ち時間のゲージは緑のまま（KJ-115）");
       assert.equal(cd.color, "rgb(42, 38, 34)", "待ち中の字は墨（ゲージの上で読める）");
-      assert.equal(cd.bg, "rgb(232, 219, 180)", "待ち中の地は紙");
+      assert.equal(cd.bg, "rgb(246, 238, 214)", "待ち中の地は札の色（KJ-145）");
       assert.deepEqual(errors, []);
       await ctx.close();
     } finally { await browser.close(); srv.close(); }
@@ -209,6 +209,54 @@ test("Play：0枚・1枚は押せない見え方（札の地・墨 0.35）、1�
     assert.equal(l.off, false, "日本：放てる並びは押せる");
     assert.equal(l.bg, "rgb(156, 59, 46)", "押せる＝弁柄の地"); assert.equal(l.weight, "700");
     await shot("2");
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  } finally { await browser.close(); srv.close(); }
+});
+
+// KJ-145：卓に無地の濃い地（--table-ground）を敷く。背景の記事が透けない・卓の字は地に対して 4.5 以上・押せないボタン（札の地）と卓の地が見分けられる
+test("卓の地：不透明な --table-ground・紙より濃い・卓の中の字は読める・押せないボタンの札の地と見分けられる・ヒントとゲージが見える", { skip }, async () => {
+  const srv = await serve(); const browser = await chromium.launch();
+  try {
+    const url = `http://127.0.0.1:${srv.address().port}/index.html`;
+    const { ctx, page, errors } = await open(browser, url);
+    await play(page);
+    const m = await page.evaluate(() => {
+      const rgb = (s) => s.match(/[\d.]+/g).map(Number);
+      const lin = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+      const lum = (c) => 0.2126 * lin(c[0]) + 0.7152 * lin(c[1]) + 0.0722 * lin(c[2]);
+      const ratio = (a, b) => { const [p, q] = [lum(a), lum(b)].sort((x, y) => y - x); return (p + 0.05) / (q + 0.05); };
+      const t = document.querySelector(".table"), ts = getComputedStyle(t);
+      const ground = rgb(ts.backgroundColor), paper = rgb(getComputedStyle(document.body).backgroundColor), tile = rgb("rgb(246, 238, 214)");
+      const decl = getComputedStyle(document.documentElement).getPropertyValue("--table-ground").trim();
+      const text = (el) => { const c = rgb(getComputedStyle(el).color); const a = c.length > 3 ? c[3] : 1; return [0, 1, 2].map((i) => c[i] * a + ground[i] * (1 - a)); };
+      document.querySelector(".info").innerHTML = '<span class="no">（1字では放てない）</span>';
+      const heads = [...t.querySelectorAll(".side-head b, .side-head, .info .no")].filter((e) => e.textContent.trim()).map((e) => ({ t: e.textContent.trim().slice(0, 6), r: ratio(text(e), ground) }));
+      return { bg: ts.backgroundColor, decl, groundTile: ratio(ground, tile), groundPaper: ratio(ground, paper), heads };
+    });
+    assert.equal(m.decl.toLowerCase(), "#d3c391", "色は --table-ground の1か所");
+    assert.equal(m.bg, "rgb(211, 195, 145)", "卓の地は不透明（背景の記事が透けない）");
+    assert.ok(m.heads.length > 0);
+    for (const h of m.heads) assert.ok(h.r >= 4.5, `卓の中の字「${h.t}」は卓の地に対して 4.5 以上（${h.r.toFixed(2)}）`);
+    assert.ok(m.groundTile > 1.2, `卓の地と札の地が見分けられる（${m.groundTile.toFixed(2)}）`);
+    console.log(`# KJ-145 明暗差：卓の地/札の地 ${m.groundTile.toFixed(2)}・卓の地/紙 ${m.groundPaper.toFixed(2)}・字 ${m.heads.map((h) => h.r.toFixed(1)).join("/")}`);
+    // 卓の中のボタンは押せる／押せない（台が空）どちらも札の地。Play は押せないとき札の地・押せるとき弁柄
+    const bgs = await page.evaluate(() => ["bSplit", "bJoin", "bInvert", "bCycle", "bHomo", "bRelease"].map((id) => [id, getComputedStyle(document.getElementById(id)).backgroundColor]));
+    for (const [id, bg] of bgs) assert.equal(bg, "rgb(246, 238, 214)", `${id} 押せない＝札の地`);
+    // 卓の外（Back・Redraw・手札の行）は変えない
+    const outside = await page.evaluate(() => ["bBack", "bRedraw"].map((id) => getComputedStyle(document.getElementById(id)).backgroundColor));
+    assert.deepEqual(outside, ["rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0)"]);
+    if (process.env.KJ_SHOT_BTN) await page.screenshot({ path: path.join(process.env.KJ_SHOT_BTN, "kj-145-empty-375.png") });
+    await page.evaluate(() => { const G = __KJ.game; G.me.cards = [..."日本上下山川口木"].map((c, i) => ({ id: 9300 + i, c, t: 0, fresh: false })); __KJ.render(); });
+    await page.locator("#meHand .tile", { hasText: "日" }).first().click();
+    await page.locator("#meHand .tile", { hasText: "本" }).first().click();
+    const on = await page.evaluate(() => { const b = document.getElementById("bRelease"); return { off: b.disabled || b.getAttribute("aria-disabled") === "true", bg: getComputedStyle(b).backgroundColor }; });
+    assert.equal(on.off, false); assert.equal(on.bg, "rgb(156, 59, 46)", "押せる Play は弁柄の地のまま");
+    if (process.env.KJ_SHOT_BTN) await page.screenshot({ path: path.join(process.env.KJ_SHOT_BTN, "kj-145-two-375.png") });
+    // ヒントの光り：卓の濃い地の上でも金の縁と薄い金の地が出る
+    await page.evaluate(() => { const G = __KJ.game; G.hint = null; G.me.cards = [..."日分"].map((ch, i) => ({ id: 7300 + i, c: ch, t: 0, fresh: false })); window.__shift(G); __KJ.render(); });
+    const h = await page.evaluate(() => { const c = getComputedStyle(document.getElementById("bSplit")); return { bg: c.backgroundColor, shadow: c.boxShadow }; });
+    assert.equal(h.bg, "rgb(255, 241, 196)"); assert.match(h.shadow, /rgb\(217, 154, 0\)/);
     assert.deepEqual(errors, []);
     await ctx.close();
   } finally { await browser.close(); srv.close(); }

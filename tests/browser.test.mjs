@@ -2160,7 +2160,7 @@ test("画面", { skip }, async (t) => {
     });
     // 卓は紙の色・上下は太い罫線。場と台が卓の中にある
     const table = await page.evaluate(() => { const e = document.querySelector(".table"), cs = getComputedStyle(e); return { bg: cs.backgroundColor, img: cs.backgroundImage, bw: cs.borderTopWidth, field: e.contains(document.getElementById("field")), row: e.contains(document.getElementById("row")), ops: e.contains(document.querySelector(".ops")) }; });
-    assert.deepEqual(table, { bg: "rgba(0, 0, 0, 0)", img: "none", bw: "3px", field: true, row: true, ops: true }); // 卓の地は透かす（KJ-094：背景の記事とざらつきが卓の下にも続く）。下の紙は紙の色のまま
+    assert.deepEqual(table, { bg: "rgb(211, 195, 145)", img: "none", bw: "3px", field: true, row: true, ops: true }); // KJ-145：卓の地は不透明な無地（--table-ground。背景の記事が透けない）。卓の外の紙は紙の色のまま
     assert.equal(await page.evaluate(() => getComputedStyle(document.body).backgroundColor), PAPER, "卓の下の紙は紙の色");
     // 札：細い縁（補助色）で札の色の地。影はない。角の印は墨色
     const tile = await page.evaluate(() => { const e = document.querySelector("#meHand .tile"), cs = getComputedStyle(e), mk = getComputedStyle(e.querySelector(".mk")); return { b: cs.borderBottomWidth, side: cs.borderLeftWidth, bc: cs.borderBottomColor, sc: cs.borderLeftColor, shadow: cs.boxShadow, bg: cs.backgroundColor, mk: mk.color }; });
@@ -2207,8 +2207,8 @@ test("画面", { skip }, async (t) => {
     assert.ok(ratio(bkc.color, bkc.bg) >= 4.5, `押せるとき bBack 文字と地（${bkc.color} / ${bkc.bg}）`);
     const enabled = rows.find((r) => r.id === "bInvert"), disabled = rows.find((r) => r.off && !["bBack", "bRedraw", "bRelease"].includes(r.id)); // KJ-117：Play の押せないは操作5つと同じ札の地なので、比べるのは操作5つの中
     assert.ok(disabled, "押せないボタンがある");
-    assert.notEqual(enabled.bg, disabled.bg, "押せるときと押せないときが見分けられる");
-    // KJ-099：押せない＝紙の地に薄い字（地は濃くしない）。押せるのと地か字の濃さがはっきり違う（押せる字は上で 4.5 以上を見た）
+    assert.equal(enabled.bg, disabled.bg, "KJ-145：卓の中のボタンは押せる・押せないどちらも札の地（見分けは字の濃さ・太さ・下線）");
+    // KJ-099・KJ-145：押せない＝札の地に薄い字。押せるのと地か字の濃さがはっきり違う（押せる字は上で 4.5 以上を見た）
     assert.match(disabled.color, /^rgba\(42, 38, 34, 0\.3[0-9]*\)$/, "押せない操作の字は墨の不透明度 0.35");
     assert.notEqual(enabled.color, disabled.color, "押せると押せないで、字の色も違う")
     await page.click("#bInvert");
