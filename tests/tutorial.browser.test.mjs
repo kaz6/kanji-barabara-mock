@@ -268,7 +268,7 @@ test("チュートリアルの画面", { skip }, async (t) => {
     await pickOpp(page, "room");
     assert.equal(await page.isVisible("#start"), false);
     assert.equal(await page.isVisible("#tut"), false);
-    assert.equal(await page.isVisible("#roomBox"), true);
+    assert.equal(await page.evaluate(() => !document.getElementById("roomBox").hidden), true);
     assert.equal(await page.isVisible("#bTutorial"), true, "ボタンからは見られる");
     await page.click("#bTutorial");
     assert.equal(await page.evaluate(() => __KJ.game.opponent), "tutorial");
