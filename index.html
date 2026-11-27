@@ -111,14 +111,14 @@ button.op.cutopen .sp-a{animation:kjSpA .3s ease-in-out}button.op.cutopen .sp-b{
 .jn-a,.jn-b{display:inline-block}.jn-a{transform-origin:100% 100%;transform:rotate(5deg)}.jn-b{transform-origin:0% 100%;transform:rotate(-5deg)} /* Join のロゴ（KJ-103）：Jo｜in。下の角を軸に、上がくっつくハの字（Split の逆）。線は入れない */
 .jn-seam{display:inline-block;position:relative;width:0;height:0;vertical-align:baseline;margin:0 .06em} /* 継ぎ目：幅ゼロ。左右に .06em ずつ（見本の in の margin-left 2px ≒ .12em のすき間）。放射はここから上に出す */
 .jn-fx{position:absolute;left:-.47em;bottom:.82em;width:.94em;height:.47em;overflow:visible;pointer-events:none} /* 墨の放射3本（16×8 を 17px の字のときの割合で em）。根元が字の上端のすぐ上 */
-button.op:disabled .jn-fx,button.op[aria-disabled=true] .jn-fx{opacity:.35}
-.pl-t{position:relative;display:inline-block}.pl-arc{position:absolute;left:50%;bottom:100%;margin:0 0 -5px 3px;width:54px;height:16px;overflow:visible;pointer-events:none} /* Play の印（KJ-120）：字の上に点線の弧と矢（54×16）。字の真ん中より少し右から。色は字と同じ（currentColor）なので、押せないときも字と同じ薄さ。レイアウトには入れない（高さは変えない） */ /* 押せないときは字と同じく薄く */
+button.op:disabled .jn-fx,button.op[aria-disabled=true] .jn-fx{opacity:.35} /* 押せないときは字と同じく薄く */
 /* くっつけた瞬間、放射だけ一度弾む（KJ-105）。根元（下の中央）を軸に 1→1.6倍→1。時間と倍率はここ1か所（仮）。押せない見え方になっても最後まで見せる。字・ほかのボタン・札は動かさない */
 :root{--jn-pop-time:.3s;--jn-pop-scale:1.6}
 .jn-fx{transform-origin:50% 100%}
 button.op.joinpop .jn-fx{animation:kjJnPop var(--jn-pop-time) ease-out}
 @keyframes kjJnPop{50%{transform:scale(var(--jn-pop-scale))}}
 @media (prefers-reduced-motion:reduce){button.op.joinpop .jn-fx{animation:none}}
+.pl-t{position:relative;display:inline-block}.pl-arc{position:absolute;left:50%;bottom:100%;margin:0 0 -5px 3px;width:54px;height:16px;overflow:visible;pointer-events:none} /* Play の印（KJ-120）：字の上に点線の弧と矢（54×16）。字の真ん中より少し右から。色は字と同じ（currentColor）なので、押せないときも字と同じ薄さ。レイアウトには入れない（高さは変えない） */ /* 押せないときは字と同じく薄く */
 .ic{display:inline-block;vertical-align:-.22em;overflow:visible} /* 印の SVG（KJ-048）：字の高さに合わせる。色は文字と同じ（currentColor） */
 .tile .mk .mi{display:inline-block;line-height:1}
 .tile .orig{position:absolute;bottom:1px;left:3px;font:10px/1 system-ui,sans-serif;color:var(--sub)}
