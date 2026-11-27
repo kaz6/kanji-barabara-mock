@@ -27,7 +27,7 @@ FONTS = [  # (元の名前, 太さ, 出力名, font-family 名)
     ("zen-old-mincho", 700, "kj-zen-700.woff2", "KJ Zen"),
     ("shippori-mincho", 400, "kj-shippori-400.woff2", "KJ Shippori"),
     ("kaisei-tokumin", 400, "kj-kaisei-400.woff2", "KJ Kaisei"),
-    ("kaisei-tokumin", 700, "kj-kaisei-700.woff2", "KJ Kaisei"),  # KJ-134：表紙の號数だけ（第號と大字）。太さ 700
+    ("kaisei-tokumin", 700, "kj-kaisei-700.woff2", "KJ Kaisei Bold"),  # KJ-134：表紙の號数だけ（第號と大字）。別の family 名にする（同じ名前だと、札の字＋太字の所で 14字以外が Shippori に落ちる）
 ]
 
 
@@ -117,7 +117,7 @@ def main():
     css = ["/* KJ-093：tools/build_paper_fonts.py が作る。新聞紙風の見た目の字体（要る字だけ）。Zen Old Mincho・Shippori Mincho・Kaisei Tokumin（SIL OFL 1.1。fonts/OFL-Paper.txt） */"]
     for name, weight, out, family in FONTS:
         chars = ui if family == "KJ Zen" else cards
-        if family == "KJ Kaisei" and weight == 700:
+        if family == "KJ Kaisei Bold":
             chars = issue_chars()  # KJ-134：號数（#mastNo）だけの太い字体。ほかの字は 400 のまま
         elif family == "KJ Kaisei":
             chars = cards | lead_chars() | stamp_chars() | issue_chars()  # 號数（KJ-124）と、 説明文（#lead。KJ-101）の字と、判子の「否」（KJ-104）を足す
