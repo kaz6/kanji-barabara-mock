@@ -16,7 +16,7 @@
   --bg:#e8dbb4; --ink:#2a2622; --sub:#625a50; --line:#a0957b; --tile:#f6eed6; --cut:#b48f62; --cut-op:.6;
   --edge:#7d7366; --slot:#dccf9e; --accent:#9c3b2e; --accent-edge:#6e2a21; --ok:#2f6b4f; --dim:#625a50; --join:#2f6fd6;
   --table:#e8dbb4; --table-2:#ddd0a4; --on-table:#2a2622; --on-table-sub:#625a50;
-  --btn:transparent; --btn-edge:#2a2622; --btn-off:#dccf9e; --btn-off-ink:#574f45; /* 押せないボタン：一段濃い紙の地に濃い字（文字は読める明暗差 4.5 以上） */ --play-off:#7a3a2f; --play-off-ink:#f4ddd7;
+  --btn:transparent; --btn-edge:#2a2622; --btn-off:#dccf9e; --btn-off-ink:#574f45; /* 押せないボタン：一段濃い紙の地に濃い字（文字は読める明暗差 4.5 以上） */
   --slot-fill:rgba(232,219,180,.9); /* 空きマス（点線）の中：紙の色を濃く敷いて、背景の記事が透けて邪魔にならないようにする（KJ-094。ざらつきは薄く残る） */
   --hint:#d99a00; /* ヒントの光り（KJ-037。仮決め。青＝くっつけられる・赤＝選んだ札とは別の色） */
   --win:#2f6b4f; --lose:#625a50; /* 終わりの「勝ち！」「負け…」の色（KJ-018。仮決め。弁柄は選んだ札と Play だけなので使わない） */
@@ -236,7 +236,7 @@ button.op.main:disabled,button.op.main[aria-disabled=true]{background:var(--tile
 :root .table .ops-set button.op.hint:not(:disabled):not([aria-disabled=true]){box-shadow:0 0 0 2px var(--hint),0 0 10px 2px rgba(217,154,0,.55),inset 0 -3px 0 var(--accent)}
 .table .ops-set button.op#bHomo{flex:2 1 auto}
 .table button.op.main{flex:1 1 auto;font-size:17px;padding:10px 12px;background:var(--accent);border:2px solid var(--ink);color:var(--bg);letter-spacing:.12em}
-.table button.op.main:disabled,.table button.op.main[aria-disabled=true]{background:var(--play-off);border-color:var(--ink);color:var(--play-off-ink);font-weight:700}
+.table button.op.main:disabled,.table button.op.main[aria-disabled=true]{background:var(--tile);border-color:var(--ink);color:rgba(42,38,34,.35);font-weight:400} /* KJ-117：Play の押せない見え方は操作5つと同じ考え（札の地・墨の枠・墨 0.35 の字）。押せるときは弁柄の地 */
 .table button.op.quiet{background:transparent;border-bottom:0;color:var(--on-table);padding:6px 10px}
 .table button.op.quiet:disabled,.table button.op.quiet[aria-disabled=true]{background:transparent;color:var(--dim)}
 .table button.op.quiet.cd{background:var(--slot);color:var(--ink)}
@@ -1566,6 +1566,7 @@ function renderOps(){
   $("cpuCds").textContent=gone?"相手の通信が切れた":cds.length?"待ち："+cds.join("・"):"";
   $("cpuCds").classList.toggle("gone",gone);
   $("bRelease").disabled=!(live&&(s.rl.ok||isTry(s)))||(!!TUT&&!TUT.buttonOn("bRelease")); // チュートリアル：いまの段の手のボタンだけ
+  setOff("bRelease",live&&!s.rl.ok&&s.rc.length===1&&[...s.text].length===1); // KJ-117：台が1枚（1字では放てない）は押せない見え方。押すと 否 と理由は今までどおり（onclick の isTry）
   // 押せない見た目の操作ボタンは disabled でなく aria-disabled（見た目は同じ）。押すと何も起きず、「ためした」に理由が残る（KJ-041）
   setOff("bSplit",!(live&&one&&K.canSplit(T,one)&&fitL(2)));
   setOff("bJoin",!(live&&s.joins.length&&fit1));

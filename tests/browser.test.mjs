@@ -692,7 +692,7 @@ test("画面", { skip }, async (t) => {
       await page.click("#bBack");
       await tile("日").click();
       assert.match(await page.textContent("#info"), /1字では放てない（2字以上の言葉）/);
-      await page.click("#bRelease"); // 押せるが、はじかれる
+      await page.click("#bRelease", { force: true }); // KJ-117：押せない見え方（aria-disabled）だが、押すとはじかれて理由が出る
       assert.equal(await page.textContent("#nopeWhy"), "2字から！", "はじかれた理由は画面の真ん中に出す（KJ-022）");
       assert.match(await page.textContent("#meScore"), /^0 点/);
       assert.equal(await page.locator("#meHand .tile.sel").count(), 1, "札は選んだまま");
@@ -2180,7 +2180,7 @@ test("画面", { skip }, async (t) => {
         return `rgb(${[0, 1, 2].map((i) => Math.round(g[i] * o + u[i] * (1 - o))).join(", ")})`; })() : null, edge: cs.borderBottomColor };
     }));
     const OPS5 = ["bSplit", "bJoin", "bInvert", "bCycle", "bHomo"]; // KJ-099：卓の操作5つの「押せない」は薄い字（押せない部品は明暗差の決まりの外）。ほかのボタンは今まで通り 4.5 以上
-    const check = (rows, label) => { for (const r of rows) { if (r.off && OPS5.includes(r.id) && !r.gauge) continue; const under = r.bg === "rgba(0, 0, 0, 0)" ? PAPER : r.bg; assert.ok(ratio(r.color, under) >= 4.5, `${label} ${r.id} 文字と地（${r.color} / ${under}）`); if (r.gauge) assert.ok(ratio(r.color, r.gauge) >= 4.5, `${label} ${r.id} 文字とゲージ（${r.gauge}）`); } };
+    const check = (rows, label) => { for (const r of rows) { if (r.off && [...OPS5, "bRelease"].includes(r.id) && !r.gauge) continue; /* KJ-117：Play の押せないも操作5つと同じ薄い字 */ const under = r.bg === "rgba(0, 0, 0, 0)" ? PAPER : r.bg; assert.ok(ratio(r.color, under) >= 4.5, `${label} ${r.id} 文字と地（${r.color} / ${under}）`); if (r.gauge) assert.ok(ratio(r.color, r.gauge) >= 4.5, `${label} ${r.id} 文字とゲージ（${r.gauge}）`); } };
     let rows = await contrasts();
     assert.ok(rows.every((r) => r.off), "何も選ばないと（卓のボタンは）押せない");
     check(rows, "押せないとき");
@@ -2193,7 +2193,7 @@ test("画面", { skip }, async (t) => {
     const bkc = await page.evaluate(() => ({ color: getComputedStyle(document.getElementById("bBack")).color, bg: getComputedStyle(document.body).backgroundColor, off: document.getElementById("bBack").disabled }));
     assert.equal(bkc.off, false, "札を選ぶと Back が押せる");
     assert.ok(ratio(bkc.color, bkc.bg) >= 4.5, `押せるとき bBack 文字と地（${bkc.color} / ${bkc.bg}）`);
-    const enabled = rows.find((r) => r.id === "bInvert"), disabled = rows.find((r) => r.off && !["bBack", "bRedraw"].includes(r.id));
+    const enabled = rows.find((r) => r.id === "bInvert"), disabled = rows.find((r) => r.off && !["bBack", "bRedraw", "bRelease"].includes(r.id)); // KJ-117：Play の押せないは操作5つと同じ札の地なので、比べるのは操作5つの中
     assert.ok(disabled, "押せないボタンがある");
     assert.notEqual(enabled.bg, disabled.bg, "押せるときと押せないときが見分けられる");
     // KJ-099：押せない＝紙の地に薄い字（地は濃くしない）。押せるのと地か字の濃さがはっきり違う（押せる字は上で 4.5 以上を見た）
