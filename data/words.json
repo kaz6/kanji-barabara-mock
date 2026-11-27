@@ -16,7 +16,7 @@
  "stats": {
   "hold_by_level": {
    "N5": 144,
-   "N4": 358,
+   "N4": 359,
    "G1": 141
   },
   "by_level": {
@@ -38,15 +38,15 @@
     }
    },
    "N4": {
-    "total": 11036,
+    "total": 11073,
     "by_length": {
      "1": 253,
-     "2": 6710,
-     "3": 2864,
-     "4": 1209
+     "2": 6734,
+     "3": 2870,
+     "4": 1216
     },
-    "common": 2487,
-    "yoji": 204,
+    "common": 2492,
+    "yoji": 206,
     "pn": 57,
     "kana": {
      "な": 4,
@@ -72,15 +72,15 @@
     }
    }
   },
-  "total": 11082,
+  "total": 11119,
   "by_length": {
    "1": 261,
-   "2": 6731,
-   "3": 2876,
-   "4": 1214
+   "2": 6755,
+   "3": 2882,
+   "4": 1221
   },
-  "common": 2499,
-  "yoji": 206,
+  "common": 2504,
+  "yoji": 208,
   "pn": 57,
   "pn_added": 25,
   "kana": {
@@ -4075,6 +4075,16 @@
    "kana": "ふはつ",
    "en": [
     "misfire"
+   ],
+   "common": true
+  },
+  {
+   "w": "不良",
+   "lv": "N4",
+   "kana": "ふりょう",
+   "en": [
+    "bad; poor",
+    "delinquent; hoodlum"
    ],
    "common": true
   },
@@ -18307,6 +18317,33 @@
    "en": [
     "urgent; pressing",
     "urgently; promptly"
+   ],
+   "common": true
+  },
+  {
+   "w": "良好",
+   "lv": "N4",
+   "kana": "りょうこう",
+   "en": [
+    "good; fine"
+   ],
+   "common": true
+  },
+  {
+   "w": "良心",
+   "lv": "N4",
+   "kana": "りょうしん",
+   "en": [
+    "conscience"
+   ],
+   "common": true
+  },
+  {
+   "w": "良質",
+   "lv": "N4",
+   "kana": "りょうしつ",
+   "en": [
+    "good quality; fine quality"
    ],
    "common": true
   },
@@ -54303,6 +54340,158 @@
    ]
   },
   {
+   "w": "良人",
+   "lv": "N4",
+   "kana": "おっと",
+   "en": [
+    "husband"
+   ]
+  },
+  {
+   "w": "良化",
+   "lv": "N4",
+   "kana": "りょうか",
+   "en": [
+    "improvement; amelioration"
+   ]
+  },
+  {
+   "w": "良医",
+   "lv": "N4",
+   "kana": "りょうい",
+   "en": [
+    "good doctor"
+   ]
+  },
+  {
+   "w": "良友",
+   "lv": "N4",
+   "kana": "りょうゆう",
+   "en": [
+    "good friend"
+   ]
+  },
+  {
+   "w": "良吏",
+   "lv": "N4",
+   "kana": "りょうり",
+   "en": [
+    "good official"
+   ]
+  },
+  {
+   "w": "良品",
+   "lv": "N4",
+   "kana": "りょうひん",
+   "en": [
+    "fine article; good-quality item"
+   ]
+  },
+  {
+   "w": "良夜",
+   "lv": "N4",
+   "kana": "りょうや",
+   "en": [
+    "moonlit night"
+   ]
+  },
+  {
+   "w": "良家",
+   "lv": "N4",
+   "kana": "りょうけ",
+   "en": [
+    "good family; respectable family"
+   ]
+  },
+  {
+   "w": "良工",
+   "lv": "N4",
+   "kana": "りょうこう",
+   "en": [
+    "skilled artisan"
+   ]
+  },
+  {
+   "w": "良日",
+   "lv": "N4",
+   "kana": "りょうじつ",
+   "en": [
+    "lucky (auspicious) day"
+   ]
+  },
+  {
+   "w": "良書",
+   "lv": "N4",
+   "kana": "りょうしょ",
+   "en": [
+    "good book; valuable work"
+   ]
+  },
+  {
+   "w": "良民",
+   "lv": "N4",
+   "kana": "りょうみん",
+   "en": [
+    "good citizens; law-abiding people"
+   ]
+  },
+  {
+   "w": "良田",
+   "lv": "N4",
+   "kana": "りょうでん",
+   "en": [
+    "fertile rice paddy"
+   ]
+  },
+  {
+   "w": "良知",
+   "lv": "N4",
+   "kana": "りょうち",
+   "en": [
+    "intuition"
+   ]
+  },
+  {
+   "w": "良薬",
+   "lv": "N4",
+   "kana": "りょうやく",
+   "en": [
+    "good medicine"
+   ]
+  },
+  {
+   "w": "良行",
+   "lv": "N4",
+   "kana": "らぎょう",
+   "en": [
+    "the \"ra\" column of the Japanese syllabary table (ra, ri, ru, re, ro)"
+   ]
+  },
+  {
+   "w": "良計",
+   "lv": "N4",
+   "kana": "りょうけい",
+   "en": [
+    "good plan"
+   ]
+  },
+  {
+   "w": "良風",
+   "lv": "N4",
+   "kana": "りょうふう",
+   "en": [
+    "good custom"
+   ]
+  },
+  {
+   "w": "良馬",
+   "lv": "N4",
+   "kana": "りょうば",
+   "en": [
+    "good horse"
+   ]
+  },
+  {
    "w": "色上",
    "lv": "N4",
    "kana": "いろじょう",
@@ -58682,6 +58871,15 @@
    ]
   },
   {
+   "w": "野良",
+   "lv": "N4",
+   "kana": "のら",
+   "en": [
+    "field; farm",
+    "rural; agricultural"
+   ]
+  },
+  {
    "w": "野道",
    "lv": "N4",
    "kana": "のみち",
@@ -62384,6 +62582,15 @@
    "en": [
     "unprepared",
     "careless; imprudent"
+   ],
+   "common": true
+  },
+  {
+   "w": "不良品",
+   "lv": "N4",
+   "kana": "ふりょうひん",
+   "en": [
+    "inferior goods; defective product"
    ],
    "common": true
   },
@@ -66296,6 +66503,14 @@
    "kana": "しらぬい",
    "en": [
     "phosphorescent light; mysterious lights on the sea"
+   ]
+  },
+  {
+   "w": "不良化",
+   "lv": "N4",
+   "kana": "ふりょうか",
+   "en": [
+    "degradation; downfall"
    ]
   },
   {
@@ -82477,6 +82692,22 @@
    "g1": true
   },
   {
+   "w": "良質紙",
+   "lv": "N4",
+   "kana": "りょうしつし",
+   "en": [
+    "good quality paper"
+   ]
+  },
+  {
+   "w": "良馬場",
+   "lv": "N4",
+   "kana": "りょうばば",
+   "en": [
+    "dry track (in horse racing); firm track"
+   ]
+  },
+  {
    "w": "色上質",
    "lv": "N4",
    "kana": "いろじょうしつ",
@@ -84950,6 +85181,22 @@
    "en": [
     "wild dog; Asiatic jackal (Canis aureus ssp.)",
     "side-striped jackal (carnivore, Canis adustus)"
+   ]
+  },
+  {
+   "w": "野良犬",
+   "lv": "N4",
+   "kana": "のらいぬ",
+   "en": [
+    "stray dog"
+   ]
+  },
+  {
+   "w": "野良着",
+   "lv": "N4",
+   "kana": "のらぎ",
+   "en": [
+    "clothes for doing farm work or working in fields"
    ]
   },
   {
@@ -88040,6 +88287,39 @@
    "yoji": true
   },
   {
+   "w": "不良交友",
+   "lv": "N4",
+   "kana": "ふりょうこうゆう",
+   "en": [
+    "getting mixed up with the wrong people; getting into bad company"
+   ],
+   "yoji": true
+  },
+  {
+   "w": "不良外人",
+   "lv": "N4",
+   "kana": "ふりょうがいじん",
+   "en": [
+    "undesirable alien"
+   ]
+  },
+  {
+   "w": "不良少女",
+   "lv": "N4",
+   "kana": "ふりょうしょうじょ",
+   "en": [
+    "bad girl; juvenile delinquent"
+   ]
+  },
+  {
+   "w": "不良少年",
+   "lv": "N4",
+   "kana": "ふりょうしょうねん",
+   "en": [
+    "juvenile delinquent"
+   ]
+  },
+  {
    "w": "不言不語",
    "lv": "N4",
    "kana": "ふげんふご",
@@ -88181,6 +88461,14 @@
    "kana": "ちゅうぜんとうかい",
    "en": [
     "middle frontal gyrus"
+   ]
+  },
+  {
+   "w": "中古良品",
+   "lv": "N4",
+   "kana": "ちゅうこりょうひん",
+   "en": [
+    "used item in good condition"
    ]
   },
   {
@@ -95243,6 +95531,14 @@
    "yoji": true
   },
   {
+   "w": "良二千石",
+   "lv": "N4",
+   "kana": "りょうにせんせき",
+   "en": [
+    "competent local official"
+   ]
+  },
+  {
    "w": "色上質紙",
    "lv": "N4",
    "kana": "いろじょうしつし",
@@ -96139,6 +96435,15 @@
    "en": [
     "wildlife"
    ]
+  },
+  {
+   "w": "野良仕事",
+   "lv": "N4",
+   "kana": "のらしごと",
+   "en": [
+    "farm work; field labour"
+   ],
+   "yoji": true
   },
   {
    "w": "野菜工場",
