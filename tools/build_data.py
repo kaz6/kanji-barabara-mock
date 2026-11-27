@@ -54,6 +54,27 @@ SKIP_KANJI_INFO = {  # 書き方として外すもの
 }
 
 
+def short_on(vals):
+    """音読み（KJ-130）：カタカナのまま、ハイフンを外し、重ねず、先の2つまで"""
+    out = []
+    for v in vals:
+        v = v.strip("-")
+        if v and v not in out:
+            out.append(v)
+    return out[:2]
+
+
+def short_kun(vals):
+    """訓読み（KJ-130）：送りがな（. のあと）とハイフンを外す。単独で読める形（先頭が - でないもの）を先に、重ねず、先の2つまで"""
+    plain, bound = [], []
+    for v in vals:
+        k = v.strip("-").split(".", 1)[0]
+        lst = bound if v.startswith("-") else plain
+        if k and k not in plain and k not in bound:
+            lst.append(k)
+    return (plain + bound)[:2]
+
+
 def find_db(path):
     if path:
         return path
@@ -258,10 +279,12 @@ def main():
             "select m.value from meaning m join rm_group g on m.gid = g.ID "
             "where g.cid = ? and (m.m_lang = '' or m.m_lang = 'en')", (cid,))]
         if is_out:
-            outside_rows.append({"c": ch, "strokes": strokes, "freq": int(freq) if freq else None, "en": meanings[:2]})
+            outside_rows.append({"c": ch, "strokes": strokes, "freq": int(freq) if freq else None, "en": meanings[:2],
+                                 "on": short_on(on), "kun": short_kun(kun)})
         else:
             kanji.append({"c": ch, "lv": lv_of[ch], **({"g1": True} if ch in g1set else {}),
-                          "strokes": strokes, "freq": int(freq) if freq else None, "en": meanings[:2]})
+                          "strokes": strokes, "freq": int(freq) if freq else None, "en": meanings[:2],
+                          "on": short_on(on), "kun": short_kun(kun)})  # on・kun：English のときの読みのローマ字のもと（KJ-130）。多くて2つ
         readings[ch] = {"on": on, "kun": kun}
 
     write("kanji.json", {

@@ -53,30 +53,32 @@ async function dragTo(page, from, to, rx, ry) {
   await page.mouse.move(x2, y2, { steps: 4 });
   await page.mouse.up();
 }
-// 8段を通す。seen に、各段で出た見出しと案内を集める
+// 9段（English は 取る のあとに 読み〔KJ-130〕が入る）を通す。seen に、各段で出た見出しと案内を集める
 async function playThrough(page, seen) {
   const note = async () => seen.push([await stepText(page), await lineText(page)]);
   await note(); // 1 放つ
   await tile(page, "大").click(); await tile(page, "雨").click(); await page.click("#bRelease");
   await note(); // 2 取る
   for (let i = 0; i < 2; i++) await page.locator("#field .tile").first().click();
-  await note(); // 3 割る
+  await note(); // 3 読み（English だけ。押す手は「次へ」）
+  await page.click("#tutNext");
+  await note(); // 4 割る
   await tile(page, "好").click(); await page.click("#bSplit"); await note(); await page.click("#bRelease"); await autoTaken(page);
-  await note(); // 4 くっつける
+  await note(); // 5 くっつける
   await dragTo(page, "十", "口", 0.5, 0.12); await note();
   await tile(page, "古").click(); await tile(page, "本").click(); await page.click("#bRelease"); await autoTaken(page);
-  await note(); // 5 反転
+  await note(); // 6 反転
   await tile(page, "下").click(); await page.click("#bInvert"); await tile(page, "手").click(); await page.click("#bRelease"); await autoTaken(page);
-  await note(); // 6 巡り
+  await note(); // 7 巡り
   await tile(page, "月").click(); await page.click("#bCycle"); await tile(page, "山").click(); await page.click("#bRelease"); await autoTaken(page);
-  await note(); // 7 同音
+  await note(); // 8 同音
   await tile(page, "木").click(); await page.click("#bHomo"); await page.locator(".choices button", { hasText: "気" }).click();
   await tile(page, "分").click(); await page.click("#bRelease"); await autoTaken(page);
   await page.waitForFunction(() => !document.getElementById("tutGo").hidden, null, { timeout: 5000 });
-  await note(); // 8 おわり
+  await note(); // 9 おわり
 }
 
-test("KJ-128 English でチュートリアルを通す：8段の見出し・案内が English・日本語の文が残らない・本番へ", { skip }, async () => {
+test("KJ-128 English でチュートリアルを通す：9段（読みの段つき）の見出し・案内が English・日本語の文が残らない・本番へ", { skip }, async () => {
   const srv = await serve();
   const url = `http://127.0.0.1:${srv.address().port}/index.html`;
   const browser = await chromium.launch();
@@ -84,7 +86,7 @@ test("KJ-128 English でチュートリアルを通す：8段の見出し・案�
     const { ctx, page, errors } = await open(browser, url, "en");
     assert.equal(await page.textContent("#bTutorial"), "Tutorial");
     await page.click("#bTutorial");
-    assert.match(await stepText(page), /^1 \/ 8　Play$/);
+    assert.match(await stepText(page), /^1 \/ 9　Play$/);
     assert.equal(await page.textContent("#tutSkip"), "Skip");
     if (SHOT) { fs.mkdirSync(SHOT, { recursive: true }); await page.screenshot({ path: path.join(SHOT, "tutorial-en-1.png") }); }
     // 今の段でない手は、English の理由ではじく（否 の判子）
@@ -92,13 +94,14 @@ test("KJ-128 English でチュートリアルを通す：8段の見出し・案�
     assert.match(await page.textContent("#nopeWhy"), /^Not now \(Tutorial 1: Play\)$/);
     const seen = [];
     await playThrough(page, seen);
-    assert.deepEqual(seen.map((s) => s[0].replace(/^(\d) \/ 8　/, "$1 ")), ["1 Play", "2 Take", "3 Split", "3 Split", "4 Join", "4 Join", "5 Flip", "6 Cycle", "7 Same reading", "8 Done"]);
+    assert.deepEqual(seen.map((s) => s[0].replace(/^(\d) \/ 9　/, "$1 ")), ["1 Play", "2 Take", "3 Readings", "4 Split", "4 Split", "5 Join", "5 Join", "6 Flip", "7 Cycle", "8 Same reading", "9 Done"]);
     for (const [step, line] of seen) {
       assert.ok(!KANA.test(step), step);
       assert.ok(!KANA.test(line), `かなが残っている：${line}`); // 札の漢字（大雨 など）はそのまま。かなは English の文に混ざらない
       assert.match(line, /[A-Za-z]{3}/);
     }
     assert.match(seen[1][1], /^After you play, take as many cards/);
+    assert.match(seen[2][1], /^Each character has readings\. 大 \(dai \/ oo\) \+ 雨 \(u \/ ame\) → 大雨 \(ooame\)$/); // 読みの段（KJ-130）
     assert.equal(await page.textContent("#tutGo"), "Start playing");
     assert.deepEqual(errors, []);
     await ctx.close();
