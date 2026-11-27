@@ -158,11 +158,10 @@ for (const look of [null, "white", "outline", "line", "zzz"]) {
       // 金の縁：動きを減らす設定（この試験は reduce）では縁だけが光りになる。押せない Split にも、押せる Cycle（.lift なし＝チュートリアルの「ここを押す」）にも残る
       assert.match(hint.shadow, /rgb\(217, 154, 0\)/, "ヒントの金の縁が残る（押せない）");
       await page.locator("#meHand .tile", { hasText: "日" }).first().click();
-      await page.evaluate(() => document.getElementById("bCycle").classList.add("hint"));
-      const sh = await page.evaluate(() => getComputedStyle(document.getElementById("bCycle")).boxShadow);
+      // 印を付けるのと読むのを同じ evaluate（同期）でやる：別々だと、間に画面の再描画〔renderOps が class を組み直す〕が入って hint が消え、金の縁が読めない揺れになる（KJ-121）
+      const sh = await page.evaluate(() => { const b = document.getElementById("bCycle"); b.classList.add("hint"); const v = getComputedStyle(b).boxShadow; b.classList.remove("hint"); return v; });
       assert.match(sh, /rgb\(217, 154, 0\)/, "ヒントの金の縁が残る（押せる・.lift なし）");
       assert.match(sh, /rgb\(156, 59, 46\) 0px -3px 0px 0px inset/, "下線の形は金の縁と下線が並ぶ");
-      await page.evaluate(() => document.getElementById("bCycle").classList.remove("hint"));
       // 待ち時間のゲージ：使ったあと、字は墨でゲージの上で読める。ゲージ（::before）が出る
       await page.evaluate(() => { const G = __KJ.game; G.hint = null; G.me.cards = [..."上天休口辶十日下"].map((ch, i) => ({ id: 9100 + i, c: ch, t: 0, fresh: false })); window.__shift(G); __KJ.render(); });
       await page.locator("#meHand .tile", { hasText: "上" }).first().click();
