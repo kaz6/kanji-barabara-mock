@@ -1488,7 +1488,7 @@ test("文言（KJ-024・KJ-048）：js/strings.js のボタンは8つで英語�
   const S = require("../js/strings.js");
   assert.equal(S.ICONS, undefined, "⇄・↻・♪ の文字の印は持たない（KJ-048）");
   assert.deepEqual(S.BUTTONS, { bRelease: "Play", bSplit: "Split", bJoin: "Join", bInvert: "Flip", bCycle: "Cycle", bHomo: "Same reading", bBack: "Back", bRedraw: "Redraw" }, "読み上げの名前");
-  assert.deepEqual(S.LOGO, { bSplit: ["Sp", "cut", "lit"], bJoin: ["Jo", "burst", "in"], bInvert: ["Fl", "invert", "p"], bCycle: ["", "cycle", "ycle"], bHomo: ["", "homophone", "ame reading"] }, "印を字の1つに組み込む");
+  assert.deepEqual(S.LOGO, { bSplit: ["Sp", "cut", "lit"], bJoin: ["Jo", "burst", "in"], bRelease: ["Play", "arc", ""], bInvert: ["Fl", "invert", "p"], bCycle: ["", "cycle", "ycle"], bHomo: ["", "homophone", "ame reading"] }, "印を字の1つに組み込む");
   // 印の SVG：相談チャットの見本（C1・S1・F2）の形と色（currentColor）
   const svg = (k) => S.iconSvg(k);
   assert.equal(S.buttonHtml("bSplit"), '<span class="sp-a">Sp</span><span class="sp-cut" aria-hidden="true"></span><span class="sp-b">lit</span>', "Split のロゴ：Sp｜lit（割れ目は SVG でなく点線の要素。KJ-059）");
@@ -1515,7 +1515,7 @@ test("文言（KJ-024・KJ-048）：js/strings.js のボタンは8つで英語�
     assert.match(svg(k), /stroke="currentColor"/, `${k} の色は文字と同じ`);
     assert.match(svg(k), /aria-hidden="true"/, `${k} は読み上げに出さない`);
   }
-  assert.equal(S.buttonHtml("bRelease"), "Play");
+  assert.match(S.buttonHtml("bRelease"), /^<span class="pl-t">Play<svg class="pl-arc" viewBox="0 0 54 16" aria-hidden="true"[^>]*>.*<\/svg><\/span>$/, "Play は 字＋弧と矢の SVG（KJ-120）");
   assert.equal(S.buttonHtml("bInvert"), `Fl${svg("invert")}p`);
   assert.equal(S.buttonHtml("bCycle"), `${svg("cycle")}ycle`);
   assert.equal(S.buttonHtml("bHomo"), `${svg("homophone")}ame reading`);
