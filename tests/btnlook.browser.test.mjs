@@ -136,6 +136,18 @@ for (const look of [null, "white", "outline", "line", "zzz"]) {
       const a = await others();
       // Play・Back・Redraw は KJ-102 の前と同じ（地・字の色・太さ。Play は押せない見え方のとき）
       assert.deepEqual(a, [["bRelease", "rgb(122, 58, 47)", "rgb(244, 221, 215)", "700"], ["bBack", "rgba(0, 0, 0, 0)", "rgb(98, 90, 80)", "400"], ["bRedraw", "rgba(0, 0, 0, 0)", "rgb(42, 38, 34)", "400"]]); // Play は押せない見え方（--play-off）
+      // KJ-115：Back は押せないとき下線なし・押せるとき操作5つと同じ弁柄の下線（Redraw に下線は無い）
+      const bs = () => page.evaluate(() => ["bBack", "bRedraw"].map((id) => getComputedStyle(document.getElementById(id)).boxShadow));
+      assert.equal(await page.evaluate(() => document.getElementById("bBack").disabled), true);
+      assert.deepEqual(await bs(), ["none", "none"], "Back が押せない：下線なし");
+      await page.locator("#meHand .tile", { hasText: "上" }).first().click();
+      assert.equal(await page.evaluate(() => document.getElementById("bBack").disabled), false);
+      const on = await bs();
+      assert.match(on[0], /rgb\(156, 59, 46\) 0px -3px 0px 0px inset/, "Back が押せる：弁柄の 3px の下線");
+      assert.equal(on[1], "none", "Redraw に下線は足さない");
+      if (process.env.KJ_SHOT_BTN) await page.screenshot({ path: path.join(process.env.KJ_SHOT_BTN, "kj-115-back-line.png") });
+      await page.click("#bBack");
+      assert.equal((await bs())[0], "none", "Back を押して台が空になる：下線が消える");
       // ヒントの光り：押せない Split も、押せる Flip も、薄い金の地・墨の字・縁の光り
       await page.evaluate(() => { const G = __KJ.game; G.hint = null; G.me.cards = [..."日分"].map((ch, i) => ({ id: 7200 + i, c: ch, t: 0, fresh: false })); window.__shift(G); __KJ.render(); });
       assert.equal(await page.evaluate(() => __KJ.game.hintActive().button), "bSplit");
@@ -159,7 +171,7 @@ for (const look of [null, "white", "outline", "line", "zzz"]) {
       await page.waitForTimeout(350);
       const cd = await page.evaluate(() => { const bt = document.getElementById("bInvert"), cs = getComputedStyle(bt), bef = getComputedStyle(bt, "::before"); return { cd: bt.classList.contains("cd"), off: bt.disabled || bt.getAttribute("aria-disabled") === "true", color: cs.color, bg: cs.backgroundColor, gauge: parseFloat(bef.width) > 0, gaugeColor: bef.backgroundColor }; });
       assert.equal(cd.cd, true, "待ち中の印"); assert.equal(cd.off, true, "待ち中は押せない");
-      assert.equal(cd.gauge, true, "ゲージが出ている"); assert.notEqual(cd.gaugeColor, "rgba(0, 0, 0, 0)");
+      assert.equal(cd.gauge, true, "ゲージが出ている"); assert.notEqual(cd.gaugeColor, "rgba(0, 0, 0, 0)"); assert.equal(cd.gaugeColor, "rgb(68, 112, 90)", "待ち時間のゲージは緑のまま（KJ-115）");
       assert.equal(cd.color, "rgb(42, 38, 34)", "待ち中の字は墨（ゲージの上で読める）");
       assert.equal(cd.bg, "rgb(232, 219, 180)", "待ち中の地は紙");
       assert.deepEqual(errors, []);
