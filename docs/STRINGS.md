@@ -256,3 +256,13 @@
 | 〇円は一度きり！（円は使った助数詞。人・本・日… も同じ） | Only one 円 per match! |
 
 遊び方の説明（しくみ）17行の English は `js/strings.js` の `HOWTO.en`。戦果の共有の English の型は `SHARE_RESULT_EN`（例：`漢対普請瓦版 第壱號 / （煽り文句。日本語のまま） / Beat CPU (very weak) 48-30 / Best word: '十円' 9 pts / (N5)⏎URL⏎#漢対普請瓦版 #KanjiDuel`）。
+
+## 言語（KJ-128。段2）
+
+English にした範囲（段1のあとの続き）。訳は全部仮（係が作った）。English のとき画面に出る文は、日本語と同じ場所に置いてある。
+
+- チュートリアル：`data/tutorial.json` の `ui_en`（ボタン・文の型）・`steps[].title_en`（段の名前：Play・Take・Split・Join・Flip・Cycle・Same reading・Done）・`actions[].line_en`（案内の1行）。画面は `TUT.uiText(k)`・`TUT.title()`・`TUT.line()`・`TUT.say(why)`。ログに残る文（`autoNote`・段のメモ・はじいた理由）は日本語のまま
+- 部品の札の意味：`data/radical_meanings.json` の `name_en`・`mean_en`（`parts` と `forms`）。`K.radicalNote(D,T,c,"en")`・`K.radicalFormNote(D,base,"en")`。形：`艹 (grass): grass; plants`／`儿 (legs) = 人`／`ナ = 手`／`亍: the right side of 行 (walking)`／`亻 (person radical) = 人`
+- くっつく相手の行：`K.joinNote(D,T,cards,sel,"en")` → `Joins: 禾+火→秋`（3組まで・あとは `+N more`）
+- 台の行の注：`js/strings.js` の `notePts`（点／ ` pts`）・`noteYoji`・`pn_地名`（place）・`pn_名字`（surname）・`pnSep`・`noteCounter`・`noteJoins`（`Joins to make 古 or 田`）・`noteRev`（Wrong order）・`noteParen`。はじかれた理由は段1の `CORE_EN`（`STR.tr(K.rejectText(...))`）
+- 見逃した言葉・終わりの言葉の欄：段1の `esMissed`・`esReading`・`esMeaning`（意味は `ens`）のまま

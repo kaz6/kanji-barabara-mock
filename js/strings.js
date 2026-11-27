@@ -222,6 +222,16 @@
     esMeaning: { ja: "意味：", en: "Meaning: " },
     esSep: { ja: "　", en: "  " },
     esKotoban: { ja: "コトバンクで引く", en: "Look up on Kotobank" },
+    // 台の行の注（KJ-128）：点・四字熟語・地名・名字・数＋助数詞・くっつけると・並べる順が逆・はじかれた理由のかっこ
+    notePts: { ja: "点", en: " pts" },
+    noteYoji: { ja: "（四字熟語）", en: " (four-character idiom)" },
+    pn_地名: { ja: "地名", en: "place" },
+    pn_名字: { ja: "名字", en: "surname" },
+    pnSep: { ja: "・", en: " / " },
+    noteCounter: { ja: "（数＋助数詞）", en: " (number + counter)" },
+    noteJoins: { ja: (a) => `くっつけると ${a.join(" か ")}`, en: (a) => `Joins to make ${a.join(" or ")}` },
+    noteRev: { ja: "並べる順が逆", en: "Wrong order" },
+    noteParen: { ja: (x) => `（${x}）`, en: (x) => `(${x})` },
   };
   // 文を引く。en に無ければ ja。値が関数なら引数を渡して呼ぶ
   function t(key, ...args) {

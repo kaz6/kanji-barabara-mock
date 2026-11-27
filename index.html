@@ -673,8 +673,9 @@ function applyStatic(){ // HTML に直書きしていた文（data-t＝文／dat
   $("bShare").textContent=STR.t("shareButton");$("bShareEnd").textContent=STR.t("shareButton");
   document.documentElement.lang=STR.getLang();
 }
-function applyLang(){ // 言語を替えたら、段1の範囲を全部入れ直す。データを読む前は文だけ（選びの並びはデータのあと）
-  applyStatic();
+function tutorialBtn(){const u=D.tutorial&&D.tutorial.ui;if(u)$("bTutorial").textContent=STR.getLang()==="en"&&D.tutorial.ui_en?D.tutorial.ui_en.button:u.button} // KJ-128
+function applyLang(){ // 言語を替えたら、段1・段2の範囲を全部入れ直す。データを読む前は文だけ（選びの並びはデータのあと）
+  applyStatic();tutorialBtn();
   if(D.rules){buildPickers();buildHowto();showCounts();roomUi();if(G&&!G.over)render()}
 }
 function setLangTo(v){STR.setLang(v);lsSet(LANG_KEY,STR.getLang());$("langPanel").hidden=true;$("bLang").setAttribute("aria-expanded","false");applyLang()}
@@ -798,7 +799,7 @@ function startTutorial(){
   autoTok=null; // 前の自動取りの印を残さない（KJ-055）
   clearTimeout(cpuTimer);sendAbandoned();leaveRoom();
   T=tablesFor(D.tutorial.level); // 好 などが割れるよう、N4 の表（段の中身は data/tutorial.json）
-  TUT=K.createTutorial(D,T,{now:clock});G=TUT.g;
+  TUT=K.createTutorial(D,T,{now:clock,lang:STR.getLang});G=TUT.g;
   row=[];lastTried="";hideNope();
   $("msg").textContent="";$("msg").className="msg";
   $("bCopyEnd").hidden=$("bShareEnd").hidden=true;$("logPanel").classList.remove("on");
@@ -814,10 +815,10 @@ function finishTutorial(kind){
 function renderTut(){
   $("tut").hidden=!TUT;
   if(!TUT)return;
-  const ui=TUT.ui;
-  $("tutStep").textContent=`${ui.stepOf.replace("{n}",TUT.stepNo()).replace("{total}",TUT.total)}　${TUT.title()}`;
+  const ui=k=>TUT.uiText(k); // KJ-128：English のときは data/tutorial.json の ui_en・title_en・line_en
+  $("tutStep").textContent=`${ui("stepOf").replace("{n}",TUT.stepNo()).replace("{total}",TUT.total)}　${TUT.title()}`;
   $("tutLine").textContent=TUT.line();
-  $("tutSkip").textContent=ui.skip;$("tutGo").textContent=ui.go;$("tutGo").hidden=!TUT.atEnd();
+  $("tutSkip").textContent=ui("skip");$("tutGo").textContent=ui("go");$("tutGo").hidden=!TUT.atEnd();
 }
 $("bTutorial").onclick=startTutorial;
 $("tutSkip").onclick=()=>finishTutorial("skip");
@@ -1221,6 +1222,7 @@ function beginRoom(startRow){
 const rowCards=()=>row.map(id=>G.byId(G.me,id)).filter(Boolean);
 const rowText=()=>rowCards().map(x=>x.c).join("");
 const lastCard=()=>{const rc=rowCards();return rc.length?rc[rc.length-1]:null}; // 割る・反転・巡り・同音は、最後に選んだ札に効く（KJ-054・D-070）
+const noteWhy=why=>STR.getLang()==="en"?STR.tr(K.rejectText(why)):why; // 台の行の「はじかれた理由」。English のときだけ短い言い方に言い換える（KJ-128）
 function rowState(){
   const rc=rowCards(),text=K.kanaText(T,rowText()),rl=K.releasable(T,G.used,text); // 言葉の書き方：ノ・儿・ナ の札はかな（天ノ川 → 天の川。KJ-053）
   const pair=rc.length===2?[rc[0].c,rc[1].c]:null;
@@ -1328,7 +1330,7 @@ const REJECT_MS=1500;let nopeTimer=null;
 function hideNope(){clearTimeout(nopeTimer);nopeTimer=null;$("nope").classList.remove("on")}
 function showWhy(why){
   if(!why)return;
-  $("nopeWhy").textContent=STR.tr(K.rejectText(why));const nb=$("nope"),ic=nb.querySelector(".no-ic");ic.style.animation="none";void ic.offsetWidth;ic.style.animation="";nb.classList.add("on"); // 判子は出し直すたびに押し直す（KJ-104）
+  $("nopeWhy").textContent=STR.tr(K.rejectText(TUT?TUT.say(why):why));const nb=$("nope"),ic=nb.querySelector(".no-ic");ic.style.animation="none";void ic.offsetWidth;ic.style.animation="";nb.classList.add("on"); // 判子は出し直すたびに押し直す（KJ-104）
   clearTimeout(nopeTimer);nopeTimer=setTimeout(hideNope,REJECT_MS);
 }
 function afterOp(res){if(res&&res.ok){row=res.sel||(res.cards?res.cards.map(x=>x.id):[]);lastTried=""}hideChoices();afterChange()} // 1枚に効く操作は、前に選んでいた札の選びを残す（res.sel。KJ-054）
@@ -1595,19 +1597,19 @@ function render(){
     rowEl.appendChild(t);
   });
   const w=T.WORDS.get(s.text),info=$("info");
-  const rev=s.reversed?' <span class="rev">並べる順が逆</span>':"";
-  const pts=s.rl.ok?` <span class="pts">${K.scoreOf(D,T,s.text).pts}点</span>`:"";
+  const rev=s.reversed?` <span class="rev">${STR.t("noteRev")}</span>`:"";
+  const pts=s.rl.ok?` <span class="pts">${K.scoreOf(D,T,s.text).pts}${STR.t("notePts")}</span>`:"";
   if(!s.text)info.innerHTML="";
-  else if(w)info.innerHTML=`<span class="w">${s.text}</span>${pts} ${w.kana}${w.pn_kana?`／${w.pn_kana}`:""}${w.pn?`<span class="pn">〔${w.pn.join("・")}〕</span>`:""}${w.yoji?"（四字熟語）":""} — ${w.en.join(" / ")}${s.rl.ok?"":` <span class="no">（${s.rl.why}）</span>`}${rev}`;
+  else if(w)info.innerHTML=`<span class="w">${s.text}</span>${pts} ${w.kana}${w.pn_kana?`／${w.pn_kana}`:""}${w.pn?`<span class="pn">〔${w.pn.map(x=>STR.t("pn_"+x)).join(STR.t("pnSep"))}〕</span>`:""}${w.yoji?STR.t("noteYoji"):""} — ${w.en.join(" / ")}${s.rl.ok?"":` <span class="no">${STR.t("noteParen",noteWhy(s.rl.why))}</span>`}${rev}`;
   else if(s.reversed)info.innerHTML=rev.trim();
-  else if(s.rl.ok&&K.counterReading(T,s.text))info.innerHTML=`<span class="w">${s.text}</span>${pts} ${K.counterReading(T,s.text).join("・")}（数＋助数詞）`; // 辞書に無い 数＋助数詞（KJ-022）：読みは data/counters.json
+  else if(s.rl.ok&&K.counterReading(T,s.text))info.innerHTML=`<span class="w">${s.text}</span>${pts} ${K.counterReading(T,s.text).join("・")}${STR.t("noteCounter")}`; // 辞書に無い 数＋助数詞（KJ-022）：読みは data/counters.json
   else if(s.rl.ok&&D.readings.readings[s.text]){const r=D.readings.readings[s.text];info.innerHTML=`<span class="w">${s.text}</span>${pts} ${[...r.on,...r.kun].slice(0,6).join("・")}`}
-  else if(s.joins.length)info.innerHTML=`くっつけると ${s.joins.join(" か ")}`;
-  else info.innerHTML=s.rl.ok?`<span class="w">${s.text}</span>${pts}`:`<span class="no">${s.rl.why}</span>`;
+  else if(s.joins.length)info.innerHTML=STR.t("noteJoins",s.joins);
+  else info.innerHTML=s.rl.ok?`<span class="w">${s.text}</span>${pts}`:`<span class="no">${noteWhy(s.rl.why)}</span>`;
   // 台の部品の札が何と同じ意味か（KJ-021）：台に並んだ部品の札のうち、最後に選んだ1枚の意味を1行目に出す。字の札・表にない札は出さない
   // 部品の札が無く、1枚目の字が左の形（亻など）で見えているときは、その形の意味（亻（にんべん）＝人）
-  const pc=[...s.rc].reverse().find(x=>!K.isChar(T,x.c)),rad=pc?K.radicalNote(D,T,pc.c):(s.joins.length&&s.rc[0]?K.radicalFormNote(D,s.rc[0].c):null);
-  const lcd=lastCard(),jn=lcd&&!K.isChar(T,lcd.c)?K.joinNote(D,T,G.me.cards,lcd):null; // 最後に選んだ札が部品の札で、くっつく相手が手札・ストックに今あるときだけ（KJ-083。形は rules の join_note）
+  const pc=[...s.rc].reverse().find(x=>!K.isChar(T,x.c)),LG=STR.getLang(),rad=pc?K.radicalNote(D,T,pc.c,LG):(s.joins.length&&s.rc[0]?K.radicalFormNote(D,s.rc[0].c,LG):null);
+  const lcd=lastCard(),jn=lcd&&!K.isChar(T,lcd.c)?K.joinNote(D,T,G.me.cards,lcd,LG):null; // 最後に選んだ札が部品の札で、くっつく相手が手札・ストックに今あるときだけ（KJ-083。形は rules の join_note）
   const radEl=rad?`<span class="rad" data-c="${pc?pc.c:s.rc[0].c}">${rad}</span>`:"";
   if(jn)info.innerHTML=`<span class="l1">${radEl}<span class="joinnote">${rad?"　":""}${jn}</span></span>`+info.innerHTML; // 1行目の意味の後ろに続ける（情報の欄は2行のまま）
   else if(rad)info.innerHTML=radEl+info.innerHTML;
@@ -1718,7 +1720,7 @@ window.__KJ={get game(){return G},get tut(){return TUT},get row(){return row},ge
 STR.setLang(STR.detectLang(lsGet(LANG_KEY),navigator.language));applyStatic(); // 言語（KJ-127）。データを待たずに文を入れる
 fillNews();window.addEventListener("resize",fillNews); // 背景の記事（KJ-094）。データを待たずに敷く
 Promise.all(K.FILES.map(f=>fetch(`data/${f}.json`).then(r=>r.json()).then(j=>D[f]=j)))
-  .then(()=>{preloadFx();loadSettings();applyRoomLink();refreshMast();T=tablesFor(level);buildPickers();buildHowto();showCounts();roomUi();$("bTutorial").textContent=D.tutorial.ui.button;$("bTutorial").hidden=false})
+  .then(()=>{preloadFx();loadSettings();applyRoomLink();refreshMast();T=tablesFor(level);buildPickers();buildHowto();showCounts();roomUi();tutorialBtn();$("bTutorial").hidden=false})
   .catch(e=>{$("setupInfo").textContent=STR.t("dataFail")});
 </script>
 </body>

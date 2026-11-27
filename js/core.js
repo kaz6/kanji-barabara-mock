@@ -168,16 +168,19 @@
   const isChar = (T, c) => T.CHARS.has(c) || T.JOUYOU.has(c) || T.OUTSIDE.has(c) || T.N5HELD.has(c);
   // 部品の札が何と同じ意味か（KJ-021・D-039。data/radical_meanings.json）。台の行に出す一行。字の札・表にない札は null
   // 同じ意味の字があれば 亻（にんべん）＝人 の形、無ければ 艹（くさかんむり）草のこと の形。呼び名の無い部品は（）を省く
-  const radicalNote = (D, T, c) => {
+  // KJ-128：lang が "en" のときは English（name_en・mean_en。同じ意味の字 same はそのまま）：艹 (grass) = ... / 亍: the right side of 行 (walking)。English の文は表に無ければ日本語に落ちる
+  const radicalNote = (D, T, c, lang) => {
     const R = D.radical_meanings && D.radical_meanings.parts;
     if (!R || isChar(T, c) || !R[c]) return null;
     const e = R[c];
+    if (lang === "en" && (e.name_en || e.mean_en || e.same)) return c + (e.name_en ? ` (${e.name_en})` : "") + (e.same ? ` = ${e.same}` : e.mean_en ? ": " + e.mean_en : "");
     return c + (e.name ? `（${e.name}）` : "") + (e.same ? `＝${e.same}` : (e.name ? "" : " ") + (e.mean || ""));
   };
-  // 台で札の字が左の形（亻・氵 など。radical_forms.json）に変わっているとき、その形の一行（亻（にんべん）＝人）。base＝札の字（人）。無ければ null
-  const radicalFormNote = (D, base) => {
+  // 台で札の字が左の形（亻・氵 など。radical_forms.json）に変わっているとき、その形の一行（亻（にんべん）＝人）。base＝札の字（人）。無ければ null。English：亻 (person radical) = 人
+  const radicalFormNote = (D, base, lang) => {
     const form = D.radical_forms && D.radical_forms.left && D.radical_forms.left[base];
     const e = form && D.radical_meanings && D.radical_meanings.forms && D.radical_meanings.forms[form];
+    if (e && lang === "en" && e.name_en) return `${form} (${e.name_en}) = ${e.same}`;
     return e ? `${form}（${e.name}）＝${e.same}` : null;
   };
   // 部品の札 sel を選んだとき、自分の手札（上の段）・ストックに今あるくっつく相手（KJ-083・D-101）。cards＝自分の札（手札とストック）。
@@ -198,15 +201,17 @@
   };
   // 台の行に出す「くっつく：…」の一行。形は data/rules.json の join_note（full＝禾＋火→秋／partner＝禾＋火／mask＝禾＋？）。3組まで・あとは「ほか N組」。無ければ null
   const JOIN_NOTE_MODES = ["full", "partner", "mask"];
-  const joinNote = (D, T, cards, sel) => {
+  const joinNote = (D, T, cards, sel, lang) => {
     const mode = (D.rules && D.rules.join_note) || "full";
     const ps = joinPartners(T, cards, sel);
     if (!ps.length) return null;
+    const PL = lang === "en" ? "+" : "＋", Q = lang === "en" ? "?" : "？", DOT = lang === "en" ? "/" : "・"; // KJ-128：English は半角
     const show = (p) => {
-      if (mode === "mask") return p.a === sel.c && p.b !== sel.c ? `${p.a}＋？` : p.b === sel.c && p.a !== sel.c ? `？＋${p.b}` : `${p.a}＋？`;
-      return mode === "partner" ? `${p.a}＋${p.b}` : `${p.a}＋${p.b}→${p.to.join("・")}`;
+      if (mode === "mask") return p.a === sel.c && p.b !== sel.c ? `${p.a}${PL}${Q}` : p.b === sel.c && p.a !== sel.c ? `${Q}${PL}${p.b}` : `${p.a}${PL}${Q}`;
+      return mode === "partner" ? `${p.a}${PL}${p.b}` : `${p.a}${PL}${p.b}→${p.to.join(DOT)}`;
     };
     const items = [...new Set(ps.map(show))];
+    if (lang === "en") return "Joins: " + items.slice(0, 3).join("  ") + (items.length > 3 ? `  +${items.length - 3} more` : ""); // KJ-128
     const head = items.slice(0, 3).join("　");
     return "くっつく：" + head + (items.length > 3 ? `　ほか${items.length - 3}組` : "");
   };
@@ -1387,6 +1392,7 @@
     const TD = D.tutorial;
     const g = createGame(D, T, { ...(env || {}), tutorial: TD, startStock: false });
     const steps = TD.steps, ui = TD.ui;
+    const en = () => !!(env && typeof env.lang === "function" && env.lang() === "en"); // KJ-128：English のとき、画面に出す文だけ English（ui_en・title_en・line_en）。ログに残る文は日本語のまま
     const acts = [];
     steps.forEach((s, i) => s.actions.forEach((a, j) => acts.push({ ...a, step: i, k: j, last: j === s.actions.length - 1 })));
     const info = { total: steps.length, done: 0, finished: null, secs: [] }; // done＝済んだ段の数
@@ -1397,18 +1403,25 @@
     const act = () => acts[cur];
     const lockedNow = () => g.me.takes > 0;
     const same = (a, b) => (a || []).join("") === (b || []).join("");
+    const FACE_EN = { top: "top", bottom: "bottom", left: "left", right: "right", center: "center" };
+    const useTextEn = (a) => (a.op === "join" ? `${a.from} on the ${FACE_EN[a.face]} side of ${a.to}` : a.op === "homophone" ? `${a.use.join("")} → ${a.pick}` : a.use.join(" → "));
     const useText = (a) => (a.op === "join" ? `${a.from} を ${a.to} の${FACE_LABEL[a.face]}の面に` : a.op === "homophone" ? `${a.use.join("")} → ${a.pick}` : a.use.join(" → "));
     const tut = {
       g, steps, info, ui, acts,
       get total() { return steps.length; },
       // 画面に出す段：最後の段（おわり）の前の放ったあとは、取りきるまで前の段のまま（段7 の 気分 のあとの「取る」が「8/8 おわり」に見えない。KJ-046）
       act, shownStep: () => (lockedNow() && act().op === "end" && cur > 0 ? acts[cur - 1].step : act().step),
-      stepNo: () => tut.shownStep() + 1, title: () => steps[tut.shownStep()].title,
+      stepNo: () => tut.shownStep() + 1, title: () => { const s = steps[tut.shownStep()]; return en() && s.title_en ? s.title_en : s.title; },
+      // 画面に出すボタン・見出しの文字（English のときは ui_en。無ければ日本語）
+      uiText: (k) => (en() && TD.ui_en && TD.ui_en[k] !== undefined ? TD.ui_en[k] : ui[k]),
+      // はじいた理由（blocked の返し）を、画面に出す言語の文にする。ログには blocked が返した日本語のまま残る
+      say: (why) => (en() && why && tut.whyEn.has(why) ? tut.whyEn.get(why) : why),
+      whyEn: new Map(),
       // いま画面に出す1行。放ったあと場から取りきるまでは、取る案内
       line() {
         if (info.finished) return "";
-        if (lockedNow() && act().op !== "take") return fmt(ui.autoTake, { n: g.me.takes });
-        return act().line;
+        if (lockedNow() && act().op !== "take") return fmt(tut.uiText("autoTake"), { n: g.me.takes });
+        return en() && act().line_en ? act().line_en : act().line;
       },
       // 自動で取る番か（放ったあとで取る枚数が残っていて、いまの手が段2 の「取る」ではない）。取る枚数のぶん手札・ストックに空きがあるときだけ
       autoPending: () => !info.finished && !g.over && lockedNow() && act().op !== "take" && g.canTakeMore(g.me) && g.field.length > 0,
@@ -1436,8 +1449,9 @@
         if (info.finished) return null;
         if (op === "take") return null; // 取れる枚数があるかは遊びの決まりが見る
         const notNow = fmt(ui.notNow, { n: a.step + 1, title: steps[a.step].title });
-        if (a.op !== op) return notNow;
+        if (a.op !== op) { tut.whyEn.set(notNow, fmt(TD.ui_en ? TD.ui_en.notNow : ui.notNow, { n: a.step + 1, title: steps[a.step].title_en || steps[a.step].title })); return notNow; }
         const wrong = fmt(ui.wrongCards, { use: useText(a) });
+        tut.whyEn.set(wrong, fmt(TD.ui_en ? TD.ui_en.wrongCards : ui.wrongCards, { use: useTextEn(a) }));
         if (op === "release") return x.text === a.word ? null : wrong;
         if (op === "join") return x.from === a.from && x.to === a.to && x.face === a.face ? null : wrong;
         if (!same(x.chars, a.use)) return wrong;
