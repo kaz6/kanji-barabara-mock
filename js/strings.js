@@ -146,5 +146,170 @@
   });
   // 背景の記事（KJ-094。見本「新聞21」の文。遊びの決まりを新聞の文体にしたもの。文は仮）。画面の背景いっぱいに繰り返す。点は決まり（data/rules.json）と同じ：三字九点・四字十二点・四字熟語は倍・引き直しは五度まで
   const NEWS = "本紙特報。漢字ヲ割リ、回シ、裏返シ、合セテ別ノ字ト為シ、言葉ヲ放ツ遊戯、市中ニ大流行ス。相手ノ放チタル言葉ハ其ノ儘返ス能ハズ、必ズ一工夫ヲ要ス。山札ニ出デタル札ハ早キ者ノ物ナリ。三字ノ言葉ハ九点、四字ハ十二点、四字熟語ハ其ノ倍ナリ。引直シハ五度マデ、回ヲ重ヌル毎ニ値上ル。記者曰ク、待ツモ一手、攻ムルモ一手、勝敗ハ十分ニシテ決ス。";
-  return Object.freeze({ ICON_SHAPES, iconSvg, BUTTONS, LOGO, buttonHtml, redrawNote, TEXT, GEAR_SVG, SENKYO, SHARE_RESULT, AORI, AORI_SHARE, NEWS });
+  // ---------- 言語の切り替え（KJ-127。作者「別の言語に変えれるよう、スイッチできるようにしたい」「こっちは韓国語なしで」）----------
+  // 言語は 日本語（ja）・English（en）の2つ。選んだ言語は端末に覚える（localStorage kj-lang。index.html）。初めて開いたときは navigator.language（ja→日本語、ほか→English。仮）。
+  // 訳は係が作った（仮。英語に強い人が見るまで）。短く、学ぶ人に分かる英語。漢字・語・読み（かな）は訳さずそのまま出す。en に無い文は ja に落ちる（t）。
+  // 範囲（段1）：はじめる前の画面・遊び方の説明（しくみ）・終わりの画面・はじかれた理由・合言葉と戦果の共有の文。題字・説明の2行・戦況・背景の記事・煽り文句・ログ・チュートリアル・部品の札の意味は日本語のまま（段2は P-128）。
+  // core.js（DOM に触らない。日本語のまま）が返す画面向けの文（レベル・遊び方・強さ・終わりの見出し・はじかれた理由・部屋のエラー）は、下の CORE_EN で英語に言い換える（tr）。
+  const LANGS = Object.freeze([
+    Object.freeze({ key: "ja", label: "日本語", short: "JP" }),
+    Object.freeze({ key: "en", label: "English", short: "EN" }),
+  ]);
+  let lang = "ja";
+  const normLang = (v) => (v === "en" ? "en" : "ja");
+  // 端末に覚えた言語（ja・en）があればそれ。無ければ navigator.language（ja で始まれば日本語。ほかは English。空なら日本語）
+  const detectLang = (stored, nav) => (stored === "ja" || stored === "en" ? stored : !nav || /^ja([-_]|$)/i.test(String(nav)) ? "ja" : "en");
+  const getLang = () => lang;
+  const setLang = (v) => { lang = normLang(v); return lang; };
+  const U = {
+    setHead: { ja: "はじめる前に選ぶ", en: "Choose before you start" },
+    lblPlay: { ja: "遊び方", en: "Mode" },
+    lblPower: { ja: "強さ", en: "CPU level" },
+    lblRoom: { ja: "合言葉の部屋", en: "Room" },
+    lblLevel: { ja: "レベル", en: "Level" },
+    lblTime: { ja: "時間", en: "Time" },
+    lblVib: { ja: "振動", en: "Vibration" },
+    lblFace: { ja: TEXT.faceLabel, en: "Card font" },
+    faceTaisho: { ja: TEXT.faceTaisho, en: "Taisho style" },
+    faceMincho: { ja: TEXT.faceMincho, en: "Mincho" },
+    on: { ja: "入", en: "On" },
+    off: { ja: "切", en: "Off" },
+    actHost: { ja: "部屋を作る", en: "Create a room" },
+    actEnter: { ja: "部屋に入る", en: "Join a room" },
+    codePh: { ja: "数字4けた", en: "4 digits" },
+    codeAria: { ja: "合言葉", en: "Room code" },
+    enterBtn: { ja: "合言葉で入る", en: "Join with code" },
+    enterNote: { ja: "入る側は、作った人のレベル・時間で遊ぶ", en: "If you join, you play at the host's level and time" },
+    cancel: { ja: "やめる", en: "Cancel" },
+    start: { ja: "はじめる", en: "Start" },
+    langBtn: { ja: "言語", en: "Language" },
+    settings: { ja: TEXT.settings, en: "Settings" },
+    counts: { ja: (c, w, l) => `字 ${c}・語 ${w}（レベル ${l}）`, en: (c, w, l) => `${c} kanji, ${w} words; level ${l}` },
+    dataFail: { ja: "データを読めませんでした（file:// では開けません。Pages かローカルのサーバーで開いてください）", en: "Couldn't load the data (it won't open from file://. Use Pages or a local server)" },
+    roomMaking: { ja: "部屋を作っている…", en: "Creating the room..." },
+    roomHosted: { ja: (l, t) => `合言葉を相手に伝えてください（レベル ${l}・${t}）。相手を待っています`, en: (l, t) => `Tell your friend the room code (level ${l}, ${t}). Waiting for them...` },
+    roomFinding: { ja: "部屋を探している…", en: "Looking for the room..." },
+    roomVersion: { ja: "相手と版がちがう（二人とも読み込み直してから、もう一度）", en: "Version mismatch (both of you reload the page, then try again)" },
+    roomTheirs: { ja: (l, t) => `相手の設定：レベル ${l}・${t}`, en: (l, t) => `Host's settings: level ${l}, ${t}` },
+    roomJoining: { ja: (set) => `${set}。入っている…`, en: (set) => `${set}. Joining...` },
+    roomWaiting: { ja: (set) => `${set}。始まるのを待っています`, en: (set) => `${set}. Waiting for the game to start` },
+    roomCancelled: { ja: "やめた", en: "Cancelled" },
+    roomHostSet: { ja: (l, t) => `作った人の設定：レベル ${l}・${t}`, en: (l, t) => `Host's settings: level ${l}, ${t}` },
+    howtoSum: { ja: "しくみ", en: "How it works" },
+    again: { ja: "もう一度", en: "Play again" },
+    setupBtn: { ja: "設定を変える", en: "Change settings" },
+    logBtn: { ja: "ログ", en: "Log" },
+    copyBtn: { ja: "コピー", en: "Copy" },
+    copyLog: { ja: "ログをコピー", en: "Copy log" },
+    copied: { ja: "コピーした", en: "Copied" },
+    copyFail: { ja: "選んである文字を手でコピーしてください", en: "Please copy the selected text by hand" },
+    shareButton: { ja: TEXT.shareButton, en: "Share" },
+    shareCopied: { ja: TEXT.shareCopied, en: "Copied" },
+    shareFailed: { ja: TEXT.shareFailed, en: "Couldn't share. Tell your friend the room code another way" },
+    shareEndFailed: { ja: TEXT.shareEndFailed, en: "Couldn't share" },
+    // 合言葉の共有の文（KJ-122。ja は作者の文）。題＝masthead・副題＝mastheadSub・リンクは K.roomShareUrl。全部この1本に入る（navigator.share では url を別に渡さない）
+    shareText: { ja: TEXT.shareText, en: (code, title, sub, url) => `${title} ${sub}\nCombine kanji and make words — a word duel! Room code ${code} ${url}` },
+    hashtag: { ja: TEXT.hashtag, en: "#漢対普請瓦版 #KanjiDuel" }, // 戦果の共有の最後の行（KJ-126・KJ-127。合言葉の共有には付けない）
+    msgWin: { ja: (a, b) => `勝ち（${a} 対 ${b}）`, en: (a, b) => `You win (${a}-${b})` },
+    msgLose: { ja: (a, b) => `負け（${a} 対 ${b}）`, en: (a, b) => `You lose (${a}-${b})` },
+    msgDraw: { ja: (a, b) => `引き分け（${a} 対 ${b}）`, en: (a, b) => `Draw (${a}-${b})` },
+    msgSolo: { ja: (a) => `ひとりで ${a} 点`, en: (a) => `Solo: ${a} pts` },
+    esPts: { ja: "点", en: "pts" },
+    esVs: { ja: "対", en: "vs" },
+    esPlus: { ja: (n) => `+${n}点`, en: (n) => `+${n} pts` },
+    esMissed: { ja: "見逃した言葉：", en: "Missed word: " },
+    esReading: { ja: "読み：", en: "Reading: " },
+    esMeaning: { ja: "意味：", en: "Meaning: " },
+    esSep: { ja: "　", en: "  " },
+    esKotoban: { ja: "コトバンクで引く", en: "Look up on Kotobank" },
+  };
+  // 文を引く。en に無ければ ja。値が関数なら引数を渡して呼ぶ
+  function t(key, ...args) {
+    const e = U[key];
+    if (!e) return key;
+    const v = lang === "en" && e.en !== undefined ? e.en : e.ja;
+    return typeof v === "function" ? v(...args) : v;
+  }
+  // core.js が日本語で返す画面向けの文を、English のときだけ言い換える（表に無い文はそのまま）。レベル・遊び方・強さ・終わりの見出し・はじかれた理由（K.rejectText の結果）・部屋のエラー
+  const CORE_EN = Object.freeze({
+    "小1（小学1年の漢字80字）": "Grade 1 (the 80 kanji of elementary grade 1)", "小1": "Grade 1", "N4（N5＋N4 の字）": "N4 (N5 + N4 kanji)",
+    "CPU戦": "vs CPU", "友達と対戦": "vs a friend",
+    "とても弱い": "Very weak", "ふつう": "Normal", "つよい": "Strong",
+    "勝ち！": "You win!", "負け…": "You lose...", "引き分け": "Draw", "おわり": "Done",
+    "2字から！": "2+ characters!", "漢字の札が要る！": "Needs a kanji card!", "もう放った言葉！": "Already played!", "順番が逆！": "Wrong order!",
+    "山札から取りきるまで動けない！": "Take from the deck first!", "山札にない！": "Not in the deck!", "辞書にない！": "Not in the dictionary!",
+    "手札もストックもいっぱい！": "Hand and stock are full!", "手札がいっぱい！": "Hand is full!", "ストックがいっぱい！": "Stock is full!",
+    "くっつかない！": "Doesn't join!", "割れない！": "Can't split!", "できない字！": "Not a valid kanji!", "待ち時間！": "Cooling down!",
+    "同じ読みの字がない！": "No kanji with the same reading!", "取れる枚数がない！": "Nothing left to take!",
+    "相手が先に放った！": "Opponent played it first!", "相手が先に取った！": "Opponent took it first!", "引き直しは5回まで！": "Redraw limit: 5!",
+    "合言葉は数字4けた": "The room code is 4 digits", "つながらない": "Can't connect", "その合言葉の部屋がない": "No room with that code",
+    "合言葉を作れなかった（もう一度）": "Couldn't make a room code (try again)", "その部屋はもう始まっている": "That room has already started",
+  });
+  function tr(s) {
+    if (lang !== "en") return s;
+    if (Object.prototype.hasOwnProperty.call(CORE_EN, s)) return CORE_EN[s];
+    const m = /^〇(.+)は一度きり！?$/.exec(String(s)); // 使った助数詞（〇円は一度きり！）
+    return m ? `Only one ${m[1]} per match!` : s;
+  }
+  const timeLabel = (sec) => (lang === "en" ? `${sec / 60} min` : `${sec / 60}分`); // core.js の timeLabel と同じ形（ja）。English は「5 min」
+  // 戦果の共有の文の型（English。KJ-127。型の読み方は SHARE_RESULT と同じ。数は算用数字〔arabic〕）。煽り文句の行（AORI_SHARE）は日本語のまま
+  const SHARE_RESULT_EN = Object.freeze({
+    arabic: true,
+    title: "{title} {issue}",
+    win: "Beat {who} {me}-{opp}",
+    lose: "Lost to {who} {me}-{opp}",
+    draw: "Drew with {who} {me}-{opp}",
+    solo: "Solo: {me} pts",
+    best: "Winning word: '{word}' {pts} pts",
+    level: "({level})",
+    minus: "-",
+    sep: " / ",
+    whoCpu: { weak: "CPU (very weak)", fair: "CPU (normal)", normal: "CPU (strong)" },
+    whoRoom: "a friend",
+  });
+  const shareResult = () => (lang === "en" ? SHARE_RESULT_EN : SHARE_RESULT);
+  const hashtag = () => t("hashtag");
+  // 遊び方の説明（しくみ。KJ-127 で index.html から移した）。p＝{R:rules, S:rules.score, p.min:分, levelLabel, chars, words, cycles:[巡りの名前], radKeys, radVals}。1行ずつ HTML
+  const HOWTO = {
+    ja: (p) => { const R = p.R, S = R.score; return [
+    `<b>選ぶ</b>：手札・ストックの札をタップすると、札はそのマスに残ったまま色が変わって選ばれ、角に選んだ順の数字（1・2・3…）が出る。台には、選んだ札の写しが選んだ順に左から並ぶ。もう一度タップ（手札の札でも、台の写しでも）で外れる。ボタンは選んだ札に、選んだ順で働く。`,
+    `<b>入れ替え・移す</b>：札を指で引きずって、別の札の上で離すと位置が入れ替わる（手札とストックの間でもよい）。空いたマスの上で離すと、そこへ移る。`,
+    `<b>放つ</b>：台の札が辞書の語（2〜4字）なら放てる。<b>1字では放てない</b>（くっつけて作った字でも同じ）。一度放った言葉は二人とも二度と使えない。放った札は消える（相手には届かない）。`,
+    `<b>点数</b>：${Object.entries(S.by_length).map(([n,p])=>`${n}字 ${p}点`).join("・")}。四字熟語は ${S.yoji_mult} 倍、特別な語（天上天下）はさらに ${S.special_mult} 倍。`,
+    `<b>取る</b>：放ったら、放った字数と同じ枚数を<b>山札</b>から選んで取れる（上の段 ${R.hand_max} 枚・ストック ${R.split_extra} 枚の合わせて ${R.hand_max+R.split_extra} マスが埋まるまで）。<b>取りきるまで、ほかの手は何もできない</b>（山札が光る）。取れる枚数はためられない。取ったところには山から次の字が出る。相手も同じ山札から取るので早い者勝ち（ひとりでは取り合いなし）。`,
+    `<b>ストック</b>：手札（${R.hand_max} マス）の下の ${R.split_extra} マス。字も部品も置ける。割る・くっつけるでできた札は、手札に空きがなければストックに入る（全部で ${R.hand_max+R.split_extra} 枚まで）。山札から取った札も、上の段が埋まっていればストックに入る。ストックの札も選んで使える。`,
+    `<b>はじまり</b>：はじめの手札は ${R.start_hand} 枚。はじめたらすぐ時間が動く。ストックには、使いやすい部品が ${R.start_stock_parts} 枚、最初から入っている。`,
+    `<b>台</b>は並べて見る場所：選んだ札は手札・ストックのマスにいるまま、台にはその写しが出る（枚数は変わらない）。`,
+    `<b>レベル</b>：はじめる前に選ぶ（小1／N5／N4。小1 は小学1年の漢字80字、N4 は N5＋N4 の字）。山に入る字・語・割り方・対義・巡り・同音がレベルで変わる。いまは ${p.levelLabel}（字 ${p.chars}・語 ${p.words}）。`,
+    `<b>遊び方・強さ</b>：はじめる前に選ぶ。CPU戦：とても弱い（CPU は ${R.cpu.weak_interval_sec[0]}〜${R.cpu.weak_interval_sec[1]} 秒に1回）／ふつう（${R.cpu.fair_interval_sec[0]}〜${R.cpu.fair_interval_sec[1]} 秒に1回）／つよい（${R.cpu.interval_sec[0]}〜${R.cpu.interval_sec[1]} 秒に1回）。`,
+    `<b>割る</b>：台の1枚を部品表で一段だけ割る。<b>くっつける</b>：台の2枚を、左→右の順でくっつける。逆に並べたときは「並べる順が逆」と出る。十・口（古・田）や 大・丶（太・犬）のように2通りの字になるときは選ぶ。`,
+    `<b>反転</b>（印：${iconSvg("invert")}）対義の字に。${R.cooldown_sec.invert} 秒待ち。<b>巡り</b>（印：${iconSvg("cycle")}）${p.cycles.join("・")}を1つ先へ。${R.cooldown_sec.cycle} 秒待ち。<b>同音</b>：同じ読みの字から選ぶ。${R.cooldown_sec.homophone} 秒待ち。待ち時間は操作ごとで、二人は別々。`,
+    `<b>引き直し</b>：手札を全部入れ替える（${R.start_hand} 枚）。値段は、その試合で何回目かで上がる（${R.redraw.costs.map(c=>c+" 点").join("→")}）。${R.redraw.costs.length} 回まで。点が足りなくても払える（マイナスになってよい）。`,
+    `<b>勝ち</b>：先に ${R.win.score} 点。または ${p.min} 分たって点の多い方。CPU の速さは強さで変わる。`,
+    `${p.radKeys.join("・")} を左に置いてくっつけられるときは、${p.radVals.join("・")} の形で見せる（札はもとの字のまま）。色の薄い札は部品（字ではない）。`,
+    `<b>ヒント</b>：${R.hint.timed_sec ? `${R.hint.timed_sec} 秒なにも放たない・引き直さないと` : ""}${R.hint.fail_streak ? `${R.hint.timed_sec ? "、または続けて " : "続けて "}${R.hint.fail_streak} 回はじかれると` : ""}、使う札と操作のボタンが光る（${R.hint.glow_sec} 秒。ほかの手をしても残る。光らせた言葉を放つ・光らせた札が無くなる・引き直しを使うと消える）。言葉は文字では出ない。点はかからない。`,
+    `<b>ログ</b>：一手ごとの記録。上の「ログ」で見てコピーできる。終わったら「ログをコピー」が出る。`,
+    ]; },
+    en: (p) => { const R = p.R, S = R.score; return [
+    `<b>Select</b>: tap cards in your hand or stock. A selected card stays in its slot, changes colour and gets a number (1, 2, 3, ...) in its corner. Copies of the selected cards line up on the stand from the left, in the order you picked them. Tap again (the card or its copy) to deselect. The buttons act on the selected cards in that order.`,
+    `<b>Swap / move</b>: drag a card onto another card and release to swap places (hand and stock too). Release on an empty slot to move it there.`,
+    `<b>Play</b>: a word on the stand can be played if it is in the dictionary (2-4 characters). <b>A single character can't be played</b> (even one you made by joining). A word that has been played can't be used again by either player. Played cards disappear (they don't reach your opponent).`,
+    `<b>Points</b>: ${Object.entries(S.by_length).map(([n,p])=>`${n} characters ${p} pts`).join(" · ")}. Four-character idioms x${S.yoji_mult}; the special word (天上天下) another x${S.special_mult}.`,
+    `<b>Take</b>: after you play, take as many cards from the <b>deck</b> as the word had characters (until the ${R.hand_max} top slots and ${R.split_extra} stock slots, ${R.hand_max+R.split_extra} in all, are full). <b>You can't do anything else until you have taken them all</b> (the deck glows). Unused takes can't be saved. A new kanji appears from the pile where you took one. Your opponent takes from the same deck, so it's first come, first served (no rush when you play solo).`,
+    `<b>Stock</b>: the ${R.split_extra} slots below your hand (${R.hand_max} slots). They hold kanji and parts. Cards made by splitting or joining go to the stock when the hand is full (up to ${R.hand_max+R.split_extra} cards in all). Cards taken from the deck go to the stock when the top row is full. You can select and use stock cards too.`,
+    `<b>Start</b>: you begin with ${R.start_hand} cards in hand, and the clock starts right away. The stock begins with ${R.start_stock_parts} handy parts.`,
+    `<b>The stand</b> is where you line cards up: selected cards stay in their slots, and copies appear on the stand (the number of cards doesn't change).`,
+    `<b>Level</b>: chosen before the game (Grade 1 / N5 / N4. Grade 1 is the 80 kanji of elementary grade 1; N4 is the N5 + N4 kanji). The kanji, words, splits, opposites, cycles and same-readings in the deck change with the level. Now: ${p.levelLabel} (${p.chars} kanji, ${p.words} words).`,
+    `<b>Mode and CPU level</b>: chosen before the game. vs CPU: very weak (the CPU moves once every ${R.cpu.weak_interval_sec[0]}-${R.cpu.weak_interval_sec[1]} s) / normal (${R.cpu.fair_interval_sec[0]}-${R.cpu.fair_interval_sec[1]} s) / strong (${R.cpu.interval_sec[0]}-${R.cpu.interval_sec[1]} s).`,
+    `<b>Split</b>: splits one card on the stand by one step in the parts table. <b>Join</b>: joins two cards on the stand, left to right. In the wrong order you'll see "Wrong order". When two kanji are possible (like 十 + 口 gives 古 or 田, 大 + 丶 gives 太 or 犬) you choose.`,
+    `<b>Flip</b> (icon: ${iconSvg("invert")}) turns a kanji into its opposite; ${R.cooldown_sec.invert} s cooldown. <b>Cycle</b> (icon: ${iconSvg("cycle")}) moves one step along ${p.cycles.join(", ")}; ${R.cooldown_sec.cycle} s cooldown. <b>Same reading</b>: choose among kanji read the same way; ${R.cooldown_sec.homophone} s cooldown. Cooldowns are per action, and separate for each player.`,
+    `<b>Redraw</b>: replaces your whole hand (${R.start_hand} cards). The price goes up with each redraw in a game (${R.redraw.costs.map(c=>c+" pts").join(" / ")}), up to ${R.redraw.costs.length} times. You can pay even without enough points (your score can go negative).`,
+    `<b>Winning</b>: first to ${R.win.score} points, or the higher score after ${p.min} minutes. The CPU's speed depends on its level.`,
+    `When ${p.radKeys.join(", ")} sit on the left and can be joined, they are shown as ${p.radVals.join(", ")} (the card is still the original kanji). Pale cards are parts, not kanji.`,
+    `<b>Hint</b>: ${R.hint.timed_sec ? `if you play nothing and don't redraw for ${R.hint.timed_sec} s` : ""}${R.hint.fail_streak ? `${R.hint.timed_sec ? ", or after " : "after "}${R.hint.fail_streak} rejections in a row` : ""}, the cards to use and the button glow (for ${R.hint.glow_sec} s; the glow stays if you do something else, and goes away when you play the hinted word, lose the hinted cards, or redraw). The word itself is never shown. It costs no points.`,
+    `<b>Log</b>: a record of every move. Open it with "Log" above and copy it. When the game ends, "Copy log" appears.`,
+    ]; },
+  };
+  const howto = (p) => HOWTO[lang === "en" ? "en" : "ja"](p);
+  return Object.freeze({ ICON_SHAPES, iconSvg, BUTTONS, LOGO, buttonHtml, redrawNote, TEXT, GEAR_SVG, SENKYO, SHARE_RESULT, SHARE_RESULT_EN, shareResult, hashtag, AORI, AORI_SHARE, NEWS, LANGS, normLang, detectLang, getLang, setLang, t, tr, timeLabel, howto, CORE_EN });
 });

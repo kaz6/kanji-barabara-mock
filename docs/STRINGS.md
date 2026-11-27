@@ -134,3 +134,117 @@
 | 快勝！決め手は『○○』 | 共有：勝ち（○○＝一番点の高い語） | `AORI_SHARE.win` | 仮 |
 | 無念。されど『○○』を放つ | 共有：負け（同上） | `AORI_SHARE.lose` | 仮 |
 | #漢対普請瓦版 | 戦果の共有の最後の行（URL の次）。合言葉の共有には付けない | `TEXT.hashtag` | 作者（「ハッシュタグもつけようぜ」）。タグの字は仮 |
+
+
+## 言語（KJ-127。段1）
+
+言語は 日本語・English の2つ。正本は `js/strings.js` の `U`（ja・en の表。`STR.t(鍵)`）・`CORE_EN`（core.js が日本語で返す文の言い換え。`STR.tr(文)`）・`HOWTO`（遊び方の説明。`STR.howto`）・`SHARE_RESULT_EN`（English の戦果の共有の型）。選んだ言語は localStorage `kj-lang`。**訳は全部仮**（係が作った。英語に強い人が見るまで）。漢字・語・読み（かな）は訳さない。
+日本語のまま残す（段2は P-128）：題字・ルビ・號数・日付・説明の2行・戦況・背景の記事・煽り文句・ログ・操作のボタン（Split など）・チュートリアル・部品の札の意味・くっつく相手・台の行の注・クレジット。`CORE_EN` に無いはじかれた理由・部屋のエラーは English でも日本語。
+
+### 文の表（`U`。例の引数で組んだ形）
+
+| 鍵 | 日本語 | English |
+|---|---|---|
+| `setHead` | はじめる前に選ぶ | Choose before you start |
+| `lblPlay` | 遊び方 | Mode |
+| `lblPower` | 強さ | CPU level |
+| `lblRoom` | 合言葉の部屋 | Room |
+| `lblLevel` | レベル | Level |
+| `lblTime` | 時間 | Time |
+| `lblVib` | 振動 | Vibration |
+| `lblFace` | 札の字 | Card font |
+| `faceTaisho` | 大正風 | Taisho style |
+| `faceMincho` | 明朝 | Mincho |
+| `on` | 入 | On |
+| `off` | 切 | Off |
+| `actHost` | 部屋を作る | Create a room |
+| `actEnter` | 部屋に入る | Join a room |
+| `codePh` | 数字4けた | 4 digits |
+| `codeAria` | 合言葉 | Room code |
+| `enterBtn` | 合言葉で入る | Join with code |
+| `enterNote` | 入る側は、作った人のレベル・時間で遊ぶ | If you join, you play at the host's level and time |
+| `cancel` | やめる | Cancel |
+| `start` | はじめる | Start |
+| `langBtn` | 言語 | Language |
+| `settings` | 設定 | Settings |
+| `counts` | 字 284・語 11036（レベル N4） | 284 kanji, 11036 words; level N4 |
+| `dataFail` | データを読めませんでした（file:// では開けません。Pages かローカルのサーバーで開いてください） | Couldn't load the data (it won't open from file://. Use Pages or a local server) |
+| `roomMaking` | 部屋を作っている… | Creating the room... |
+| `roomHosted` | 合言葉を相手に伝えてください（レベル N5・5分）。相手を待っています | Tell your friend the room code (level N5, 5分). Waiting for them... |
+| `roomFinding` | 部屋を探している… | Looking for the room... |
+| `roomVersion` | 相手と版がちがう（二人とも読み込み直してから、もう一度） | Version mismatch (both of you reload the page, then try again) |
+| `roomTheirs` | 相手の設定：レベル N5・5分 | Host's settings: level N5, 5分 |
+| `roomJoining` | （相手の設定）。入っている… | （相手の設定）. Joining... |
+| `roomWaiting` | （相手の設定）。始まるのを待っています | （相手の設定）. Waiting for the game to start |
+| `roomCancelled` | やめた | Cancelled |
+| `roomHostSet` | 作った人の設定：レベル N5・5分 | Host's settings: level N5, 5分 |
+| `howtoSum` | しくみ | How it works |
+| `again` | もう一度 | Play again |
+| `setupBtn` | 設定を変える | Change settings |
+| `logBtn` | ログ | Log |
+| `copyBtn` | コピー | Copy |
+| `copyLog` | ログをコピー | Copy log |
+| `copied` | コピーした | Copied |
+| `copyFail` | 選んである文字を手でコピーしてください | Please copy the selected text by hand |
+| `shareButton` | 共有 | Share |
+| `shareCopied` | コピーした | Copied |
+| `shareFailed` | 共有できなかった。合言葉を口で伝えてください | Couldn't share. Tell your friend the room code another way |
+| `shareEndFailed` | 共有できなかった | Couldn't share |
+| `shareText` | 漢対普請瓦版 Split & Join — a Kanji Duel⏎漢字を組み合わせて、言葉づくり対戦しよう。合言葉 2901 https://…/?room=2901 | 漢対普請瓦版 Split & Join — a Kanji Duel⏎Combine kanji and make words — a word duel! Room code 2901 https://…/?room=2901 |
+| `hashtag` | #漢対普請瓦版 | #漢対普請瓦版 #KanjiDuel |
+| `msgWin` | 勝ち（48 対 30） | You win (48-30) |
+| `msgLose` | 負け（30 対 48） | You lose (30-48) |
+| `msgDraw` | 引き分け（30 対 30） | Draw (30-30) |
+| `msgSolo` | ひとりで 48 点 | Solo: 48 pts |
+| `esPts` | 点 | pts |
+| `esVs` | 対 | vs |
+| `esPlus` | +9点 | +9 pts |
+| `esMissed` | 見逃した言葉： | Missed word:  |
+| `esReading` | 読み： | Reading:  |
+| `esMeaning` | 意味： | Meaning:  |
+| `esSep` | 　 |    |
+| `esKotoban` | コトバンクで引く | Look up on Kotobank |
+
+### core.js の文の言い換え（`CORE_EN`）
+
+| 日本語（core.js が返す文） | English |
+|---|---|
+| 小1（小学1年の漢字80字） | Grade 1 (the 80 kanji of elementary grade 1) |
+| 小1 | Grade 1 |
+| N4（N5＋N4 の字） | N4 (N5 + N4 kanji) |
+| CPU戦 | vs CPU |
+| 友達と対戦 | vs a friend |
+| とても弱い | Very weak |
+| ふつう | Normal |
+| つよい | Strong |
+| 勝ち！ | You win! |
+| 負け… | You lose... |
+| 引き分け | Draw |
+| おわり | Done |
+| 2字から！ | 2+ characters! |
+| 漢字の札が要る！ | Needs a kanji card! |
+| もう放った言葉！ | Already played! |
+| 順番が逆！ | Wrong order! |
+| 山札から取りきるまで動けない！ | Take from the deck first! |
+| 山札にない！ | Not in the deck! |
+| 辞書にない！ | Not in the dictionary! |
+| 手札もストックもいっぱい！ | Hand and stock are full! |
+| 手札がいっぱい！ | Hand is full! |
+| ストックがいっぱい！ | Stock is full! |
+| くっつかない！ | Doesn't join! |
+| 割れない！ | Can't split! |
+| できない字！ | Not a valid kanji! |
+| 待ち時間！ | Cooling down! |
+| 同じ読みの字がない！ | No kanji with the same reading! |
+| 取れる枚数がない！ | Nothing left to take! |
+| 相手が先に放った！ | Opponent played it first! |
+| 相手が先に取った！ | Opponent took it first! |
+| 引き直しは5回まで！ | Redraw limit: 5! |
+| 合言葉は数字4けた | The room code is 4 digits |
+| つながらない | Can't connect |
+| その合言葉の部屋がない | No room with that code |
+| 合言葉を作れなかった（もう一度） | Couldn't make a room code (try again) |
+| その部屋はもう始まっている | That room has already started |
+| 〇円は一度きり！（円は使った助数詞。人・本・日… も同じ） | Only one 円 per match! |
+
+遊び方の説明（しくみ）17行の English は `js/strings.js` の `HOWTO.en`。戦果の共有の English の型は `SHARE_RESULT_EN`（例：`漢対普請瓦版 第壱號 / （煽り文句。日本語のまま） / Beat CPU (very weak) 48-30 / Winning word: '十円' 9 pts / (N5)⏎URL⏎#漢対普請瓦版 #KanjiDuel`）。
