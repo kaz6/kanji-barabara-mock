@@ -193,7 +193,7 @@
   "乍": {
    "mean": "つくること",
    "q": true,
-   "mean_en": "making; suddenly"
+   "mean_en": "making"
   },
   "虽": {
    "mean": "強 の右がわの形",
@@ -204,7 +204,7 @@
    "name": "おおざと・こざと",
    "mean": "まち・おかのこと",
    "q": true,
-   "name_en": "mound / village",
+   "name_en": "village / mound",
    "mean_en": "a town; a hill"
   },
   "豕": {
@@ -416,7 +416,7 @@
    "name": "ふゆがしら",
    "mean": "ゆっくり行くこと",
    "q": true,
-   "name_en": "winter",
+   "name_en": "winter top",
    "mean_en": "walking slowly"
   },
   "冫": {

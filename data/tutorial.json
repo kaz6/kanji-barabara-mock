@@ -74,7 +74,7 @@
         {
           "op": "take",
           "line": "放つと、字数と同じ枚数を山札から取れる。山札の札を2枚タップして取る",
-          "line_en": "After you play, you take as many cards from the deck as the word had characters. Tap 2 cards in the deck to take them"
+          "line_en": "After you play, take as many cards from the deck as the word had characters. Tap 2 deck cards"
         }
       ],
       "title_en": "Take"

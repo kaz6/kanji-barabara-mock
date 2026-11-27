@@ -98,7 +98,7 @@ test("KJ-128 English でチュートリアルを通す：8段の見出し・案�
       assert.ok(!KANA.test(line), `かなが残っている：${line}`); // 札の漢字（大雨 など）はそのまま。かなは English の文に混ざらない
       assert.match(line, /[A-Za-z]{3}/);
     }
-    assert.match(seen[1][1], /^After you play, you take as many cards/);
+    assert.match(seen[1][1], /^After you play, take as many cards/);
     assert.equal(await page.textContent("#tutGo"), "Start playing");
     assert.deepEqual(errors, []);
     await ctx.close();
