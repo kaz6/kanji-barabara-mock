@@ -52,12 +52,12 @@ test("新しい順（あとに放った言葉が先頭）。放った言葉以�
   assert.deepEqual(K.senkyoLines(null, { me: "あなた", tpl: STR.SENKYO, kana }), []);
 });
 
-test("場から取った字は、その人のその放ちのあとの 取る を「場ヨリ新・話ヲ取ル。」と並べる。取っていなければ文ごと出さない。点 0・十以上も漢数字", () => {
+test("場から取った字は、その人のその放ちのあとの 取る を「山札ヨリ新・話ヲ取ル。」と並べる。取っていなければ文ごと出さない。点 0・十以上も漢数字", () => {
   const log = [L("あなた", "空白", 3), L("あなた", "新", 0, "取る"), L("CPU", "学校名", 9), L("あなた", "話", 0, "取る"), L("CPU", "後", 0, "取る"), L("CPU", "道", 0, "取る"), L("CPU", "午", 0, "取る"), L("あなた", "休日", 12)];
   const r = K.senkyoLines(log, { me: "あなた", tpl: STR.SENKYO, kana: () => "" });
-  assert.equal(r[2].text, "アナタ、空白ヲ放ツ。二字ニテ三点。場ヨリ新・話ヲ取ル。", "あなたの 取る は あなたの文へ（CPU の手が間に入っても）");
-  assert.equal(r[1].text, "CPU、学校名ヲ放ツ。三字ニテ九点。場ヨリ後・道・午ヲ取ル。");
-  assert.equal(r[0].text, "アナタ、休日ヲ放ツ。二字ニテ十二点。", "まだ取っていなければ「場ヨリ」は出ない");
+  assert.equal(r[2].text, "アナタ、空白ヲ放ツ。二字ニテ三点。山札ヨリ新・話ヲ取ル。", "あなたの 取る は あなたの文へ（CPU の手が間に入っても）");
+  assert.equal(r[1].text, "CPU、学校名ヲ放ツ。三字ニテ九点。山札ヨリ後・道・午ヲ取ル。");
+  assert.equal(r[0].text, "アナタ、休日ヲ放ツ。二字ニテ十二点。", "まだ取っていなければ「山札ヨリ」は出ない");
   assert.deepEqual(r[2].takes, ["新", "話"]);
   assert.equal(K.senkyoLines([L("あなた", "休日", 0)], { me: "あなた", tpl: STR.SENKYO, kana: () => "" })[0].text, "アナタ、休日ヲ放ツ。二字ニテ〇点。");
 });
@@ -84,11 +84,11 @@ test("本物の試合の記録から：あなたが放つと文になり、取�
   const c1 = g.field[0].c;
   g.take(g.me, g.field[0].id);
   l = lines(g);
-  assert.ok(l[0].text.endsWith(`場ヨリ${c1}ヲ取ル。`), l[0].text);
+  assert.ok(l[0].text.endsWith(`山札ヨリ${c1}ヲ取ル。`), l[0].text);
   takeAll(g, g.me);
   l = lines(g);
   assert.equal(l[0].takes.length, 2, "放った字数と同じ枚数");
-  assert.match(l[0].text, /場ヨリ.+・.+ヲ取ル。$/);
+  assert.match(l[0].text, /山札ヨリ.+・.+ヲ取ル。$/);
   // CPU が放つ：名前は CPU のまま・あなたの行ではない
   setHand(g, g.cpu, "学校");
   g.addLog(g.cpu.name, "放つ", [..."学校"], [], 6, "");

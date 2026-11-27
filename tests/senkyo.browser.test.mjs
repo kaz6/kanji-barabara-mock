@@ -111,7 +111,7 @@ test("戦況の欄：左に墨の地の縦書きの見出し「戦況」・中�
   } finally { await browser.close(); srv.close(); }
 });
 
-test("戦況の文：放つたびに増える。あなた・CPU の文。読みと点が文に入る。取るたびに「場ヨリ○ヲ取ル。」が足される。放った言葉は漢字のまま（使用済みが読める）", { skip }, async () => {
+test("戦況の文：放つたびに増える。あなた・CPU の文。読みと点が文に入る。取るたびに「山札ヨリ○ヲ取ル。」が足される。放った言葉は漢字のまま（使用済みが読める）", { skip }, async () => {
   const srv = await serve(); const browser = await chromium.launch();
   try {
     const { ctx, page, errors } = await open(browser, `http://127.0.0.1:${srv.address().port}/index.html`);
@@ -124,18 +124,18 @@ test("戦況の文：放つたびに増える。あなた・CPU の文。読み�
     assert.match(t[0], /^アナタ、休日（キュウジツ）ヲ放ツ。二字ニテ三点。$/, "放った直後（まだ取っていない）");
     await page.locator("#field .tile").nth(0).click();
     t = await lisText(page);
-    assert.match(t[0], /^アナタ、休日（キュウジツ）ヲ放ツ。二字ニテ三点。場ヨリ[^・]+ヲ取ル。$/, "1枚取ったら 場ヨリ○ヲ取ル。");
+    assert.match(t[0], /^アナタ、休日（キュウジツ）ヲ放ツ。二字ニテ三点。山札ヨリ[^・]+ヲ取ル。$/, "1枚取ったら 山札ヨリ○ヲ取ル。");
     await page.locator("#field .tile").nth(1).click();
     t = await lisText(page);
     assert.equal(t.length, 1, "取っても行は増えない");
-    assert.match(t[0], /^アナタ、休日（キュウジツ）ヲ放ツ。二字ニテ三点。場ヨリ[^・]+・[^・]+ヲ取ル。$/, "2枚取り終えた");
+    assert.match(t[0], /^アナタ、休日（キュウジツ）ヲ放ツ。二字ニテ三点。山札ヨリ[^・]+・[^・]+ヲ取ル。$/, "2枚取り終えた");
     assert.equal(await page.textContent("#takes"), "");
     // CPU が放つ：新しい行が右（先頭）に
     await addRel(page, [["cpu", "学校名", 9, ["後", "道", "午"]]]);
     t = await lisText(page);
     assert.equal(t.length, 2);
     assert.match(t[0], /^CPU、学校名/, "新しい順（先頭が新しい）");
-    assert.match(t[0], /三字ニテ九点。場ヨリ後・道・午ヲ取ル。$/);
+    assert.match(t[0], /三字ニテ九点。山札ヨリ後・道・午ヲ取ル。$/);
     assert.match(t[1], /^アナタ、休日/);
     // 放った言葉そのものは漢字のまま＝札の字（--kanji）で出る
     const w = await page.$$eval("#released li .w", (a) => a.map((x) => ({ t: x.textContent, ff: getComputedStyle(x).fontFamily })));

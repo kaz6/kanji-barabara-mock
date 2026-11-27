@@ -150,7 +150,7 @@ test("放ったあと、取りきるまで：案内は取る。ほかの手は�
   assert.equal(g.me.takes, 2);
   assert.equal(tut.act().op, "take");
   assert.equal(tut.stepNo(), 2);
-  assert.match(tut.line(), /場の札を2枚タップして取る/);
+  assert.match(tut.line(), /山札の札を2枚タップして取る/);
   assert.equal(g.split(g.me, ids(g, "好")).ok, false, "取りきるまで割れない");
   assert.equal(tut.canSelect("好"), false);
   assert.equal(tut.buttonOn("bRelease"), false);
@@ -179,7 +179,7 @@ test("段3 以降の放ったあとの取るは、案内だけ取るに替わり
   PLAY.release(t2, t2.act());
   assert.equal(g2.me.takes, 2);
   assert.equal(t2.stepNo(), 4);
-  assert.match(t2.line(), /場から自動で取る（あと 2 枚）/);
+  assert.match(t2.line(), /山札から自動で取る（あと 2 枚）/);
   assert.equal(t2.glow().chars.length, 0, "取るあいだは札もボタンも光らせない");
   assert.equal(t2.autoPending(), true, "段2 のあとは自動で取る番");
   takeAll(t2);
@@ -300,7 +300,7 @@ test("段7 の 気分 のあと：取りきるまで段7 のまま、取りき�
   assert.equal(tut.stepNo(), 7, "取りきるまで画面の段は 7");
   assert.equal(tut.title(), "同音");
   assert.equal(tut.atEnd(), false);
-  assert.match(tut.line(), /場から自動で取る（あと 2 枚）/);
+  assert.match(tut.line(), /山札から自動で取る（あと 2 枚）/);
   assert.equal(tut.autoTake().ok, true);
   assert.equal(tut.stepNo(), 7, "1枚ではまだ");
   assert.equal(tut.autoTake().ok, true);
@@ -329,7 +329,7 @@ test("自動取り：段2 は人が取る（自動にならない）。段3 以�
   assert.equal(tut.autoPending(), false, "段2 は人がタップして取る");
   assert.equal(tut.autoTake().ok, false, "段2 では自動で取らない");
   assert.equal(g.me.takes, 2);
-  assert.match(tut.line(), /場の札を2枚タップして取る/);
+  assert.match(tut.line(), /山札の札を2枚タップして取る/);
   takeAll(tut);
   PLAY.split(tut, tut.act()); PLAY.release(tut, tut.act());
   assert.equal(tut.autoPending(), true, "段3 の 女子 のあとは自動");

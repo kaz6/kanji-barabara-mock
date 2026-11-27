@@ -129,7 +129,7 @@ test("画面", { skip }, async (t) => {
       await tap("休"); await tap("日");
       await page.click("#bRelease");
       assert.match(await page.textContent("#meScore"), /^3 点/);
-      assert.match(await page.textContent("#takes"), /場から あと 2 枚 取る/);
+      assert.match(await page.textContent("#takes"), /山札から あと 2 枚 取る/);
       assert.equal(await page.locator("#field.glow").count(), 1, "放ったあと、取りきるまで場が光る（KJ-039）");
       assert.equal(await page.evaluate(() => [...document.querySelectorAll(".ops button")].every((b) => b.disabled || b.getAttribute("aria-disabled") === "true")), true, "取りきるまで、ほかのボタンは全部押せない（KJ-039）");
       assert.equal(await pos("#field > *"), field0);
@@ -141,7 +141,7 @@ test("画面", { skip }, async (t) => {
       assert.equal(await page.evaluate(() => document.getElementById("bRedraw").getAttribute("aria-disabled")), "false", "取りきったら動ける");
       assert.equal(await page.locator("#meHand .tile", { hasText: "山" }).count(), 1, "山 が手札に来た");
       assert.equal(await pos("#field > *"), field0, "取ったあとも場の位置は同じ");
-      assert.match(await page.textContent("#released"), /^アナタ、休日（キュウジツ）ヲ放ツ。二字ニテ三点。場ヨリ山・川ヲ取ル。$/); // 戦況の文（KJ-094）：読みと点は文の中・取った字が足される
+      assert.match(await page.textContent("#released"), /^アナタ、休日（キュウジツ）ヲ放ツ。二字ニテ三点。山札ヨリ山・川ヲ取ル。$/); // 戦況の文（KJ-094）：読みと点は文の中・取った字が足される
       // 引き直し（1回目は0点。KJ-049）：添え字は次の値段と残りの回数
       assert.equal(await page.textContent("#cdRedraw"), "0pt あと5回", "はじめは 0pt あと5回");
       await holdRedraw(page);
@@ -629,7 +629,7 @@ test("画面", { skip }, async (t) => {
       await page.click("#bBack");
       await page.evaluate(() => { __KJ.game.me.takes = 2; __KJ.render(); });
       assert.equal(await page.evaluate(() => __KJ.game.handCount(__KJ.game.me)), 8);
-      assert.match(await page.textContent("#takes"), /場から あと 2 枚 取る/);
+      assert.match(await page.textContent("#takes"), /山札から あと 2 枚 取る/);
       assert.equal(await page.locator("#field.glow").count(), 1, "場が光る");
       await page.locator("#field .tile").nth(0).click();
       assert.equal(await page.evaluate(() => __KJ.game.handCount(__KJ.game.me)), 8, "上の段は8のまま");
@@ -1220,7 +1220,7 @@ test("画面", { skip }, async (t) => {
       // 「取る」の文も出した形（放ったあとは札を選べないので、選んだあとに取れる枚数を足す。KJ-039）
       await page.evaluate(() => { __KJ.game.me.takes = 2; __KJ.render(); });
       assert.equal(await page.locator("#row .tile").count(), 4, "取れる枚数が付いても台の写しは残る");
-      assert.match(await page.textContent("#takes"), /場から あと 2 枚 取る/);
+      assert.match(await page.textContent("#takes"), /山札から あと 2 枚 取る/);
       const parts = await page.evaluate(() => {
         const box = (sel) => [...document.querySelectorAll(sel)].map((e) => { const r = e.getBoundingClientRect(); return { sel, l: r.left, t: r.top, r: r.right, b: r.bottom, w: r.width, h: r.height, shown: r.width > 0 && r.height > 0 }; });
         return [].concat(
@@ -2243,7 +2243,7 @@ test("画面", { skip }, async (t) => {
     s = await look();
     assert.ok(s.f.length === 3 && s.f.every((x) => x.bc === GOLD && x.bw >= 3), `取る番は場の札が金の太い枠（${JSON.stringify(s.f)}）`);
     assert.equal(s.h, GOLD, "場の見出しも金");
-    assert.match(s.text, /場から あと 2 枚 取る/);
+    assert.match(s.text, /山札から あと 2 枚 取る/);
     assert.ok(s.h1 <= 24 && !s.over, `文は1行で折り返さない（高さ${s.h1}）`);
     assert.ok(s.topIn, "文は場の上（卓の頭）にある");
     assert.ok(s.right <= 375, "文が画面の横に収まる");

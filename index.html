@@ -172,8 +172,8 @@ body.playing .mast{display:none}
 /* 台（高さを固定する） */
 /* 卓（KJ-042）：場と台が乗る真ん中を墨色の単色の面に。囲み線はやめ、色の面で分ける */
 .table{position:relative;background:transparent;color:var(--on-table);border-radius:0;border-top:3px solid var(--ink);border-bottom:3px solid var(--ink);padding:10px 0 12px 28px;margin:10px 0}
-/* 卓の左の縦書きの見出し「卓　場と台」（KJ-093。新聞の囲み記事の見出し。字は飾りなので読み上げには出ない・押せない） */
-.table::before{content:"卓　場と台";position:absolute;left:0;top:0;bottom:0;width:20px;writing-mode:vertical-rl;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;letter-spacing:.35em;border-right:1px solid var(--ink);pointer-events:none}
+/* 卓の左の縦書きの見出し「卓に並ぶ」（KJ-093。新聞の囲み記事の見出し。字は飾りなので読み上げには出ない・押せない） */
+.table::before{content:"卓に並ぶ";position:absolute;left:0;top:0;bottom:0;width:20px;writing-mode:vertical-rl;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;letter-spacing:.35em;border-right:1px solid var(--ink);pointer-events:none}
 .table .side{margin:0 0 8px}
 .table .side-head{height:auto;margin-bottom:0}
 .table .side-head b{color:var(--on-table)}
@@ -509,7 +509,7 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
   <section class="table">
   <div class="takesline"><span class="takes" id="takes"></span></div>
   <section class="side fieldside" id="fieldSide">
-    <div class="side-head"><b>場</b></div>
+    <div class="side-head"><b>山札</b></div>
     <div class="field" id="field"></div>
   </section>
 
@@ -1400,7 +1400,7 @@ function renderField(){
   $("fieldSide").classList.toggle("take",can); // 取る番：場の見出しも金（KJ-046）
   el.style.gridTemplateColumns=`repeat(${D.rules.field_size},1fr)`;
   for(const x of G.field)el.appendChild(tileEl(x,{onClick:()=>tapField(x.id)}));
-  $("takes").textContent=!G.over&&G.me.takes>0&&!(TUT&&autoTok)?`場から あと ${G.me.takes} 枚 取る（タップ）`:"";
+  $("takes").textContent=!G.over&&G.me.takes>0&&!(TUT&&autoTok)?`山札から あと ${G.me.takes} 枚 取る（タップ）`:"";
 }
 // ゲージ（KJ-034）：待っている間は class cd と --g（0〜1）。待ちが明けたら外して、小さく光らせる（full）
 function gauge(b,waiting,f){
@@ -1629,8 +1629,8 @@ function buildHowto(){
     `<b>入れ替え・移す</b>：札を指で引きずって、別の札の上で離すと位置が入れ替わる（手札とストックの間でもよい）。空いたマスの上で離すと、そこへ移る。`,
     `<b>放つ</b>：台の札が辞書の語（2〜4字）なら放てる。<b>1字では放てない</b>（くっつけて作った字でも同じ）。一度放った言葉は二人とも二度と使えない。放った札は消える（相手には届かない）。`,
     `<b>点数</b>：${Object.entries(S.by_length).map(([n,p])=>`${n}字 ${p}点`).join("・")}。四字熟語は ${S.yoji_mult} 倍、特別な語（天上天下）はさらに ${S.special_mult} 倍。`,
-    `<b>取る</b>：放ったら、放った字数と同じ枚数を<b>場</b>から選んで取れる（上の段 ${R.hand_max} 枚・ストック ${R.split_extra} 枚の合わせて ${R.hand_max+R.split_extra} マスが埋まるまで）。<b>取りきるまで、ほかの手は何もできない</b>（場の札が光る）。取れる枚数はためられない。取ったところには山から次の字が出る。相手も同じ場から取るので早い者勝ち（ひとりでは取り合いなし）。`,
-    `<b>ストック</b>：手札（${R.hand_max} マス）の下の ${R.split_extra} マス。字も部品も置ける。割る・くっつけるでできた札は、手札に空きがなければストックに入る（全部で ${R.hand_max+R.split_extra} 枚まで）。場から取った札も、上の段が埋まっていればストックに入る。ストックの札も選んで使える。`,
+    `<b>取る</b>：放ったら、放った字数と同じ枚数を<b>山札</b>から選んで取れる（上の段 ${R.hand_max} 枚・ストック ${R.split_extra} 枚の合わせて ${R.hand_max+R.split_extra} マスが埋まるまで）。<b>取りきるまで、ほかの手は何もできない</b>（山札が光る）。取れる枚数はためられない。取ったところには山から次の字が出る。相手も同じ山札から取るので早い者勝ち（ひとりでは取り合いなし）。`,
+    `<b>ストック</b>：手札（${R.hand_max} マス）の下の ${R.split_extra} マス。字も部品も置ける。割る・くっつけるでできた札は、手札に空きがなければストックに入る（全部で ${R.hand_max+R.split_extra} 枚まで）。山札から取った札も、上の段が埋まっていればストックに入る。ストックの札も選んで使える。`,
     `<b>はじまり</b>：はじめの手札は ${R.start_hand} 枚。はじめたらすぐ時間が動く。ストックには、使いやすい部品が ${R.start_stock_parts} 枚、最初から入っている。`,
     `<b>台</b>は並べて見る場所：選んだ札は手札・ストックのマスにいるまま、台にはその写しが出る（枚数は変わらない）。`,
     `<b>レベル</b>：はじめる前に選ぶ（小1／N5／N4。小1 は小学1年の漢字80字、N4 は N5＋N4 の字）。山に入る字・語・割り方・対義・巡り・同音がレベルで変わる。いまは ${K.levelLabel(T.level)}（字 ${T.CHARS.size}・語 ${T.WORDS.size}）。`,

@@ -275,7 +275,7 @@ test("色：紙・札・墨・弁柄。字と地の明暗差は 4.5 以上（表
   } finally { await browser.close(); srv.close(); }
 });
 
-test("罫線と形：卓の上下は太い罫線・左に縦書きの見出し「卓　場と台」・操作5つは罫線で仕切った一続きの段・選んだ札は弁柄の縁・角丸はやめた", { skip }, async () => {
+test("罫線と形：卓の上下は太い罫線・左に縦書きの見出し「卓に並ぶ」・操作5つは罫線で仕切った一続きの段・選んだ札は弁柄の縁・角丸はやめた", { skip }, async () => {
   const srv = await serve(); const browser = await chromium.launch();
   try {
     const url = `http://127.0.0.1:${srv.address().port}/index.html`;
@@ -292,7 +292,7 @@ test("罫線と形：卓の上下は太い罫線・左に縦書きの見出し�
     });
     assert.deepEqual(st.top, ["3px", "solid", "rgb(42, 38, 34)"]);
     assert.deepEqual(st.bottom, ["3px", "solid"]);
-    assert.equal(st.content, '"卓　場と台"');
+    assert.equal(st.content, '"卓に並ぶ"');
     assert.equal(st.mode, "vertical-rl");
     assert.ok(st.leftPad > st.headW, "見出しが札や台に重ならない");
     assert.deepEqual(st.setBorder, ["1px", "solid"], "操作5つの外側の罫線");
