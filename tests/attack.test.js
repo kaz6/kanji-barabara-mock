@@ -170,8 +170,8 @@ test("ログ：効かされた側（CPU）の行として残る。手は 割る�
 
 test("待ち時間はかけない・使わない：効かされた側の待ち時間はそのまま", () => {
   const { g } = human("回転", "六年年年年年年年");
-  assert.deepEqual(g.cpu.cd, { invert: 0, cycle: 0, homophone: 0 });
-  assert.deepEqual(g.me.cd, { invert: 0, cycle: 0, homophone: 0 });
+  assert.deepEqual(g.cpu.cd, { split: 0, invert: 0, cycle: 0, homophone: 0 });
+  assert.deepEqual(g.me.cd, { split: 0, invert: 0, cycle: 0, homophone: 0 });
   assert.equal(g.cpu.takes, 0, "相手は場から取る枚数も増えない");
 });
 

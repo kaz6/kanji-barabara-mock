@@ -11,6 +11,7 @@ test("割る：休→人木、吾→五口。一段だけ", () => {
   let r = g.split(g.me, [id]);
   assert.ok(r.ok);
   assert.equal(chars(g.me.cards), "人木");
+  g.clock.t += D.rules.cooldown_sec.split; // KJ-138：割るの待ち時間が満ちてから次を割る
   [id] = setHand(g, g.me, "語");
   r = g.split(g.me, [id]);
   assert.equal(chars(r.cards), "言吾", "語 は一段で 言 吾 まで");
@@ -328,6 +329,7 @@ test("割る：手札8＋ストックの全部（rules.json の値。いまは8�
   for (let i = 0; i < X - 1; i++) { // ストックがいっぱいになるまで、手札の1枚を 休 にして割る
     const hand = g.me.cards.find((x) => !x.tray && x.c === "一");
     hand.c = "休";
+    g.clock.t += D.rules.cooldown_sec.split; // KJ-138：割るの待ち時間が満ちてから次を割る
     assert.ok(g.split(g.me, [hand.id]).ok);
   }
   assert.equal(g.me.cards.length, ALL);
@@ -335,6 +337,7 @@ test("割る：手札8＋ストックの全部（rules.json の値。いまは8�
   assert.equal(g.handCount(g.me), 8);
   const spare = g.me.cards.find((x) => !x.tray && (x.c === "一" || x.c === "人")); // 手札の1枚を 休 にする
   spare.c = "休";
+  g.clock.t += D.rules.cooldown_sec.split; // KJ-138：待ち時間が満ちてから（理由の順は 割れない → 待ち時間 → いっぱい。反転などと同じ）
   assert.equal(g.split(g.me, [spare.id]).why, "手札もストックもいっぱい", "いっぱいで割れない");
   assert.equal(g.me.cards.length, ALL);
 });
@@ -1163,6 +1166,7 @@ test("ストック：割る・くっつけるでできた札は、字も部品�
   g.split(g.me, [g.me.cards[0].id]); // 人木：人は 休 の位置、木 はストックへ
   assert.deepEqual(g.me.cards.filter((x) => x.tray).map((x) => x.c), ["木"], "字（木）もストックへ");
   const ko = g.me.cards.find((x) => x.c === "古");
+  g.clock.t += D.rules.cooldown_sec.split; // KJ-138
   g.split(g.me, [ko.id]); // 十口：口 はストックへ
   assert.deepEqual(g.me.cards.filter((x) => x.tray).map((x) => x.c), ["木", "口"]);
 });
@@ -2189,6 +2193,7 @@ test("玉＝王＋丶：国→玉→王 と割れる（N5・N4・小1）。王 �
   let [id] = setHand(g, g.me, "国");
   assert.equal(chars(g.split(g.me, [id]).cards), "囗玉");
   const [yu] = g.me.cards.filter((c) => c.c === "玉").map((c) => c.id);
+  g.clock.t += D.rules.cooldown_sec.split; // KJ-138
   assert.equal(chars(g.split(g.me, [yu]).cards), "王丶", "玉 をもう一度割ると 王 と 丶");
   assert.equal(g.join(g.me, g.me.cards.filter((c) => "王丶".includes(c.c)).map((c) => c.id)).ok, true);
 });
@@ -2274,6 +2279,7 @@ test("KJ-054：2枚選んで Split → 最後に選んだ札が割れる。前�
   assert.equal(last.op, "割る");
   assert.deepEqual(last.from, ["休"]);
   // 3枚：前の2枚の順番もそのまま
+  g.clock.t += D.rules.cooldown_sec.split; // KJ-138
   const [x, y, z] = setHand(g, g.me, "木上休");
   const r3 = g.split(g.me, [y, x, z]);
   assert.ok(r3.ok);

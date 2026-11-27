@@ -61,6 +61,7 @@ test("耂（KJ-114）：教 → 孝 → 耂 と割り、耂 を割ると 土・�
     assert.equal(await page.evaluate(() => __KJ.game.T.level), "N4");
     await pick(page, "教"); await page.click("#bSplit");
     assert.ok((await hand(page)).includes("孝"), await hand(page));
+    await page.evaluate(() => { __KJ.game.me.cd.split = 0; __KJ.render(); }); // KJ-138：割るの待ち時間は満ちたことにする
     await pick(page, "攵"); await page.click("#bSplit"); // 割ったあとは 孝・攵 が選ばれたまま。攵 を外して 孝 だけ割る
     let h = await hand(page);
     assert.ok(h.includes("耂") && h.includes("子") && !h.includes("孝"), h);
@@ -68,6 +69,7 @@ test("耂（KJ-114）：教 → 孝 → 耂 と割り、耂 を割ると 土・�
     await page.evaluate(() => { __KJ.game.me.cards = [..."耂人木休辶川"].map((c, i) => ({ id: 9200 + i, c, t: 0, fresh: false })); __KJ.render(); });
     await pick(page, "耂");
     await shot(page, "oigashira-1-selected-375x667.png");
+    await page.evaluate(() => { __KJ.game.me.cd.split = 0; __KJ.render(); }); // KJ-138：割るの待ち時間は満ちたことにする（時間に頼らない）
     assert.equal(await page.getAttribute("#bSplit", "aria-disabled"), "false", "耂 は割れる");
     await page.click("#bSplit");
     h = await hand(page);

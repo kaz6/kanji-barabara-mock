@@ -50,6 +50,7 @@ npm test
 - `tests/radical.test.js`・`tests/radical.browser.test.mjs`：部品の札の意味（KJ-021。部品すべてに行がある・radical_forms と食い違わない・一行の形・一覧にそろっている／画面：部品の札を選ぶと台の行に出る・字の札では出ない・外すと消える）
 - `tests/reach.test.js`：丶 の行き先（KJ-077。行き先だけの字・レベルごとの出番〔勺は出番なし〕・くっつける・割る・面で落とす・語・ストック）。KJ-113：旧＝｜＋日（くっつける・割る・面で落とす・語・CPU・ヒント）と、画面の tests/kyuu.browser.test.mjs（中 を割って ｜ を出し、日 と Join で 旧。日｜ の並びは押せない。`KJ_SHOT_KYUU=<フォルダ>` で画像を書く）。KJ-137：良＝丶＋艮（N4 でだけ出番・逆順は通らない・割る・面で落とす〔top／bottom〕・語37）と、画面の tests/ryou.browser.test.mjs（N4 で 銀 を割って 艮 を出し、丶 と Join で 良。艮丶 の並びは押せない。`KJ_SHOT_RYOU=<フォルダ>` で画像を書く）
 - `tests/proper_names.test.js`：地名・名字（KJ-032。一覧の数・手に持てるときだけ語に入る・印と読み・点数は普通と同じ・下の名前は通らない）と、全レベルで外す語（買春・売春）
+- `tests/splitcd.test.js`・`tests/splitcd.browser.test.mjs`：割る（Split）の待ち時間（KJ-138。`data/rules.json` の `cooldown_sec.split` 5秒〔仮〕。続けて割れない・理由は 待ち時間・満ちたら割れる・割れなかったときは始まらない・人ごと・whyNot と同じ順・CPU・ヒント・しくみの説明・巡りと割るをくり返す裏技が待たされる／画面：ゲージ・押せない見え方）
 - `tests/tan.test.js`：旦 を 日＋一 に割る（KJ-098。N4 でだけ・昼 は今のまま・日＋一 は 目 と 旦 の2つ〔選びの一覧・面で落とす〕・N5／小1 は 目 だけ）
 - `tests/shinnyo.test.js`・`tests/shinnyo.browser.test.mjs`：辶 を点1つで見せる（KJ-116。データは U+8FB6 のまま・Shippori／Kaisei／Zen の範囲に U+8FB6 が無く kj-glyphs にある／画面：大正風・明朝の両方で 辶 が点1つ〔墨のつながり2〕）。`KJ_SHOT_SHINNYO=<フォルダ>` で画像を書く
 - `tests/kuchi.test.js`：囗 を 口 として読む（KJ-096。囗＋人 で 人口・点は普通と同じ・回 は今のまま・ろ にならない・CPU とヒントも使う）

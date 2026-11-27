@@ -74,6 +74,7 @@ test("旧（KJ-113）：中 を割って ｜ を出し、日 と並べて Join �
     assert.equal([...h2].filter((c) => c === "日").length, 0, "日 は 旧 になった：" + h2);
     await shot(page, "kyuu-3-joined-375x667.png");
     // 割ると ｜ と 日 に戻る
+    await page.evaluate(() => { __KJ.game.me.cd.split = 0; __KJ.render(); }); // KJ-138：割るの待ち時間は満ちたことにする（時間に頼らない）
     await page.click("#bSplit"); // くっつけた 旧 は選ばれたまま
     const h3 = await hand(page);
     assert.ok(h3.includes("｜") && h3.includes("日") && !h3.includes("旧"), h3);

@@ -39,6 +39,7 @@ test("割る：耂 → 土 ノ。者 → 耂 日 は今のまま。耂 は字と
   const r = g.split(g.me, [a]);
   assert.ok(r.ok, r.why);
   assert.equal(chars(r.cards), "土ノ");
+  g.clock.t += D.rules.cooldown_sec.split; // KJ-138：割るの待ち時間が満ちてから次を割る
   const [t] = setHand(g, g.me, "者");
   assert.equal(chars(g.split(g.me, [t]).cards), "耂日");
   assert.equal(K.isChar(T4, "耂"), false);
