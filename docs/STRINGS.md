@@ -174,6 +174,7 @@
 | `roomMaking` | 部屋を作っている… | Creating the room... |
 | `roomHosted` | 合言葉を相手に伝えてください（レベル N5・5分）。相手を待っています | Tell your friend the room code (level N5, 5分). Waiting for them... |
 | `roomFinding` | 部屋を探している… | Looking for the room... |
+| `roomEntering` | 部屋に入っています… | Joining the room... |（KJ-149：共有のリンクで開いたとき）
 | `roomVersion` | 相手と版がちがう（二人とも読み込み直してから、もう一度） | Version mismatch (both of you reload the page, then try again) |
 | `roomTheirs` | 相手の設定：レベル N5・5分 | Host's settings: level N5, 5分 |
 | `roomJoining` | （相手の設定）。入っている… | （相手の設定）. Joining... |

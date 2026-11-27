@@ -1343,11 +1343,12 @@ async function hostNow(){
   me.code=h.code;roomUi();
   setRoomMsg(STR.t("roomHosted",STR.tr(K.levelShort(level)),STR.timeLabel(timeLimit)));
 }
-$("bEnter").onclick=async()=>{
+// KJ-149：共有のリンク（?room=）で開いたら、押さなくても入る（auto）。入れたら URL から ?room= を外す（再読み込みで二度入ろうとしないため）。入れなかったら今の画面（［部屋に入る］が選ばれ合言葉が入った状態）に理由を出す
+async function enterRoom(auto){
   if(ROOM)return;
   const code=$("roomCode").value.trim().replace(/[０-９]/g,d=>String.fromCharCode(d.charCodeAt(0)-0xFEE0)); // 全角の数字も受ける
   const me={role:"guest",code,entry:linkCode&&code===linkCode?"link":"typed"}; // 入り方（KJ-123）：?room= の合言葉のまま入った＝リンク／打った＝手入力
-  ROOM=me;roomUi();setRoomMsg(STR.t("roomFinding"));
+  ROOM=me;roomUi();setRoomMsg(STR.t(auto?"roomEntering":"roomFinding"));
   const f=await K.findRoom(CLAIMS,code,Date.now()/1000);
   if(ROOM!==me)return;
   if(!f.ok){ROOM=null;roomUi();setRoomMsg(STR.tr(f.why));return}
@@ -1359,8 +1360,10 @@ $("bEnter").onclick=async()=>{
   const j=await K.joinRoom(CLAIMS,me.matchId);
   if(ROOM!==me)return;
   if(!j.ok){cancelRoom();setRoomMsg(STR.tr(j.why));return}
+  if(linkCode){try{history.replaceState(null,"",location.pathname+location.hash)}catch(e){}} // KJ-149：?room= を外す
   setRoomMsg(STR.t("roomWaiting",set));
-};
+}
+$("bEnter").onclick=()=>enterRoom(false);
 // 二人とも 'start' 行が届いたときに始める。始まりの時刻はその行の created_at から
 function beginRoom(startRow){
   const rm=ROOM;if(!rm||!rm.matchId||MC)return;
@@ -1889,7 +1892,7 @@ window.__KJ={get game(){return G},get tut(){return TUT},get row(){return row},ge
 STR.setLang(STR.detectLang(lsGet(LANG_KEY),navigator.language));applyStatic(); // 言語（KJ-127）。データを待たずに文を入れる
 fillNews();window.addEventListener("resize",fillNews); // 背景の記事（KJ-094）。データを待たずに敷く
 Promise.all(K.FILES.map(f=>fetch(`data/${f}.json`).then(r=>r.json()).then(j=>D[f]=j)))
-  .then(()=>{preloadFx();loadSettings();if(bgmOn&&bgmCfg())bgmLoad();applyRoomLink();refreshMast();T=tablesFor(level);buildPickers();buildHowto();showCounts();roomUi();tutorialBtn();$("bTutorial").hidden=false})
+  .then(()=>{preloadFx();loadSettings();if(bgmOn&&bgmCfg())bgmLoad();applyRoomLink();refreshMast();T=tablesFor(level);buildPickers();buildHowto();showCounts();roomUi();tutorialBtn();$("bTutorial").hidden=false;if(linkCode)enterRoom(true)}) // KJ-149
   .catch(e=>{$("setupInfo").textContent=STR.t("dataFail")});
 </script>
 </body>

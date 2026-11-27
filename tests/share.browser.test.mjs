@@ -1,5 +1,5 @@
 // 合言葉の共有の画面（KJ-107）：部屋を作ると「共有」が出る・navigator.share に ?room= 付きのリンクが渡る・share が無いとクリップボードに写る・
-// ?room= で開くと「友だちと」が選ばれ合言葉が入っている（まだ入っていない）・合わない合言葉は入らない。kj_claims は page.route の偽物。本物の Supabase には出さない
+// ?room= で開くとそのまま部屋に入る（KJ-149）・入れなければ［部屋に入る］が選ばれ合言葉が入った画面に戻り理由が出る・合わない合言葉は入らない。kj_claims は page.route の偽物。本物の Supabase には出さない
 // Playwright の Chromium がないと skip になる。skip は「通った」ではない
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -155,25 +155,34 @@ test("合言葉の共有の画面（KJ-107）", { skip }, async (t) => {
       await A.ctx.close();
     });
 
-    await t.test("?room=合言葉 で開く：「友達と対戦」と［部屋に入る］が選ばれ、入る側の欄に合言葉が入っている。まだ入っていない", async () => {
+    await t.test("?room=合言葉 で開く（KJ-149）：押さなくても入ろうとして「部屋に入っています…」を出す。部屋が無ければ［部屋に入る］が選ばれ合言葉が入った画面に戻り、理由が出る", async () => {
       const claimsHits = [];
-      const handler = async (route) => { claimsHits.push(route.request().method()); return fakeClaims()(route); };
+      const fake = fakeClaims();
+      const handler = async (route) => { claimsHits.push(route.request().method()); await new Promise((r) => setTimeout(r, 700)); return fake(route); };
       const B = await open(browser, base + "?room=4821", { handler, pre: "localStorage.setItem('kj-opponent', 'normal')" });
       assert.equal(await B.page.isChecked('#opp input[value="room"]'), true);
       assert.equal(await B.page.isVisible("#roomBox"), true);
       assert.equal(await B.page.isChecked('#act input[value="enter"]'), true, "［部屋に入る］が選ばれている（KJ-123）");
-      assert.equal(await B.page.isChecked('#act input[value="host"]'), false);
-      assert.equal(await B.page.isVisible("#lvl"), false, "入る側にレベル・時間は出ない");
       assert.equal(await B.page.inputValue("#roomCode"), "4821");
-      assert.equal(await B.page.isVisible("#game"), false, "勝手に入らない");
-      await B.page.waitForTimeout(400);
-      assert.deepEqual(claimsHits, [], "押すまで kj_claims に何も送らない");
-      assert.equal(await B.page.isEnabled("#bEnter"), true);
-      if (shots) await B.page.screenshot({ path: path.join(shots, "link-375x667.png") });
+      assert.equal((await B.page.textContent("#roomMsg")).trim(), "部屋に入っています…", "入るまでの間の1行");
+      assert.equal(await B.page.isDisabled("#bEnter"), true, "入っている間は押せない");
+      if (shots) await B.page.screenshot({ path: path.join(shots, "link-joining-375x667.png") });
+      // 3つ目：開いた直後の間でも「しくみ」の開き口が見える（待っている間の画面）
+      assert.equal(await B.page.isVisible("details > summary"), true, "待っている間も「しくみ」の開き口が見える");
+      await B.page.waitForFunction(() => { const m = document.getElementById("roomMsg").textContent; return m && m !== "部屋に入っています…"; }, null, { timeout: 8000 });
+      const why = (await B.page.textContent("#roomMsg")).trim();
+      assert.ok(why.length > 0 && !/入っています/.test(why), "入れなかった理由が出る：" + why);
+      assert.ok(claimsHits.length > 0, "開いただけで kj_claims を探しに行く");
+      assert.equal(await B.page.isChecked('#act input[value="enter"]'), true, "入れなくても［部屋に入る］が選ばれたまま");
+      assert.equal(await B.page.inputValue("#roomCode"), "4821", "合言葉が入ったまま");
+      assert.equal(await B.page.isEnabled("#bEnter"), true, "押して入り直せる");
+      assert.equal(await B.page.isVisible("#game"), false);
+      assert.equal(await B.page.isVisible("#lvl"), false, "入る側にレベル・時間は出ない");
+      if (shots) await B.page.screenshot({ path: path.join(shots, "link-failed-375x667.png") });
       // 端末に覚えた遊び方は書き換えない
       const stored = await B.page.evaluate(() => { try { return localStorage.getItem("kj-opponent"); } catch (e) { return "x"; } });
       assert.equal(stored, "normal", "端末に覚えた遊び方（つよい）は書き換えない");
-      assert.deepEqual(B.errors, []);
+      assert.deepEqual(B.errors.filter((e) => !/Failed to load resource/.test(e)), []);
       await B.ctx.close();
     });
 
@@ -188,7 +197,7 @@ test("合言葉の共有の画面（KJ-107）", { skip }, async (t) => {
       }
     });
 
-    await t.test("リンクで開いた人が「合言葉で入る」を押すと、作った人の部屋に入って二人で始まる", async () => {
+    await t.test("リンクで開いた人は押さずに作った人の部屋に入って二人で始まる。入ったあとは URL から ?room= が消える（KJ-149）", async () => {
       const handler = fakeClaims();
       const A = await open(browser, base, { share: "ok", handler });
       await A.page.addInitScript(() => { window.__KJ_POLL_MS = 150; });
@@ -198,14 +207,24 @@ test("合言葉の共有の画面（KJ-107）", { skip }, async (t) => {
       const code = (await A.page.textContent("#roomShow")).trim();
       await A.page.click("#bShare");
       const link = (await A.page.evaluate(() => window.__shared))[0].text.match(/https?:\/\/\S+/)[0];
-      const B = await open(browser, link, { handler });
-      assert.equal(await B.page.inputValue("#roomCode"), code);
-      await B.page.click("#bEnter");
+      const B = await open(browser, link, { handler, pre: "window.__KJ_POLL_MS = 150" });
+      // 押していない（bEnter を押さない）のに入る
       for (const P of [A, B]) await P.page.waitForSelector("#game:not([hidden])", { timeout: 8000 });
       assert.equal(await B.page.$eval("#bShare", (e) => e.hidden), true, "入る側には共有が出ない");
       assert.equal(await A.page.$eval("#bShare", (e) => e.hidden), false, "作った側（対）には出ている");
+      assert.ok(!new URL(B.page.url()).search.includes("room"), "入ったあと URL に ?room= が無い：" + B.page.url());
+      assert.equal(await B.page.evaluate(() => window.__KJ.room && window.__KJ.room.entry), "link", "入り方の統計は「リンク」");
       assert.deepEqual([...A.errors, ...B.errors], []);
       await A.ctx.close(); await B.ctx.close();
+    });
+
+    await t.test("桁が合わない ?room= で開いても kj_claims に何も送らない（自動で入らない）", async () => {
+      const hits = [];
+      const B = await open(browser, base + "?room=12", { handler: async (route) => { hits.push(1); return route.abort(); } });
+      await B.page.waitForTimeout(400);
+      assert.deepEqual(hits, [], "桁が合わなければ kj_claims に何も送らない");
+      assert.equal(await B.page.isChecked('#opp input[value="cpu"]'), true);
+      await B.ctx.close();
     });
   } finally {
     await browser.close();

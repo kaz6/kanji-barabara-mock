@@ -211,10 +211,8 @@ test("はじめる前の画面の組み直し（KJ-123）", { skip }, async (t) 
       await A.page.waitForSelector("#roomShow:not([hidden])");
       const code = (await A.page.textContent("#roomShow")).trim();
       // リンクで開く
-      const L = await open(browser, base + "?room=" + code, { handler });
-      await L.page.addInitScript(() => { window.__KJ_POLL_MS = 150; });
-      assert.equal(await L.page.inputValue("#roomCode"), code);
-      await L.page.click("#bEnter");
+      const L = await open(browser, base + "?room=" + code, { handler, pre: "window.__KJ_POLL_MS = 150" });
+      // KJ-149：リンクで開くと押さなくても入る（［合言葉で入る］は押さない）
       for (const P of [A, L]) await P.page.waitForSelector("#game:not([hidden])", { timeout: 8000 });
       const first = (P) => P.page.evaluate(() => __KJ.game.logText().split("\n")[0]);
       assert.equal(await first(L), "# 入り方：リンク");

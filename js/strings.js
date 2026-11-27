@@ -191,6 +191,7 @@
     roomMaking: { ja: "部屋を作っている…", en: "Creating the room..." },
     roomHosted: { ja: (l, t) => `合言葉を相手に伝えてください（レベル ${l}・${t}）。相手を待っています`, en: (l, t) => `Tell your friend the room code (level ${l}, ${t}). Waiting for them...` },
     roomFinding: { ja: "部屋を探している…", en: "Looking for the room..." },
+    roomEntering: { ja: "部屋に入っています…", en: "Joining the room..." }, // KJ-149：共有のリンクで開いたとき
     roomVersion: { ja: "相手と版がちがう（二人とも読み込み直してから、もう一度）", en: "Version mismatch (both of you reload the page, then try again)" },
     roomTheirs: { ja: (l, t) => `相手の設定：レベル ${l}・${t}`, en: (l, t) => `Host's settings: level ${l}, ${t}` },
     roomJoining: { ja: (set) => `${set}。入っている…`, en: (set) => `${set}. Joining...` },

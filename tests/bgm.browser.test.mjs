@@ -273,10 +273,8 @@ test("曲：合言葉の部屋で、二人の数え下げが同じ時刻に終�
     await A.page.check('#act input[value="host"]');
     await A.page.waitForSelector("#roomShow:not([hidden])");
     const code = (await A.page.textContent("#roomShow")).trim();
-    const B = await open(browser, base + "?room=" + code, { handler });
-    await B.page.addInitScript(() => { window.__KJ_POLL_MS = 150; });
+    const B = await open(browser, base + "?room=" + code, { handler, pre: "window.__KJ_POLL_MS = 150;" }); // KJ-149：リンクで開くと押さなくても入る
     await loaded(A.page); await loaded(B.page);
-    await B.page.click("#bEnter");
     for (const P of [A, B]) await P.page.waitForSelector("#count:not([hidden])", { timeout: 8000 });
     await shot(B.page, "room-count");
     const chars = [];
