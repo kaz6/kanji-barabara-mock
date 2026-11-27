@@ -84,10 +84,13 @@ test("表紙：題字「漢対普請瓦版」（ルビ・英字の副題つき�
     assert.equal(rows.fs, 11, "副題は11px");
     assert.ok(rows.fm >= 24, "題字は大きいまま");
     assert.equal(await page.textContent("#mastNo"), "第壱號");
-    // KJ-124：號数の太さ・字体は説明の1行目（#lead）と同じ。大きさ（13px）は変えない
+    // KJ-124：號数の字体は説明の1行目（#lead）と同じ。大きさ（13px）は変えない。KJ-134：太さだけ 700（説明の1行目は 400 のまま）
     const wt = await page.evaluate(() => { const g = (id) => getComputedStyle(document.getElementById(id)); return { no: g("mastNo").fontWeight, lead: g("lead").fontWeight, noFam: g("mastNo").fontFamily, leadFam: g("lead").fontFamily, size: g("mastNo").fontSize }; });
-    assert.equal(wt.no, wt.lead, "號数の font-weight は説明の1行目と同じ");
-    assert.ok(wt.noFam.startsWith('"KJ Kaisei"') && wt.leadFam.startsWith('"KJ Kaisei"'), "字体も同じ（大正風）");
+    assert.equal(wt.no, "700", "號数の font-weight は 700（KJ-134）");
+    assert.equal(wt.lead, "400", "説明の1行目は 400 のまま");
+    const loaded = await page.evaluate(async () => { await document.fonts.load('700 13px "KJ Kaisei Bold"', "第壱號"); return document.fonts.check('700 13px "KJ Kaisei Bold"', "第壱號") && [...document.fonts].some((f) => f.family.replace(/"/g, "") === "KJ Kaisei Bold" && f.weight === "700" && f.status === "loaded"); });
+    assert.ok(loaded, "太い字体（kj-kaisei-700）が読み込まれて號数に使われる");
+    assert.ok(wt.noFam.startsWith('"KJ Kaisei Bold", "KJ Kaisei"') && wt.leadFam.startsWith('"KJ Kaisei"'), "字体も同じ（大正風）");
     assert.equal(wt.size, "13px", "大きさは変えない");
     const date = await page.textContent("#mastDate");
     assert.match(date, /^[〇一二三四五六七八九]{4}年[一二三四五六七八九十]+月[一二三四五六七八九十]+日$/);

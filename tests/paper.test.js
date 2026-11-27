@@ -56,7 +56,7 @@ function faces() {
 
 test("字体：画面の字（Zen Old Mincho 400・700）・札の字（Shippori Mincho・Kaisei Tokumin）が同梱され、ライセンスの文がある", () => {
   const f = faces();
-  assert.deepEqual(f.map((x) => `${x.fam} ${x.weight}`).sort(), ["KJ Kaisei 400", "KJ Shippori 400", "KJ Zen 400", "KJ Zen 700"]);
+  assert.deepEqual(f.map((x) => `${x.fam} ${x.weight}`).sort(), ["KJ Kaisei 400", "KJ Kaisei Bold 700", "KJ Shippori 400", "KJ Zen 400", "KJ Zen 700"]);
   for (const x of f) {
     const p = path.join(ROOT, "fonts", x.src);
     assert.ok(fs.existsSync(p), `${x.src} が無い`);
@@ -66,6 +66,18 @@ test("字体：画面の字（Zen Old Mincho 400・700）・札の字（Shippori
   const lic = fs.readFileSync(path.join(ROOT, "fonts", "OFL-Paper.txt"), "utf8");
   for (const name of ["Zen Old Mincho", "Shippori Mincho", "Kaisei"]) assert.ok(lic.includes(name), `OFL-Paper.txt に ${name} の文が無い`);
   assert.ok(/SIL OPEN FONT LICENSE Version 1\.1/i.test(lic));
+});
+
+test("字体：號数の太い字体（KJ-134。Kaisei Tokumin 700）は、第・號と大字だけを持つ（ほかの字は 400 のまま）", () => {
+  const f = faces().find((x) => x.fam === "KJ Kaisei Bold" && x.weight === 700);
+  assert.ok(f, "KJ Kaisei Bold 700 が kj-paper.css に無い");
+  assert.equal(f.src, "kj-kaisei-700.woff2");
+  const want = new Set([..."第號壱弐参肆伍陸漆捌玖拾佰阡"].map((c) => c.codePointAt(0)));
+  assert.deepEqual([...f.set].sort((a, b) => a - b), [...want].sort((a, b) => a - b), "要る字だけ（號数の字）");
+  assert.ok(fs.statSync(path.join(ROOT, "fonts", f.src)).size < 20 * 1024, "要る字だけなので小さい");
+  const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
+  assert.match(html, /#mastNo\{[^}]*font-family:"KJ Kaisei Bold","KJ Kaisei"[^}]*font-weight:700/, "表紙の號数は 700（KJ Kaisei Bold）");
+  assert.ok(!faces().some((x) => x.fam === "KJ Kaisei" && x.weight !== 400), "KJ Kaisei に 400 以外の字体を足さない（札の字＋太字の所が Shippori に落ちる）");
 });
 
 test("字体：札に出る字は、Kaisei Tokumin か Shippori Mincho か kj-glyphs のどれかに入っている（落とし先が必ずある）", () => {

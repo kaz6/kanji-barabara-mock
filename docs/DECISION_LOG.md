@@ -355,3 +355,10 @@
 - 確かめていないこと：音そのもの（耳。数え下げと曲の頭の合い・音量・ノイズの輪が規則正しく聞こえないか・iPhone で鳴るか）。試験は偽の AudioContext で予約の時刻を見る
 - 作者に聞くこと：ノイズの輪の音量（`bgm.gain.noise` 0.6）／曲が鳴り出す所の合わせ（onset_sec 2.3）／最後の1分の速さ（1.1）／権利：日本での扱いは未確認（SOURCES.md）
 - 戻し方：このコミットを revert（`kj-bgm` が端末に残るが読まれなくなるだけ。rules の version が戻る）
+
+### R-158 表紙の號数をもう少し太く（KJ-134。受け箱 P-134。作者 2026-11-27 20:41）
+- 作者の言葉：「ごうすう、確かにもうちょい太くしたいかも」。PR #118（KJ-124）で説明の1行目と同じ Kaisei Tokumin 400 にしたら、前の Zen 700 より墨が約2割少なくなった
+- 決めたこと：表紙の號数（`#mastNo`）だけ Kaisei Tokumin 700（仮。作者が見て直す）。字体は 第・號と大字（壱弐参肆伍陸漆捌玖拾佰阡。14字）だけを `fonts/kj-kaisei-700.woff2`（約4.8KB）に同梱（`tools/build_paper_fonts.py` の `FONTS` に1行・`issue_chars()`）。ほかの字の太さ・大きさ・位置・説明の2行・日付は変えない
+- 係の仮決め：太い字体は別の family 名 `"KJ Kaisei Bold"`（`#mastNo` だけ `"KJ Kaisei Bold","KJ Kaisei"`）。`"KJ Kaisei"` に 700 を足すと、札の字＋太字の所（放った語の札・戦況のあなたの行）で 14字以外が Shippori に落ちるため（レビューで実測）。`"KJ Kaisei"` に 400 以外を足さない試験あり
+- 太さを替える場所：index.html の `#mastNo` の `font-weight`（1か所）
+- 戻し方：このブランチの2コミット（4f73f78・d6172e7）を revert、またはマージのコミットを revert（localStorage に残るものは無い）
