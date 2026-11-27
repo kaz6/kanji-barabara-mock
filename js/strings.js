@@ -72,7 +72,7 @@
     mastheadRuby: "かんたいふしんかわらばん", // 題字の上のルビ（KJ-109）
     mastheadSub: "Split & Join — a Kanji Duel", // 題字の下の英字の副題（KJ-109）
     shareButton: "共有", // 合言葉の共有（KJ-107）。部屋を作って合言葉が出たら、合言葉の横に出す
-    shareText: (code, title) => `${title}で対戦しよう。合言葉 ${code}`, // 共有の文（仮。KJ-107）。title は masthead（題は KJ-109 のもの）
+    shareText: (code, title, sub, url) => `${title} ${sub}\n漢字を組み合わせて、言葉づくり対戦しよう。合言葉 ${code} ${url}`, // 共有の文（KJ-122。作者の文。題＝masthead・副題＝mastheadSub・リンクは K.roomShareUrl。全部この1本に入るので navigator.share では url を別に渡さない）
     shareCopied: "コピーした", // navigator.share が無い端末で、文とリンクをクリップボードに写したとき
     shareFailed: "共有できなかった。合言葉を口で伝えてください", // 共有もコピーもできなかったとき
     shareEndFailed: "共有できなかった", // 戦果の共有（KJ-108）：共有もコピーもできなかったとき（ボタンの字を一時これにする）

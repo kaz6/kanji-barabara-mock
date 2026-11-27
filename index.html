@@ -1086,9 +1086,9 @@ function leaveRoom(){if(MC){if(G&&!G.over)MC.leave();MC.stop();MC=null}LINK.clos
 // 戻り値："shared"（渡した）／"aborted"（閉じただけ。何も出さない）／"copied"（写した）／"failed"（どちらもできない）
 async function shareOrCopy(title,text,url){
   if(typeof navigator.share==="function"){
-    try{await navigator.share({title,text,url});return"shared"}catch(e){if(e&&e.name==="AbortError")return"aborted"} // ほかの失敗はコピーに回る
+    try{await navigator.share(url?{title,text,url}:{title,text});return"shared"}catch(e){if(e&&e.name==="AbortError")return"aborted"} // ほかの失敗はコピーに回る
   }
-  const both=text+"\n"+url;
+  const both=url?text+"\n"+url:text; // url が無いときは text にリンクまで入っている（合言葉の共有。KJ-122）
   try{await navigator.clipboard.writeText(both);return"copied"}
   catch(e){
     const ta=document.createElement("textarea");ta.value=both;document.body.appendChild(ta);ta.select();
@@ -1099,7 +1099,7 @@ async function shareOrCopy(title,text,url){
 $("bShare").textContent=STR.TEXT.shareButton;
 $("bShare").onclick=async()=>{
   if(!ROOM||!ROOM.code)return;
-  const r=await shareOrCopy(STR.TEXT.masthead,STR.TEXT.shareText(ROOM.code,STR.TEXT.masthead),K.roomShareUrl(location.href,ROOM.code));
+  const r=await shareOrCopy(STR.TEXT.masthead,STR.TEXT.shareText(ROOM.code,STR.TEXT.masthead,STR.TEXT.mastheadSub,K.roomShareUrl(location.href,ROOM.code)));
   if(r==="copied")setRoomMsg(STR.TEXT.shareCopied);else if(r==="failed")setRoomMsg(STR.TEXT.shareFailed);
 };
 // 戦果の共有（KJ-108）：終わったあと、結果を新聞の見出し風の文にして、ページの URL（?room= なし）と一緒に渡す。文の型は js/strings.js の SHARE_RESULT、組み立ては K.shareResultText

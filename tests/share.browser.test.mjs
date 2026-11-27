@@ -111,9 +111,10 @@ test("合言葉の共有の画面（KJ-107）", { skip }, async (t) => {
       await A.page.click("#bShare");
       const shared = await A.page.evaluate(() => window.__shared);
       assert.equal(shared.length, 1);
-      assert.equal(shared[0].text, `漢対普請瓦版で対戦しよう。合言葉 ${code}`);
-      assert.equal(shared[0].url, `${base}?room=${code}`);
-      assert.doesNotMatch(shared[0].text + shared[0].url, /gmail|@/);
+      assert.equal(shared[0].text, `漢対普請瓦版 Split & Join — a Kanji Duel\n漢字を組み合わせて、言葉づくり対戦しよう。合言葉 ${code} ${base}?room=${code}`);
+      assert.equal(shared[0].url, undefined, "リンクは文の中。url も渡すと端末で二重に出る");
+      assert.equal(shared[0].text.split("?room=").length - 1, 1);
+      assert.doesNotMatch(shared[0].text, /gmail|@/);
       assert.equal(await A.page.evaluate(() => !!document.getElementById("bShare")), true);
       await A.ctx.close();
       const B = await open(browser, base, { share: "abort", handler: fakeClaims() });
@@ -137,7 +138,7 @@ test("合言葉の共有の画面（KJ-107）", { skip }, async (t) => {
       await A.page.click("#bShare");
       await A.page.waitForFunction(() => document.getElementById("roomMsg").textContent === "コピーした");
       const clip = await A.page.evaluate(() => navigator.clipboard.readText());
-      assert.equal(clip, `漢対普請瓦版で対戦しよう。合言葉 ${code}\n${base}?room=${code}`);
+      assert.equal(clip, `漢対普請瓦版 Split & Join — a Kanji Duel\n漢字を組み合わせて、言葉づくり対戦しよう。合言葉 ${code} ${base}?room=${code}`);
       assert.deepEqual(A.errors, []);
       await A.ctx.close();
     });
@@ -150,7 +151,7 @@ test("合言葉の共有の画面（KJ-107）", { skip }, async (t) => {
       const code = (await A.page.textContent("#roomShow")).trim();
       await A.page.click("#bShare");
       await A.page.waitForFunction(() => document.getElementById("roomMsg").textContent === "コピーした");
-      assert.equal(await A.page.evaluate(() => navigator.clipboard.readText()), `漢対普請瓦版で対戦しよう。合言葉 ${code}\n${base}?room=${code}`);
+      assert.equal(await A.page.evaluate(() => navigator.clipboard.readText()), `漢対普請瓦版 Split & Join — a Kanji Duel\n漢字を組み合わせて、言葉づくり対戦しよう。合言葉 ${code} ${base}?room=${code}`);
       await A.ctx.close();
     });
 
@@ -193,7 +194,7 @@ test("合言葉の共有の画面（KJ-107）", { skip }, async (t) => {
       await A.page.waitForSelector("#roomShow:not([hidden])");
       const code = (await A.page.textContent("#roomShow")).trim();
       await A.page.click("#bShare");
-      const link = (await A.page.evaluate(() => window.__shared))[0].url;
+      const link = (await A.page.evaluate(() => window.__shared))[0].text.match(/https?:\/\/\S+/)[0];
       const B = await open(browser, link, { handler });
       assert.equal(await B.page.inputValue("#roomCode"), code);
       await B.page.click("#bEnter");

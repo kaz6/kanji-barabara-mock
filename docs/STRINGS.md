@@ -94,7 +94,7 @@
 | 文言 | 置き場 | 決めた人 |
 |---|---|---|
 | 共有 | 合言葉の横のボタン（`TEXT.shareButton`） | 作者（「合言葉の共有」）。文字は仮 |
-| 漢対普請瓦版で対戦しよう。合言葉 ○○ | 共有の文（`TEXT.shareText`。題は `TEXT.masthead`） | 仮（作者が直す） |
+| 漢対普請瓦版 Split & Join — a Kanji Duel／漢字を組み合わせて、言葉づくり対戦しよう。合言葉 ○○ リンク | 共有の文（`TEXT.shareText`。題は `TEXT.masthead`・副題は `TEXT.mastheadSub`。KJ-122） | 作者の文 |
 | コピーした | 共有が使えない端末で、文とリンクを写したとき（`TEXT.shareCopied`） | 仮 |
 | 共有できなかった。合言葉を口で伝えてください | 共有もコピーもできなかったとき（`TEXT.shareFailed`） | 仮 |
 
