@@ -1,6 +1,6 @@
 {
- "version": "2026-11-25.2",
- "note": "特別な語（D-015）。next は「自分の次の一投でつながる相手」。N5 版では空。fx_words は「演出だけ特別」の語（KJ-064。点・倍率は変えない。special には入れない）。together＝全部の字を同時に出す（無ければ1字ずつ）・tone＝色（gold）。足し引きはここだけ。effects は「放つと効く語」（KJ-079・D-098／KJ-080・D-099）：語→{op, target, n}。op＝split（割る）・cycle（巡りで次の字へ）・invert（反転）・join（2枚を1枚にくっつける）・homophone（同じ読みの別の字へ）。target＝self（放った本人。場から取り終わったあとに効く。自刃）／opp（相手の上の段の札。放った瞬間に効く）。n＝効かせる枚数（join は組の数。\"max\" はできるだけ多く）。special・fx_words とは別で、点・演出・振動は変えない。足し引きはここだけ",
+ "version": "2026-11-27.1",
+ "note": "特別な語（D-015）。next は「自分の次の一投でつながる相手」。N5 版では空。fx_words は「演出だけ特別」の語（KJ-064。点・倍率は変えない。special には入れない）。together＝全部の字を同時に出す（無ければ1字ずつ）・tone＝色（gold）。足し引きはここだけ。effects は「放つと効く語」（KJ-079・D-098／KJ-080・D-099）：語→{op, target, n}。op＝split（割る）・cycle（巡りで次の字へ）・invert（反転）・join（2枚を1枚にくっつける）・homophone（同じ読みの別の字へ）。target＝self（放った本人。場から取り終わったあとに効く。自刃）／opp（相手の上の段の札。放った瞬間に効く）。n＝効かせる枚数（join は組の数。\"max\" はできるだけ多く）。special・fx_words とは別で、点・演出・振動は変えない。足し引きはここだけ。KJ-131：op＝face（札の字を替える）・target＝both（放った人と相手の両方。試合の終わりまで）・value＝mincho。明朝体 だけ。点・演出・振動は普通の語のまま",
  "fx_words": [
   {
    "w": "金玉",
@@ -99,6 +99,11 @@
    "op": "homophone",
    "target": "opp",
    "n": 1
+  },
+  "明朝体": {
+   "op": "face",
+   "target": "both",
+   "value": "mincho"
   }
  }
 }

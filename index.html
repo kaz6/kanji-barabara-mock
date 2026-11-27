@@ -154,6 +154,16 @@ body.taking .stage,body.taking #meHand,body.taking #meTray,body.taking #trayHead
 @keyframes kjTakePop{0%{transform:scale(1)}40%{transform:scale(1.22)}100%{transform:scale(1)}}
 .takeshort{display:inline-block;min-width:4.6em;margin-left:8px;white-space:nowrap;font-size:13px;font-weight:700;color:var(--ink)}
 @media (prefers-reduced-motion:reduce){.field.glow .tile,.field.pop .tile{animation:none}}
+/* 明朝体の演出（KJ-131）：替わる前の見た目の写し（.flip-f）を上に重ね、下は明朝に替えてから、写しを右端を軸に左へめくって消す（0.8秒。仮。数は --flip-ms と js の FLIP_MS）。めくれる紙の裏（.flip-b）は紙の色。めくれている間だけ下に薄い影（.flip-sh）。写しは押せない（pointer-events:none）ので、めくっている間も遊べる */
+.flip{position:fixed;z-index:60;pointer-events:none;perspective:1400px}
+.flip-sh{position:absolute;inset:0;background:linear-gradient(to left,rgba(42,38,34,.30),rgba(42,38,34,0) 65%);opacity:0;animation:flipSh var(--flip-ms,800ms) ease-in-out forwards}
+.flip-pg{position:absolute;inset:0;transform-origin:100% 50%;transform-style:preserve-3d;animation:flipTurn var(--flip-ms,800ms) cubic-bezier(.45,.05,.55,.95) forwards}
+.flip-f,.flip-b{position:absolute;inset:0;overflow:hidden;background:var(--bg);backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.flip-b{transform:rotateY(180deg)}
+.flip-f>#game{margin:0;pointer-events:none}
+@keyframes flipTurn{to{transform:rotateY(180deg)}}
+@keyframes flipSh{0%{opacity:0}40%{opacity:1}100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.flip{display:none}}
 @media (max-width:540px){
   .me .tile{font-size:26px}
   .cpu .hand{grid-template-columns:repeat(8,1fr)}
@@ -690,7 +700,29 @@ function fillNews(){
 }
 // ---------- 札の字（KJ-093）：大正風（Kaisei Tokumin。初期）／明朝（Shippori Mincho）。<html data-face> を替える。端末に覚える ----------
 let face="taisho";
-function setFace(f){face=f==="mincho"?"mincho":"taisho";document.documentElement.setAttribute("data-face",face)}
+// 試合の中で 明朝体 が放たれていたら（G.face＝"mincho"。KJ-131）、終わるまで明朝。設定（face・kj-face）は書き換えない。終わったら・はじめる前の画面では設定に戻す
+let pendingFlip=false; // 明朝体が放たれて、めくる演出がまだのあいだ（描き直したあとに写しを取るため）
+function shownFace(){if(pendingFlip||(G&&(G.events||[]).some(e=>e.type==="face")))return document.documentElement.getAttribute("data-face")||face;return G&&G.face&&!G.over?G.face:face} // めくる演出の前は、替える前のまま
+function syncFace(){const f=shownFace();if(document.documentElement.getAttribute("data-face")!==f)document.documentElement.setAttribute("data-face",f)}
+function setFace(f){face=f==="mincho"?"mincho":"taisho";syncFace()}
+const FLIP_MS=800; // めくる秒数（仮。css の --flip-ms と同じ）
+// 明朝体の演出（KJ-131）：替わる前の写しを重ねてから札の字を替え、写しを右端を軸に左へめくって消す。動きを減らす設定では一度に替える
+function runFlip(){if(!pendingFlip)return;pendingFlip=false;flipPage()}
+function flipPage(){
+  const src=$("game"),r=src&&src.getBoundingClientRect();
+  if(reduceMotion()||!r||src.hidden||!r.width||!r.height){syncFace();return}
+  const wrap=document.createElement("div");wrap.className="flip";wrap.setAttribute("aria-hidden","true");wrap.inert=true;
+  wrap.style.cssText=`left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;--flip-ms:${FLIP_MS}ms`;
+  const sh=document.createElement("div");sh.className="flip-sh";
+  const pg=document.createElement("div");pg.className="flip-pg";
+  const f=document.createElement("div");f.className="flip-f";
+  const cl=src.cloneNode(true);cl.style.width=r.width+"px";cl.style.minHeight=r.height+"px";f.appendChild(cl);
+  const b=document.createElement("div");b.className="flip-b";
+  pg.appendChild(f);pg.appendChild(b);wrap.appendChild(sh);wrap.appendChild(pg);
+  document.body.appendChild(wrap);
+  syncFace(); // 写しを重ねたあとで、下を明朝に替える
+  setTimeout(()=>wrap.remove(),FLIP_MS+100);
+}
 // ---------- 表紙の号数（KJ-093）：その端末で始めた試合の数＋1。端末に覚える（読めなければ 第壱號）。チュートリアルは数えない ----------
 function issuesPlayed(){const n=parseInt(lsGet(ISSUE_KEY),10);return n>=0?n:0}
 function countIssue(){lsSet(ISSUE_KEY,issuesPlayed()+1);refreshMast()}
@@ -740,7 +772,7 @@ const playMode=()=>K.readOpponent(D,opponent).mode; // cpu／room
 function tablesFor(lv){return TABLES[lv]||(TABLES[lv]=K.makeTables(D,lv))}
 function showCounts(){$("setupInfo").textContent=STR.t("counts",T.CHARS.size,T.WORDS.size,STR.tr(K.levelLabel(T.level)))}
 // 画面は2つ：はじめる前の画面と、遊ぶ画面。「もう一度」は同じ設定ですぐ始まる。「設定を変える」で前の画面へ戻る
-function showScreen(playing){closeEnd();$("setup").hidden=playing;$("game").hidden=!playing;document.body.classList.toggle("playing",playing)}
+function showScreen(playing){syncFace();closeEnd();$("setup").hidden=playing;$("game").hidden=!playing;document.body.classList.toggle("playing",playing)}
 function start(){
   clearTimeout(cpuTimer);
   sendAbandoned();
@@ -900,6 +932,7 @@ function drain(){
       if(e.who===G.me.name){const w=T.WORDS.get(e.text);buzz("release",{text:e.text,len:[...e.text].length,special:vibSpecial||T.SPECIAL.has(e.text),yoji:!!(w&&w.yoji)})} // 振動：自分が放ったときだけ（相手の手では震えない）
       if(e.who===G.me.name)vibSpecial=false;
     }
+    if(e.type==="face"){pendingFlip=true;setTimeout(runFlip,0)} // 明朝体が放たれた（KJ-131。自分でも相手でも）：描き直したあとで、札の字を明朝に替えてめくる（render の終わりか、次の tick）
     if(e.type==="effect"&&e.victim&&e.hits&&e.hits.length){HITQ.push(e);if(e.victim===G.me.name)buzz("hit")} // 食らいの演出（KJ-081）：効いたときだけ。震えるのは人が食らったときだけ（食らわせたときは今の「放つ」の振動のまま）
     if(e.type==="effect"&&(e.who===G.me.name||e.victim===G.me.name))showMsg(K.effectText(e)); // 放つと効く語（KJ-079 自刃・KJ-080 相手の札に効く語）：自分が放った手と、自分の札が食らった手だけ短く出す（CPU の自刃は出さない）
     if(e.type==="over")end(e.winner,e.solo);
@@ -942,6 +975,7 @@ async function sendLog(g){
 function sendAbandoned(){if(G&&!G.over)sendLog(G)}
 function end(winner,solo){
   clearTimeout(cpuTimer);
+  syncFace(); // 試合が終わったら札の字を設定に戻す（KJ-131）
   LASTEND={d:K.endShow(G,T,winner),level:G.level,opponent:G.opponent}; // 戦果の共有（KJ-108）の文のもと。演出（#fx）を待たずに、終わった時点で決める
   sendLog(G);
   if(MC){MC.stop();MC=null;LINK.closeAll();ROOM=null}
@@ -1572,6 +1606,7 @@ function ptsFx(key,p,sc,n){ // render のたび：点が変わっていたら演
 function cdText(p,k){const t=G.cdLeft(p,k);return t>0?Math.ceil(t)+"s":""}
 function render(){
   if(!G)return;
+  syncFace(); // 試合の中で 明朝体 が放たれていれば明朝、終わったら設定（KJ-131）
   row=row.filter(id=>G.byId(G.me,id));
   $("cpuSide").hidden=G.solo;
   $("cpuName").textContent=G.cpu.name;
@@ -1670,6 +1705,7 @@ function renderOps(){
   const left=Math.ceil(G.timeLeft());
   $("clock").innerHTML=`残り <span class="n">${Math.floor(left/60)}:${String(left%60).padStart(2,"0")}</span>`; // 残り時間は大きな数字（KJ-042）
   renderTut();
+  runFlip(); // 明朝体の演出（KJ-131）：描き直したあとの見た目を写して、めくる
 }
 // 戦況（KJ-094）：放った言葉を新しい順に、漢字カタカナ交じりの文で（文は K.senkyoLines。型は STR.SENKYO＝仮）。場から取るたびに、その文のおわりへ「場ヨリ○ヲ取ル」が足される。放った言葉そのものは漢字のまま
 let senkyoKey="";

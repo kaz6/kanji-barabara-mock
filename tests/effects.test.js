@@ -21,10 +21,11 @@ test("データ：effects は 語→{op, target, n}。自刃＝自分に split�
     join: ["合体", "集合", "大集合"],
     homophone: ["同音", "同名"],
   };
-  const opp = Object.keys(E).filter((w) => w !== "自刃").sort();
+  const opp = Object.keys(E).filter((w) => w !== "自刃" && w !== "明朝体").sort(); // 明朝体（KJ-131）は札の字を替える語。tests/mincho.test.js
   assert.deepEqual(opp, Object.values(want).flat().sort());
   for (const [op, ws] of Object.entries(want)) for (const w of ws) assert.equal(E[w].op, op, w);
   for (const [w, e] of Object.entries(E)) {
+    if (w === "明朝体") continue; // KJ-131：op face・target both・value mincho（n は無い）
     assert.ok(["self", "opp"].includes(e.target), w);
     assert.ok(Number.isInteger(e.n) || e.n === "max", w);
     assert.ok(T4.WORDS.has(w), `${w} は N4 の語`);
@@ -33,7 +34,7 @@ test("データ：effects は 語→{op, target, n}。自刃＝自分に split�
   }
   assert.equal(E["大回転"].n, 2, "大回転だけ2枚");
   assert.equal(E["大集合"].n, "max");
-  for (const w of Object.keys(E)) if (w !== "大回転" && w !== "大集合" && w !== "自刃") assert.equal(E[w].n, 1, w);
+  for (const w of Object.keys(E)) if (w !== "大回転" && w !== "大集合" && w !== "自刃" && w !== "明朝体") assert.equal(E[w].n, 1, w);
   assert.deepEqual(T4.EFFECTS.get("自刃"), { op: "split", target: "self", n: 1 });
   assert.equal(TG1.EFFECTS.has("自刃"), false, "自刃 は小1 の語ではない");
 });
