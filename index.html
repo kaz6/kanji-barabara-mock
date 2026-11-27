@@ -650,7 +650,7 @@ function fillNews(){
 // ---------- 札の字（KJ-093）：大正風（Kaisei Tokumin。初期）／明朝（Shippori Mincho）。<html data-face> を替える。端末に覚える ----------
 let face="taisho";
 function setFace(f){face=f==="mincho"?"mincho":"taisho";document.documentElement.setAttribute("data-face",face)}
-// ---------- 表紙の号数（KJ-093）：その端末で始めた試合の数＋1。端末に覚える（読めなければ 第一號）。チュートリアルは数えない ----------
+// ---------- 表紙の号数（KJ-093）：その端末で始めた試合の数＋1。端末に覚える（読めなければ 第壱號）。チュートリアルは数えない ----------
 function issuesPlayed(){const n=parseInt(lsGet(ISSUE_KEY),10);return n>=0?n:0}
 function countIssue(){lsSet(ISSUE_KEY,issuesPlayed()+1);refreshMast()}
 // ---------- ▼（KJ-101）：はじめる前の画面で、下にまだ見えていない所があるときだけ右下に出す。試合中・チュートリアル中・終わりの画面では出さない ----------
