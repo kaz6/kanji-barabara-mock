@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const require = createRequire(import.meta.url);
 let chromium = null;
-try { ({ chromium } = require("playwright")); } catch { /* 入っていない */ }
+try { ({ chromium } = require("./pwja.cjs")); } catch { /* 入っていない */ }
 const skip = chromium ? false : "Playwright が入っていない";
 const TYPES = { ".css": "text/css; charset=utf-8", ".otf": "font/otf", ".woff": "font/woff", ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".json": "application/json; charset=utf-8" };
 function serve() {

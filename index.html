@@ -280,6 +280,9 @@ button.op.full{animation:kjGaugeFull .6s ease-out}
 .setup h2{font-size:15px;margin:0}
 /* KJ-123：見出しの行の右端に歯車（墨の線だけ。箱・影・光彩なし）。押すと小さな設定の欄（いまは振動の入／切）が開く */
 .sethead{display:flex;align-items:center;justify-content:space-between;margin:0 0 12px;min-height:24px}
+.sethead .shbtns{display:flex;align-items:center;flex:none}
+.sethead .langbtn{flex:none;min-width:44px;height:44px;margin:-10px 0 -10px 0;padding:0 6px;border:0;background:transparent;color:var(--on-table);font:inherit;font-size:13px;letter-spacing:.06em;cursor:pointer}
+.sethead .langbtn:focus-visible{outline:2px solid var(--on-table);outline-offset:-4px}
 .sethead .gear{flex:none;width:44px;height:44px;margin:-10px -10px -10px 0;padding:0;border:0;background:transparent;color:var(--on-table);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .sethead .gear[hidden]{display:none}
 .sethead .gear .gear-ic{width:24px;height:24px;display:block}
@@ -479,28 +482,29 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
   <p class="lead-en" id="leadEn" lang="en"></p>
 
   <section class="setup" id="setup">
-    <div class="sethead"><h2>はじめる前に選ぶ</h2><button type="button" class="gear" id="bGear" hidden aria-expanded="false" aria-controls="setPanel"></button></div>
-    <div class="setpanel" id="setPanel" hidden><div class="grp" id="grpVib"><p class="gt">振動</p><span class="opp" id="vib" role="radiogroup" aria-label="振動"></span></div></div>
-    <div class="grp"><p class="gt">遊び方</p><span class="opp" id="opp" role="radiogroup" aria-label="遊び方"></span></div>
-    <div class="grp" id="powBox" hidden><p class="gt">強さ</p><span class="opp" id="pow" role="radiogroup" aria-label="強さ"></span></div>
-    <div class="grp" id="actBox" hidden><p class="gt">合言葉の部屋</p><span class="opp" id="act" role="radiogroup" aria-label="合言葉の部屋"></span></div><!-- KJ-123：友達と対戦のとき、強さの段の場所に［部屋を作る］［部屋に入る］。初めはどちらも選ばれていない -->
+    <div class="sethead"><h2 data-t="setHead"></h2><span class="shbtns"><button type="button" class="langbtn" id="bLang" aria-expanded="false" aria-controls="langPanel"></button><button type="button" class="gear" id="bGear" hidden aria-expanded="false" aria-controls="setPanel"></button></span></div>
+    <div class="setpanel" id="langPanel" hidden><span class="opp" id="langPick" role="radiogroup" data-t-aria="langBtn"></span></div><!-- KJ-127：言語の切り替え（日本語・English）。見出しの行の右の JP／EN を押すとここが開き、選ぶと閉じる -->
+    <div class="setpanel" id="setPanel" hidden><div class="grp" id="grpVib"><p class="gt" data-t="lblVib"></p><span class="opp" id="vib" role="radiogroup" data-t-aria="lblVib"></span></div></div>
+    <div class="grp"><p class="gt" data-t="lblPlay"></p><span class="opp" id="opp" role="radiogroup" data-t-aria="lblPlay"></span></div>
+    <div class="grp" id="powBox" hidden><p class="gt" data-t="lblPower"></p><span class="opp" id="pow" role="radiogroup" data-t-aria="lblPower"></span></div>
+    <div class="grp" id="actBox" hidden><p class="gt" data-t="lblRoom"></p><span class="opp" id="act" role="radiogroup" data-t-aria="lblRoom"></span></div><!-- KJ-123：友達と対戦のとき、強さの段の場所に［部屋を作る］［部屋に入る］。初めはどちらも選ばれていない -->
     <div id="setSlot">
-      <div class="grp" id="grpLvl"><p class="gt">レベル</p><span class="opp" id="lvl" role="radiogroup" aria-label="レベル"></span></div>
-      <div class="grp" id="grpTim"><p class="gt">時間</p><span class="opp" id="tim" role="radiogroup" aria-label="時間"></span></div>
+      <div class="grp" id="grpLvl"><p class="gt" data-t="lblLevel"></p><span class="opp" id="lvl" role="radiogroup" data-t-aria="lblLevel"></span></div>
+      <div class="grp" id="grpTim"><p class="gt" data-t="lblTime"></p><span class="opp" id="tim" role="radiogroup" data-t-aria="lblTime"></span></div>
     </div>
     <div class="grp" id="roomBox" hidden>
       <div id="hostSlot"></div><!-- 友達と対戦のとき、レベル・時間をここ（部屋を作る前・作る側）に置く。［部屋に入る］のときは出さない（作った人のレベル・時間で遊ぶため）。KJ-045・KJ-123 -->
       <div id="enterBox" hidden>
-        <div class="roomrow"><input id="roomCode" inputmode="numeric" autocomplete="off" maxlength="4" placeholder="数字4けた" aria-label="合言葉"><button class="op" id="bEnter">合言葉で入る</button></div>
-        <p class="gt">入る側は、作った人のレベル・時間で遊ぶ</p>
+        <div class="roomrow"><input id="roomCode" inputmode="numeric" autocomplete="off" maxlength="4" data-t-ph="codePh" data-t-aria="codeAria"><button class="op" id="bEnter" data-t="enterBtn"></button></div>
+        <p class="gt" data-t="enterNote"></p>
       </div>
       <div class="roomrow" id="codeRow" hidden><p class="roomcode" id="roomShow" hidden></p><button class="op" id="bShare" hidden></button></div>
       <p class="note" id="roomMsg"></p>
-      <button class="op" id="bRoomCancel" hidden>やめる</button>
+      <button class="op" id="bRoomCancel" hidden data-t="cancel"></button>
     </div>
-    <div class="grp" id="grpFace"><p class="gt" id="faceLabel"></p><span class="opp" id="face" role="radiogroup" aria-label="札の字"></span></div>
+    <div class="grp" id="grpFace"><p class="gt" id="faceLabel"></p><span class="opp" id="face" role="radiogroup" data-t-aria="lblFace"></span></div>
     <p class="note" id="setupInfo"></p>
-    <button class="op main" id="start">はじめる</button>
+    <button class="op main" id="start" data-t="start"></button>
     <button class="op" id="bTutorial" hidden></button>
   </section>
 
@@ -576,16 +580,16 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
 
   <section class="panel" id="logPanel">
     <textarea id="logText" readonly></textarea>
-    <div class="bar"><button class="op" id="bCopy">コピー</button><span class="note" id="copyMsg"></span></div>
+    <div class="bar"><button class="op" id="bCopy" data-t="copyBtn"></button><span class="note" id="copyMsg"></span></div>
   </section>
 
   <details>
-    <summary><span class="sm">しくみ</span><span class="bar" id="topbar">
-      <button class="op" id="again">もう一度</button>
-      <button class="op" id="bSetup">設定を変える</button>
-      <button class="op" id="bLog">ログ</button>
+    <summary><span class="sm" data-t="howtoSum"></span><span class="bar" id="topbar">
+      <button class="op" id="again" data-t="again"></button>
+      <button class="op" id="bSetup" data-t="setupBtn"></button>
+      <button class="op" id="bLog" data-t="logBtn"></button>
       <button class="op" id="bShareEnd" hidden></button>
-      <button class="op" id="bCopyEnd" hidden>ログをコピー</button>
+      <button class="op" id="bCopyEnd" hidden data-t="copyLog"></button>
     </span></summary>
     <ul id="howto"></ul>
     <p class="credit">画面の字：Zen Old Mincho（The Zen Old Mincho Project Authors）／札の字：Kaisei Tokumin（The Kaisei Project Authors）・Shippori Mincho（The Shippori Mincho Project Authors）。どれも SIL OFL 1.1（fonts/OFL-Paper.txt）。</p>
@@ -603,8 +607,8 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
 const K=window.KJ;
 const STR=window.KJ_STR; // 画面の文言（ボタンの文字・角の印。KJ-024）
 for(const id of Object.keys(STR.BUTTONS)){const b=document.getElementById(id);if(STR.LOGO[id])b.setAttribute("aria-label",STR.BUTTONS[id]);b.querySelector(".lb").innerHTML=STR.buttonHtml(id)} // 印を字に組み込んだボタン（Fl＋印＋p など）は SVG 入り。読み上げは aria-label（KJ-048）
-document.getElementById("mastMain").textContent=STR.TEXT.masthead;document.getElementById("mastRuby").textContent=STR.TEXT.mastheadRuby;document.getElementById("mastSub").textContent=STR.TEXT.mastheadSub;document.getElementById("faceLabel").textContent=STR.TEXT.faceLabel; // 表紙の題字・設定の見出し（KJ-093）
-document.getElementById("bGear").innerHTML=STR.GEAR_SVG;document.getElementById("bGear").setAttribute("aria-label",STR.TEXT.settings);document.getElementById("skHead").textContent=STR.SENKYO.head; // 設定の見出し・戦況の見出し（KJ-094）
+document.getElementById("mastMain").textContent=STR.TEXT.masthead;document.getElementById("mastRuby").textContent=STR.TEXT.mastheadRuby;document.getElementById("mastSub").textContent=STR.TEXT.mastheadSub;// 表紙の題字（KJ-093）。設定の見出しなど言語で替わる文は applyStatic（KJ-127）
+document.getElementById("bGear").innerHTML=STR.GEAR_SVG;document.getElementById("skHead").textContent=STR.SENKYO.head; // 設定の見出し・戦況の見出し（KJ-094）
 const D={};
 let T=null, G=null; // 表・ゲームの状態
 let autoTok=null;  // チュートリアルの自動取りが走っているあいだの印（下の autoTakeRun）
@@ -614,7 +618,7 @@ const LVL_KEY="kj-level";
 let level=null;     // レベル（"G1"〔小1〕／"N5"／"N4"）。はじめるときに効く。端末に覚える
 let row=[];         // 選んだ札の id（選んだ順。台にはその写しを左から並べる）
 let lastTried="";
-const OPP_KEY="kj-opponent",TIME_KEY="kj-time",VIB_KEY="kj-vibe",FACE_KEY="kj-face",ISSUE_KEY="kj-issue";
+const OPP_KEY="kj-opponent",TIME_KEY="kj-time",VIB_KEY="kj-vibe",FACE_KEY="kj-face",ISSUE_KEY="kj-issue",LANG_KEY="kj-lang";
 let opponent=null;  // 相手のキー（weak・fair・normal・room。solo は画面から外した〔KJ-056〕）。端末に覚える（KJ-007）。画面では「遊び方」と「強さ」の2段で選ぶ（KJ-045）
 let cpuPower="weak"; // 「CPU戦」のときの強さ。遊び方を行き来しても覚えている
 let timeLimit=null; // 制限時間（秒）。端末に覚える（KJ-007）
@@ -629,11 +633,11 @@ function copyLog(){
   const text=G.logText(),m=$("copyMsg");
   const fallback=()=>{$("logPanel").classList.add("on");const ta=$("logText");ta.value=text;ta.focus();ta.select();
     let ok=false;try{ok=document.execCommand("copy")}catch(e){}
-    m.textContent=ok?"コピーした":"選んである文字を手でコピーしてください"};
-  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(()=>{m.textContent="コピーした";flashCopied()},fallback);
+    m.textContent=ok?STR.t("copied"):STR.t("copyFail")};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(()=>{m.textContent=STR.t("copied");flashCopied()},fallback);
   else fallback();
 }
-function flashCopied(){const b=$("bCopyEnd");if(!b.hidden){b.textContent="コピーした";setTimeout(()=>b.textContent="ログをコピー",1500)}}
+function flashCopied(){const b=$("bCopyEnd");if(!b.hidden){b.textContent=STR.t("copied");setTimeout(()=>b.textContent=STR.t("copyLog"),1500)}}
 $("bCopy").onclick=copyLog;$("bCopyEnd").onclick=copyLog;
 
 // ---------- はじめる ----------
@@ -657,6 +661,24 @@ function applyRoomLink(){
   roomAct="enter";linkCode=code;
   $("roomCode").value=code;
 }
+// ---------- 言語（KJ-127）：日本語・English。端末に覚える（kj-lang）。初めは navigator.language。文は js/strings.js の t・tr・howto ----------
+function applyStatic(){ // HTML に直書きしていた文（data-t＝文／data-th＝HTML の文／data-t-aria・data-t-ph）を、いまの言語で入れ直す
+  for(const el of document.querySelectorAll("[data-t]"))el.textContent=STR.t(el.dataset.t);
+  for(const el of document.querySelectorAll("[data-th]"))el.innerHTML=STR.t(el.dataset.th);
+  for(const el of document.querySelectorAll("[data-t-aria]"))el.setAttribute("aria-label",STR.t(el.dataset.tAria));
+  for(const el of document.querySelectorAll("[data-t-ph]"))el.setAttribute("placeholder",STR.t(el.dataset.tPh));
+  $("faceLabel").textContent=STR.t("lblFace");
+  $("bGear").setAttribute("aria-label",STR.t("settings"));
+  const cur=STR.LANGS.find(o=>o.key===STR.getLang());$("bLang").textContent=cur.short;$("bLang").setAttribute("aria-label",STR.t("langBtn")+": "+cur.label);
+  $("bShare").textContent=STR.t("shareButton");$("bShareEnd").textContent=STR.t("shareButton");
+  document.documentElement.lang=STR.getLang();
+}
+function applyLang(){ // 言語を替えたら、段1の範囲を全部入れ直す。データを読む前は文だけ（選びの並びはデータのあと）
+  applyStatic();
+  if(D.rules){buildPickers();buildHowto();showCounts();roomUi();if(G&&!G.over)render()}
+}
+function setLangTo(v){STR.setLang(v);lsSet(LANG_KEY,STR.getLang());$("langPanel").hidden=true;$("bLang").setAttribute("aria-expanded","false");applyLang()}
+$("bLang").onclick=()=>{const p=$("langPanel"),open=p.hidden;p.hidden=!open;$("bLang").setAttribute("aria-expanded",open?"true":"false")};
 // ---------- 背景の記事（KJ-094）：いつも入（KJ-123 で入／切をなくした。localStorage kj-news は読まない）。記事は画面の大きさに合わせて繰り返す ----------
 function fillNews(){
   const box=$("bgnews");if(!box||!STR.NEWS)return;
@@ -701,17 +723,19 @@ function radios(box,name,items,cur,onPick){
   }
 }
 function buildPickers(){
-  radios($("opp"),"opp",K.PLAY_MODES.map(o=>({value:o.key,label:o.label})),playMode(),v=>{cancelRoom();roomAct=null;opponent=K.opponentKey(v,cpuPower);lsSet(OPP_KEY,opponent);roomUi()});
-  radios($("pow"),"pow",K.CPU_POWERS.map(o=>({value:o.key,label:o.label})),cpuPower,v=>{cpuPower=v;opponent=K.opponentKey("cpu",v);lsSet(OPP_KEY,opponent)});
-  radios($("lvl"),"lvl",K.LEVELS.map(o=>({value:o.key,label:o.short,title:o.label})),level,v=>{level=v;lsSet(LVL_KEY,v);T=tablesFor(level);showCounts()});
-  radios($("face"),"face",[{value:"taisho",label:STR.TEXT.faceTaisho},{value:"mincho",label:STR.TEXT.faceMincho}],face,v=>{setFace(v);lsSet(FACE_KEY,v)});
-  radios($("act"),"act",[{value:"host",label:"部屋を作る"},{value:"enter",label:"部屋に入る"}],roomAct,pickAct); // KJ-123：初めはどちらも選ばれていない（?room= のときだけ［部屋に入る］）
-  if(canVibe()){$("bGear").hidden=false;radios($("vib"),"vib",[{value:"1",label:"入"},{value:"0",label:"切"}],vibeOn?"1":"0",v=>{vibeOn=v==="1";lsSet(VIB_KEY,v);if(vibeOn)buzz("take")})} // 振動が使えない端末には出さない。入にしたとき、1回だけ試しに震える
-  radios($("tim"),"tim",K.timeChoices(D).map(sec=>({value:sec,label:K.timeLabel(sec)})),timeLimit,v=>{timeLimit=+v;lsSet(TIME_KEY,v);buildHowto()});
+  for(const id of ["opp","pow","lvl","tim","face","act","vib","langPick"])$(id).textContent=""; // 言語を替えたとき作り直す（KJ-127）
+  radios($("langPick"),"lang",STR.LANGS.map(o=>({value:o.key,label:o.label})),STR.getLang(),setLangTo);
+  radios($("opp"),"opp",K.PLAY_MODES.map(o=>({value:o.key,label:STR.tr(o.label)})),playMode(),v=>{cancelRoom();roomAct=null;opponent=K.opponentKey(v,cpuPower);lsSet(OPP_KEY,opponent);roomUi()});
+  radios($("pow"),"pow",K.CPU_POWERS.map(o=>({value:o.key,label:STR.tr(o.label)})),cpuPower,v=>{cpuPower=v;opponent=K.opponentKey("cpu",v);lsSet(OPP_KEY,opponent)});
+  radios($("lvl"),"lvl",K.LEVELS.map(o=>({value:o.key,label:STR.tr(o.short),title:STR.tr(o.label)})),level,v=>{level=v;lsSet(LVL_KEY,v);T=tablesFor(level);showCounts()});
+  radios($("face"),"face",[{value:"taisho",label:STR.t("faceTaisho")},{value:"mincho",label:STR.t("faceMincho")}],face,v=>{setFace(v);lsSet(FACE_KEY,v)});
+  radios($("act"),"act",[{value:"host",label:STR.t("actHost")},{value:"enter",label:STR.t("actEnter")}],roomAct,pickAct); // KJ-123：初めはどちらも選ばれていない（?room= のときだけ［部屋に入る］）
+  if(canVibe()){$("bGear").hidden=false;radios($("vib"),"vib",[{value:"1",label:STR.t("on")},{value:"0",label:STR.t("off")}],vibeOn?"1":"0",v=>{vibeOn=v==="1";lsSet(VIB_KEY,v);if(vibeOn)buzz("take")})} // 振動が使えない端末には出さない。入にしたとき、1回だけ試しに震える
+  radios($("tim"),"tim",K.timeChoices(D).map(sec=>({value:sec,label:STR.timeLabel(sec)})),timeLimit,v=>{timeLimit=+v;lsSet(TIME_KEY,v);buildHowto()});
 }
 const playMode=()=>K.readOpponent(D,opponent).mode; // cpu／room
 function tablesFor(lv){return TABLES[lv]||(TABLES[lv]=K.makeTables(D,lv))}
-function showCounts(){$("setupInfo").textContent=`字 ${T.CHARS.size}・語 ${T.WORDS.size}（レベル ${K.levelLabel(T.level)}）`}
+function showCounts(){$("setupInfo").textContent=STR.t("counts",T.CHARS.size,T.WORDS.size,STR.tr(K.levelLabel(T.level)))}
 // 画面は2つ：はじめる前の画面と、遊ぶ画面。「もう一度」は同じ設定ですぐ始まる。「設定を変える」で前の画面へ戻る
 function showScreen(playing){closeEnd();$("setup").hidden=playing;$("game").hidden=!playing;document.body.classList.toggle("playing",playing)}
 function start(){
@@ -917,17 +941,17 @@ function end(winner,solo){
   LASTEND={d:K.endShow(G,T,winner),level:G.level,opponent:G.opponent}; // 戦果の共有（KJ-108）の文のもと。演出（#fx）を待たずに、終わった時点で決める
   sendLog(G);
   if(MC){MC.stop();MC=null;LINK.closeAll();ROOM=null}
-  const m=$("msg"),sc=`${G.me.score} 対 ${G.cpu.score}`;
+  const m=$("msg");
   if(solo){
-    m.textContent=`ひとりで ${G.me.score} 点`;
+    m.textContent=STR.t("msgSolo",G.me.score);
     m.className="msg";
     $("bCopyEnd").hidden=$("bShareEnd").hidden=false;
     showEndAfterFx(winner);
     return;
   }
-  if(winner===G.me){m.textContent=`勝ち（${sc}）`;m.className="msg win";buzz("win")}
-  else if(winner===G.cpu){m.textContent=`負け（${sc}）`;m.className="msg lose";buzz("lose")}
-  else{m.textContent=`引き分け（${sc}）`;m.className="msg"}
+  if(winner===G.me){m.textContent=STR.t("msgWin",G.me.score,G.cpu.score);m.className="msg win";buzz("win")}
+  else if(winner===G.cpu){m.textContent=STR.t("msgLose",G.me.score,G.cpu.score);m.className="msg lose";buzz("lose")}
+  else{m.textContent=STR.t("msgDraw",G.me.score,G.cpu.score);m.className="msg"}
   $("bCopyEnd").hidden=$("bShareEnd").hidden=false;
   showEndAfterFx(winner);
 }
@@ -961,19 +985,19 @@ function esDone(){
 function showEnd(winner){
   const d=K.endShow(G,T,winner),el=$("endShow");
   closeEnd();
-  const lab=$("esLabel");lab.textContent=d.label;lab.className=d.kind;
+  const lab=$("esLabel");lab.textContent=STR.tr(d.label);lab.className=d.kind;
   const ao=$("esAori");ao.textContent="";if(!G.tutorial)for(const part of (K.aoriLine(d,STR.AORI).match(/[^、！]+[、！]?/g)||[])){if(!part)continue;const sp=document.createElement("span");sp.className="seg";sp.textContent=part;ao.append(sp)} // KJ-126
-  $("esScore").innerHTML=d.kind==="solo"?`<span class="you">${d.me}</span><span class="t">点</span>`
-    :`<span class="you">${d.me}</span><span class="t">対</span><span class="them">${d.cpu}</span>`;
+  $("esScore").innerHTML=d.kind==="solo"?`<span class="you">${d.me}</span><span class="t">${STR.t("esPts")}</span>`
+    :`<span class="you">${d.me}</span><span class="t">${STR.t("esVs")}</span><span class="them">${d.cpu}</span>`;
   const ul=$("esWords");ul.innerHTML="";
   const items=d.items.map(it=>{
     const li=document.createElement("li");li.className=`esw t${it.tier}`;
     li.innerHTML=`<span class="wr"><span class="w"></span><span class="p"></span></span><span class="k"></span>`;
-    li.querySelector(".w").textContent=it.text;li.querySelector(".p").textContent=`+${it.pts}点`;li.querySelector(".k").textContent=it.kana;
+    li.querySelector(".w").textContent=it.text;li.querySelector(".p").textContent=STR.t("esPlus",it.pts);li.querySelector(".k").textContent=it.kana;
     li._w=it;ul.appendChild(li);return li});
   // KJ-082：ヒントで光ったのに放たれなかった言葉を1つ（無ければ空）。字は大きく、読みと意味はそのまま
   const mi=$("esMissed");mi.textContent="";mi.classList.toggle("has",!!d.missed);mi._w=d.missed||null;
-  if(d.missed){const m=d.missed;mi.append("見逃した言葉：");const w=document.createElement("span");w.className="w";w.textContent=m.text;mi.append(w,(m.kana?`（${m.kana}）`:"")+(m.en?` ${m.en}`:""))}
+  if(d.missed){const m=d.missed;mi.append(STR.t("esMissed"));const w=document.createElement("span");w.className="w";w.textContent=m.text;mi.append(w,(m.kana?`（${m.kana}）`:"")+(m.en?` ${m.en}`:""))}
   ES={items,timers:[],done:false};
   delete el.dataset.done;el.classList.add("on");document.body.classList.add("esOn");
   items.forEach((li,i)=>ES.timers.push(setTimeout(()=>{li.classList.add("in","fresh");if(i===items.length-1)esDone()},END_PACE.first+i*END_PACE.gap)));
@@ -988,10 +1012,10 @@ function esInfo(host,w){
   if(same)return;
   const box=document.createElement(host.tagName==="LI"?"li":"div");box.className="esd";box._host=host;
   const parts=[];
-  if(w.reading)parts.push("読み："+w.reading);
-  if(w.ens&&w.ens.length)parts.push("意味："+w.ens.join(" / "));
-  const t=document.createElement("div");t.textContent=parts.join("　");if(parts.length)box.appendChild(t);
-  const a=document.createElement("a");a.href=w.url;a.target="_blank";a.rel="noopener noreferrer";a.textContent="コトバンクで引く";box.appendChild(a);
+  if(w.reading)parts.push(STR.t("esReading")+w.reading);
+  if(w.ens&&w.ens.length)parts.push(STR.t("esMeaning")+w.ens.join(" / "));
+  const t=document.createElement("div");t.textContent=parts.join(STR.t("esSep"));if(parts.length)box.appendChild(t);
+  const a=document.createElement("a");a.href=w.url;a.target="_blank";a.rel="noopener noreferrer";a.textContent=STR.t("esKotoban");box.appendChild(a);
   if(host.tagName==="LI")host.after(box);else host.appendChild(box);
 }
 $("endShow").onclick=e=>{
@@ -1126,23 +1150,21 @@ async function shareOrCopy(title,text,url){
     ta.remove();return ok?"copied":"failed";
   }
 }
-$("bShare").textContent=STR.TEXT.shareButton;
 $("bShare").onclick=async()=>{
   if(!ROOM||!ROOM.code)return;
-  const r=await shareOrCopy(STR.TEXT.masthead,STR.TEXT.shareText(ROOM.code,STR.TEXT.masthead,STR.TEXT.mastheadSub,K.roomShareUrl(location.href,ROOM.code)));
-  if(r==="copied")setRoomMsg(STR.TEXT.shareCopied);else if(r==="failed")setRoomMsg(STR.TEXT.shareFailed);
+  const r=await shareOrCopy(STR.TEXT.masthead,STR.t("shareText",ROOM.code,STR.TEXT.masthead,STR.TEXT.mastheadSub,K.roomShareUrl(location.href,ROOM.code)));
+  if(r==="copied")setRoomMsg(STR.t("shareCopied"));else if(r==="failed")setRoomMsg(STR.t("shareFailed"));
 };
 // 戦果の共有（KJ-108）：終わったあと、結果を新聞の見出し風の文にして、ページの URL（?room= なし）と一緒に渡す。文の型は js/strings.js の SHARE_RESULT、組み立ては K.shareResultText
-$("bShareEnd").textContent=STR.TEXT.shareButton;
 $("bShareEnd").onclick=async()=>{
   if(!LASTEND)return;
-  const b=$("bShareEnd"),o={tpl:STR.SHARE_RESULT,title:STR.TEXT.masthead,issue:K.issueLabel(issuesPlayed()),level:K.levelShort(LASTEND.level),opponent:LASTEND.opponent,aori:STR.AORI_SHARE,url:K.siteUrl(location.href),hashtag:STR.TEXT.hashtag}; // KJ-126：リンクとタグは文の中（タグが URL の行の次に来るように）
+  const b=$("bShareEnd"),o={tpl:STR.shareResult(),title:STR.TEXT.masthead,issue:K.issueLabel(issuesPlayed()),level:STR.tr(K.levelShort(LASTEND.level)),opponent:LASTEND.opponent,aori:STR.AORI_SHARE,url:K.siteUrl(location.href),hashtag:STR.hashtag()}; // KJ-126：リンクとタグは文の中（タグが URL の行の次に来るように）
   const m=K.shareResultText(LASTEND.d,o);
   const r=await shareOrCopy(m.title,m.text,null);
-  const flash=t=>{b.textContent=t;setTimeout(()=>b.textContent=STR.TEXT.shareButton,1500)};
-  if(r==="copied")flash(STR.TEXT.shareCopied);else if(r==="failed")flash(STR.TEXT.shareEndFailed);
+  const flash=t=>{b.textContent=t;setTimeout(()=>b.textContent=STR.t("shareButton"),1500)};
+  if(r==="copied")flash(STR.t("shareCopied"));else if(r==="failed")flash(STR.t("shareEndFailed"));
 };
-$("bRoomCancel").onclick=()=>{cancelRoom();setRoomMsg("やめた")};
+$("bRoomCancel").onclick=()=>{cancelRoom();setRoomMsg(STR.t("roomCancelled"))};
 // 作る／入る（KJ-123）：［部屋を作る］は押すとすぐ、いま選んでいるレベル・時間で部屋を作る。［部屋に入る］は合言葉の入力を出す
 $("bGear").onclick=()=>{const p=$("setPanel"),open=p.hidden;p.hidden=!open;$("bGear").setAttribute("aria-expanded",open?"true":"false")}; // 歯車（KJ-123）：設定の欄を開け閉めする
 function pickAct(v){
@@ -1153,31 +1175,31 @@ function pickAct(v){
 async function hostNow(){
   if(ROOM)return;
   const matchId=K.newMatchId(cryptoRand),me={role:"host",matchId,code:null,level,timeLimit};
-  ROOM=me;roomUi();setRoomMsg("部屋を作っている…");
+  ROOM=me;roomUi();setRoomMsg(STR.t("roomMaking"));
   LINK.subscribe(matchId,K.roomWaiter(CLAIMS,"host",matchId,beginRoom,{level,time:timeLimit}));
   const h=await K.hostRoom(CLAIMS,{matchId,level,timeLimit,version:D.rules.version,nowSec:Date.now()/1000,rand:cryptoRand});
   if(ROOM!==me)return;
-  if(!h.ok){cancelRoom();setRoomMsg(h.why);return}
+  if(!h.ok){cancelRoom();setRoomMsg(STR.tr(h.why));return}
   me.code=h.code;roomUi();
-  setRoomMsg(`合言葉を相手に伝えてください（レベル ${K.levelShort(level)}・${K.timeLabel(timeLimit)}）。相手を待っています`);
+  setRoomMsg(STR.t("roomHosted",STR.tr(K.levelShort(level)),STR.timeLabel(timeLimit)));
 }
 $("bEnter").onclick=async()=>{
   if(ROOM)return;
   const code=$("roomCode").value.trim().replace(/[０-９]/g,d=>String.fromCharCode(d.charCodeAt(0)-0xFEE0)); // 全角の数字も受ける
   const me={role:"guest",code,entry:linkCode&&code===linkCode?"link":"typed"}; // 入り方（KJ-123）：?room= の合言葉のまま入った＝リンク／打った＝手入力
-  ROOM=me;roomUi();setRoomMsg("部屋を探している…");
+  ROOM=me;roomUi();setRoomMsg(STR.t("roomFinding"));
   const f=await K.findRoom(CLAIMS,code,Date.now()/1000);
   if(ROOM!==me)return;
-  if(!f.ok){ROOM=null;roomUi();setRoomMsg(f.why);return}
-  if(f.version!==D.rules.version||!K.LEVELS.some(x=>x.key===f.level)){ROOM=null;roomUi();setRoomMsg("相手と版がちがう（二人とも読み込み直してから、もう一度）");return}
+  if(!f.ok){ROOM=null;roomUi();setRoomMsg(STR.tr(f.why));return}
+  if(f.version!==D.rules.version||!K.LEVELS.some(x=>x.key===f.level)){ROOM=null;roomUi();setRoomMsg(STR.t("roomVersion"));return}
   Object.assign(me,{matchId:f.matchId,level:f.level,timeLimit:K.normTime(D,f.timeLimit)});
-  const set=`相手の設定：レベル ${K.levelShort(me.level)}・${K.timeLabel(me.timeLimit)}`;
-  setRoomMsg(set+"。入っている…");
+  const set=STR.t("roomTheirs",STR.tr(K.levelShort(me.level)),STR.timeLabel(me.timeLimit));
+  setRoomMsg(STR.t("roomJoining",set));
   LINK.subscribe(me.matchId,K.roomWaiter(CLAIMS,"guest",me.matchId,beginRoom));
   const j=await K.joinRoom(CLAIMS,me.matchId);
   if(ROOM!==me)return;
-  if(!j.ok){cancelRoom();setRoomMsg(j.why);return}
-  setRoomMsg(set+"。始まるのを待っています");
+  if(!j.ok){cancelRoom();setRoomMsg(STR.tr(j.why));return}
+  setRoomMsg(STR.t("roomWaiting",set));
 };
 // 二人とも 'start' 行が届いたときに始める。始まりの時刻はその行の created_at から
 function beginRoom(startRow){
@@ -1190,7 +1212,7 @@ function beginRoom(startRow){
   MC=K.createMatchClient(G,CLAIMS,{rand:cryptoRand});
   countIssue();
   row=[];lastTried="";hideNope();
-  showMsg(rm.role==="guest"?`作った人の設定：レベル ${K.levelShort(rm.level)}・${K.timeLabel(rm.timeLimit)}`:"");
+  showMsg(rm.role==="guest"?STR.t("roomHostSet",STR.tr(K.levelShort(rm.level)),STR.timeLabel(rm.timeLimit)):"");
   $("bCopyEnd").hidden=$("bShareEnd").hidden=true;hideChoices();setRoomMsg("");
   buildHowto();showScreen(true);render();
 }
@@ -1306,7 +1328,7 @@ const REJECT_MS=1500;let nopeTimer=null;
 function hideNope(){clearTimeout(nopeTimer);nopeTimer=null;$("nope").classList.remove("on")}
 function showWhy(why){
   if(!why)return;
-  $("nopeWhy").textContent=K.rejectText(why);const nb=$("nope"),ic=nb.querySelector(".no-ic");ic.style.animation="none";void ic.offsetWidth;ic.style.animation="";nb.classList.add("on"); // 判子は出し直すたびに押し直す（KJ-104）
+  $("nopeWhy").textContent=STR.tr(K.rejectText(why));const nb=$("nope"),ic=nb.querySelector(".no-ic");ic.style.animation="none";void ic.offsetWidth;ic.style.animation="";nb.classList.add("on"); // 判子は出し直すたびに押し直す（KJ-104）
   clearTimeout(nopeTimer);nopeTimer=setTimeout(hideNope,REJECT_MS);
 }
 function afterOp(res){if(res&&res.ok){row=res.sel||(res.cards?res.cards.map(x=>x.id):[]);lastTried=""}hideChoices();afterChange()} // 1枚に効く操作は、前に選んでいた札の選びを残す（res.sel。KJ-054）
@@ -1668,28 +1690,10 @@ function showFx(who,text,o){
   clearTimeout(showFx.t);showFx.t=setTimeout(()=>fx.classList.remove("on"),ms);
 }
 function buildHowto(){
-  const R=D.rules,S=R.score,TL=(G&&G.timeLimit)||timeLimit; // 合言葉の部屋の入った側は、作った人の時間
+  const R=D.rules,TL=(G&&G.timeLimit)||timeLimit; // 合言葉の部屋の入った側は、作った人の時間
   $("lead").textContent=STR.TEXT.lead(R.win.score,(TL||R.win.time_limit_sec)/60);
   $("leadEn").textContent=STR.TEXT.leadEn(R.win.score,(TL||R.win.time_limit_sec)/60);
-  $("howto").innerHTML=[
-    `<b>選ぶ</b>：手札・ストックの札をタップすると、札はそのマスに残ったまま色が変わって選ばれ、角に選んだ順の数字（1・2・3…）が出る。台には、選んだ札の写しが選んだ順に左から並ぶ。もう一度タップ（手札の札でも、台の写しでも）で外れる。ボタンは選んだ札に、選んだ順で働く。`,
-    `<b>入れ替え・移す</b>：札を指で引きずって、別の札の上で離すと位置が入れ替わる（手札とストックの間でもよい）。空いたマスの上で離すと、そこへ移る。`,
-    `<b>放つ</b>：台の札が辞書の語（2〜4字）なら放てる。<b>1字では放てない</b>（くっつけて作った字でも同じ）。一度放った言葉は二人とも二度と使えない。放った札は消える（相手には届かない）。`,
-    `<b>点数</b>：${Object.entries(S.by_length).map(([n,p])=>`${n}字 ${p}点`).join("・")}。四字熟語は ${S.yoji_mult} 倍、特別な語（天上天下）はさらに ${S.special_mult} 倍。`,
-    `<b>取る</b>：放ったら、放った字数と同じ枚数を<b>山札</b>から選んで取れる（上の段 ${R.hand_max} 枚・ストック ${R.split_extra} 枚の合わせて ${R.hand_max+R.split_extra} マスが埋まるまで）。<b>取りきるまで、ほかの手は何もできない</b>（山札が光る）。取れる枚数はためられない。取ったところには山から次の字が出る。相手も同じ山札から取るので早い者勝ち（ひとりでは取り合いなし）。`,
-    `<b>ストック</b>：手札（${R.hand_max} マス）の下の ${R.split_extra} マス。字も部品も置ける。割る・くっつけるでできた札は、手札に空きがなければストックに入る（全部で ${R.hand_max+R.split_extra} 枚まで）。山札から取った札も、上の段が埋まっていればストックに入る。ストックの札も選んで使える。`,
-    `<b>はじまり</b>：はじめの手札は ${R.start_hand} 枚。はじめたらすぐ時間が動く。ストックには、使いやすい部品が ${R.start_stock_parts} 枚、最初から入っている。`,
-    `<b>台</b>は並べて見る場所：選んだ札は手札・ストックのマスにいるまま、台にはその写しが出る（枚数は変わらない）。`,
-    `<b>レベル</b>：はじめる前に選ぶ（小1／N5／N4。小1 は小学1年の漢字80字、N4 は N5＋N4 の字）。山に入る字・語・割り方・対義・巡り・同音がレベルで変わる。いまは ${K.levelLabel(T.level)}（字 ${T.CHARS.size}・語 ${T.WORDS.size}）。`,
-    `<b>遊び方・強さ</b>：はじめる前に選ぶ。CPU戦：とても弱い（CPU は ${R.cpu.weak_interval_sec[0]}〜${R.cpu.weak_interval_sec[1]} 秒に1回）／ふつう（${R.cpu.fair_interval_sec[0]}〜${R.cpu.fair_interval_sec[1]} 秒に1回）／つよい（${R.cpu.interval_sec[0]}〜${R.cpu.interval_sec[1]} 秒に1回）。`,
-    `<b>割る</b>：台の1枚を部品表で一段だけ割る。<b>くっつける</b>：台の2枚を、左→右の順でくっつける。逆に並べたときは「並べる順が逆」と出る。十・口（古・田）や 大・丶（太・犬）のように2通りの字になるときは選ぶ。`,
-    `<b>反転</b>（印：${STR.iconSvg("invert")}）対義の字に。${R.cooldown_sec.invert} 秒待ち。<b>巡り</b>（印：${STR.iconSvg("cycle")}）${T.CYCLES.map(c=>c.name).join("・")}を1つ先へ。${R.cooldown_sec.cycle} 秒待ち。<b>同音</b>：同じ読みの字から選ぶ。${R.cooldown_sec.homophone} 秒待ち。待ち時間は操作ごとで、二人は別々。`,
-    `<b>引き直し</b>：手札を全部入れ替える（${R.start_hand} 枚）。値段は、その試合で何回目かで上がる（${R.redraw.costs.map(c=>c+" 点").join("→")}）。${R.redraw.costs.length} 回まで。点が足りなくても払える（マイナスになってよい）。`,
-    `<b>勝ち</b>：先に ${R.win.score} 点。または ${(TL||R.win.time_limit_sec)/60} 分たって点の多い方。CPU の速さは強さで変わる。`,
-    `${Object.keys(D.radical_forms.left).join("・")} を左に置いてくっつけられるときは、${Object.values(D.radical_forms.left).join("・")} の形で見せる（札はもとの字のまま）。色の薄い札は部品（字ではない）。`,
-    `<b>ヒント</b>：${R.hint.timed_sec ? `${R.hint.timed_sec} 秒なにも放たない・引き直さないと` : ""}${R.hint.fail_streak ? `${R.hint.timed_sec ? "、または続けて " : "続けて "}${R.hint.fail_streak} 回はじかれると` : ""}、使う札と操作のボタンが光る（${R.hint.glow_sec} 秒。ほかの手をしても残る。光らせた言葉を放つ・光らせた札が無くなる・引き直しを使うと消える）。言葉は文字では出ない。点はかからない。`,
-    `<b>ログ</b>：一手ごとの記録。上の「ログ」で見てコピーできる。終わったら「ログをコピー」が出る。`,
-  ].map(x=>`<li>${x}</li>`).join("");
+  $("howto").innerHTML=STR.howto({R,min:(TL||R.win.time_limit_sec)/60,levelLabel:STR.tr(K.levelLabel(T.level)),chars:T.CHARS.size,words:T.WORDS.size,cycles:T.CYCLES.map(c=>c.name),radKeys:Object.keys(D.radical_forms.left),radVals:Object.values(D.radical_forms.left)}).map(x=>`<li>${x}</li>`).join(""); // 文は js/strings.js の HOWTO（ja・en。KJ-127）
 }
 let roomBusy=false;
 function pump(){
@@ -1711,10 +1715,11 @@ document.addEventListener("visibilitychange",()=>{
 
 window.__KJ={get game(){return G},get tut(){return TUT},get row(){return row},get tables(){return T},get mc(){return MC},get room(){return ROOM},data:D,render,drain}; // ブラウザのテスト用
 
+STR.setLang(STR.detectLang(lsGet(LANG_KEY),navigator.language));applyStatic(); // 言語（KJ-127）。データを待たずに文を入れる
 fillNews();window.addEventListener("resize",fillNews); // 背景の記事（KJ-094）。データを待たずに敷く
 Promise.all(K.FILES.map(f=>fetch(`data/${f}.json`).then(r=>r.json()).then(j=>D[f]=j)))
   .then(()=>{preloadFx();loadSettings();applyRoomLink();refreshMast();T=tablesFor(level);buildPickers();buildHowto();showCounts();roomUi();$("bTutorial").textContent=D.tutorial.ui.button;$("bTutorial").hidden=false})
-  .catch(e=>{$("setupInfo").textContent="データを読めませんでした（file:// では開けません。Pages かローカルのサーバーで開いてください）"});
+  .catch(e=>{$("setupInfo").textContent=STR.t("dataFail")});
 </script>
 </body>
 </html>
