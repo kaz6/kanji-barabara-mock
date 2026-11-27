@@ -1464,3 +1464,13 @@ R-025〜R-027 はカードに書いてあった仮置き、R-028〜R-031 は係�
 - レビューで足した試験：待ち時間のゲージが緑（rgb(68, 112, 90)）のままなことを btnlook で見る
 - テスト：tests/btnlook.browser.test.mjs・tests/layout.browser.test.mjs
 - 戻し方：この PR の merge コミットを revert（端末に残るものは無い）
+
+### R-141 部品の札の 辶 を点1つの形で見せる（KJ-116。受け箱 P-116。作者 2026-11-27 00:27）
+
+- 作者の言葉：「辶、って点が2つあるのか…」→「そろえます」（点1つにそろえる）
+- 決めたこと（カードのとおり）：データの文字コード（U+8FB6）は変えず、同梱の字形（`fonts/kj-glyphs.otf`）の U+8FB6 を Noto Serif CJK JP の U+2ECC（⻌。点1つ）の字形に差し替えた（`tools/build_glyphs.py` の `SUBSTITUTE`。`data/glyphs.json` に `substitute`。`docs/GLYPHS.md` に注記）。輪郭の数 3→2
+- 係の仮決め：（1）字形は拡大・移動なしでそのまま使う（2）Shippori が U+8FB6 を持っていて先に効くので、`fonts/kj-paper.css` の Shippori の範囲から U+8FB6 を外した（`tools/build_paper_fonts.py` の `NO_PAPER` で作り直しても外れる）。Kaisei・Zen は元から持っていない（3）Shippori の woff2 の中身は作り直していない（元の字体が手元に無い。字形が残るが使われない。次に build_paper_fonts.py を回せば消える）（4）点の数は、墨のつながりの数（点1つ＝2・点2つ＝3）で見分ける
+- 注意：アプリの外に出る文字（共有の文・ログのコピー）は端末の字体のまま（点2つになりうる）。`build_glyphs.py` を回すと GLYPHS.md の手書き注記（耂 など）が書き換わりかけるので、回したあとは差分を見る
+- 触っていない：parts.json の 辶・割る・くっつける・言葉の決まり・ほかの字形
+- テスト：tests/shinnyo.test.js・tests/shinnyo.browser.test.mjs（`KJ_SHOT_SHINNYO=<フォルダ>` で画像を書く）
+- 戻し方：この PR の merge コミットを revert（端末に残るものは無い）
