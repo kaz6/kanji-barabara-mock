@@ -83,7 +83,12 @@ test("表紙：題字「漢対普請瓦版」（ルビ・英字の副題つき�
     assert.equal(rows.fr, 9, "ルビは9px");
     assert.equal(rows.fs, 11, "副題は11px");
     assert.ok(rows.fm >= 24, "題字は大きいまま");
-    assert.equal(await page.textContent("#mastNo"), "第一號");
+    assert.equal(await page.textContent("#mastNo"), "第壱號");
+    // KJ-124：號数の太さ・字体は説明の1行目（#lead）と同じ。大きさ（13px）は変えない
+    const wt = await page.evaluate(() => { const g = (id) => getComputedStyle(document.getElementById(id)); return { no: g("mastNo").fontWeight, lead: g("lead").fontWeight, noFam: g("mastNo").fontFamily, leadFam: g("lead").fontFamily, size: g("mastNo").fontSize }; });
+    assert.equal(wt.no, wt.lead, "號数の font-weight は説明の1行目と同じ");
+    assert.ok(wt.noFam.startsWith('"KJ Kaisei"') && wt.leadFam.startsWith('"KJ Kaisei"'), "字体も同じ（大正風）");
+    assert.equal(wt.size, "13px", "大きさは変えない");
     const date = await page.textContent("#mastDate");
     assert.match(date, /^[〇一二三四五六七八九]{4}年[一二三四五六七八九十]+月[一二三四五六七八九十]+日$/);
     const today = await page.evaluate(() => KJ.kansujiDate(new Date()));
@@ -155,31 +160,31 @@ test("表紙の題字（KJ-109）：412／375／320px で、題字・ルビ・�
   } finally { await browser.close(); srv.close(); }
 });
 
-test("号数：試合を始めるたびに増え、端末に覚える。読めなければ 第一號。チュートリアルは数えない", { skip }, async () => {
+test("号数：試合を始めるたびに増え、端末に覚える。読めなければ 第壱號。チュートリアルは数えない", { skip }, async () => {
   const srv = await serve(); const browser = await chromium.launch();
   try {
     const url = `http://127.0.0.1:${srv.address().port}/index.html`;
     const { ctx, page, errors } = await open(browser, url);
-    assert.equal(await page.textContent("#mastNo"), "第一號");
+    assert.equal(await page.textContent("#mastNo"), "第壱號");
     await play(page);
     assert.equal(await page.evaluate(() => localStorage.getItem("kj-issue")), "1", "始めたら 1 試合");
     await page.click("#bSetup");
-    assert.equal(await page.textContent("#mastNo"), "第二號");
+    assert.equal(await page.textContent("#mastNo"), "第弐號");
     await page.click("#start");
     await page.click("#bSetup");
-    assert.equal(await page.textContent("#mastNo"), "第三號");
+    assert.equal(await page.textContent("#mastNo"), "第参號");
     assert.equal(await page.evaluate(() => localStorage.getItem("kj-issue")), "2");
     await page.click("#start");
     await page.click("#again"); // もう一度も 1 試合
     assert.equal(await page.evaluate(() => localStorage.getItem("kj-issue")), "4");
     await page.reload();
     await page.waitForFunction(() => document.getElementById("setupInfo").textContent.startsWith("字 "));
-    assert.equal(await page.textContent("#mastNo"), "第五號", "ページを開き直しても覚えている");
+    assert.equal(await page.textContent("#mastNo"), "第伍號", "ページを開き直しても覚えている");
     await ctx.close();
     // 読めない値・負の値
     for (const bad of ["abc", "-4", ""]) {
       const o = await open(browser, url, { init: { "kj-issue": bad } });
-      assert.equal(await o.page.textContent("#mastNo"), "第一號", `kj-issue=${JSON.stringify(bad)}`);
+      assert.equal(await o.page.textContent("#mastNo"), "第壱號", `kj-issue=${JSON.stringify(bad)}`);
       assert.deepEqual(o.errors, []);
       await o.ctx.close();
     }
@@ -347,8 +352,8 @@ test("レビュー P-093：取ったばかりの札・ヒントの札を選ん�
       const { ctx, page, errors } = await open(browser, url, { vp: { width: w, height: 800 }, init: { "kj-issue": "20" } });
       await page.evaluate(CONTRAST);
       const mast = await page.evaluate(() => { const r = (id) => document.getElementById(id).getBoundingClientRect(); const n = r("mastNo"), d = r("mastDate"); return { oneLine: n.height < 24 && d.height < 24, noOverlap: n.right <= d.left }; });
-      assert.equal(await page.textContent("#mastNo"), "第二十一號");
-      assert.deepEqual(mast, { oneLine: true, noOverlap: true }, `${w}px：第二十一號でも号数が1行`);
+      assert.equal(await page.textContent("#mastNo"), "第弐拾壱號");
+      assert.deepEqual(mast, { oneLine: true, noOverlap: true }, `${w}px：第弐拾壱號でも号数が1行`);
       await play(page);
       // 押せない Back・Redraw・空の台の字
       assert.equal(await page.evaluate(() => document.getElementById("bBack").disabled), true);
