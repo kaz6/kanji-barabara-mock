@@ -1,19 +1,25 @@
 {
- "version": "2026-11-25.1",
- "note": "部品の札（字として見せない札）が何と同じ意味かの表（KJ-021・D-039。受け箱 P-021）。台の行に出す。name＝呼び名（ひらがな。無いものは省く）、same＝同じ意味の字（その部品が字の形違いのとき）、mean＝短い意味（same が無いとき）、q＝作者に確かめたい（一覧では ？）。forms は radical_forms.json の左の形（亻＝人 など）。一覧は docs/RADICAL_MEANINGS.md（作者が赤を入れる）。呼び名と意味は KANJIDIC2（jamdict の部首名）と一般の呼び方から。部品の札は data/parts.json の割り方に出てくる、字として見せない札（全レベルの合計）",
+ "version": "2026-11-27.1",
+ "note": "KJ-128（P-128）：English のときは name_en（呼び名の英語）・mean_en（意味の英語）を使う（K.radicalNote の lang）。same の字・部品の字はそのまま。訳は係の仮。 部品の札（字として見せない札）が何と同じ意味かの表（KJ-021・D-039。受け箱 P-021）。台の行に出す。name＝呼び名（ひらがな。無いものは省く）、same＝同じ意味の字（その部品が字の形違いのとき）、mean＝短い意味（same が無いとき）、q＝作者に確かめたい（一覧では ？）。forms は radical_forms.json の左の形（亻＝人 など）。一覧は docs/RADICAL_MEANINGS.md（作者が赤を入れる）。呼び名と意味は KANJIDIC2（jamdict の部首名）と一般の呼び方から。部品の札は data/parts.json の割り方に出てくる、字として見せない札（全レベルの合計）",
  "parts": {
   "卜": {
    "name": "ぼく",
-   "mean": "うらないのこと"
+   "mean": "うらないのこと",
+   "name_en": "divination",
+   "mean_en": "fortune-telling"
   },
   "ノ": {
    "name": "はらい",
    "mean": "左にはらう線",
-   "q": true
+   "q": true,
+   "name_en": "slash",
+   "mean_en": "a stroke slanting down to the left"
   },
   "｜": {
    "name": "たてぼう",
-   "mean": "上から下へ通す線"
+   "mean": "上から下へ通す線",
+   "name_en": "vertical stroke",
+   "mean_en": "a line running top to bottom"
   },
   "ナ": {
    "same": "手",
@@ -21,24 +27,32 @@
   },
   "亠": {
    "name": "なべぶた",
-   "mean": "ふたのこと"
+   "mean": "ふたのこと",
+   "name_en": "lid",
+   "mean_en": "a lid"
   },
   "囗": {
    "name": "くにがまえ",
-   "mean": "かこむこと・口とも読む"
+   "mean": "かこむこと・口とも読む",
+   "name_en": "enclosure",
+   "mean_en": "enclosing; also read as 口 (mouth)"
   },
   "儿": {
    "name": "ひとあし",
-   "same": "人"
+   "same": "人",
+   "name_en": "legs"
   },
   "宀": {
    "name": "うかんむり",
-   "mean": "家・やねのこと"
+   "mean": "家・やねのこと",
+   "name_en": "roof",
+   "mean_en": "a house or roof"
   },
   "𠆢": {
    "name": "ひとがしら",
    "same": "人",
-   "q": true
+   "q": true,
+   "name_en": "person top"
   },
   "云": {
    "same": "言",
@@ -46,318 +60,421 @@
   },
   "彳": {
    "name": "ぎょうにんべん",
-   "mean": "行く・道のこと"
+   "mean": "行く・道のこと",
+   "name_en": "step",
+   "mean_en": "going; a road"
   },
   "亍": {
    "mean": "行 の右がわ（歩くこと）",
-   "q": true
+   "q": true,
+   "mean_en": "the right side of 行 (walking)"
   },
   "艹": {
    "name": "くさかんむり",
-   "mean": "草のこと"
+   "mean": "草のこと",
+   "name_en": "grass",
+   "mean_en": "grass; plants"
   },
   "⺍": {
    "name": "つかんむり",
    "mean": "ツに見える形（学 の上）",
-   "q": true
+   "q": true,
+   "name_en": "claw top",
+   "mean_en": "the claw-like top of 学"
   },
   "丶": {
    "name": "てん",
-   "mean": "小さな点"
+   "mean": "小さな点",
+   "name_en": "dot",
+   "mean_en": "a small dot"
   },
   "广": {
    "name": "まだれ",
-   "mean": "家・建物のこと"
+   "mean": "家・建物のこと",
+   "name_en": "building",
+   "mean_en": "a house; a building"
   },
   "𢀖": {
    "mean": "後 の右がわの形（ゆっくり行くこと）",
-   "q": true
+   "q": true,
+   "mean_en": "the right side of 後 (walking slowly)"
   },
   "聿": {
    "name": "ふでづくり",
-   "mean": "筆のこと"
+   "mean": "筆のこと",
+   "name_en": "brush",
+   "mean_en": "a writing brush"
   },
   "罒": {
    "name": "あみがしら",
-   "mean": "あみのこと"
+   "mean": "あみのこと",
+   "name_en": "net",
+   "mean_en": "a net"
   },
   "亲": {
    "mean": "新・親 の左がわの形",
-   "q": true
+   "q": true,
+   "mean_en": "the left side of 新 and 親"
   },
   "电": {
    "mean": "電 の下の形（いなずま）",
-   "q": true
+   "q": true,
+   "mean_en": "the bottom of 電 (lightning)"
   },
   "吾": {
-   "mean": "われ（自分）のこと"
+   "mean": "われ（自分）のこと",
+   "mean_en": "I; oneself"
   },
   "龶": {
    "mean": "青 の上の形",
-   "q": true
+   "q": true,
+   "mean_en": "the top of 青"
   },
   "𠂉": {
    "mean": "毎 の上の形",
-   "q": true
+   "q": true,
+   "mean_en": "the top of 毎"
   },
   "辶": {
    "name": "しんにょう",
-   "mean": "道・進むこと"
+   "mean": "道・進むこと",
+   "name_en": "movement",
+   "mean_en": "a road; moving forward"
   },
   "耂": {
    "name": "おいがしら",
-   "same": "老"
+   "same": "老",
+   "name_en": "old age"
   },
   "也": {
    "mean": "古い言い方で「…である」",
-   "q": true
+   "q": true,
+   "mean_en": "an old word for \"to be\""
   },
   "亼": {
    "name": "ひとやね",
    "mean": "あつめること",
-   "q": true
+   "q": true,
+   "name_en": "roof",
+   "mean_en": "gathering"
   },
   "昜": {
    "mean": "日がのぼること（陽 の形）",
-   "q": true
+   "q": true,
+   "mean_en": "the sun rising (as in 陽)"
   },
   "开": {
    "mean": "開・研 の中の形",
-   "q": true
+   "q": true,
+   "mean_en": "the middle of 開 and 研"
   },
   "弋": {
    "name": "しきがまえ",
    "mean": "くい・しるしの棒",
-   "q": true
+   "q": true,
+   "name_en": "stake",
+   "mean_en": "a stake; a marker"
   },
   "甬": {
    "mean": "通 の右がわの形",
-   "q": true
+   "q": true,
+   "mean_en": "the right side of 通"
   },
   "頁": {
    "name": "おおがい",
-   "same": "頭"
+   "same": "頭",
+   "name_en": "page"
   },
   "丷": {
    "mean": "八に近い形",
-   "q": true
+   "q": true,
+   "mean_en": "a shape like 八"
   },
   "乍": {
    "mean": "つくること",
-   "q": true
+   "q": true,
+   "mean_en": "making; suddenly"
   },
   "虽": {
    "mean": "強 の右がわの形",
-   "q": true
+   "q": true,
+   "mean_en": "the right side of 強"
   },
   "阝": {
    "name": "おおざと・こざと",
    "mean": "まち・おかのこと",
-   "q": true
+   "q": true,
+   "name_en": "mound / village",
+   "mean_en": "a town; a hill"
   },
   "豕": {
    "name": "いのこ",
-   "mean": "ぶた・いのししのこと"
+   "mean": "ぶた・いのししのこと",
+   "name_en": "pig",
+   "mean_en": "a pig; a boar"
   },
   "匚": {
    "name": "はこがまえ",
-   "mean": "はこのこと"
+   "mean": "はこのこと",
+   "name_en": "box",
+   "mean_en": "a box"
   },
   "メ": {
    "mean": "区 の中の形（×）",
-   "q": true
+   "q": true,
+   "mean_en": "the × inside 区"
   },
   "隹": {
    "name": "ふるとり",
-   "mean": "鳥のこと"
+   "mean": "鳥のこと",
+   "name_en": "short-tailed bird",
+   "mean_en": "a bird"
   },
   "产": {
    "mean": "産 の上の形（うまれること）",
-   "q": true
+   "q": true,
+   "mean_en": "the top of 産 (giving birth)"
   },
   "攵": {
    "name": "のぶん",
-   "mean": "うつこと"
+   "mean": "うつこと",
+   "name_en": "rap",
+   "mean_en": "to strike"
   },
   "丂": {
    "mean": "考 の右がわの形",
-   "q": true
+   "q": true,
+   "mean_en": "the right side of 考"
   },
   "另": {
    "mean": "わかれること",
-   "q": true
+   "q": true,
+   "mean_en": "to part; to separate"
   },
   "刂": {
    "name": "りっとう",
-   "same": "刀"
+   "same": "刀",
+   "name_en": "knife"
   },
   "勿": {
    "mean": "「…するな」のこと",
-   "q": true
+   "q": true,
+   "mean_en": "\"don't ...\""
   },
   "吅": {
    "mean": "口が二つ（さけぶこと）",
-   "q": true
+   "q": true,
+   "mean_en": "two 口 (shouting)"
   },
   "歹": {
    "name": "がつへん",
-   "mean": "しぬこと・ほねのこと"
+   "mean": "しぬこと・ほねのこと",
+   "name_en": "bad / bone",
+   "mean_en": "death; bones"
   },
   "匕": {
    "name": "さじ",
-   "mean": "さじのこと"
+   "mean": "さじのこと",
+   "name_en": "spoon",
+   "mean_en": "a spoon"
   },
   "禾": {
    "name": "のぎへん",
-   "mean": "いねのこと"
+   "mean": "いねのこと",
+   "name_en": "grain",
+   "mean_en": "rice plants; grain"
   },
   "厶": {
    "name": "む",
-   "mean": "わたくし（自分）のこと"
+   "mean": "わたくし（自分）のこと",
+   "name_en": "private",
+   "mean_en": "oneself; private"
   },
   "龺": {
    "mean": "朝 の左がわの形",
-   "q": true
+   "q": true,
+   "mean_en": "the left side of 朝"
   },
   "廴": {
    "name": "えんにょう",
-   "mean": "のびること・長く歩くこと"
+   "mean": "のびること・長く歩くこと",
+   "name_en": "stride",
+   "mean_en": "stretching; walking far"
   },
   "刍": {
    "mean": "かりとった草のこと",
-   "q": true
+   "q": true,
+   "mean_en": "cut grass"
   },
   "关": {
    "mean": "送 の右がわの形",
-   "q": true
+   "q": true,
+   "mean_en": "the right side of 送"
   },
   "兑": {
    "mean": "説 の右がわの形",
-   "q": true
+   "q": true,
+   "mean_en": "the right side of 説"
   },
   "疒": {
    "name": "やまいだれ",
-   "mean": "病気のこと"
+   "mean": "病気のこと",
+   "name_en": "sickness",
+   "mean_en": "illness"
   },
   "尸": {
    "name": "しかばね",
    "mean": "からだ・やねのこと",
-   "q": true
+   "q": true,
+   "name_en": "corpse",
+   "mean_en": "a body; a roof"
   },
   "斦": {
    "mean": "斤（おの）が二つ",
-   "q": true
+   "q": true,
+   "mean_en": "two 斤 (axes)"
   },
   "艮": {
    "name": "ねづくり",
    "mean": "とまること（うしとら）",
-   "q": true
+   "q": true,
+   "name_en": "stopping",
+   "mean_en": "stopping (the northeast)"
   },
   "僉": {
    "mean": "みな（すべて）のこと",
-   "q": true
+   "q": true,
+   "mean_en": "all; everyone"
   },
   "氐": {
    "mean": "ひくいこと（低 の右がわ）",
-   "q": true
+   "q": true,
+   "mean_en": "low (the right side of 低)"
   },
   "冖": {
    "name": "わかんむり",
-   "mean": "おおうこと"
+   "mean": "おおうこと",
+   "name_en": "crown",
+   "mean_en": "to cover"
   },
   "哥": {
    "mean": "うた・あにのこと",
-   "q": true
+   "q": true,
+   "mean_en": "song; elder brother"
   },
   "⺌": {
    "mean": "光 の上の形",
-   "q": true
+   "q": true,
+   "mean_en": "the top of 光"
   },
   "兀": {
    "mean": "光 の下の形（人に近い）",
-   "q": true
+   "q": true,
+   "mean_en": "the bottom of 光 (like a person)"
   },
   "几": {
    "name": "つくえ",
-   "mean": "つくえのこと"
+   "mean": "つくえのこと",
+   "name_en": "table",
+   "mean_en": "a table"
   },
   "灬": {
    "name": "れっか",
-   "same": "火"
+   "same": "火",
+   "name_en": "fire"
   },
   "𡗗": {
    "mean": "春 の上の形",
-   "q": true
+   "q": true,
+   "mean_en": "the top of 春"
   },
   "彦": {
-   "mean": "ひこ（りっぱな男）のこと"
+   "mean": "ひこ（りっぱな男）のこと",
+   "mean_en": "a fine young man"
   },
   "圣": {
    "mean": "軽 の右がわの形",
-   "q": true
+   "q": true,
+   "mean_en": "the right side of 軽"
   },
   "𠬝": {
    "mean": "服 の右がわの形",
-   "q": true
+   "q": true,
+   "mean_en": "the right side of 服"
   },
   "袁": {
    "mean": "遠 の中の形",
-   "q": true
+   "q": true,
+   "mean_en": "the middle of 遠"
   },
   "翟": {
    "mean": "きじ（鳥）のこと",
-   "q": true
+   "q": true,
+   "mean_en": "a pheasant (a bird)"
   },
   "夂": {
    "name": "ふゆがしら",
    "mean": "ゆっくり行くこと",
-   "q": true
+   "q": true,
+   "name_en": "winter",
+   "mean_en": "walking slowly"
   },
   "冫": {
    "name": "にすい",
-   "same": "氷"
+   "same": "氷",
+   "name_en": "ice"
   },
   "𦰩": {
    "mean": "漢 の右がわの形",
-   "q": true
+   "q": true,
+   "mean_en": "the right side of 漢"
   }
  },
  "forms": {
   "亻": {
    "name": "にんべん",
-   "same": "人"
+   "same": "人",
+   "name_en": "person radical"
   },
   "氵": {
    "name": "さんずい",
-   "same": "水"
+   "same": "水",
+   "name_en": "water radical"
   },
   "扌": {
    "name": "てへん",
-   "same": "手"
+   "same": "手",
+   "name_en": "hand radical"
   },
   "牜": {
    "name": "うしへん",
-   "same": "牛"
+   "same": "牛",
+   "name_en": "ox radical"
   },
   "釒": {
    "name": "かねへん",
-   "same": "金"
+   "same": "金",
+   "name_en": "metal radical"
   },
   "糹": {
    "name": "いとへん",
-   "same": "糸"
+   "same": "糸",
+   "name_en": "thread radical"
   },
   "飠": {
    "name": "しょくへん",
-   "same": "食"
+   "same": "食",
+   "name_en": "food radical"
   },
   "訁": {
    "name": "ごんべん",
-   "same": "言"
+   "same": "言",
+   "name_en": "speech radical"
   },
   "礻": {
    "name": "しめすへん",
-   "same": "示"
+   "same": "示",
+   "name_en": "altar radical"
   }
  }
 }

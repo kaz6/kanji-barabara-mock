@@ -1,11 +1,44 @@
 {
-  "version": "2026-11-24.1",
-  "note": "KJ-043 チュートリアル（受け箱 P-043。作者 2026-11-23 04:54。D-057）。文は全部仮（作者が直せる形でここ1か所に置く。話し手・キャラクター・声は置かない）。手札・ストック・場は決まったもの。段の中身（札・言葉）は相談チャットが表で確かめた。ボタンの文字（Play・Split・Flip・Cycle・Same reading）は英語のまま、文の中でもその名前で呼ぶ。 KJ-055（受け箱 P-055。作者 2026-11-23 14:34）：段2（取る）のあと、放ったあとの取るは場の左から自動（ui.autoTake・ui.autoNote の文は仮）。",
+  "version": "2026-11-27.1",
+  "note": "KJ-043 チュートリアル（受け箱 P-043。作者 2026-11-23 04:54。D-057）。文は全部仮（作者が直せる形でここ1か所に置く。話し手・キャラクター・声は置かない）。手札・ストック・場は決まったもの。段の中身（札・言葉）は相談チャットが表で確かめた。ボタンの文字（Play・Split・Flip・Cycle・Same reading）は英語のまま、文の中でもその名前で呼ぶ。 KJ-055（受け箱 P-055。作者 2026-11-23 14:34）：段2（取る）のあと、放ったあとの取るは場の左から自動（ui.autoTake・ui.autoNote の文は仮）。 KJ-128（P-128）：English の文は ui_en・steps[].title_en・actions[].line_en（仮。係の訳。English のとき createTutorial が使う。ログに残る文〔autoNote・段のメモ〕は日本語のまま）。",
   "level": "N4",
-  "hand": ["大", "雨", "好", "十", "口", "下", "月", "木"],
-  "stock": ["本", "手", "山", "分"],
-  "field": ["水", "白", "百"],
-  "refill": ["田", "川", "魚", "目", "耳", "足", "犬", "花", "休", "車", "鳥", "空", "森", "林"],
+  "hand": [
+    "大",
+    "雨",
+    "好",
+    "十",
+    "口",
+    "下",
+    "月",
+    "木"
+  ],
+  "stock": [
+    "本",
+    "手",
+    "山",
+    "分"
+  ],
+  "field": [
+    "水",
+    "白",
+    "百"
+  ],
+  "refill": [
+    "田",
+    "川",
+    "魚",
+    "目",
+    "耳",
+    "足",
+    "犬",
+    "花",
+    "休",
+    "車",
+    "鳥",
+    "空",
+    "森",
+    "林"
+  ],
   "ui": {
     "button": "チュートリアル",
     "skip": "とばす",
@@ -18,57 +51,180 @@
   },
   "steps": [
     {
-      "id": "release", "title": "放つ",
+      "id": "release",
+      "title": "放つ",
       "actions": [
-        { "op": "release", "use": ["大", "雨"], "word": "大雨", "line": "大 → 雨 の順にタップして、Play で放つ（大雨）" }
-      ]
+        {
+          "op": "release",
+          "use": [
+            "大",
+            "雨"
+          ],
+          "word": "大雨",
+          "line": "大 → 雨 の順にタップして、Play で放つ（大雨）",
+          "line_en": "Tap 大, then 雨, then press Play (大雨)"
+        }
+      ],
+      "title_en": "Play"
     },
     {
-      "id": "take", "title": "取る",
+      "id": "take",
+      "title": "取る",
       "actions": [
-        { "op": "take", "line": "放つと、字数と同じ枚数を山札から取れる。山札の札を2枚タップして取る" }
-      ]
+        {
+          "op": "take",
+          "line": "放つと、字数と同じ枚数を山札から取れる。山札の札を2枚タップして取る",
+          "line_en": "After you play, you take as many cards from the deck as the word had characters. Tap 2 cards in the deck to take them"
+        }
+      ],
+      "title_en": "Take"
     },
     {
-      "id": "split", "title": "割る",
+      "id": "split",
+      "title": "割る",
       "actions": [
-        { "op": "split", "use": ["好"], "line": "好 をタップして Split。女 と 子 に割れる" },
-        { "op": "release", "use": ["女", "子"], "word": "女子", "line": "女 → 子 の順に選んで、Play（女子）" }
-      ]
+        {
+          "op": "split",
+          "use": [
+            "好"
+          ],
+          "line": "好 をタップして Split。女 と 子 に割れる",
+          "line_en": "Tap 好 and press Split. It breaks into 女 and 子"
+        },
+        {
+          "op": "release",
+          "use": [
+            "女",
+            "子"
+          ],
+          "word": "女子",
+          "line": "女 → 子 の順に選んで、Play（女子）",
+          "line_en": "Select 女, then 子, then press Play (女子)"
+        }
+      ],
+      "title_en": "Split"
     },
     {
-      "id": "join", "title": "くっつける",
+      "id": "join",
+      "title": "くっつける",
       "actions": [
-        { "op": "join", "from": "十", "to": "口", "face": "top", "line": "十 を指で引きずって、口 の上の面に落とす" },
-        { "op": "release", "use": ["古", "本"], "word": "古本", "line": "古 → 本 の順に選んで、Play（古本）" }
-      ]
+        {
+          "op": "join",
+          "from": "十",
+          "to": "口",
+          "face": "top",
+          "line": "十 を指で引きずって、口 の上の面に落とす",
+          "line_en": "Drag 十 and drop it on the top side of 口"
+        },
+        {
+          "op": "release",
+          "use": [
+            "古",
+            "本"
+          ],
+          "word": "古本",
+          "line": "古 → 本 の順に選んで、Play（古本）",
+          "line_en": "Select 古, then 本, then press Play (古本)"
+        }
+      ],
+      "title_en": "Join"
     },
     {
-      "id": "invert", "title": "反転",
+      "id": "invert",
+      "title": "反転",
       "actions": [
-        { "op": "invert", "use": ["下"], "line": "下 をタップして Flip。反対の 上 になる" },
-        { "op": "release", "use": ["上", "手"], "word": "上手", "line": "上 → 手 の順に選んで、Play（上手）" }
-      ]
+        {
+          "op": "invert",
+          "use": [
+            "下"
+          ],
+          "line": "下 をタップして Flip。反対の 上 になる",
+          "line_en": "Tap 下 and press Flip. It turns into its opposite, 上"
+        },
+        {
+          "op": "release",
+          "use": [
+            "上",
+            "手"
+          ],
+          "word": "上手",
+          "line": "上 → 手 の順に選んで、Play（上手）",
+          "line_en": "Select 上, then 手, then press Play (上手)"
+        }
+      ],
+      "title_en": "Flip"
     },
     {
-      "id": "cycle", "title": "巡り",
+      "id": "cycle",
+      "title": "巡り",
       "actions": [
-        { "op": "cycle", "use": ["月"], "line": "月 をタップして Cycle。曜日の次の 火 になる" },
-        { "op": "release", "use": ["火", "山"], "word": "火山", "line": "火 → 山 の順に選んで、Play（火山）" }
-      ]
+        {
+          "op": "cycle",
+          "use": [
+            "月"
+          ],
+          "line": "月 をタップして Cycle。曜日の次の 火 になる",
+          "line_en": "Tap 月 and press Cycle. It moves to the next day of the week, 火"
+        },
+        {
+          "op": "release",
+          "use": [
+            "火",
+            "山"
+          ],
+          "word": "火山",
+          "line": "火 → 山 の順に選んで、Play（火山）",
+          "line_en": "Select 火, then 山, then press Play (火山)"
+        }
+      ],
+      "title_en": "Cycle"
     },
     {
-      "id": "homophone", "title": "同音",
+      "id": "homophone",
+      "title": "同音",
       "actions": [
-        { "op": "homophone", "use": ["木"], "pick": "気", "line": "木 をタップして Same reading。同じ読みの 気 を選ぶ" },
-        { "op": "release", "use": ["気", "分"], "word": "気分", "line": "気 → 分 の順に選んで、Play（気分）" }
-      ]
+        {
+          "op": "homophone",
+          "use": [
+            "木"
+          ],
+          "pick": "気",
+          "line": "木 をタップして Same reading。同じ読みの 気 を選ぶ",
+          "line_en": "Tap 木 and press Same reading. Pick 気, which is read the same way"
+        },
+        {
+          "op": "release",
+          "use": [
+            "気",
+            "分"
+          ],
+          "word": "気分",
+          "line": "気 → 分 の順に選んで、Play（気分）",
+          "line_en": "Select 気, then 分, then press Play (気分)"
+        }
+      ],
+      "title_en": "Same reading"
     },
     {
-      "id": "end", "title": "おわり",
+      "id": "end",
+      "title": "おわり",
       "actions": [
-        { "op": "end", "line": "分からなくなったら、札が光ってヒントが出る。さあ、本番へ" }
-      ]
+        {
+          "op": "end",
+          "line": "分からなくなったら、札が光ってヒントが出る。さあ、本番へ",
+          "line_en": "If you get stuck, cards light up as a hint. Now, on to the real game"
+        }
+      ],
+      "title_en": "Done"
     }
-  ]
+  ],
+  "ui_en": {
+    "button": "Tutorial",
+    "skip": "Skip",
+    "go": "Start playing",
+    "stepOf": "{n} / {total}",
+    "autoTake": "Taking from the deck for you, as many cards as you played ({n} left)",
+    "notNow": "Not now (Tutorial {n}: {title})",
+    "wrongCards": "Tutorial: use {use} now"
+  }
 }
