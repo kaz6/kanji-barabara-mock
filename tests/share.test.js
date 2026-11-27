@@ -20,9 +20,14 @@ test("共有のリンク：ページの URL に ?room=合言葉。もとの ? �
   assert.equal(K.roomCodeFromSearch(new URL(K.roomShareUrl("http://h/p/", "5678")).search), "5678");
 });
 
-test("共有の文：題（masthead）と合言葉が入る。題を直せば文も変わる（KJ-107）", () => {
-  const t = STR.TEXT;
+test("共有の文：作者の文（KJ-122）。題・副題・合言葉・リンクが1本に入り、リンクは1つだけ", () => {
+  const t = STR.TEXT, url = K.roomShareUrl("https://kaz6.github.io/kanji-barabara-mock/", "2901");
   assert.equal(t.shareButton, "共有");
-  assert.equal(t.shareText("1234", t.masthead), `${t.masthead}で対戦しよう。合言葉 1234`);
-  assert.ok(t.shareText("1234", t.masthead).includes("漢対普請瓦版"));
+  const s = t.shareText("2901", t.masthead, t.mastheadSub, url);
+  assert.equal(s, "漢対普請瓦版 Split & Join — a Kanji Duel\n漢字を組み合わせて、言葉づくり対戦しよう。合言葉 2901 https://kaz6.github.io/kanji-barabara-mock/?room=2901");
+  assert.equal(s.split("https://").length - 1, 1);
+  assert.equal(s.split("2901").length - 1, 2, "合言葉とリンクの ?room= の2か所だけ");
+  assert.ok(!s.includes("#"));
+  // 題・副題を直せば文も変わる
+  assert.ok(t.shareText("1234", "題X", "副Y", "u").startsWith("題X 副Y\n"));
 });
