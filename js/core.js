@@ -254,6 +254,74 @@
   // 囗 は 口 として読める（KJ-096。reads_as。ろ とは読まない）
   const kanaOf = (T, c) => (T.KANA && T.KANA.get(c)) || (T.READS && T.READS.get(c)) || c;
   const kanaText = (T, chars) => [...(typeof chars === "string" ? chars : chars.join(""))].map((c) => kanaOf(T, c)).join("");
+
+  // ---------- 読みのローマ字（KJ-130。DOM に触らない）----------
+  // かな（ひらがな・カタカナ）→ ヘボン式のローマ字。長音は音の通りに重ねる（おう→ou・おお→oo・うう→uu・ー→前の母音。画面の字体 Zen Old Mincho に長音符の字が無いため）。
+  // っ は次の子音を重ねる（きっぷ→kippu。ち・ちゃ の前は t：まっちゃ→matcha）。ん は n（母音・や行の前は n'：ほんや→hon'ya）。かなでない字はそのまま
+  const ROMAJI_BASE = {
+    あ: "a", い: "i", う: "u", え: "e", お: "o", か: "ka", き: "ki", く: "ku", け: "ke", こ: "ko", さ: "sa", し: "shi", す: "su", せ: "se", そ: "so",
+    た: "ta", ち: "chi", つ: "tsu", て: "te", と: "to", な: "na", に: "ni", ぬ: "nu", ね: "ne", の: "no", は: "ha", ひ: "hi", ふ: "fu", へ: "he", ほ: "ho",
+    ま: "ma", み: "mi", む: "mu", め: "me", も: "mo", や: "ya", ゆ: "yu", よ: "yo", ら: "ra", り: "ri", る: "ru", れ: "re", ろ: "ro", わ: "wa", ゐ: "i", ゑ: "e", を: "o",
+    が: "ga", ぎ: "gi", ぐ: "gu", げ: "ge", ご: "go", ざ: "za", じ: "ji", ず: "zu", ぜ: "ze", ぞ: "zo", だ: "da", ぢ: "ji", づ: "zu", で: "de", ど: "do",
+    ば: "ba", び: "bi", ぶ: "bu", べ: "be", ぼ: "bo", ぱ: "pa", ぴ: "pi", ぷ: "pu", ぺ: "pe", ぽ: "po", ゔ: "vu", ゎ: "wa",
+  };
+  const ROMAJI_SMALL = { ぁ: "a", ぃ: "i", ぅ: "u", ぇ: "e", ぉ: "o" };
+  const ROMAJI_YOON = { ゃ: "ya", ゅ: "yu", ょ: "yo" };
+  const ROMAJI_SPECIAL = { しぇ: "she", じぇ: "je", ちぇ: "che", ふぁ: "fa", ふぃ: "fi", ふぇ: "fe", ふぉ: "fo", うぃ: "wi", うぇ: "we", うぉ: "wo", てぃ: "ti", でぃ: "di", とぅ: "tu", どぅ: "du", でゅ: "dyu", ゔぁ: "va", ゔぃ: "vi", ゔぇ: "ve", ゔぉ: "vo", つぁ: "tsa", つぃ: "tsi", つぇ: "tse", つぉ: "tso", いぇ: "ye", くぁ: "kwa", ぐぁ: "gwa" };
+  const romaji = (kana) => {
+    const cs = [...String(kana == null ? "" : kana)].map((ch) => (ch >= "ァ" && ch <= "ヶ" ? String.fromCharCode(ch.charCodeAt(0) - 0x60) : ch)); // カタカナ→ひらがな
+    let out = "", dbl = false, i = 0;
+    const put = (r) => {
+      if (dbl && r) { out += r.startsWith("ch") ? "t" + r : r[0] + r; dbl = false; } else out += r;
+    };
+    while (i < cs.length) {
+      const ch = cs[i], nx = cs[i + 1], two = ch + (nx || "");
+      if (ch === "っ") { dbl = true; i++; continue; }
+      if (ch === "ー") { const v = out.match(/[aiueo]$/); if (v) out += v[0]; i++; continue; }
+      if (ch === "ん") {
+        const rest = romaji(cs.slice(i + 1).join("")).charAt(0);
+        out += /[aiueoy]/.test(rest) ? "n'" : "n"; i++; continue;
+      }
+      if (ROMAJI_SPECIAL[two]) { put(ROMAJI_SPECIAL[two]); i += 2; continue; }
+      if (ROMAJI_BASE[ch] && nx && ROMAJI_YOON[nx]) { // きゃ・しゃ・ちゃ…：子音＋ゃゅょ（し・ち・じ・ぢ は h・j を残す）
+        const b = ROMAJI_BASE[ch], y = ROMAJI_YOON[nx];
+        put(/^(sh|ch|j)i$/.test(b) ? b.slice(0, -1) + y.slice(1) : b === "ji" ? "j" + y.slice(1) : b.slice(0, -1) + y);
+        i += 2; continue;
+      }
+      if (ROMAJI_BASE[ch]) { put(ROMAJI_BASE[ch]); i++; continue; }
+      if (ROMAJI_SMALL[ch]) { put(ROMAJI_SMALL[ch]); i++; continue; }
+      if (ROMAJI_YOON[ch]) { put(ROMAJI_YOON[ch]); i++; continue; }
+      dbl = false; out += ch; i++;
+    }
+    return out;
+  };
+  // 字の札の読み（KJ-130）：data/kanji.json の on（音読み。カタカナ）・kun（訓読み。送りがななし）と en（英語の意味）。字の札だけ。表に無い字（常用漢字の中継ぎなど）・部品の札は null
+  const KANJI_ROWS = new WeakMap();
+  const charReading = (D, c) => {
+    const K0 = D && D.kanji;
+    if (!K0) return null;
+    let m = KANJI_ROWS.get(K0);
+    if (!m) { m = new Map(); for (const r of [...(K0.kanji || []), ...(K0.outside || [])]) m.set(r.c, r); KANJI_ROWS.set(K0, m); }
+    const r = m.get(c);
+    if (!r || (!(r.on && r.on.length) && !(r.kun && r.kun.length))) return null;
+    return { c, on: (r.on || []).map(romaji), kun: (r.kun || []).map(romaji), en: (r.en || []).slice(0, 2) };
+  };
+  // 台の行の一行：「日 · nichi, jitsu / hi, bi · day, sun」。訓が無ければ音だけ（「 / 」なし）。字の札でなければ null
+  const READ_DOT = " · ";
+  const charReadingLine = (D, c) => {
+    const r = charReading(D, c);
+    if (!r) return null;
+    const rd = [r.on.join(", "), r.kun.join(", ")].filter(Boolean).join(" / ");
+    return [c, rd, r.en.join(", ")].filter(Boolean).join(READ_DOT);
+  };
+  // 放った語の一行：「日本 · nihon · Japan」。語の表の読み（かな。地名・名字は pn_kana）か、数＋助数詞の読み。意味は先の2つ。読みが無ければ null
+  const wordReadingLine = (T, text) => {
+    const w = T && T.WORDS ? T.WORDS.get(text) : null;
+    const cr = !w && T && T.COUNTER_READ ? counterReading(T, text) : null;
+    const kana = w ? w.kana || w.pn_kana || "" : cr ? cr.join(" ") : "";
+    if (!kana) return null;
+    return [text, romaji(kana), w && w.en ? w.en.slice(0, 2).join(", ") : ""].filter(Boolean).join(READ_DOT);
+  };
   const isKanaChar = (T, c) => !!T.KANA && [...T.KANA.values()].includes(c);
   // 語の字として使えるか：手に持てる字か、このレベルで手に入るかな（KJ-053）
   const wordCharOk = (T, c) => T.HOLD.has(c) || (!!T.KANA_OK && T.KANA_OK.has(c));
@@ -1391,8 +1459,11 @@
   function createTutorial(D, T, env) {
     const TD = D.tutorial;
     const g = createGame(D, T, { ...(env || {}), tutorial: TD, startStock: false });
-    const steps = TD.steps, ui = TD.ui;
+    const ui = TD.ui;
     const en = () => !!(env && typeof env.lang === "function" && env.lang() === "en"); // KJ-128：English のとき、画面に出す文だけ English（ui_en・title_en・line_en）。ログに残る文は日本語のまま
+    // KJ-130：English のときだけ、読みの段を1つ足す（TD.en_steps。after＝その id の段のすぐあと。押す手は「次へ」＝op "next" だけ）。日本語の段の数は変えない
+    const steps = TD.steps.slice();
+    if (en()) for (const x of TD.en_steps || []) { const at = steps.findIndex((s) => s.id === x.after); steps.splice(at < 0 ? steps.length : at + 1, 0, x.step); }
     const acts = [];
     steps.forEach((s, i) => s.actions.forEach((a, j) => acts.push({ ...a, step: i, k: j, last: j === s.actions.length - 1 })));
     const info = { total: steps.length, done: 0, finished: null, secs: [] }; // done＝済んだ段の数
@@ -1431,6 +1502,7 @@
         return g.take(g.me, g.field[0].id, ui.autoNote);
       },
       atEnd: () => !info.finished && act().op === "end" && !lockedNow(),
+      atNext: () => !info.finished && act().op === "next" && !lockedNow(), // 読みの段（English。KJ-130）：「次へ」を出す
       // 光らせるもの：札（字）・ボタン（id）・同音の選びの字
       glow() {
         const a = act();
@@ -1796,7 +1868,8 @@
   function kotobankUrl(word) { return "https://kotobank.jp/search?q=" + encodeURIComponent(word); }
   function endWordInfo(T, text, w) {
     const cr = !w && T && T.COUNTER_READ ? counterReading(T, text) : null;
-    return { reading: w ? w.kana : (cr ? cr.join("・") : ""), ens: w && w.en ? w.en.slice(0, 2) : [], url: kotobankUrl(text) };
+    const reading = w ? w.kana : (cr ? cr.join("・") : "");
+    return { reading, romaji: romaji(reading.split("・")[0]), ens: w && w.en ? w.en.slice(0, 2) : [], url: kotobankUrl(text) }; // romaji：English のときの読み（KJ-130。先頭の読みだけ）
   }
   const END_LABELS = { win: "勝ち！", lose: "負け…", draw: "引き分け", solo: "おわり" };
   function endShow(g, T, winner) {
@@ -1994,7 +2067,7 @@
   return {
     kansuji, daiji, aoriLine, aoriShareLine, issueLabel, kansujiDate, shareResultText, siteUrl, toKatakana, senkyoLines,
     FILES, OPPONENTS, PLAY_MODES, CPU_POWERS, readOpponent, opponentKey, LEVELS, timeChoices, normTime, vibratePattern, timeLabel, levelLabel, levelShort, makeTables, isN5, isLevelChar, isChar, radicalNote, radicalFormNote, joinPartners, joinNote, JOIN_NOTE_MODES, splitOnce, canSplit, delivered, joinResults, joinReversed,
-    releasable, effectText, counterParts, usedCounters, counterBlocked, counterReading, rejectText, scoreOf, kanaOf, kanaText, wordCharOk, KANA_ONLY_WHY, homoChars, marks, markKinds, cutSpec, FACES, FACE_LABEL, faceJoins, faceResults, rulesLabel, opponentLabel, createGame, createTutorial, TUTORIAL_OPPONENT, playLogRow, endShow, kotobankUrl, END_LABELS, logSendAllowed, playLogResult, PLAY_LOG_LIMITS,
+    releasable, effectText, counterParts, usedCounters, counterBlocked, counterReading, rejectText, scoreOf, kanaOf, kanaText, romaji, charReading, charReadingLine, wordReadingLine, wordCharOk, KANA_ONLY_WHY, homoChars, marks, markKinds, cutSpec, FACES, FACE_LABEL, faceJoins, faceResults, rulesLabel, opponentLabel, createGame, createTutorial, TUTORIAL_OPPONENT, playLogRow, endShow, kotobankUrl, END_LABELS, logSendAllowed, playLogResult, PLAY_LOG_LIMITS,
     strSeed, seededRand, matchRand, ROLES, ROOM_OPPONENT, MATCH_END_GRACE_SEC, MATCH_INSERT_TIMEOUT_SEC, MATCH_PING_SEC, MATCH_GONE_SEC, ROOM_LOBBY_TTL_SEC,
     createMatchClient, memoryClaims, newMatchId, newRoomCode, roomCodeFromSearch, roomShareUrl, roomLobbyId, findRoom, hostRoom, joinRoom, startRoom, roomStartAt, roomWaiter,
   };

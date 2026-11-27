@@ -266,3 +266,15 @@ English にした範囲（段1のあとの続き）。訳は全部仮（係が�
 - くっつく相手の行：`K.joinNote(D,T,cards,sel,"en")` → `Joins: 禾+火→秋`（3組まで・あとは `+N more`）
 - 台の行の注：`js/strings.js` の `notePts`（点／ ` pts`）・`noteYoji`・`pn_地名`（place）・`pn_名字`（surname）・`pnSep`・`noteCounter`・`noteJoins`（`Joins to make 古 or 田`）・`noteRev`（Wrong order）・`noteParen`。はじかれた理由は段1の `CORE_EN`（`STR.tr(K.rejectText(...))`）
 - 見逃した言葉・終わりの言葉の欄：段1の `esMissed`・`esReading`・`esMeaning`（意味は `ens`）のまま
+
+## 読みのローマ字（KJ-130）
+
+English のときだけ出る（日本語のときは出さない）。長音は音のとおり重ねる（画面の字体に ō・ū が無いため）。文の型は `js/core.js`（`K.charReadingLine`・`K.wordReadingLine`）に置いてあり、区切りは ` · `。
+
+| 場所 | 形 |
+| --- | --- |
+| 台の行（字の札を1枚選んだとき） | `日 · nichi, jitsu / hi, bi · day, sun` |
+| 台の行（語を放ったあと、台が空のあいだ） | `日本 · nihon · Japan` |
+| 終わりの画面の語・タップの欄の Reading・見逃した言葉 | `にほん · nihon` |
+| English のチュートリアルの読みの段（`data/tutorial.json` の `en_steps`。仮） | `Each character has readings. 大 (dai / oo) + 雨 (u / ame) → 大雨 (ooame)`。ボタンは `Next`（`ui_en.next`） |
+
