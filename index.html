@@ -148,7 +148,12 @@ button.op.joinpop .jn-fx{animation:kjJnPop var(--jn-pop-time) ease-out}
 .field.glow .tile{border:3px solid var(--hint);box-shadow:0 0 0 1px var(--hint),0 0 10px 2px rgba(217,154,0,.55);animation:kjTake 1s ease-in-out infinite alternate}
 .table .fieldside.take .side-head b{color:var(--hint)}
 @keyframes kjTake{from{box-shadow:0 0 0 1px var(--hint),0 0 3px 0 rgba(217,154,0,.3)}to{box-shadow:0 0 0 1px var(--hint),0 0 12px 3px rgba(217,154,0,.75)}}
-@media (prefers-reduced-motion:reduce){.field.glow .tile{animation:none}}
+/* KJ-119：取る番のあいだ、取れない所（台・操作・手札・ストック・戻す／引き直し）を薄くして山札の3枚だけをはっきり見せる。入った瞬間に山札の札を一度だけ弾ませる（0.3秒）。動きを減らす設定では弾ませない（薄くするのは残す）。金の色は変えない */
+body.taking .stage,body.taking #meHand,body.taking #meTray,body.taking #trayHead,body.taking #meSide .bkrd{opacity:.45;transition:opacity .15s}
+.field.pop .tile{animation:kjTakePop .3s ease-out var(--popd,0s) 1,kjTake 1s ease-in-out infinite alternate}
+@keyframes kjTakePop{0%{transform:scale(1)}40%{transform:scale(1.22)}100%{transform:scale(1)}}
+.takeshort{display:inline-block;min-width:4.6em;margin-left:8px;white-space:nowrap;font-size:13px;font-weight:700;color:var(--hint)}
+@media (prefers-reduced-motion:reduce){.field.glow .tile,.field.pop .tile{animation:none}}
 @media (max-width:540px){
   .me .tile{font-size:26px}
   .cpu .hand{grid-template-columns:repeat(8,1fr)}
@@ -509,7 +514,7 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
   <section class="table">
   <div class="takesline"><span class="takes" id="takes"></span></div>
   <section class="side fieldside" id="fieldSide">
-    <div class="side-head"><b>山札</b></div>
+    <div class="side-head"><b>山札</b><span class="takeshort" id="takeShort"></span></div>
     <div class="field" id="field"></div>
   </section>
 
@@ -1398,9 +1403,17 @@ function renderField(){
   const el=$("field"),can=!G.over&&G.me.takes>0&&G.canTakeMore(G.me)&&!(TUT&&autoTok); // 自動取りのあいだは「タップ」の案内を出さない
   el.className="field"+(can?" can glow":"");el.innerHTML="";
   $("fieldSide").classList.toggle("take",can); // 取る番：場の見出しも金（KJ-046）
+  // KJ-119：取る番に入った瞬間だけ山札の札を弾ませ（途中で描き直しても続きから）、取る番のあいだは取れない所を薄くする
+  if(TAKE_SEEN.g!==G){TAKE_SEEN.g=G;TAKE_SEEN.on=false;TAKE_SEEN.at=0}
+  if(can&&!TAKE_SEEN.on){TAKE_SEEN.at=reduceMotion()?0:performance.now();if(TAKE_SEEN.at)el.dataset.pops=String((+el.dataset.pops||0)+1)}
+  TAKE_SEEN.on=can;
+  document.body.classList.toggle("taking",can);
+  const popAge=TAKE_SEEN.at?performance.now()-TAKE_SEEN.at:1e9;
+  if(can&&popAge<300){el.classList.add("pop");el.style.setProperty("--popd",`-${Math.round(popAge)}ms`)}else el.style.removeProperty("--popd");
   el.style.gridTemplateColumns=`repeat(${D.rules.field_size},1fr)`;
   for(const x of G.field)el.appendChild(tileEl(x,{onClick:()=>tapField(x.id)}));
   $("takes").textContent=!G.over&&G.me.takes>0&&!(TUT&&autoTok)?`山札から あと ${G.me.takes} 枚 取る（タップ）`:"";
+  $("takeShort").textContent=can?`あと ${G.me.takes} 枚`:"";
 }
 // ゲージ（KJ-034）：待っている間は class cd と --g（0〜1）。待ちが明けたら外して、小さく光らせる（full）
 function gauge(b,waiting,f){
@@ -1414,6 +1427,7 @@ function gauge(b,waiting,f){
 // ---- 点の演出（KJ-050。作者 2026-11-23。D-065。中身は仮）----
 // 点が入る（放つ）：放った字が卓から点へ飛び、「+〇」が大きく出て点に吸い込まれる。点の数字はカウントアップして一度ポンと大きくなる。2字 ふつう／3字 少し大きく光る／4字・四字熟語・特別な語 さらに大きく＋卓の上に光の輪
 // 点が減る（引き直し）：「-〇」が点の上から落ちて消え、点の数字が揺れる（値段が大きいほど大きく・長く）。マイナスになったら点は灰色。相手の欄でも同じ動きを小さく。音なし。長さは1秒前後まで。特別な語の演出（#fx）の上にも出す（z-index 11）
+const TAKE_SEEN={g:null,on:false,at:0}; // KJ-119：取る番に入ったのを一度だけ見つける
 const PTS_FX={g:null,prev:{me:null,cpu:null},disp:{me:null,cpu:null},last:null,max:1000};
 function reduceMotion(){try{return matchMedia("(prefers-reduced-motion: reduce)").matches}catch(e){return false}}
 function ptsTier(who,pts){ // 放った言葉で段を決める。分からないとき（放った言葉が届いていない）は点の大きさで
