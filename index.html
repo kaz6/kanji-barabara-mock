@@ -609,7 +609,7 @@ let row=[];         // 選んだ札の id（選んだ順。台にはその写し
 let lastTried="";
 const OPP_KEY="kj-opponent",TIME_KEY="kj-time",VIB_KEY="kj-vibe",FACE_KEY="kj-face",ISSUE_KEY="kj-issue";
 let opponent=null;  // 相手のキー（weak・fair・normal・room。solo は画面から外した〔KJ-056〕）。端末に覚える（KJ-007）。画面では「遊び方」と「強さ」の2段で選ぶ（KJ-045）
-let cpuPower="weak"; // 「CPU と」のときの強さ。遊び方を行き来しても覚えている
+let cpuPower="weak"; // 「CPU戦」のときの強さ。遊び方を行き来しても覚えている
 let timeLimit=null; // 制限時間（秒）。端末に覚える（KJ-007）
 const $=id=>document.getElementById(id);
 const clock=()=>performance.now()/1000;
@@ -641,7 +641,7 @@ function loadSettings(){
   vibeOn=lsGet(VIB_KEY)!=="0"; // 振動の入り切り（KJ-074）。覚えていなければ入
   setFace(lsGet(FACE_KEY)==="mincho"?"mincho":"taisho"); // 札の字（KJ-093）。覚えていなければ大正風
 }
-// 共有のリンク ?room=合言葉（KJ-107）で開いたら、遊び方を「友だちと（合言葉）」にし、入る側の欄に合言葉を入れておく。入るのは遊び手が「合言葉で入る」を押してから。合言葉の決まりに合わなければ何もしない。端末に覚えた遊び方は書き換えない
+// 共有のリンク ?room=合言葉（KJ-107）で開いたら、遊び方を「友達と対戦」にし、入る側の欄に合言葉を入れておく。入るのは遊び手が「合言葉で入る」を押してから。合言葉の決まりに合わなければ何もしない。端末に覚えた遊び方は書き換えない
 // KJ-123：「友達と対戦」＋［部屋に入る］が選ばれた状態にする。入り方の統計のため、リンクの合言葉を覚えておく（打ち直さずに入ったら「リンク」）
 function applyRoomLink(){
   let code=null;try{code=K.roomCodeFromSearch(location.search)}catch(e){}
@@ -1673,7 +1673,7 @@ function buildHowto(){
     `<b>はじまり</b>：はじめの手札は ${R.start_hand} 枚。はじめたらすぐ時間が動く。ストックには、使いやすい部品が ${R.start_stock_parts} 枚、最初から入っている。`,
     `<b>台</b>は並べて見る場所：選んだ札は手札・ストックのマスにいるまま、台にはその写しが出る（枚数は変わらない）。`,
     `<b>レベル</b>：はじめる前に選ぶ（小1／N5／N4。小1 は小学1年の漢字80字、N4 は N5＋N4 の字）。山に入る字・語・割り方・対義・巡り・同音がレベルで変わる。いまは ${K.levelLabel(T.level)}（字 ${T.CHARS.size}・語 ${T.WORDS.size}）。`,
-    `<b>遊び方・強さ</b>：はじめる前に選ぶ。CPU と：とても弱い（CPU は ${R.cpu.weak_interval_sec[0]}〜${R.cpu.weak_interval_sec[1]} 秒に1回）／ふつう（${R.cpu.fair_interval_sec[0]}〜${R.cpu.fair_interval_sec[1]} 秒に1回）／つよい（${R.cpu.interval_sec[0]}〜${R.cpu.interval_sec[1]} 秒に1回）。`,
+    `<b>遊び方・強さ</b>：はじめる前に選ぶ。CPU戦：とても弱い（CPU は ${R.cpu.weak_interval_sec[0]}〜${R.cpu.weak_interval_sec[1]} 秒に1回）／ふつう（${R.cpu.fair_interval_sec[0]}〜${R.cpu.fair_interval_sec[1]} 秒に1回）／つよい（${R.cpu.interval_sec[0]}〜${R.cpu.interval_sec[1]} 秒に1回）。`,
     `<b>割る</b>：台の1枚を部品表で一段だけ割る。<b>くっつける</b>：台の2枚を、左→右の順でくっつける。逆に並べたときは「並べる順が逆」と出る。十・口（古・田）や 大・丶（太・犬）のように2通りの字になるときは選ぶ。`,
     `<b>反転</b>（印：${STR.iconSvg("invert")}）対義の字に。${R.cooldown_sec.invert} 秒待ち。<b>巡り</b>（印：${STR.iconSvg("cycle")}）${T.CYCLES.map(c=>c.name).join("・")}を1つ先へ。${R.cooldown_sec.cycle} 秒待ち。<b>同音</b>：同じ読みの字から選ぶ。${R.cooldown_sec.homophone} 秒待ち。待ち時間は操作ごとで、二人は別々。`,
     `<b>引き直し</b>：手札を全部入れ替える（${R.start_hand} 枚）。値段は、その試合で何回目かで上がる（${R.redraw.costs.map(c=>c+" 点").join("→")}）。${R.redraw.costs.length} 回まで。点が足りなくても払える（マイナスになってよい）。`,
