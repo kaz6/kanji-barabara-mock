@@ -66,7 +66,7 @@
 
 | 文言 | 出る所 | 決めた人 |
 |---|---|---|
-| 振動 ／ 入 ・ 切 | はじめる前の画面の歯車を押すと開く設定の欄の中（`navigator.vibrate` がある端末だけ。index.html の `#grpVib`・`#setPanel`。KJ-123） | 係の仮決め |
+| 振動 ／ 入 ・ 切 | はじめる前の画面の歯車を押すと開く設定の欄の中（`navigator.vibrate` がある端末だけ。歯車そのものは曲の入／切があるのでいつも出る。KJ-133。index.html の `#grpVib`・`#setPanel`。KJ-123） | 係の仮決め |
 | 合言葉の部屋（段の見出し）／ 部屋を作る ／ 部屋に入る | はじめる前の画面（友達と対戦のとき。作る／入るの選ぶ札 `#act`。KJ-123） | 係の仮決め（見出しは前の文言から括弧を取った） |
 
 ## 表紙と札の字（KJ-093。ボタンではないので日本語。仮）
@@ -153,6 +153,7 @@
 | `lblLevel` | レベル | Level |
 | `lblTime` | 時間 | Time |
 | `lblVib` | 振動 | Vibration |
+| `lblBgm` | 曲（KJ-133。歯車の欄の入／切） | Music |
 | `lblFace` | 札の字 | Card font |
 | `faceTaisho` | 大正風 | Taisho style |
 | `faceMincho` | 明朝 | Mincho |
@@ -256,7 +257,7 @@
 | 終わった！ | The game is over! |
 | 〇円は一度きり！（円は使った助数詞。人・本・日… も同じ） | Only one 円 per match! |
 
-遊び方の説明（しくみ）17行の English は `js/strings.js` の `HOWTO.en`。戦果の共有の English の型は `SHARE_RESULT_EN`（例：`漢対普請瓦版 第壱號 / （煽り文句。日本語のまま） / Beat CPU (very weak) 48-30 / Best word: '十円' 9 pts / (N5)⏎URL⏎#漢対普請瓦版 #KanjiDuel`）。
+遊び方の説明（しくみ）18行の English は `js/strings.js` の `HOWTO.en`。戦果の共有の English の型は `SHARE_RESULT_EN`（例：`漢対普請瓦版 第壱號 / （煽り文句。日本語のまま） / Beat CPU (very weak) 48-30 / Best word: '十円' 9 pts / (N5)⏎URL⏎#漢対普請瓦版 #KanjiDuel`）。
 
 ## 言語（KJ-128。段2）
 

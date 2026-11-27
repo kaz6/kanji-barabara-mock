@@ -145,7 +145,7 @@ test("KJ-127 English：はじめる前の画面と遊び方の説明（しくみ
     await page.locator("details summary").first().click();
     const h = await howtoText(page);
     assert.ok(!KANA.test(h), "しくみにかなが残っている：" + (h.match(/[\u3040-\u30ff]+/g) || []).join(" "));
-    assert.equal(await page.locator("#howto li").count(), 17);
+    assert.equal(await page.locator("#howto li").count(), 18);
     assert.equal(await txt(page, "details summary .sm"), "How it works");
     assert.equal(await txt(page, "#again"), "Play again");
     // 画面の字体（Zen）で出る：英字の見出し・説明の最初の字体が KJ Zen

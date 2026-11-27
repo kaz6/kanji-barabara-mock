@@ -425,6 +425,11 @@ details ul{padding-left:18px}
 @media (prefers-reduced-motion:reduce){#nope.on .no-ic{animation:none}}
 #nope .no-why{font-size:20px;font-weight:700;color:var(--ink);line-height:1.3;text-wrap:balance;background:var(--tile);border:1px solid var(--ink);padding:3px 10px;max-width:90vw;box-sizing:border-box}
 /* 特別な語の演出 */
+#count{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;background:var(--bg);color:var(--ink);cursor:default;touch-action:none} /* KJ-133：数え下げ。大字は画面の字（Zen）の太字。墨のまま（色の役割 D-122 を使わない） */
+#count[hidden]{display:none}
+#count span{font-family:var(--ui);font-weight:700;font-size:min(48vw,240px);line-height:1;animation:kjCount 1s ease-out both}
+@keyframes kjCount{from{transform:scale(1.25);opacity:.2}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){#count span{animation:none}}
 #fx{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(232,219,180,.92);z-index:10;pointer-events:none}
 #fx.on{display:flex}
 #fx .c{font-family:"KJ Fx",var(--kanji);font-size:min(22vw,150px);line-height:1;opacity:0;transform:scale(1.6);transition:opacity .12s,transform .18s}
@@ -495,7 +500,7 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
   <section class="setup" id="setup">
     <div class="sethead"><h2 data-t="setHead"></h2><span class="shbtns"><button type="button" class="langbtn" id="bLang" aria-expanded="false" aria-controls="langPanel"></button><button type="button" class="gear" id="bGear" hidden aria-expanded="false" aria-controls="setPanel"></button></span></div>
     <div class="setpanel" id="langPanel" hidden><span class="opp" id="langPick" role="radiogroup" data-t-aria="langBtn"></span></div><!-- KJ-127：言語の切り替え（日本語・English）。見出しの行の右の JP／EN を押すとここが開き、選ぶと閉じる -->
-    <div class="setpanel" id="setPanel" hidden><div class="grp" id="grpVib"><p class="gt" data-t="lblVib"></p><span class="opp" id="vib" role="radiogroup" data-t-aria="lblVib"></span></div></div>
+    <div class="setpanel" id="setPanel" hidden><div class="grp" id="grpBgm"><p class="gt" data-t="lblBgm"></p><span class="opp" id="bgm" role="radiogroup" data-t-aria="lblBgm"></span></div><div class="grp" id="grpVib"><p class="gt" data-t="lblVib"></p><span class="opp" id="vib" role="radiogroup" data-t-aria="lblVib"></span></div></div>
     <div class="grp"><p class="gt" data-t="lblPlay"></p><span class="opp" id="opp" role="radiogroup" data-t-aria="lblPlay"></span></div>
     <div class="grp" id="powBox" hidden><p class="gt" data-t="lblPower"></p><span class="opp" id="pow" role="radiogroup" data-t-aria="lblPower"></span></div>
     <div class="grp" id="actBox" hidden><p class="gt" data-t="lblRoom"></p><span class="opp" id="act" role="radiogroup" data-t-aria="lblRoom"></span></div><!-- KJ-123：友達と対戦のとき、強さの段の場所に［部屋を作る］［部屋に入る］。初めはどちらも選ばれていない -->
@@ -610,6 +615,7 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
   </details>
 </main>
 <div id="nope" role="status" aria-live="polite"><div class="no-ic" aria-hidden="true">否</div><div class="no-why" id="nopeWhy"></div></div>
+<div id="count" hidden aria-hidden="true"><span id="countChar"></span></div><!-- KJ-133：はじまりの数え下げ（参・弐・壱。1秒ずつ）。画面いっぱいを紙の地で覆い、押せない -->
 <div id="fx"><div class="who" id="fxWho"></div><div id="fxChars" style="display:flex;gap:2vw"></div></div>
 
 <script src="js/core.js"></script>
@@ -631,7 +637,7 @@ const LVL_KEY="kj-level";
 let level=null;     // レベル（"G1"〔小1〕／"N5"／"N4"）。はじめるときに効く。端末に覚える
 let row=[];         // 選んだ札の id（選んだ順。台にはその写しを左から並べる）
 let lastTried="";
-const OPP_KEY="kj-opponent",TIME_KEY="kj-time",VIB_KEY="kj-vibe",FACE_KEY="kj-face",ISSUE_KEY="kj-issue",LANG_KEY="kj-lang";
+const OPP_KEY="kj-opponent",TIME_KEY="kj-time",VIB_KEY="kj-vibe",FACE_KEY="kj-face",BGM_KEY="kj-bgm",ISSUE_KEY="kj-issue",LANG_KEY="kj-lang";
 let opponent=null;  // 相手のキー（weak・fair・normal・room。solo は画面から外した〔KJ-056〕）。端末に覚える（KJ-007）。画面では「遊び方」と「強さ」の2段で選ぶ（KJ-045）
 let cpuPower="weak"; // 「CPU戦」のときの強さ。遊び方を行き来しても覚えている
 let timeLimit=null; // 制限時間（秒）。端末に覚える（KJ-007）
@@ -663,6 +669,7 @@ function loadSettings(){
   const l=lsGet(LVL_KEY);level=K.LEVELS.some(x=>x.key===l)?l:(D.rules.level_default||"N4");
   timeLimit=K.normTime(D,lsGet(TIME_KEY));
   vibeOn=lsGet(VIB_KEY)!=="0"; // 振動の入り切り（KJ-074）。覚えていなければ入
+  bgmOn=lsGet(BGM_KEY)!=="0"; // 試合の曲の入り切り（KJ-133）。覚えていなければ入
   setFace(lsGet(FACE_KEY)==="mincho"?"mincho":"taisho"); // 札の字（KJ-093）。覚えていなければ大正風
 }
 // 共有のリンク ?room=合言葉（KJ-107）で開いたら、遊び方を「友達と対戦」にし、入る側の欄に合言葉を入れておく。入るのは遊び手が「合言葉で入る」を押してから。合言葉の決まりに合わなければ何もしない。端末に覚えた遊び方は書き換えない
@@ -740,7 +747,7 @@ if(window.ResizeObserver)new ResizeObserver(updateScrollHint).observe(document.b
 updateScrollHint();
 function refreshMast(){$("mastNo").textContent=K.issueLabel(issuesPlayed());$("mastDate").textContent=K.kansujiDate(new Date())}
 // ---------- 振動（KJ-074。D-092）：自分の手のときだけ。形は rules.vibrate（K.vibratePattern）。navigator.vibrate が無い端末（iOS の Safari など）では何もしない ----------
-let vibeOn=true;
+let vibeOn=true,bgmOn=true;
 const canVibe=()=>{try{return typeof navigator!=="undefined"&&typeof navigator.vibrate==="function"}catch(e){return false}};
 function buzz(kind,o){
   if(!vibeOn||!canVibe()||!D.rules)return;
@@ -759,25 +766,141 @@ function radios(box,name,items,cur,onPick){
   }
 }
 function buildPickers(){
-  for(const id of ["opp","pow","lvl","tim","face","act","vib","langPick"])$(id).textContent=""; // 言語を替えたとき作り直す（KJ-127）
+  for(const id of ["opp","pow","lvl","tim","face","act","vib","bgm","langPick"])$(id).textContent=""; // 言語を替えたとき作り直す（KJ-127）
   radios($("langPick"),"lang",STR.LANGS.map(o=>({value:o.key,label:o.label})),STR.getLang(),setLangTo);
   radios($("opp"),"opp",K.PLAY_MODES.map(o=>({value:o.key,label:STR.tr(o.label)})),playMode(),v=>{cancelRoom();roomAct=null;opponent=K.opponentKey(v,cpuPower);lsSet(OPP_KEY,opponent);roomUi()});
   radios($("pow"),"pow",K.CPU_POWERS.map(o=>({value:o.key,label:STR.tr(o.label)})),cpuPower,v=>{cpuPower=v;opponent=K.opponentKey("cpu",v);lsSet(OPP_KEY,opponent)});
   radios($("lvl"),"lvl",K.LEVELS.map(o=>({value:o.key,label:STR.tr(o.short),title:STR.tr(o.label)})),level,v=>{level=v;lsSet(LVL_KEY,v);T=tablesFor(level);showCounts()});
   radios($("face"),"face",[{value:"taisho",label:STR.t("faceTaisho")},{value:"mincho",label:STR.t("faceMincho")}],face,v=>{setFace(v);lsSet(FACE_KEY,v)});
   radios($("act"),"act",[{value:"host",label:STR.t("actHost")},{value:"enter",label:STR.t("actEnter")}],roomAct,pickAct); // KJ-123：初めはどちらも選ばれていない（?room= のときだけ［部屋に入る］）
-  if(canVibe()){$("bGear").hidden=false;radios($("vib"),"vib",[{value:"1",label:STR.t("on")},{value:"0",label:STR.t("off")}],vibeOn?"1":"0",v=>{vibeOn=v==="1";lsSet(VIB_KEY,v);if(vibeOn)buzz("take")})} // 振動が使えない端末には出さない。入にしたとき、1回だけ試しに震える
+  $("bGear").hidden=false; // KJ-133：曲の入／切があるので、歯車はいつも出す（振動の欄だけ、振動が使えない端末では出さない）
+  $("grpVib").hidden=!canVibe();
+  if(canVibe())radios($("vib"),"vib",[{value:"1",label:STR.t("on")},{value:"0",label:STR.t("off")}],vibeOn?"1":"0",v=>{vibeOn=v==="1";lsSet(VIB_KEY,v);if(vibeOn)buzz("take")}); // 入にしたとき、1回だけ試しに震える
+  radios($("bgm"),"bgm",[{value:"1",label:STR.t("on")},{value:"0",label:STR.t("off")}],bgmOn?"1":"0",v=>{bgmOn=v==="1";lsSet(BGM_KEY,v);bgmUnlock();bgmSetupSync()});
   radios($("tim"),"tim",K.timeChoices(D).map(sec=>({value:sec,label:STR.timeLabel(sec)})),timeLimit,v=>{timeLimit=+v;lsSet(TIME_KEY,v);buildHowto()});
 }
 const playMode=()=>K.readOpponent(D,opponent).mode; // cpu／room
 function tablesFor(lv){return TABLES[lv]||(TABLES[lv]=K.makeTables(D,lv))}
 function showCounts(){$("setupInfo").textContent=STR.t("counts",T.CHARS.size,T.WORDS.size,STR.tr(K.levelLabel(T.level)))}
 // 画面は2つ：はじめる前の画面と、遊ぶ画面。「もう一度」は同じ設定ですぐ始まる。「設定を変える」で前の画面へ戻る
-function showScreen(playing){syncFace();closeEnd();$("setup").hidden=playing;$("game").hidden=!playing;document.body.classList.toggle("playing",playing)}
+function showScreen(playing){syncFace();closeEnd();$("setup").hidden=playing;$("game").hidden=!playing;document.body.classList.toggle("playing",playing);if(playing)bgmNoiseStop(0);else{cancelCount();bgmSongStop();bgmSetupSync()}}
+// ---------- 試合の曲と針の音・はじまりの数え下げ（KJ-133・D-131・D-133） ----------
+// はじめる前：ノイズの輪を小さく流す（最初に画面を触ったときから。スマホは触る前に音を鳴らせない）→「参」で針の音→「弐」「壱」→「壱」が消えて試合が始まる瞬間に、曲が鳴り出す。
+// 曲は元の録音を頭（針のノイズ）から鳴らし、曲が鳴り出す所（rules.bgm.onset_sec）が試合の始まりに重なる。終わったら頭に戻って鳴らし直す。最後の1分は少し速く。試合が終わったら1秒ほどで小さくして止める。
+// 数え下げの字（参・弐・壱）は曲が切でも出す。数え下げのあいだは時計を動かさない（CPU 戦は数えたあとに試合を作る。合言葉の部屋は始まりの時刻を数え下げのぶんだけ後ろへ）。チュートリアルでは数えない・鳴らさない。
+// 端末のテスト（webdriver）では数えない（window.__KJ_COUNT_FORCE を立てたときだけ数える）
+const BGM={ctx:null,buf:{},loading:null,noise:null,song:null,token:0,logs:[]};
+let countTok=0,countSeq=0; // countTok＝いま数えている数え下げの番号（0＝数えていない）。countSeq は増やすだけ（やめて数え直しても、古い tick が新しい数え下げと取り違えない）
+const COUNT_LOCK=['setup','game','endShow']; // 数え下げのあいだ、下の画面はキーボードでも動かせない（inert）
+const bgmCfg=()=>(D.rules&&D.rules.bgm)||null;
+function countOn(){
+  if(!bgmCfg()||TUT)return false;
+  try{if(navigator.webdriver&&!window.__KJ_COUNT_FORCE)return false}catch(e){}
+  return true;
+}
+function bgmCtx(){
+  if(BGM.ctx)return BGM.ctx;
+  try{const AC=window.AudioContext||window.webkitAudioContext;if(AC)BGM.ctx=new AC()}catch(e){BGM.ctx=null}
+  return BGM.ctx;
+}
+function bgmDecode(c,ab){return new Promise((ok,ng)=>{const p=c.decodeAudioData(ab,ok,ng);if(p&&p.then)p.then(ok,ng)})} // 古い Safari はコールバック形式
+function bgmLoad(){
+  const c=bgmCtx(),cfg=bgmCfg();
+  if(!c||!cfg)return Promise.resolve(false);
+  if(BGM.loading)return BGM.loading;
+  BGM.loading=Promise.all(Object.entries(cfg.files).map(([k,u])=>fetch(u).then(r=>r.arrayBuffer()).then(ab=>bgmDecode(c,ab)).then(b=>{BGM.buf[k]=b}))).then(()=>true,()=>{BGM.loading=null;return false});
+  return BGM.loading;
+}
+// 最初に画面を触ったとき（と、設定を替えたとき）：音を鳴らせる状態にして、曲が入のとき音を読み込む
+function bgmUnlock(){
+  const c=bgmCtx();if(!c)return;
+  try{if(c.state==="suspended"&&c.resume)c.resume()}catch(e){}
+  if(bgmOn)bgmLoad().then(()=>bgmSetupSync());
+}
+function bgmGainNode(c,v){const g=c.createGain();g.gain.value=v;g.connect(c.destination);return g}
+// はじめる前の画面にいて、曲が入で、音が読み込めているなら、ノイズの輪を流す。そうでなければ止める
+function bgmSetupSync(){
+  const want=bgmOn&&BGM.ctx&&BGM.buf.noise&&!$("setup").hidden&&!G&&!countTok;
+  if(want&&!BGM.noise){
+    const c=BGM.ctx,g=bgmGainNode(c,0),src=c.createBufferSource();
+    src.buffer=BGM.buf.noise;src.loop=true;src.connect(g);
+    const cfg=bgmCfg();g.gain.setValueAtTime(0,c.currentTime);g.gain.linearRampToValueAtTime(cfg.gain.noise,c.currentTime+(cfg.noise_fade_sec||.3));
+    src.start();BGM.noise={src,g};
+  }else if(!want&&BGM.noise)bgmNoiseStop(0);
+}
+function bgmNoiseStop(at){ // at＝画面の時計の時刻（0＝すぐ）。ノイズ（小さな針の音）は noise_fade_sec で消す
+  const n=BGM.noise;if(!n)return;BGM.noise=null;
+  const c=BGM.ctx,cfg=bgmCfg(),t=Math.max(c.currentTime,at?c.currentTime+(at-clock()):0),f=cfg.noise_fade_sec||.3;
+  try{n.g.gain.cancelScheduledValues(t);n.g.gain.setValueAtTime(n.g.gain.value,t);n.g.gain.linearRampToValueAtTime(0,t+f);n.src.stop(t+f+.05)}catch(e){}
+}
+// 試合の曲を予約する。plan＝K.bgmPlan。音が読み込めていないときは鳴らさない（数え下げの字だけ）
+function bgmGo(plan){
+  const c=BGM.ctx,cfg=bgmCfg();
+  if(!bgmOn||!c||!cfg||!BGM.buf.song||!BGM.buf.needle)return false;
+  try{if(c.state==="suspended"&&c.resume)c.resume()}catch(e){}
+  const off=t=>c.currentTime+(t-clock()); // 画面の時計 → 音の時計
+  bgmNoiseStop(plan.needleAt);
+  BGM.pend=[];
+  const sched=(buf,gain,at,loop)=>{ // 予約の時刻が過ぎていたら、その分だけ途中から
+    const src=c.createBufferSource(),g=bgmGainNode(c,gain),when=off(at),late=Math.max(0,c.currentTime-when);
+    src.buffer=buf;src.connect(g);if(loop){src.loop=true;src.loopStart=0;src.loopEnd=buf.duration}
+    if(late>=buf.duration&&!loop)return null;
+    src.start(Math.max(c.currentTime,when),late%buf.duration);(BGM.pend=BGM.pend||[]).push(src);return{src,g};
+  };
+  sched(BGM.buf.needle,cfg.gain.needle,plan.needleAt,false);
+  const song=sched(BGM.buf.song,cfg.gain.song,plan.songAt,true);
+  if(!song)return false;
+  try{song.src.playbackRate.setValueAtTime(1,0);song.src.playbackRate.setValueAtTime(plan.fastRate,Math.max(c.currentTime,off(plan.fastAt)))}catch(e){} // 最後の1分：少し速く（音程も上がる）
+  BGM.song={...song,game:null,fade:plan.fadeOut}; // game＝この曲が鳴っている試合（数え終えて試合ができたら bgmWatch が入れる）
+  return true;
+}
+// 曲を1秒ほどで小さくして止める（試合が終わった・前の画面へ戻った・曲を切にした）
+function bgmSongStop(){
+  const s=BGM.song;if(!s)return;BGM.song=null;
+  const c=BGM.ctx,t=c.currentTime;
+  try{s.g.gain.cancelScheduledValues(t);s.g.gain.setValueAtTime(s.g.gain.value,t);s.g.gain.linearRampToValueAtTime(0,t+s.fade);s.src.stop(t+s.fade+.05)}catch(e){}
+}
+function bgmWatch(){
+  const s=BGM.song;if(!s)return;
+  if(!bgmOn){bgmSongStop();return}
+  if(!s.game){if(G&&!G.over&&!countTok)s.game=G;return}
+  if(!G||G.over||G!==s.game)bgmSongStop();
+}
+// 数え下げ：startAt（画面の時計）から step 秒ずつ 参・弐・壱。数え終えたら done。countTok が変わった（やめた）ら出ない
+function runCount(startAt,tl,done){
+  const cfg=bgmCfg(),tok=++countSeq,plan=K.bgmPlan(D.rules,startAt,tl);countTok=tok;
+  for(const id of COUNT_LOCK){const e=$(id);if(e)e.inert=true}
+  try{if(document.activeElement&&document.activeElement.blur)document.activeElement.blur()}catch(e){}
+  document.documentElement.classList.add("counting");
+  $("count").hidden=false;
+  bgmGo(plan);
+  let shown=-1;
+  const tick=()=>{
+    if(countTok!==tok)return;
+    const e=clock()-startAt,i=Math.floor(e/plan.step);
+    if(i>=plan.count){$("count").hidden=true;document.documentElement.classList.remove("counting");countTok=0;for(const id of COUNT_LOCK){const e=$(id);if(e)e.inert=false}done();return}
+    if(i!==shown){shown=i;const sp=$("countChar");sp.textContent=cfg.count[Math.max(0,i)];sp.style.animation="none";void sp.offsetWidth;sp.style.animation=""}
+    setTimeout(tick,Math.max(10,((Math.max(0,i)+1)*plan.step-e)*1000+5));
+  };
+  tick();
+}
+function cancelCount(){ // 数え下げをやめる：予約した針の音・曲も止める
+  if(!countTok)return;countTok=0;$("count").hidden=true;document.documentElement.classList.remove("counting");
+  for(const id of COUNT_LOCK){const e=$(id);if(e)e.inert=false}
+  for(const s of BGM.pend||[]){try{s.stop(0)}catch(e){}}
+  BGM.pend=[];BGM.song=null;
+}
+["pointerdown","keydown","touchend"].forEach(ev=>document.addEventListener(ev,()=>bgmUnlock(),{capture:true,passive:true}));
 function start(){
+  if(countTok)return; // 数え下げのあいだの「はじめる」「もう一度」（Enter のくり返しなど）は無視
   clearTimeout(cpuTimer);
   sendAbandoned();
-  leaveRoom();leaveTutorial();
+  leaveRoom();leaveTutorial();bgmSongStop();cancelCount();
+  if(countOn()){if(G&&!G.over)G.over=true; // 前の試合は捨てた（ログは送った）。数え下げのあいだに時間切れで二重に終わらない
+    const t0=clock();runCount(t0,timeLimit,()=>begin());return} // 数えたあとに試合を作る（数え下げのあいだ時計は動かない）
+  begin();
+}
+function begin(){
   T=tablesFor(level);buildHowto();
   G=K.createGame(D,T,{now:clock,opponent,timeLimit});
   LASTEND=null;
@@ -1244,7 +1367,9 @@ $("bEnter").onclick=async()=>{
 function beginRoom(startRow){
   const rm=ROOM;if(!rm||!rm.matchId||MC)return;
   clearTimeout(cpuTimer);sendAbandoned();leaveTutorial();
-  const startAt=K.roomStartAt(startRow.created_at,Date.now()/1000,clock());
+  const startAt0=K.roomStartAt(startRow.created_at,Date.now()/1000,clock());
+  const cnt=countOn(),plan=cnt?K.bgmPlan(D.rules,startAt0,rm.timeLimit):null,startAt=cnt?plan.goAt:startAt0; // 数え下げのぶん、試合の始まりを後ろへ（二人とも 'start' 行の時刻が同じなので、同じ時刻に始まる）
+  cancelCount();
   T=tablesFor(rm.level);
   LASTEND=null;
   G=K.createGame(D,T,{now:clock,timeLimit:rm.timeLimit,match:{id:rm.matchId,role:rm.role,startAt,entry:rm.entry}});
@@ -1254,6 +1379,7 @@ function beginRoom(startRow){
   showMsg(rm.role==="guest"?STR.t("roomHostSet",STR.tr(K.levelShort(rm.level)),STR.timeLabel(rm.timeLimit)):"");
   $("bCopyEnd").hidden=$("bShareEnd").hidden=true;hideChoices();setRoomMsg("");
   buildHowto();showScreen(true);render();
+  if(cnt)runCount(startAt0,rm.timeLimit,()=>render());
 }
 
 // ---------- 人の操作 ----------
@@ -1751,7 +1877,7 @@ function pump(){
   }
   if(G.tick())afterChange();else renderOps();
 }
-setInterval(pump,250);
+setInterval(()=>{pump();bgmWatch()},250);
 // 画面が裏に回ると時計の処理が止まる。戻ったらすぐ時間切れを確かめる（制限時間をすぎていれば、その時刻で終わる）。CPU は新しく数え直す（KJ-036）
 document.addEventListener("visibilitychange",()=>{
   if(document.hidden||!G||G.over)return;
@@ -1764,7 +1890,7 @@ window.__KJ={get game(){return G},get tut(){return TUT},get row(){return row},ge
 STR.setLang(STR.detectLang(lsGet(LANG_KEY),navigator.language));applyStatic(); // 言語（KJ-127）。データを待たずに文を入れる
 fillNews();window.addEventListener("resize",fillNews); // 背景の記事（KJ-094）。データを待たずに敷く
 Promise.all(K.FILES.map(f=>fetch(`data/${f}.json`).then(r=>r.json()).then(j=>D[f]=j)))
-  .then(()=>{preloadFx();loadSettings();applyRoomLink();refreshMast();T=tablesFor(level);buildPickers();buildHowto();showCounts();roomUi();tutorialBtn();$("bTutorial").hidden=false})
+  .then(()=>{preloadFx();loadSettings();if(bgmOn&&bgmCfg())bgmLoad();applyRoomLink();refreshMast();T=tablesFor(level);buildPickers();buildHowto();showCounts();roomUi();tutorialBtn();$("bTutorial").hidden=false})
   .catch(e=>{$("setupInfo").textContent=STR.t("dataFail")});
 </script>
 </body>
