@@ -126,7 +126,7 @@ test("KJ-130 画面", { skip }, async (t) => {
   });
 
   for (const width of [375, 320]) {
-    await t.test(`${width}px：全部の字の読みの一行が、情報の欄の2行に収まる`, async () => {
+    await t.test(`${width}px：全部の字の読みの一行（1字では放てない理由つき）が、情報の欄の2行に収まる`, async () => {
       const { ctx, page } = await begin(browser, url, "en", "日", width);
       const bad = await page.evaluate(() => {
         const D = __KJ.data, K = window.KJ, out = [];
@@ -137,7 +137,7 @@ test("KJ-130 画面", { skip }, async (t) => {
         const lh = parseFloat(cs.lineHeight);
         for (const r of [...D.kanji.kanji, ...D.kanji.outside]) {
           const line = K.charReadingLine(D, r.c);
-          probe.innerHTML = `<span class="w">${r.c}</span>${line.slice(1)}`;
+          probe.innerHTML = `<span class="w">${r.c}</span>${line.slice(1)} <span class="no">(2+ characters!)</span>`; // 台が1枚のときは、1字では放てない理由が後ろに付く
           if (probe.getBoundingClientRect().height > lh * 2 + 1) out.push(line);
         }
         probe.remove();
