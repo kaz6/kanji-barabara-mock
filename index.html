@@ -161,7 +161,7 @@ body.taking .stage,body.taking #meHand,body.taking #meTray,body.taking #trayHead
   .tile .mk{font-size:10px}
 }
 /* 表紙の題字（KJ-093。作者「題字は表紙に回します〜」）：題字を二重罫線で挟み、すぐ下の行に 第○號（左）・今日の日付（中）。行の下にも二重罫線。試合の画面には出さない。題字の後ろの絵柄は KJ-095（昇る日と放射。下の .mast-sun） */
-/* KJ-101：表紙を詰めた。数はここ（.mast）の3つだけで直せる＝絵柄の箱の高さ・題字の枠の上からの間・題字の大きさ（374px 以下は --mast-fs-s） */
+/* KJ-101：表紙を詰めた。数はここ（.mast）で直せる＝絵柄の箱の高さ・題字の枠の上からの間・題字の大きさ（374px 以下は --mast-fs-s）・筋の回る速さ（--mast-spin。KJ-125） */
 .mast{--mast-spin:120s;--mast-h:130px;--mast-top:12px;--mast-fs:28px;--mast-fs-s:24px;--mast-ruby:9px;--mast-sub:11px;margin:0 0 12px}
 .mast-title{position:relative;height:var(--mast-h);overflow:hidden;background:var(--tile);border:6px double var(--ink)}
 .mast-sun{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
