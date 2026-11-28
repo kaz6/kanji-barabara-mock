@@ -73,6 +73,8 @@
   <section class="side cpu" id="cpuSide">
     <div class="side-head"><b id="cpuName">CPU</b><span class="score" id="cpuScore"></span><span class="count" id="cpuCount"></span><span class="cds" id="cpuCds"></span><span class="clock" id="clock"></span></div>
     <div class="hand" id="cpuHand"></div>
+    <!-- 相手の放った字（KJ-150）：相手が最後に放った語に使った札。自分の取る番のあいだだけ、1枚まで取れる（押せる）。ひとり・チュートリアルでは出さない。文は js/strings.js の shedHead -->
+    <div class="shedrow" id="oppShed" hidden><span class="shedlb" id="oppShedLb"></span><div class="shed" id="oppShedTiles"></div></div>
   </section>
 
   <section class="table">
@@ -1087,6 +1089,13 @@ function attachDrag(b,id){
   });
 }
 function tapRow(id){if(G.over||G.locked(G.me))return;noteTried();row=row.filter(x=>x!==id);hideChoices();afterChange()}
+// 相手の放った字を1枚取る（KJ-150）。取る番のあいだだけ押せる。合言葉の部屋では取ったことを相手へ知らせる（先着は使わない）
+function tapShed(id){
+  if(!G||G.over)return;
+  if(TUT&&autoTok)return;
+  if(MC){const mc=MC;mc.takeOpp(id).then(r=>{if(stale(mc))return;if(!r.ok){showWhy(r.why);buzz("reject")}else buzz("take");afterChange()});afterChange();return}
+  const r=G.takeOpp(G.me,id);if(!r.ok){showWhy(r.why);buzz("reject")}else buzz("take");afterChange()
+}
 function tapField(id){
   if(!G||G.over)return;
   if(TUT&&autoTok)return; // チュートリアルの自動取りのあいだは、人は取らない（KJ-055）
@@ -1244,6 +1253,17 @@ function renderHand(el,p,interactive,tray){
   const max=tray?D.rules.split_extra:D.rules.hand_max;
   for(let i=cards.length;i<max;i++){const s=document.createElement("div");s.className="slot"+(interactive?" free":"");el.appendChild(s)}
 }
+// 相手の放った字（KJ-150）：相手の行の下に小さく1列。自分の取る番のあいだだけ金の枠で押せる（山札と同じ。D-122 金＝案内）。無いときは行ごと出さない
+function renderShed(){
+  const box=$("oppShed"),el=$("oppShedTiles"),tiles=G.solo?[]:G.cpu.shed||[];
+  box.hidden=!tiles.length;
+  if(!tiles.length){el.innerHTML="";box.classList.remove("can");return}
+  const can=!G.over&&!(TUT&&autoTok)&&G.canTakeOpp(G.me,tiles[0].id).ok;
+  box.classList.toggle("can",can);
+  $("oppShedLb").textContent=STR.t("shedHead");
+  el.innerHTML="";
+  for(const t of tiles){const b=tileEl({id:t.id,c:t.c},can?{onClick:()=>tapShed(t.id)}:{});el.appendChild(b)}
+}
 function renderField(){
   const el=$("field"),can=!G.over&&G.me.takes>0&&G.canTakeMore(G.me)&&!(TUT&&autoTok); // 自動取りのあいだは「タップ」の案内を出さない
   el.className="field"+(can?" can glow":"");el.innerHTML="";
@@ -1381,6 +1401,7 @@ function render(){
   renderHand($("cpuHand"),G.cpu.remote?{cards:(G.cpu.peek||[]).map((c,i)=>({id:"o"+i,c}))}:G.cpu,false,false);
   renderHand($("meHand"),G.me,true,false);
   renderHand($("meTray"),G.me,true,true);
+  renderShed();
   renderField();
   for(const [sc,ct,p] of [[$("meScore"),$("meCount"),G.me],[$("cpuScore"),$("cpuCount"),G.cpu]]){
     let nEl=sc.querySelector(".n"); // 点は大きな数字（KJ-042）。textContent は「51 点」のまま。数字の要素は作り直さない（演出が途中で切れる。KJ-050）

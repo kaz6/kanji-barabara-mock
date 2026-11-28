@@ -548,6 +548,7 @@
     const now = env.now || (() => Date.now() / 1000);
     const rand = env.rand || (M ? matchRand(M.id, M.role) : Math.random);
     const R = D.rules;
+    const OT = Object.assign({ take_max: 1, last_word_only: true }, R.opp_tiles || {}); // 相手の放った字（KJ-150）：取る番に何枚まで・いつも最後の語のぶんだけか
     let uid = 0;
     const TUT = env.tutorial && !M ? env.tutorial : null; // チュートリアル（KJ-043）：決まった手札・ストック・場。時間なし・CPU なし
     const opponent = M ? ROOM_OPPONENT.key : TUT ? TUTORIAL_OPPONENT.key : OPPONENTS.some((o) => o.key === env.opponent) ? env.opponent : R.opponent_default;
@@ -600,13 +601,13 @@
     }
     function player(key, name, n) {
       return { key, name, cards: draw(n).map((c) => card(c)), cd: { split: 0, invert: 0, cycle: 0, homophone: 0 },
-        score: 0, takes: 0, redraws: 0, lastSpecial: null, pendingFx: [], stuck: false };
+        score: 0, takes: 0, redraws: 0, lastSpecial: null, pendingFx: [], stuck: false, shed: [], oppGot: 0 };
     }
     g.me = player("me", "あなた", R.start_hand);
     if (M) {
       // 相手は人。札はこの端末に無い（枚数だけ。相手が送る 'event' で更新）。山からも引かない
       g.cpu = { key: "cpu", name: ROOM_OPP_NAME, cards: [], remote: true, hand: R.start_hand, count: R.start_hand + (env.startStock !== false ? R.start_stock_parts || 0 : 0),
-        cd: { split: 0, invert: 0, cycle: 0, homophone: 0 }, score: 0, takes: 0, redraws: 0, lastSpecial: null, pendingFx: [], stuck: false };
+        cd: { split: 0, invert: 0, cycle: 0, homophone: 0 }, score: 0, takes: 0, redraws: 0, lastSpecial: null, pendingFx: [], stuck: false, shed: [], oppGot: 0 };
     } else {
       g.cpu = player("cpu", "CPU", g.solo ? 0 : R.start_hand); // ひとりで：CPU は出さない（山からも引かない）
     }
@@ -1013,12 +1014,14 @@
     const oppWords = new Set();
     if (M) {
       // 相手が言葉を放った（相手の 'word' 行が届いた）。二人とももう使えない。相手の点はその行の点で見せる（いまの CPU と同じ見せ方）
-      g.remoteRelease = (text, pts, score) => {
+      g.remoteRelease = (text, pts, score, used) => {
         if (oppWords.has(text)) return false; // 同じ行が二度届いた
         oppWords.add(text);
         g.used.add(text);
         if (typeof score === "number") g.cpu.score = score; else g.cpu.score += pts || 0;
         const n = [...text].length;
+        // 放った字の段（KJ-150）：相手の行に札の字が付いていればそのまま、無ければ（古い版）言葉の字から
+        setShed(g.cpu, Array.isArray(used) && used.length === n ? used : [...text], text);
         if (!g.over) addLog(g.cpu.name, "放つ", [...text], [], pts || 0, `${scoreOf(D, T, text).how}。場から${n * R.take_per_char}枚取れる`);
         g.events.push({ type: "release", who: g.cpu.name, text, pts: pts || 0 });
         const ef = T.EFFECTS.get(text);
@@ -1054,6 +1057,7 @@
       const text = pre.text;
       const { pts, how } = scoreOf(D, T, text);
       const n = [...text].length;
+      setShed(p, cardsOf(p, ids).map((x) => x.c), text); // 放った字の段（KJ-150）：相手が自分の取る番に1枚もらえる。放った形のまま（部品・かなに読んだ部品も）
       p.cards = p.cards.filter((x) => !ids.includes(x.id));
       g.used.add(text);
       p.score += pts;
@@ -1158,6 +1162,58 @@
         g.events.push({ type: "effect", who: p.name, text: f.text, op: f.op, hit: true, from: x.c, to: nc.map((y) => y.c) });
       }
     }
+    // ---------- 相手の放った字（KJ-150。作者 2026-11-28「相手が出した札から欲しいのもらえる」）----------
+    // 語を放ったら、その語に使った札（放った形のまま）を放った人の「放った字の段」（p.shed）に並べる。並ぶのは最後に放った語のぶんだけ（rules の opp_tiles.last_word_only）。
+    // 相手は自分の取る番に、取る枚数のうち opp_tiles.take_max 枚まで、山札の代わりにそこから取れる。取った札は段から消える。放った本人は自分の字を取れない。ひとり・チュートリアルでは並べない
+    function setShed(p, chars, text) {
+      if (g.solo) return;
+      p.oppGot = 0;
+      const tiles = chars.map((c) => ({ id: ++uid, c, w: text })); // w＝その札を放った語（false のときも、どの語の札かを札ごとに持つ）
+      p.shed = OT.last_word_only ? tiles : p.shed.concat(tiles);
+      p.shedWord = text;
+    }
+    const oppOf = (p) => (p === g.me ? g.cpu : g.me);
+    g.oppOf = oppOf;
+    g.canTakeOpp = (p, tileId) => {
+      if (g.solo) return fail("相手がいない");
+      if (g.hold && !g.over) return fail("通信中");
+      if (!live()) return fail("終わった");
+      if (p.takes <= 0) return fail("取れる枚数がない");
+      if (!g.canTakeMore(p)) return fail("手札もストックもいっぱい");
+      if (p.oppGot >= OT.take_max) return fail(`相手の放った字は${OT.take_max}枚まで`);
+      const t = oppOf(p).shed.find((x) => x.id === tileId);
+      if (!t) return fail("相手の放った字にない");
+      return { ok: true, tile: t };
+    };
+    // 相手の放った字を1枚、自分の手札（上の段に空きがあれば上、無ければストック）へ。取る番の1枚ぶんに数える。合言葉の部屋では createMatchClient の takeOpp が、これを呼んでから相手へ知らせる
+    g.takeOpp = (p, tileId, memo) => {
+      const pre = g.canTakeOpp(p, tileId);
+      if (!pre.ok) return pre;
+      const v = oppOf(p), word = pre.tile.w !== undefined ? pre.tile.w : v.shedWord;
+      v.shed = v.shed.filter((x) => x.id !== tileId);
+      const got = card(pre.tile.c, true);
+      settle(p, got);
+      p.takes -= 1;
+      p.oppGot++;
+      if (p === g.me && p.takes === 0) timedFrom = now();
+      addLog(p.name, "取る", [pre.tile.c], [pre.tile.c], 0, `相手の放った字から。残り${p.takes}枚取れる${memo ? `（${memo}）` : ""}`);
+      g.log[g.log.length - 1].src = "opp"; // 戦況の文が「山札ヨリ」と「相手ノ放チヨリ」を分ける
+      g.events.push({ type: "takeopp", who: p.name, c: pre.tile.c, id: got.id });
+      runPendingFx(p);
+      return { ok: true, card: got, c: pre.tile.c, word };
+    };
+    if (M) {
+      // 相手がこちらの放った字を1枚取った（相手の 'grab' の行が届いた）。その語の段にまだあるときだけ消す（先にこちらが次の語を放っていれば何もしない）
+      g.remoteGrab = (word, c) => {
+        if (g.over) return false;
+        const i = g.me.shed.findIndex((x) => x.c === c && (x.w === undefined ? g.me.shedWord === word : x.w === word));
+        if (i < 0) return false;
+        g.me.shed.splice(i, 1);
+        addLog(g.cpu.name, "取る", [c], [c], 0, "あなたの放った字から");
+        g.log[g.log.length - 1].src = "opp";
+        return true;
+      };
+    }
     // ---------- 取る：場の札を手札へ。空いたところは同じ位置に山から出す ----------
     // 場の1枚を p の手札（上の段）へ。取ったところには山から次の字が出る
     function fromField(p, fieldId) {
@@ -1221,13 +1277,17 @@
       return { ok: true, card: r.got, c: r.x.c };
     };
     // 場の札で、手札と合わせて語になるものを先に取る。なければ無作為（CPU の取り方）
-    function cpuPickField(p) {
+    // その字を手札に足すと、まだ使っていないよく使う語が手札で組める見込みがあるか（CPU の取り方）
+    function cpuWants(p, c) {
       const hand = p.cards.map((x) => kanaOf(T, x.c));
       const covers = (have, word) => {
         const left = have.slice();
         return [...word].every((ch) => { const i = left.indexOf(ch); if (i < 0) return false; left.splice(i, 1); return true; });
       };
-      const useful = g.field.filter((f) => T.COMMON_WORDS.some((w) => !g.isUsed(w.w) && w.w.includes(f.c) && covers([...hand, f.c], w.w)));
+      return T.COMMON_WORDS.some((w) => !g.isUsed(w.w) && w.w.includes(c) && covers([...hand, c], w.w));
+    }
+    function cpuPickField(p) {
+      const useful = g.field.filter((f) => cpuWants(p, f.c));
       return pick(useful.length ? useful : g.field);
     }
     // ---------- 引き直し（D-018） ----------
@@ -1385,6 +1445,9 @@
     }
     function cpuTakeAll(p) {
       while (p.takes > 0 && g.canTakeMore(p)) {
+        // 相手の放った字から1枚（KJ-150）：その字で語が作れる見込みがあるときだけ。強さごとの差は付けない
+        const t = !g.solo && p.oppGot < OT.take_max ? oppOf(p).shed.find((x) => cpuWants(p, x.c)) : null;
+        if (t && g.takeOpp(p, t.id).ok) continue;
         if (!g.take(p, cpuPickField(p).id).ok) break;
       }
     }
@@ -1627,6 +1690,9 @@
     const EM = R.emote;
     let emoteN = 0, emoteAt = -Infinity;
     const emoteSeen = new Set();
+    const grabSeen = new Set();
+    // 届いた 'word' の used（放った札の字）：1字ずつの文字列が、言葉の字数と同じだけあるときだけ。合わなければ null（言葉の字で代える）
+    const remoteUsed = (v, n) => (Array.isArray(v) && v.length === n && v.every((t) => typeof t === "string" && t.length >= 1 && t.length <= 2 && [...t].length === 1) ? v.slice() : null);
     const emoteWord = (i) => (Array.isArray(opts.emoteWords) && opts.emoteWords[i]) || String(i);
     const onEmote = (who, i) => { if (typeof opts.onEmote === "function") { try { opts.onEmote(who, i, emoteWord(i)); } catch (e) { /* 画面の都合は止めない */ } } };
     let seq = 0, sent = null, oppSeq = -1, timeSent = false, endScoreSent = false, pingN = 0, lastPing = startAt, stopped = false;
@@ -1676,12 +1742,22 @@
       if (r.conflict) { g.markTaken(n); return { ok: false, why: "相手が先に取った", lost: true, c: pre.card.c }; }
       return fail("つながらない");
     };
+    // 相手の放った字を1枚取る（KJ-150）：取れるのは片方だけなので先着は使わない。取れたら 'event' の grab で相手へ知らせる（届かなくても、こちらの取りは変わらない）
+    let grabN = 0;
+    c.takeOpp = async (tileId) => {
+      const r = g.takeOpp(g.me, tileId);
+      if (!r.ok) return r;
+      await c.sendState();
+      send("event", `${role}-${nonce}-g${grabN++}`, { type: "grab", w: r.word, c: r.c }); // 待たない
+      return r;
+    };
     // 放つ：言葉を先に入れた方だけ点が入る。負けたら札は手元に残る
     c.release = async (ids) => {
       const pre = g.canRelease(g.me, ids);
       if (!pre.ok) return pre;
       const score = g.me.score + pre.pts;
-      const r = await claim("word", pre.text, { pts: pre.pts, score });
+      const used = ids.map((id) => g.byId(g.me, id)).filter(Boolean).map((x) => x.c); // 放った札の字（放った形のまま。相手の「放った字」の段に並ぶ。KJ-150）
+      const r = await claim("word", pre.text, { pts: pre.pts, score, used });
       g.hold = false;
       if (r.ok || ownConflict(r, "word", pre.text)) {
         const out = g.releaseClaimed(g.me, ids);
@@ -1754,7 +1830,7 @@
     function payloadOk(row) {
       const p = row.payload || {};
       if (row.kind === "card") return /^[0-9]{1,6}$/.test(row.key);
-      if (row.kind === "word") { const n = [...row.key].length; return n >= 2 && n <= 8 && (p.score === undefined || scoreOk(p.score)); }
+      if (row.kind === "word") { const n = [...row.key].length; return n >= 2 && n <= 8 && (p.score === undefined || scoreOk(p.score)); } // p.used（放った札の字）は形が合わなければ読まずに言葉の字を使う（remoteUsed）
       if (row.kind === "end") {
         if (row.key === "score") return ROLES.includes(p.winner) && (p.score === undefined || scoreOk(p.score));
         return p.score === undefined || scoreOk(p.score);
@@ -1762,6 +1838,7 @@
       if (row.kind === "event" && p.type === "hand") return nat(p.seq, 1e9) && !!parseHandTiles(p.tiles, R.hand_max);
       if (row.kind === "event" && p.type === "ping" && p.tiles !== undefined) return nat(p.hs, 1e9) && !!parseHandTiles(p.tiles, R.hand_max);
       if (row.kind === "event" && p.type === "emote") return nat(p.i, EM.words - 1);
+      if (row.kind === "event" && p.type === "grab") return typeof p.w === "string" && p.w.length > 0 && p.w.length <= 32 && typeof p.c === "string" && p.c.length > 0 && p.c.length <= 2 && [...p.c].length === 1;
       if (row.kind === "event" && p.type === "state") return nat(p.seq, 1e9) && scoreOk(p.score) && nat(p.count, totalMax) && (p.hand === undefined || nat(p.hand, R.hand_max));
       return true;
     }
@@ -1783,7 +1860,7 @@
       if (on && oppNonce !== null && on !== oppNonce) { sentHand = null; lastHandAt = -Infinity; }
       if (on) oppNonce = on;
       if (row.kind === "card") return g.markTaken(Number(row.key));
-      if (row.kind === "word") return g.remoteRelease(row.key, scoreOf(D, g.T, row.key).pts, p.score); // 点の重みはこちらの表で数える
+      if (row.kind === "word") return g.remoteRelease(row.key, scoreOf(D, g.T, row.key).pts, p.score, remoteUsed(p.used, [...row.key].length)); // 点の重みはこちらの表で数える
       if (row.kind === "event" && p.type === "state") {
         if (p.seq <= oppSeq) return false;
         oppSeq = p.seq;
@@ -1795,6 +1872,11 @@
         if (sq < oppHandSeq) return false;
         oppHandSeq = sq;
         return g.remoteHand(parseHandTiles(p.tiles, R.hand_max));
+      }
+      if (row.kind === "event" && p.type === "grab") { // 相手がこちらの放った字を1枚取った（KJ-150）。同じ行が二度届いても、段にもう無ければ何も起きない
+        if (grabSeen.has(row.key)) return false;
+        grabSeen.add(row.key);
+        return g.remoteGrab(p.w, p.c);
       }
       if (row.kind === "event" && p.type === "emote") { // 相手のエモート（KJ-142）。同じ行が二度届いても一度だけ
         if (g.over || emoteSeen.has(row.key)) return false;
@@ -2211,11 +2293,11 @@
       const e = L[i];
       if (e && e.op === "札の字" && tpl.face) { out.push({ who: e.who, mine: e.who === o.me, word: "", pts: 0, takes: [], face: true, text: tpl.face, segs: [{ k: "p", t: tpl.face }] }); continue; } // 札の字が替わった行（KJ-131）
       if (!e || e.op !== "放つ") continue;
-      const takes = [];
+      const takes = [], oppTakes = []; // oppTakes＝相手の放った字から取ったぶん（KJ-150）
       for (let j = i + 1; j < L.length; j++) { // 同じ人のこの放ちのあとの 取る（次の放ち・取る以外の手まで）
         const f = L[j];
         if (!f || f.who !== e.who) continue;
-        if (f.op === "取る") takes.push((f.from || []).join(""));
+        if (f.op === "取る") (f.src === "opp" ? oppTakes : takes).push((f.from || []).join(""));
         else if (f.op === "放つ") break; // 放ったあとは取りきるまで本人は他の手を打てない。間に入るのは相手の攻撃ワードで効かされた記録だけ（同じ名前で残る）なので、数えるのをやめるのは次の放ちだけ
       }
       const word = (e.from || []).join(""), yomi = o.kana ? o.kana(word) : "";
@@ -2224,7 +2306,8 @@
       vals.yomi = yomi ? fillSegs(tpl.yomi, { kana: toKatakana(yomi) }).map((s) => s.t).join("") : "";
       let segs = fillSegs(tpl.release, vals).concat(fillSegs(tpl.score, vals));
       if (takes.length) segs = segs.concat(fillSegs(tpl.take, { cards: takes.join(tpl.sep) }));
-      out.push({ who: e.who, mine, word, pts, takes, text: segs.map((s) => s.t).join(""), segs });
+      if (oppTakes.length && tpl.takeOpp) segs = segs.concat(fillSegs(tpl.takeOpp, { cards: oppTakes.join(tpl.sep) }));
+      out.push({ who: e.who, mine, word, pts, takes, oppTakes, text: segs.map((s) => s.t).join(""), segs });
     }
     return out.reverse();
   }

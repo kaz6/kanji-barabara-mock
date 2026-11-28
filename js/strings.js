@@ -98,6 +98,7 @@
     yomi: "（{kana}）",
     score: "{n}字ニテ{pts}点。",
     take: "山札ヨリ{cards}ヲ取ル。",
+    takeOpp: "相手ノ放チヨリ{cards}ヲ取ル。", // KJ-150：相手の放った字から取ったぶん（仮）
     sep: "・",
     face: "明朝体！札ノ字ガ明朝ニ", // 明朝体を放ったとき（KJ-131。仮）。戦況の欄に1行。試合のログには core.js が別に1行書く
   });
@@ -173,6 +174,7 @@
     lblTime: { ja: "時間", en: "Time" },
     lblVib: { ja: "振動", en: "Vibration" },
     takeBand: { ja: (n, dj) => ["山札ヨリ", `${dj}枚`, "取レ"], en: (n) => ["Take", String(n), "from the deck"] }, // KJ-146：取る番の帯（台の上。黒地に白抜き）。[前, 数, 後]。数は日本語では大字（K.daiji）、English は算用数字
+    shedHead: { ja: "相手ノ放チ", en: "Opp. played" }, // KJ-150：相手が最後に放った語の札の段の見出し（取る番のあいだ金。1枚まで取れる）
     redrawHoldLabel: { ja: "長押し", en: "Hold" }, // KJ-143：Redraw のボタンの3行目（いつも出す。長押しで引き直すと気づかせる）
     lblEmote: { ja: "エモート", en: "Emotes" }, // KJ-142：合言葉の部屋のエモートの入／切（歯車の欄）
     emoteBtn: { ja: "エモートを送る", en: "Send an emote" },
