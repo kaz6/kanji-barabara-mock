@@ -62,6 +62,12 @@ const lineText = (page) => page.textContent("#tutLine");
 async function takeTwo(page) {
   for (let i = 0; i < 2; i++) await page.locator("#field .tile").first().click();
 }
+// 押せるようになるのを待つ。待ちきれなかったら、案内・取る枚数・選んでいる札を付けて落とす
+async function clickWhenReady(page, id) {
+  const ok = await page.waitForFunction((i) => { const b = document.getElementById(i); return !b.disabled && b.getAttribute("aria-disabled") !== "true"; }, id, { timeout: 8000 }).then(() => true, () => false);
+  if (!ok) assert.fail(`#${id} が押せない：段「${await page.textContent("#tutStep")}」案内「${await page.textContent("#tutLine")}」取る枚数 ${await page.evaluate(() => __KJ.game.me.takes)}・選び ${await page.evaluate(() => JSON.stringify(__KJ.row))}・手札 ${await page.evaluate(() => __KJ.game.me.cards.map((x) => x.c).join(""))}`);
+  await page.click("#" + id);
+}
 // 放ったあと（段3 以降）は山札から自動で取る（KJ-055）。取りきって（取る枚数が 0・自動取りが止まる）、案内が次に替わるまで待つ
 async function autoTaken(page) {
   await page.waitForFunction(() => __KJ.game.me.takes === 0 && !document.querySelector('body > .tile[style*="position: fixed"]'), null, { timeout: 5000 });
@@ -371,7 +377,7 @@ test("チュートリアルの画面", { skip }, async (t) => {
     await page.click("#start");
     await tile(page, "大").click(); await tile(page, "雨").click(); await page.click("#bRelease");
     await takeTwo(page);
-    await tile(page, "好").click(); await page.click("#bSplit"); await page.click("#bRelease");
+    await tile(page, "好").click(); await page.click("#bSplit"); await clickWhenReady(page, "bRelease");
     await page.click("#tutSkip"); // 自動で取る前（250ms の間）にとばす
     await page.waitForTimeout(900);
     assert.equal(await page.isVisible("#tut"), false);
@@ -384,12 +390,13 @@ test("チュートリアルの画面", { skip }, async (t) => {
     const word = await page.evaluate(() => {
       const g = __KJ.game, T = __KJ.tables, K = window.KJ;
       const cs = g.me.cards;
-      for (const a of cs) for (const b of cs) { if (a.id === b.id) continue; const r = g.canRelease(g.me, [a.id, b.id]); if (r.ok) return [a.c, b.c]; }
+      for (const a of cs) for (const b of cs) { if (a.id === b.id || a.c === b.c) continue; // 同じ字2枚だと tile(字) が同じ札を2回押して選びが外れる（KJ-159：揺れの元）
+        const r = g.canRelease(g.me, [a.id, b.id]); if (r.ok) return [a.c, b.c]; }
       return null;
     });
     if (word) {
       for (const ch of word) await tile(page, ch).click();
-      await page.click("#bRelease");
+      await clickWhenReady(page, "bRelease");
       await page.waitForTimeout(900);
       assert.equal(await page.evaluate(() => __KJ.game.me.takes), 2, "本番は人が取るまで取らない");
     } else t.diagnostic(`本番の手札で2字の言葉が見つからず、本番の確かめは省いた（${hand.join("")}）`);
