@@ -47,21 +47,27 @@ async function start(browser, url, vp) {
   return { ctx, page, errors };
 }
 const rule = (page) => page.evaluate(() => {
-  const r = document.getElementById("row"); const cs = getComputedStyle(r); const b = r.getBoundingClientRect();
+  const r = document.getElementById("row"); const rl = r.parentElement; const b = r.getBoundingClientRect();
+  const cs = getComputedStyle(rl, "::after");
   const t = r.querySelector(".tile"); const tb = t ? t.getBoundingClientRect() : null;
   const band = document.getElementById("takeBand"); const q = band.getBoundingClientRect();
   const root = getComputedStyle(document.documentElement);
   const out = parseFloat(cs.outlineWidth) + parseFloat(cs.outlineOffset);
+  const box = [b.left - out, b.top - out, b.right + out, b.bottom + out];
+  const bad = [];
+  for (const sel of [".fieldside .field", ".stage>.info", ".stage>.ops"]) { const e = document.querySelector(sel); if (!e) continue; const q2 = e.getBoundingClientRect(); const over = q2.left < box[2] && q2.right > box[0] && q2.top < box[3] && q2.bottom > box[1]; if (over) bad.push(sel); }
+  const tbx = document.querySelector(".stage").getBoundingClientRect();
+  const infoText = document.querySelector(".stage>.info"); 
+  let op = 1; for (let e = r; e; e = e.parentElement) op *= +getComputedStyle(e).opacity;
   return {
     bw: parseFloat(cs.borderTopWidth), bs: cs.borderTopStyle, bc: cs.borderTopColor,
     ow: parseFloat(cs.outlineWidth), os: cs.outlineStyle, oc: cs.outlineColor, gap: parseFloat(cs.outlineOffset),
     ink: root.getPropertyValue("--ink").trim(), vars: [root.getPropertyValue("--rule-thick").trim(), root.getPropertyValue("--rule-gap").trim(), root.getPropertyValue("--rule-thin").trim()],
-    radius: cs.borderTopLeftRadius, shadow: cs.boxShadow,
+    radius: cs.borderTopLeftRadius, shadow: cs.boxShadow, opacity: op, afterOp: +cs.opacity,
     h: b.height, tile: tb ? [tb.width, tb.height] : null,
-    outer: [b.left - out, b.top - out, b.right + out, b.bottom + out],
-    vw: document.documentElement.clientWidth, sw: document.documentElement.scrollWidth,
-    bandHidden: band.hidden, bandIn: !band.hidden && q.left >= b.left + 0.5 && q.right <= b.right - 0.5 && q.top >= b.top + 0.5 && q.bottom <= b.bottom - 0.5,
-    ink2: getComputedStyle(document.body).getPropertyValue("--ink").trim(),
+    box, tableBox: [tbx.left, tbx.right], bad,
+    vw: document.documentElement.clientWidth,
+    bandHidden: band.hidden, bandIn: !band.hidden && q.left >= b.left + 0.5 && q.right <= b.right - 0.5 && q.top >= b.top + 0.5 && q.bottom <= b.bottom - 0.5, bandOp: +getComputedStyle(band).opacity,
   };
 });
 const rgb = (hex) => { const n = parseInt(hex.slice(1), 16); return `rgb(${n >> 16}, ${(n >> 8) & 255}, ${n & 255})`; };
@@ -75,16 +81,14 @@ for (const [name, vp, h, tile] of [["800px（広い画面）", { width: 800, hei
       const shot = async (n) => { if (SHOT) { fs.mkdirSync(SHOT, { recursive: true }); const b = await page.locator(".stage").boundingBox(); await page.screenshot({ path: path.join(SHOT, `kowaku-${vp.width}-${n}.png`), clip: { x: 0, y: Math.max(0, b.y - 24), width: vp.width, height: Math.min(vp.height - Math.max(0, b.y - 24), 230) } }); } };
       // 空
       let r = await rule(page);
-      assert.deepEqual(r.vars, ["4px", "3px", "1px"], "太さ・隙間は :root の変数");
+      assert.deepEqual(r.vars, ["4px", "2px", "1px"], "太さ・隙間は :root の変数");
       assert.equal(r.bw, 1); assert.equal(r.bs, "solid"); assert.equal(r.bc, rgb(r.ink), "細い線は墨");
       assert.equal(r.ow, 4); assert.equal(r.os, "solid"); assert.equal(r.oc, rgb(r.ink), "太い線は墨");
-      assert.equal(r.gap, 3, "隙間 3px");
+      assert.equal(r.gap, 2, "隙間 2px");
       assert.equal(r.radius, "0px"); assert.equal(r.shadow, "none", "影を付けない");
       assert.equal(r.h, h, "台の高さは今のまま");
-      assert.ok(r.outer[0] >= 0 && r.outer[2] <= r.vw, `罫が画面の横に収まる ${r.outer} / ${r.vw}`);
-      // 罫を外したときの横幅と同じ（罫のせいで横に広がらない。320px は罫と関係なく今も 343px まで広がる）
-      const base = await page.evaluate(() => { const e = document.getElementById("row"); const o = e.style.outline; e.style.outline = "none"; const w = document.documentElement.scrollWidth; e.style.outline = o; return w; });
-      assert.equal(r.sw, base, "罫で横幅が増えない");
+      assert.ok(r.box[0] >= r.tableBox[0] - 0.5 && r.box[2] <= r.tableBox[1] + 0.5, `罫が台の持ち場（.stage）に収まる ${r.box} / ${r.tableBox}`);
+      assert.deepEqual(r.bad, [], "罫が山札・案内・操作に重ならない");
       await shot("empty");
       // 2枚並べた
       await page.locator("#meHand .tile", { hasText: "日" }).first().click();
@@ -96,10 +100,15 @@ for (const [name, vp, h, tile] of [["800px（広い画面）", { width: 800, hei
       // 取る番（帯が出る）
       await page.click("#bRelease");
       await page.waitForFunction(() => __KJ.game.me.takes > 0);
+      await page.waitForFunction(() => document.body.classList.contains("taking"));
+      await page.waitForTimeout(400); // 薄くなる動き（.15s）と帯の出る動き（.2s）が終わるまで
       r = await rule(page);
       assert.equal(r.bandHidden, false, "帯が出ている");
       assert.ok(r.bandIn, "帯は罫の内側（細い線を隠さない）");
       assert.equal(r.h, h);
+      assert.equal(r.opacity, 0.45, "取る番は台が薄い");
+      assert.equal(r.afterOp, 1, "罫は薄くならない（墨のまま）"); assert.equal(r.oc, rgb(r.ink)); assert.equal(r.bc, rgb(r.ink));
+      assert.deepEqual(r.bad, []);
       await shot("take");
       assert.deepEqual(errors, []);
       await ctx.close();

@@ -3,7 +3,7 @@
      紙（--bg 黄ばんだ紙）・札（--tile）・墨（--ink）・弁柄（--accent）＝Play・選んだ札の縁・あなたの印・Back の下線・Redraw の長押しのゲージ（KJ-115）。補助（--sub／--dim）・点線（--line）
      青（--join）＝くっつけられる・合体の面 ／ 緑（--gauge）＝待ち時間のゲージ ／ 金（--hint）＝ヒント
      卓（--table）は紙と同じ色（暗い面はやめた）。卓の中だけ無地の濃い地（--table-ground。KJ-145。背景の記事が透けない・ボタンと見分ける。ここ1か所で直す）。札の下の縁（--edge）は紙の濃い色。角の印（Flip・Cycle・Same reading の SVG）＝墨色（--ink） */
-  --rule-thick:4px; --rule-gap:3px; --rule-thin:1px; /* KJ-147：台の子持ち罫（太い線・隙間・細い線。仮） */
+  --rule-thick:4px; --rule-gap:2px; --rule-thin:1px; /* KJ-147：台の子持ち罫（太い線・隙間・細い線。仮） */
   --bg:#e8dbb4; --ink:#2a2622; --sub:#625a50; --line:#a0957b; --tile:#f6eed6; --cut:#b48f62; --cut-op:.6;
   --edge:#7d7366; --slot:#dccf9e; --accent:#9c3b2e; --accent-edge:#6e2a21; --ok:#2f6b4f; --dim:#625a50; --join:#2f6fd6;
   --table:#e8dbb4; --table-ground:#d3c391; --table-2:#ddd0a4; --on-table:#2a2622; --on-table-sub:#625a50;

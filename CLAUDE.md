@@ -67,7 +67,7 @@ npm test
 - `tests/redrawhold.browser.test.mjs`：Redraw の長押し（KJ-143。押している間の揺れ〔0.5→3px。rules の `redraw_hold`〕・スマホの振動〔`vibrate.redraw_hold`〕・3行目の「長押し」〔English は Hold〕・600ms で引き直すのは今のまま）。`KJ_SHOT_REDRAWHOLD=<フォルダ>` で画像を書く
 - `tests/tutorial.test.js`・`tests/tutorial.browser.test.mjs`：チュートリアル（8段を通せる・その手だけ通す・時間なし CPU なし・ログ／画面で通し・とばす・ボタンから・合言葉では出ない）
 - `tests/toruband.browser.test.mjs`：取る番の帯（KJ-146。台の上に黒地に白抜き「山札ヨリ 弐枚 取レ」〔`U.takeBand`。数は大字・English は Take 2 from the deck〕・取るごとに減る・取りきると消える・押せない〔山札は押せる〕・reduced-motion で動かさない・375／320px で台の上に収まる）。`KJ_SHOT_TORUBAND=<フォルダ>` で画像を書く
-- `tests/kowaku.browser.test.mjs`：台の子持ち罫（KJ-147。内側の細い線 1px＋外側の太い線 4px・隙間 3px・墨だけ・角丸なし・影なし・台の高さと札の大きさは今のまま・帯は罫の内側・太さは base.css の `--rule-thick`・`--rule-gap`・`--rule-thin`／広い画面・375・320px で空・2枚・取る番）。`KJ_SHOT_KOWAKU=<フォルダ>` で画像を書く
+- `tests/kowaku.browser.test.mjs`：台の子持ち罫（KJ-147。内側の細い線 1px＋外側の太い線 4px・隙間 2px・墨だけ・角丸なし・影なし・台の高さと札の大きさは今のまま・帯は罫の内側・太さは base.css の `--rule-thick`・`--rule-gap`・`--rule-thin`／広い画面・375・320px で空・2枚・取る番）。`KJ_SHOT_KOWAKU=<フォルダ>` で画像を書く
 - `tests/layout.browser.test.mjs`：試合の画面の置き場（KJ-078・KJ-090。Back は「あなた」の行の Redraw の左・上の3つは「しくみ」の行・残り時間は CPU の行の右端・Play は幅いっぱい・Redraw は卓の外／Redraw の1回タップ・長押し〔ゲージは弁柄。KJ-115〕・途中で離す）
 - `tests/cpuhand.browser.test.mjs`：CPU 対戦で相手の上の段を見せる（KJ-092。CPU の行の下に8マス・字だけ・ストックは出さない・押せない・CPU が動くと変わる・375×667 に自分の手札が収まる・ひとりとチュートリアルでは出ない。合言葉の部屋でも出る〔KJ-140〕ことは tests/browser.test.mjs）
 - `tests/joinmark.browser.test.mjs`：Join のボタンの印（KJ-103。Jo｜in が Split の逆に傾く〔+5／−5 度〕・継ぎ目の真上に墨の放射3本〔線3本・太さ1.6・端は丸〕・根元と字の上端の間 0〜3px・字に重ならない・押せないとき 0.35・375／320px ではみ出さない・読み上げは Join・押せばくっつく）。`KJ_SHOT_JOIN=<フォルダ>` で画像を書く
