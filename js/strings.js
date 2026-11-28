@@ -172,6 +172,7 @@
     lblLevel: { ja: "レベル", en: "Level" },
     lblTime: { ja: "時間", en: "Time" },
     lblVib: { ja: "振動", en: "Vibration" },
+    takeBand: { ja: (n, dj) => ["山札ヨリ", `${dj}枚`, "取レ"], en: (n) => ["Take", String(n), "from the deck"] }, // KJ-146：取る番の帯（台の上。黒地に白抜き）。[前, 数, 後]。数は日本語では大字（K.daiji）、English は算用数字
     redrawHoldLabel: { ja: "長押し", en: "Hold" }, // KJ-143：Redraw のボタンの3行目（いつも出す。長押しで引き直すと気づかせる）
     lblEmote: { ja: "エモート", en: "Emotes" }, // KJ-142：合言葉の部屋のエモートの入／切（歯車の欄）
     emoteBtn: { ja: "エモートを送る", en: "Send an emote" },

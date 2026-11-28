@@ -85,6 +85,8 @@
   <section class="stage">
     <div class="rowline">
       <div class="row" id="row"></div>
+      <!-- 取る番の帯（KJ-146）：台の上に重ねる。黒地に白抜き。押せない。文は js/strings.js の takeBand -->
+      <div class="takeband" id="takeBand" aria-hidden="true" hidden></div>
     </div>
     <div class="info" id="info"></div>
     <div class="ops">
@@ -1257,6 +1259,20 @@ function renderField(){
   for(const x of G.field)el.appendChild(tileEl(x,{onClick:()=>tapField(x.id)}));
   $("takes").textContent=!G.over&&G.me.takes>0&&!(TUT&&autoTok)?`山札から あと ${G.me.takes} 枚 取る（タップ）`:"";
   $("takeShort").textContent=can?`あと ${G.me.takes} 枚`:"";
+  renderTakeBand(can);
+}
+// 取る番の帯（KJ-146）：台の上に「山札ヨリ 弐枚 取レ」。取るごとに数が減り、取りきったら消える。出るとき一度だけ短く出す（reduced-motion では動かさない）
+const BAND={on:false,g:null};
+function renderTakeBand(can){
+  const el=$("takeBand");
+  if(BAND.g!==G){BAND.g=G;BAND.on=false}
+  if(!can){el.hidden=true;el.innerHTML="";BAND.on=false;return}
+  const parts=STR.t("takeBand",G.me.takes,K.daiji(G.me.takes));
+  el.innerHTML="";
+  parts.forEach((x,i)=>{const sp=document.createElement("span");sp.textContent=x;if(i===1)sp.className="n";el.appendChild(sp)});
+  el.hidden=false;
+  if(!BAND.on&&!reduceMotion()){el.classList.remove("in");void el.offsetWidth;el.classList.add("in");el.dataset.shown=String((+el.dataset.shown||0)+1)}
+  BAND.on=true;
 }
 // ゲージ（KJ-034）：待っている間は class cd と --g（0〜1）。待ちが明けたら外して、小さく光らせる（full）
 function gauge(b,waiting,f){

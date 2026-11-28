@@ -477,3 +477,11 @@
 - そのまま：Redraw・Play・ヒント・待ち時間・Back の働き・高さ（40px 以上）。rules.json は変えない
 - テスト：tests/btnlook.browser.test.mjs に Back の試験を足した（押せる／押せないの地・字・太さ・下線・明暗差 4.5 以上・Split と Join と同じ・高さ幅が動かない・「←」と Back の字・Redraw は変わらない・320px で Redraw に重ならない）。tests/browser.test.mjs と btnlook の KJ-115 の期待値を新しい見え方に直した。`KJ_SHOT_BTN=<フォルダ>` で画像（kj-144-off／on-375）
 - 戻し方：この PR の merge コミットを revert。端末に残るものは無い
+
+### R-171 取る番のあいだ、台の上に黒地に白抜きの帯「山札ヨリ 弐枚 取レ」（KJ-146。受け箱 P-146。作者 2026-11-28 00:38「これでいきます」）
+- 決まったこと（作者の言葉）：きっかけ「ドローの金色が、少し地味で目立たないというか、え、引くの？みたいになることが多かった。」→相談チャットの案（戦前の新聞の広告面の、黒地に白抜きの大見出しの帯）で作者が決めた
+- 作り：取る番のあいだ、台（`#row`）に重ねて 黒（`--ink`）地・白（`--tile`）字・Zen の太字の帯。「山札ヨリ」「N枚」「取レ」の3つに分け、数は大字（`K.daiji`。壱・弐・参…）で少し大きく。取るごとに数が減り、取りきると消える。出るとき一度だけ 0.2 秒（`kjBandIn`。reduced-motion では動かさない）。押せない（`pointer-events:none`）。文は `js/strings.js` の `U.takeBand`（English は Take / 数（算用数字）/ from the deck）。置き場は `index.html` の `#takeBand`（`.rowline` の中）・`renderTakeBand`・`css/table.css` の `.takeband`
+- 仮決め（係）：P-119 の「取れない所を薄くする」は `.stage` 全体にかけていたため、帯も薄くなってしまう。`.stage` ではなく中の台（`.row`）・案内（`.info`）・操作（`.ops`）に同じ 0.45 をかけた（見え方は同じ。帯だけ濃い）。tests/toruban.browser.test.mjs の確認先を `.stage` から `#row`・`.info`・`.ops` に直した。字の大きさは `clamp(20px,7vw,30px)`（320px・English でも1行〜2行に収まる）。台の高さ・札の大きさは変えない
+- そのまま：取る決まり（枚数・早い者勝ち）・金の色と役割（D-122）・チュートリアルの取る段の文・P-119 の見せ方（薄く・弾み・金の枠・「あと N 枚」）。字体は Zen 700 に必要な字が全部あったので作り直していない
+- テスト：tests/toruband.browser.test.mjs（出る・大字・減る・取りきると消える・押せない・山札は押せる・reduced-motion・参枚・English・375／320px で台の上に収まる）。`KJ_SHOT_TORUBAND=<フォルダ>` で画像
+- 戻し方：この PR の merge コミットを revert。端末に残るものは無い
