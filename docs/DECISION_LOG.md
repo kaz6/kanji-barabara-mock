@@ -460,3 +460,11 @@
 - テスト：tests/emote.test.js（core）・tests/emote.browser.test.mjs（画面。2つのページ・375／320px。`KJ_SHOT_EMOTE=<フォルダ>` で画像）
 - 戻し方：この PR の merge コミットを revert。端末に残るのは localStorage `kj-emote` だけ（読まれなくなる）。表の行は 'event' だけで古い行はそのまま残る
 
+### R-169 Redraw の長押しを伝わりやすくする（KJ-143。受け箱 P-143。作者 2026-11-28 00:03）
+- きっかけ：11-27 夜の対人戦で、相手が約4分40秒詰まった（手札とストックが埋まり、Redraw の長押しに気づかなかった）
+- 決まったこと（作者の言葉）：「リドローは、押してる間、ボタンが振動するようにしようかな！だんだん強くなる。ゲージも増える。伝わるといいな。また、うすく長押し、みたいな文字を小さくしたに入れるか…」
+- 作り（数値と見た目は係の仮決め。作者が見て直す）：押している間 Redraw を左右に揺らす（揺れ幅 0.5px→3px・周期 70ms。`data/rules.json` の `redraw_hold`）／スマホの振動は短い震えをくり返し間を詰める（`vibrate.redraw_hold`。kj-vibe 切・vibrate の無い端末では震えない。離したら止める）／ボタンの3行目に薄く小さく「長押し」（English は Hold。9px・不透明度 0.6。`U.redrawHoldLabel`。押せない見た目でも出す）。version を 2026-11-28.4 に
+- そのまま：長押しの長さ（`REDRAW_HOLD_MS` 600ms）・1回タップの「長押しで引き直し」・ゲージ・引き直しの決まり・ヒントの光り・ほかのボタン。reduced-motion では揺らさない
+- 仮のまま：揺れ幅と周期・振動の形・「長押し」の置き場（ボタンの中の3行目にした：ボタンは overflow:hidden で、下に出すと隠れるため）・文字の大きさと濃さ
+- テスト：tests/redrawhold.browser.test.mjs（`KJ_SHOT_REDRAWHOLD=<フォルダ>` で画像）。tests/browser.test.mjs の Redraw の文字の試験を3行目ぶん直した
+- 戻し方：この PR の merge コミットを revert。端末に残るものは無い
