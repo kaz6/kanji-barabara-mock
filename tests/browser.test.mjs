@@ -2202,7 +2202,7 @@ test("画面", { skip }, async (t) => {
     assert.ok(z.play[1] > z.set[0][1] && z.play[0] > z.set[0][0] * 1.5, `Play は大きい（${z.play}・${z.set[0]}）`);
     assert.ok(new Set(z.set.map((s) => s[1])).size === 1, "群は同じ高さ");
     const quiet = await page.evaluate(() => ["bBack", "bRedraw"].map((id) => { const cs = getComputedStyle(document.getElementById(id)); return [cs.backgroundColor, cs.borderBottomWidth]; }));
-    assert.deepEqual(quiet, [["rgba(0, 0, 0, 0)", "1px"], ["rgba(0, 0, 0, 0)", "1px"]], "Back・Redraw は地なし・枠線だけ（KJ-078。Back は背景の上の墨色の線）");
+    assert.deepEqual(quiet, [["rgb(246, 238, 214)", "1px"], ["rgba(0, 0, 0, 0)", "1px"]], "Redraw は地なし・枠線だけ（KJ-078）。Back は KJ-144 で操作5つと同じ札の地");
     // 文字が読める明暗差：押せるとき・押せないとき・待ち時間のゲージ（満ちた側とまだの側の両方）で 4.5 以上
     const contrasts = () => page.evaluate(() => [...document.querySelectorAll(".ops button")].map((b) => {
       const cs = getComputedStyle(b), bef = getComputedStyle(b, "::before");
@@ -2221,7 +2221,7 @@ test("画面", { skip }, async (t) => {
     assert.ok(rows.some((r) => !r.off && r.id === "bInvert"), "上 を選ぶと Flip が押せる");
     check(rows, "押せるとき");
     // Back は卓の外（KJ-090）：背景の上で読める（押せるとき 4.5 以上）
-    const bkc = await page.evaluate(() => ({ color: getComputedStyle(document.getElementById("bBack")).color, bg: getComputedStyle(document.body).backgroundColor, off: document.getElementById("bBack").disabled }));
+    const bkc = await page.evaluate(() => ({ color: getComputedStyle(document.getElementById("bBack")).color, bg: getComputedStyle(document.getElementById("bBack")).backgroundColor, off: document.getElementById("bBack").disabled })); // KJ-144：Back の地は札の色
     assert.equal(bkc.off, false, "札を選ぶと Back が押せる");
     assert.ok(ratio(bkc.color, bkc.bg) >= 4.5, `押せるとき bBack 文字と地（${bkc.color} / ${bkc.bg}）`);
     const enabled = rows.find((r) => r.id === "bInvert"), disabled = rows.find((r) => r.off && !["bBack", "bRedraw", "bRelease"].includes(r.id)); // KJ-117：Play の押せないは操作5つと同じ札の地なので、比べるのは操作5つの中

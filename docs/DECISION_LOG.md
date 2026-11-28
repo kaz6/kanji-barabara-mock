@@ -468,3 +468,12 @@
 - 仮のまま：揺れ幅と周期・振動の形・「長押し」の置き場（ボタンの中の3行目にした：ボタンは overflow:hidden で、下に出すと隠れるため）・文字の大きさと濃さ
 - テスト：tests/redrawhold.browser.test.mjs（`KJ_SHOT_REDRAWHOLD=<フォルダ>` で画像）。tests/browser.test.mjs の Redraw の文字の試験を3行目ぶん直した
 - 戻し方：この PR の merge コミットを revert。端末に残るものは無い
+
+### R-170 Back の見え方を、卓の操作5つと同じにする（KJ-144。受け箱 P-144。作者 2026-11-28 00:04）
+- 決まったこと（作者の言葉）：「←BackもCycleなどと同じボタンの感じにしたいです。」
+- 読み（相談チャットの仮・係はそのまま作った）：「同じボタンの感じ」は見え方（地・字の太さ・下線・押せないとき）。印の作り直しではない。「←」の印・大きさ・置き場（Redraw の左）・働きは今のまま
+- 作り：押せる＝札の地（`--tile`）・墨の太字（700）・弁柄の3pxの下線（KJ-115 の下線がそのまま）／押せない＝札の地に墨 0.35・細字・下線なし。css/table.css の `#bBack`。**「押せないは紙の地」ではなく札の地にした**：カード P-144 は KJ-102 の「紙の地に墨 0.35」で書かれていたが、KJ-145（P-145）で操作5つの押せないは札の地に変わった。Back は「操作5つと同じ」にそろえるので、変わったあとの札の地にした（仮決め。紙の地がよければ `#bBack:disabled` の background を `transparent` に）
+- 仮決め（係）：幅が太字で約2px動くので、Back の min-width を 56→64px（Redraw と同じ。css/screens.css の狭い画面の規則 44→64px）。選びの一覧が出ているあいだ（暗い一覧の上）は今までの見え方のまま（css/screens.css の1行）
+- そのまま：Redraw・Play・ヒント・待ち時間・Back の働き・高さ（40px 以上）。rules.json は変えない
+- テスト：tests/btnlook.browser.test.mjs に Back の試験を足した（押せる／押せないの地・字・太さ・下線・明暗差 4.5 以上・Split と Join と同じ・高さ幅が動かない・「←」と Back の字・Redraw は変わらない・320px で Redraw に重ならない）。tests/browser.test.mjs と btnlook の KJ-115 の期待値を新しい見え方に直した。`KJ_SHOT_BTN=<フォルダ>` で画像（kj-144-off／on-375）
+- 戻し方：この PR の merge コミットを revert。端末に残るものは無い
