@@ -59,7 +59,7 @@ test("筆文字：字体は特別な語の字に絞ってある（小さい）�
 });
 
 test("筆文字：KJ Fx を使うのは #fx .c の1か所だけ。読めなかったときは今の字（--kanji）に戻る。OFL と名前を置いてある", () => {
-  const html = read("index.html").toString("utf8");
+  const html = ["index.html", "css/base.css", "css/table.css", "css/screens.css"].map((n) => read(n).toString("utf8")).join("\n"); // KJ-152：CSS は css/ に出した
   const uses = html.match(/[^\n{}]*\{[^{}]*KJ Fx[^{}]*\}/g) || [];
   assert.equal(uses.length, 1, "KJ Fx を指す規則は1つ");
   assert.match(uses[0], /^#fx \.c\{[^}]*font-family:"KJ Fx",var\(--kanji\)/);
