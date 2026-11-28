@@ -107,7 +107,7 @@ test("相手の放った字：取る番のあいだ金の枠で押せる。1枚�
   await ctx.close();
 });
 
-test("375×667 と 320px：取る番に段が出ても、自分の手札・ストックが画面に収まる。段は画面の横にはみ出さない", { skip }, async (t) => {
+test("375×667 と 320px：取る番に段が出ても、自分の手札が画面に収まる（375×667 はストックも）。段は画面の横に広がらない", { skip }, async (t) => {
   const srv = await serve(); const url = `http://127.0.0.1:${srv.address().port}/index.html`;
   const browser = await chromium.launch();
   t.after(async () => { await browser.close(); srv.close(); });
@@ -116,6 +116,7 @@ test("375×667 と 320px：取る番に段が出ても、自分の手札・ス�
     await setUp(page, 2);
     const sw0 = await page.evaluate(() => { __KJ.game.cpu.shed = []; __KJ.render(); return document.documentElement.scrollWidth; }); // 段が無いときの横幅（今の画面の幅。段が増やさないことを見る）
     await page.evaluate(() => { __KJ.game.cpu.shed = [..."一二三四五六七八"].map((c, i) => ({ id: 9700 + i, c })); __KJ.render(); }); // 最大8字の語
+    await page.evaluate(() => window.scrollTo(0, 0));
     const m = await page.evaluate(() => {
       const r = (s) => document.querySelector(s).getBoundingClientRect();
       const tray = r("#meTray"), hand = r("#meHand"), shed = r("#oppShed"), tiles = [...document.querySelectorAll("#oppShedTiles .tile")].map((e) => e.getBoundingClientRect());
@@ -124,7 +125,9 @@ test("375×667 と 320px：取る番に段が出ても、自分の手札・ス�
     assert.ok(m.sw <= sw0, `${w}px：段のために横に広がらない（${sw0}→${m.sw}）`);
     assert.ok(m.tileR <= m.vw, `${w}px：段の札が画面の右に収まる（${m.tileR}）`);
     await shot(page, `kj-150-long8-${w}.png`);
-    // 自分の手札・ストックが（スクロールなしで）画面に収まるか。収まらないときは報告に書く（このテストは今の値を見る）
+    // 手札は両方の幅で収まる。ストックは 375×667 で収まる（320×568 は段が無くても main で約10px はみ出している。段があると約39px。報告に書いた）
+    assert.ok(m.handB <= m.vh, `${w}px：手札が画面に収まる（${m.handB}）`);
+    if (w === 375) assert.ok(m.trayB <= m.vh, `${w}px：ストックも収まる（${m.trayB}）`);
     if (process.env.KJ_SHOT_OPP) console.log(`# ${w}x${h} trayBottom=${m.trayB} vh=${m.vh} doc=${m.scrollH}`);
     assert.deepEqual(errors, []);
     await ctx.close();

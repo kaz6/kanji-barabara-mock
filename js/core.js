@@ -1168,7 +1168,7 @@
     function setShed(p, chars, text) {
       if (g.solo) return;
       p.oppGot = 0;
-      const tiles = chars.map((c) => ({ id: ++uid, c }));
+      const tiles = chars.map((c) => ({ id: ++uid, c, w: text })); // w＝その札を放った語（false のときも、どの語の札かを札ごとに持つ）
       p.shed = OT.last_word_only ? tiles : p.shed.concat(tiles);
       p.shedWord = text;
     }
@@ -1189,7 +1189,7 @@
     g.takeOpp = (p, tileId, memo) => {
       const pre = g.canTakeOpp(p, tileId);
       if (!pre.ok) return pre;
-      const v = oppOf(p), word = v.shedWord;
+      const v = oppOf(p), word = pre.tile.w !== undefined ? pre.tile.w : v.shedWord;
       v.shed = v.shed.filter((x) => x.id !== tileId);
       const got = card(pre.tile.c, true);
       settle(p, got);
@@ -1205,8 +1205,8 @@
     if (M) {
       // 相手がこちらの放った字を1枚取った（相手の 'grab' の行が届いた）。その語の段にまだあるときだけ消す（先にこちらが次の語を放っていれば何もしない）
       g.remoteGrab = (word, c) => {
-        if (g.over || g.me.shedWord !== word) return false;
-        const i = g.me.shed.findIndex((x) => x.c === c);
+        if (g.over) return false;
+        const i = g.me.shed.findIndex((x) => x.c === c && (x.w === undefined ? g.me.shedWord === word : x.w === word));
         if (i < 0) return false;
         g.me.shed.splice(i, 1);
         addLog(g.cpu.name, "取る", [c], [c], 0, "あなたの放った字から");

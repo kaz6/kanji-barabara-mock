@@ -221,3 +221,19 @@ test("部屋：放った札の字が相手に届く（used）。古い版（used
   assert.equal(E.c.onRow({ ...mk({ pts: 3, score: 3, used: ["学"] }), match_id: "m-opp-5" }), true);
   assert.equal(chars(E.g.cpu.shed), "学生", "数が合わない used は読まない");
 });
+
+test("last_word_only を false にすると段は足し込まれ、札ごとに放った語を持つ（部屋でも前の語の札を取れて、相手の段から消える）", async () => {
+  const old = { ...R.opp_tiles };
+  R.opp_tiles.last_word_only = false;
+  try {
+    const { A, B } = pair("m-opp-6");
+    await A.c.release(setHand(A.g, A.g.me, "学生"));
+    A.g.me.takes = 0;
+    await A.c.release(setHand(A.g, A.g.me, "先生"));
+    assert.equal(chars(B.g.cpu.shed), "学生先生");
+    setHand(B.g, B.g.me, "一二"); await B.c.release(B.g.me.cards.map((x) => x.id));
+    const t = B.g.cpu.shed.find((x) => x.w === "学生" && x.c === "学");
+    assert.equal((await B.c.takeOpp(t.id)).ok, true);
+    assert.equal(chars(A.g.me.shed), "生先生", "前の語の札も相手の段から消える");
+  } finally { Object.assign(R.opp_tiles, old); }
+});
