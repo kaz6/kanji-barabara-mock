@@ -1977,7 +1977,7 @@ test("画面", { skip }, async (t) => {
     }
     // KJ-141：終わったあとの「もう一度」は、同じ相手ともう一試合（二人とも押したら始まる。くわしくは tests/rematch.browser.test.mjs）。押したら待つ。「設定を変える」で、はじめる前の画面へ（部屋を作り直す）
     await A.page.click("#again");
-    await A.page.waitForFunction(() => document.getElementById("msg").textContent === "相手を待っています");
+    await A.page.waitForFunction(() => /相手を待っています$/.test(document.getElementById("msg").textContent));
     assert.equal(await A.page.isVisible("#setup"), false, "待つだけ。はじめる前の画面へは戻らない");
     await A.page.click("#bSetup");
     assert.equal(await A.page.isVisible("#setup"), true);

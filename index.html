@@ -653,6 +653,7 @@ function end(winner,solo){
   else if(winner===G.cpu){m.textContent=STR.t("msgLose",G.me.score,G.cpu.score);m.className="msg lose";buzz("lose")}
   else{m.textContent=STR.t("msgDraw",G.me.score,G.cpu.score);m.className="msg"}
   $("bCopyEnd").hidden=$("bShareEnd").hidden=false;
+  if(RM)RM.base=m.textContent;
   rmShow();
   showEndAfterFx(winner);
 }
@@ -853,7 +854,7 @@ function rmText(){return RM&&G&&G.over&&G.match?(RM.rem.oppLeft?STR.t("rematchLe
 function rmShow(){
   if(!RM||!G||!G.over||!G.match)return;
   const t=rmText(),m=$("msg");
-  if(t){m.textContent=t;m.className="msg"}
+  if(t)m.textContent=(RM.base?RM.base+"　":"")+t; // 結果の一言（勝ち！ ○対○）は残して、後ろに足す
   $("esRematch").textContent=t; // 終わりの画面（#endShow）が上に出ているあいだも見えるように、そこにも出す
 }
 // 合言葉の共有（KJ-107）：navigator.share で文とリンク（?room=合言葉）を渡す。無い端末は同じ文とリンクをクリップボードに写す

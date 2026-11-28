@@ -116,7 +116,7 @@ test("KJ-141 合言葉の部屋の再戦と何勝何敗（画面）", { skip, ti
 
   await t.test("A だけ「もう一度」を押す：「相手を待っています」。まだ始まらない。もう一度押しても何も増えない", async () => {
     await click(A, "again");
-    await A.page.waitForFunction(() => document.getElementById("msg").textContent === "相手を待っています");
+    await A.page.waitForFunction(() => /相手を待っています$/.test(document.getElementById("msg").textContent));
     assert.equal(await text(A, "esRematch"), "相手を待っています", "終わりの画面が出ているあいだも見える");
     assert.equal(await text(B, "esRematch"), "");
     if (SHOT) await A.page.screenshot({ path: path.join(SHOT, "rematch-waiting-375.png") });
@@ -174,8 +174,9 @@ test("KJ-141 合言葉の部屋の再戦と何勝何敗（画面）", { skip, ti
 
   await t.test("B が「設定を変える」で抜けると、A に「相手が抜けた」。A の「もう一度」ははじめる前の画面へ（部屋は残らない）", async () => {
     await click(B, "bSetup");
-    await A.page.waitForFunction(() => document.getElementById("msg").textContent === "相手が抜けた", null, { timeout: 6000 });
+    await A.page.waitForFunction(() => /相手が抜けた$/.test(document.getElementById("msg").textContent), null, { timeout: 6000 });
     assert.equal(await text(A, "esRematch"), "相手が抜けた");
+    assert.match(await text(A, "msg"), /^.*(勝ち|負け|引き分け).*　相手が抜けた$/, "結果の一言は消えず、後ろに足される");
     assert.equal(await B.page.evaluate(() => [__KJ.rematch, __KJ.roomTally]).then((x) => x[0] === null && x[1] === null), true, "B は部屋を出た（何勝何敗も消える）");
     await click(A, "again");
     assert.equal(await A.page.isVisible("#setup"), true);
