@@ -134,8 +134,8 @@ for (const look of [null, "white", "outline", "line", "zzz"]) {
       await play(page);
       const others = () => page.evaluate(() => ["bRelease", "bBack", "bRedraw"].map((id) => { const c = getComputedStyle(document.getElementById(id)); return [id, c.backgroundColor, c.color, c.fontWeight]; }));
       const a = await others();
-      // Play・Back・Redraw は KJ-102 の前と同じ（地・字の色・太さ。Play は押せない見え方のとき）
-      assert.deepEqual(a, [["bRelease", "rgb(246, 238, 214)", "rgba(42, 38, 34, 0.35)", "400"], ["bBack", "rgba(0, 0, 0, 0)", "rgb(98, 90, 80)", "400"], ["bRedraw", "rgba(0, 0, 0, 0)", "rgb(42, 38, 34)", "400"]]); // KJ-117：Play の押せないは札の地・墨 0.35 の字（操作5つと同じ考え）
+      // Play・Redraw は KJ-102 の前と同じ（地・字の色・太さ。Play は押せない見え方のとき）。Back は KJ-144 で操作5つと同じ（押せないとき札の地・墨 0.35・細字）
+      assert.deepEqual(a, [["bRelease", "rgb(246, 238, 214)", "rgba(42, 38, 34, 0.35)", "400"], ["bBack", "rgb(246, 238, 214)", "rgba(42, 38, 34, 0.35)", "400"], ["bRedraw", "rgba(0, 0, 0, 0)", "rgb(42, 38, 34)", "400"]]); // KJ-117：Play の押せないは札の地・墨 0.35 の字（操作5つと同じ考え）
       // KJ-115：Back は押せないとき下線なし・押せるとき操作5つと同じ弁柄の下線（Redraw に下線は無い）
       const bs = () => page.evaluate(() => ["bBack", "bRedraw"].map((id) => getComputedStyle(document.getElementById(id)).boxShadow));
       assert.equal(await page.evaluate(() => document.getElementById("bBack").disabled), true);
@@ -243,9 +243,9 @@ test("卓の地：不透明な --table-ground・紙より濃い・卓の中の�
     // 卓の中のボタンは押せる／押せない（台が空）どちらも札の地。Play は押せないとき札の地・押せるとき弁柄
     const bgs = await page.evaluate(() => ["bSplit", "bJoin", "bInvert", "bCycle", "bHomo", "bRelease"].map((id) => [id, getComputedStyle(document.getElementById(id)).backgroundColor]));
     for (const [id, bg] of bgs) assert.equal(bg, "rgb(246, 238, 214)", `${id} 押せない＝札の地`);
-    // 卓の外（Back・Redraw・手札の行）は変えない
+    // 卓の外：Redraw・手札の行は変えない（Back は KJ-144 で操作5つと同じ見え方）
     const outside = await page.evaluate(() => ["bBack", "bRedraw"].map((id) => getComputedStyle(document.getElementById(id)).backgroundColor));
-    assert.deepEqual(outside, ["rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0)"]);
+    assert.deepEqual(outside, ["rgb(246, 238, 214)", "rgba(0, 0, 0, 0)"], "Back は KJ-144 で札の地（押せないとき）・Redraw は透明のまま");
     if (process.env.KJ_SHOT_BTN) await page.screenshot({ path: path.join(process.env.KJ_SHOT_BTN, "kj-145-empty-375.png") });
     await page.evaluate(() => { const G = __KJ.game; G.me.cards = [..."日本上下山川口木"].map((c, i) => ({ id: 9300 + i, c, t: 0, fresh: false })); __KJ.render(); });
     await page.locator("#meHand .tile", { hasText: "日" }).first().click();
@@ -257,6 +257,59 @@ test("卓の地：不透明な --table-ground・紙より濃い・卓の中の�
     await page.evaluate(() => { const G = __KJ.game; G.hint = null; G.me.cards = [..."日分"].map((ch, i) => ({ id: 7300 + i, c: ch, t: 0, fresh: false })); window.__shift(G); __KJ.render(); });
     const h = await page.evaluate(() => { const c = getComputedStyle(document.getElementById("bSplit")); return { bg: c.backgroundColor, shadow: c.boxShadow }; });
     assert.equal(h.bg, "rgb(255, 241, 196)"); assert.match(h.shadow, /rgb\(217, 154, 0\)/);
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  } finally { await browser.close(); srv.close(); }
+});
+
+// KJ-144：Back は操作5つ（Split・Join・Flip・Cycle・Same reading）と同じ見え方。押せる＝札の地・墨の太字・弁柄の下線／押せない＝札の地に墨 0.35・細字・下線なし。大きさ・置き場・印は今のまま
+test("Back の見え方（KJ-144）：操作5つと同じ（押せる＝札の地・太字・弁柄の下線で字は 4.5 以上／押せない＝札の地に墨 0.35）・高さと置き場は今のまま・Redraw と Play は変わらない", { skip }, async () => {
+  const srv = await serve(); const browser = await chromium.launch();
+  try {
+    const url = `http://127.0.0.1:${srv.address().port}/index.html`;
+    const { ctx, page, errors } = await open(browser, url);
+    await play(page);
+    const snap = () => page.evaluate(() => {
+      const rgb = (s) => s.match(/[\d.]+/g).map(Number);
+      const lin = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+      const lum = (c) => 0.2126 * lin(c[0]) + 0.7152 * lin(c[1]) + 0.0722 * lin(c[2]);
+      const one = (id) => { const b = document.getElementById(id), c = getComputedStyle(b), r = b.getBoundingClientRect(); const fg = rgb(c.color), bg = rgb(c.backgroundColor); const [p, q] = [lum(fg), lum(bg)].sort((x, y) => y - x); return { bg: c.backgroundColor, color: c.color, weight: c.fontWeight, shadow: c.boxShadow, size: c.fontSize, family: c.fontFamily, h: r.height, w: r.width, ratio: (p + 0.05) / (q + 0.05), off: b.disabled }; };
+      return { back: one("bBack"), split: one("bSplit"), join: one("bJoin"), redraw: one("bRedraw"), play: one("bRelease"), arrow: !!document.querySelector("#bBack svg.ic"), bk: document.querySelector("#bBack .bk")?.textContent };
+    });
+    const shot = (n) => process.env.KJ_SHOT_BTN ? page.screenshot({ path: path.join(process.env.KJ_SHOT_BTN, `kj-144-${n}.png`) }) : null;
+    // 台が空：Back は押せない（Join も押せない）
+    let s = await snap();
+    assert.equal(s.back.off, true);
+    assert.equal(s.back.bg, "rgb(246, 238, 214)", "押せない：札の地（紙の地にしない・操作5つと同じ）");
+    assert.equal(s.back.color, "rgba(42, 38, 34, 0.35)", "押せない：墨 0.35");
+    assert.equal(s.back.weight, "400"); assert.equal(s.back.shadow, "none", "押せない：下線なし");
+    assert.equal(s.join.bg, s.back.bg, "押せない Join と地が同じ"); assert.equal(s.join.color, s.back.color, "押せない Join と字の色が同じ"); assert.equal(s.join.weight, s.back.weight);
+    const h0 = s.back.h, w0 = s.back.w;
+    await shot("off-375");
+    await page.locator("#meHand .tile", { hasText: "上" }).first().click();
+    s = await snap();
+    assert.equal(s.back.off, false);
+    assert.equal(s.back.bg, "rgb(246, 238, 214)", "押せる：札の地"); assert.equal(s.back.color, "rgb(42, 38, 34)", "押せる：墨");
+    assert.equal(s.back.weight, "700", "押せる：太字（操作5つと同じ 700）");
+    assert.match(s.back.shadow, /rgb\(156, 59, 46\) 0px -3px 0px 0px inset/, "押せる：弁柄の 3px の下線");
+    assert.ok(s.back.ratio >= 4.5, `押せる字の明暗差 4.5 以上（${s.back.ratio.toFixed(2)}）`);
+    assert.equal(s.back.size, s.split.size, "字の大きさは操作5つと同じ（375px）"); assert.equal(s.back.family, s.split.family, "字体は操作5つと同じ");
+    assert.equal(s.back.bg, s.split.bg, "押せる Split と地が同じ"); assert.equal(s.back.weight, s.split.weight); assert.equal(s.back.shadow, s.split.shadow, "押せる Split と下線が同じ");
+    // 大きさ・置き場・印は今のまま（高さは押せる・押せないで変わらない。「←」と Back の字がある）
+    assert.equal(s.back.h, h0, "高さが変わらない"); assert.equal(s.back.w, w0, "幅が変わらない（太字にしても動かない）");
+    assert.ok(s.back.h >= 44, `高さ ${s.back.h}`);
+    assert.equal(s.arrow, true, "←の印は今のまま"); assert.equal(s.bk, "Back");
+    assert.equal(s.redraw.bg, "rgba(0, 0, 0, 0)", "Redraw は変えない"); assert.equal(s.redraw.shadow, "none");
+    await shot("on-375");
+    // 操作5つと Back をいっしょに撮る（押せる Back・押せる Split など）
+    // 押すとくっつく前のとおり台が空になり、押せない見え方に戻る
+    await page.click("#bBack");
+    s = await snap();
+    assert.equal(s.back.off, true); assert.equal(s.back.color, "rgba(42, 38, 34, 0.35)"); assert.equal(s.back.shadow, "none");
+    // 320px でもはみ出さない
+    await page.setViewportSize({ width: 320, height: 700 });
+    const fit = await page.evaluate(() => { const b = document.getElementById("bBack").getBoundingClientRect(), r = document.getElementById("bRedraw").getBoundingClientRect(); return { br: b.right, rl: r.left, vw: document.documentElement.clientWidth, sw: document.documentElement.scrollWidth }; });
+    assert.ok(fit.br <= fit.rl, "Back は Redraw に重ならない"); // 320px の横幅は main でも別の所で 343px（この変更の前から）なので、Back の外は見ない
     assert.deepEqual(errors, []);
     await ctx.close();
   } finally { await browser.close(); srv.close(); }

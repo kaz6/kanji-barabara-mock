@@ -60,9 +60,8 @@ body.playing .mast{display:none}
 .rowline .row{flex:1 1 auto;min-width:0}
 /* Back（KJ-090。作者 2026-11-25「バックまで、指が遠い」）：卓から出して、「あなた ○点 手札」の行の Redraw のすぐ左へ。高さは Redraw と同じ（行を伸ばして揃える）・幅は 44px 以上・Redraw との間は 8px 以上 */
 .bkrd{display:flex;align-items:stretch;gap:10px;margin-left:auto;flex:none}
-#bBack{flex:none;display:inline-flex;align-items:center;justify-content:center;gap:4px;min-width:56px;min-height:40px;padding:4px 10px;background:transparent;border:1px solid var(--ink);color:var(--ink);font-size:14px;line-height:1.25}
-#bBack:not(:disabled){box-shadow:inset 0 -3px 0 var(--accent)} /* KJ-115：押せるときだけ、操作5つと同じ弁柄の下線 */
-#bBack:disabled{background:transparent;border-color:var(--line);color:var(--dim);cursor:default}
+#bBack{flex:none;display:inline-flex;align-items:center;justify-content:center;gap:4px;min-width:64px;min-height:40px;padding:4px 10px;background:var(--tile);border:1px solid var(--ink);color:var(--ink);font-size:14px;font-weight:700;line-height:1.25;box-shadow:inset 0 -3px 0 var(--accent)} /* KJ-144：操作5つ（Split ほか）と同じ見え方。押せる＝札の地・墨の太字・弁柄の太い下線（KJ-115 の下線もこれ） */
+#bBack:disabled{background:var(--tile);border-color:var(--line);color:rgba(42,38,34,.35);font-weight:400;box-shadow:none;cursor:default} /* 押せない＝札の地に墨 0.35（操作5つの押せないと同じ。KJ-145） */
 #bBack .ic{flex:none}
 /* Redraw（KJ-078）：卓の外。「あなた ○点 手札 ○/8」の行の右端。長押しで引き直す＝押している間、地が左から埋まり、埋まりきったら引き直す（長さは index.html の REDRAW_HOLD_MS） */
 .me .side-head{height:auto;min-height:44px;align-items:center;overflow:visible}
