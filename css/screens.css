@@ -196,3 +196,5 @@ body.dragging .tray.empty .slot{aspect-ratio:1;height:auto}
   .me .side-head .count{order:3;flex:1 0 100%}
   .me .side-head .bkrd{order:2}
 }
+/* KJ-157：上の @media (max-width:540px){ は main のときから閉じていなかった（末尾まで中身）。効き方は今のまま、ここで閉じる。あとから足す規則が 540px 以下だけにならないようにするため */
+}
