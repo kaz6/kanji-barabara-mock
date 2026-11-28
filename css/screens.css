@@ -57,7 +57,7 @@ body:not(.playing) #topbar,body:not(.playing) #logPanel{display:none} /* はじ�
 .choices{padding-top:56px}
 .table:has(#choices.on)+#meSide .bkrd{position:relative;z-index:6}
 .table:has(#choices.on)+#meSide #bBack,.table:has(#choices.on)+#meSide #bRedraw{border-color:var(--on-table-sub);color:var(--on-table)}
-.table:has(#choices.on)+#meSide #bBack,.table:has(#choices.on)+#meSide #bBack:disabled{background:transparent;font-weight:400;box-shadow:none} /* 暗い一覧の上では今までの見え方（KJ-144 は一覧が出ていないときの話） */
+.table:has(#choices.on)+#meSide #bBack,.table:has(#choices.on)+#meSide #bBack:disabled{background:transparent;font-weight:400} /* 暗い一覧の上では今までの見え方（KJ-144 は一覧が出ていないときの話） */
 .table:has(#choices.on)+#meSide #bBack:disabled,.table:has(#choices.on)+#meSide #bRedraw:disabled,.table:has(#choices.on)+#meSide #bRedraw[aria-disabled=true]{border-color:var(--line);color:var(--dim)}
 .cds.gone~.clock{display:none} /* 「相手の通信が切れた」は長いので、出ているあいだだけ残り時間を引っ込める（行の高さを変えない） */
 body.esOn details>summary .bar{position:fixed;top:6px;left:10px;right:10px;z-index:20}

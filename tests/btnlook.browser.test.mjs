@@ -297,7 +297,7 @@ test("Back の見え方（KJ-144）：操作5つと同じ（押せる＝札の�
     assert.equal(s.back.bg, s.split.bg, "押せる Split と地が同じ"); assert.equal(s.back.weight, s.split.weight); assert.equal(s.back.shadow, s.split.shadow, "押せる Split と下線が同じ");
     // 大きさ・置き場・印は今のまま（高さは押せる・押せないで変わらない。「←」と Back の字がある）
     assert.equal(s.back.h, h0, "高さが変わらない"); assert.equal(s.back.w, w0, "幅が変わらない（太字にしても動かない）");
-    assert.ok(s.back.h >= 40, `高さ ${s.back.h}`);
+    assert.ok(s.back.h >= 44, `高さ ${s.back.h}`);
     assert.equal(s.arrow, true, "←の印は今のまま"); assert.equal(s.bk, "Back");
     assert.equal(s.redraw.bg, "rgba(0, 0, 0, 0)", "Redraw は変えない"); assert.equal(s.redraw.shadow, "none");
     await shot("on-375");
