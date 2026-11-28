@@ -137,7 +137,7 @@ test("十二支（KJ-009）：子→丑→…→亥→子と一周する。N5・
   for (const c of ZODIAC) assert.deepEqual(owners.get(c), ["十二支"], `${c} が別の巡りにも乗っている`);
 });
 
-test("レベルの外の字（十二支）：データにあり、読みがある。山の字ではないが、字として見せ、手に持てる。部品表の行き先には出ない", () => {
+test("レベルの外の字（十二支）：データにあり、読みがある。山の字ではないが、字として見せ、手に持てる。部品表の行き先には出ない（N4 の 未 だけ 一＋木 の行き先〔KJ-139〕）", () => {
   assert.deepEqual([...OUT].sort(), [..."丑寅卯辰巳未申酉戌亥"].sort());
   const cy = D.cycles.cycles.find((c) => c.name === "十二支");
   assert.deepEqual([...cy.outside].sort(), [...OUT].sort());
