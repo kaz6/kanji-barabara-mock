@@ -59,23 +59,13 @@ const enabled = (page) => page.evaluate((ids) => ids.filter((id) => { const b = 
 const pressOff = (page, id) => page.locator(`#${id}`).click({ force: true }); // 押せない見た目（aria-disabled）のボタンも、指なら押せる
 const stepText = (page) => page.textContent("#tutStep");
 const lineText = (page) => page.textContent("#tutLine");
-// 場の左の札を1枚ずつ取る。押した札が描き直しで作り替わると、押した（down）と離した（up）が別の札になり click が起きないことがある（揺れの元の見立て。KJ-159）。
-// 押したら「取る枚数」が減るのを待ち、減らなければ押し直す。取れなかったら、いまの様子を付けて落とす（30 秒の時間切れにしない）
 async function takeTwo(page) {
-  for (let i = 0; i < 2; i++) {
-    const before = await page.evaluate(() => __KJ.game.me.takes);
-    let ok = false;
-    for (let k = 0; k < 6 && !ok; k++) {
-      await page.locator("#field .tile").first().click();
-      ok = await page.waitForFunction((b) => __KJ.game.me.takes < b, before, { timeout: 1500 }).then(() => true, () => false);
-    }
-    assert.ok(ok, `場の札を押しても取れない（取る枚数 ${before}・案内 ${await page.textContent("#tutLine")}）`);
-  }
+  for (let i = 0; i < 2; i++) await page.locator("#field .tile").first().click();
 }
 // 押せるようになるのを待つ。待ちきれなかったら、案内・取る枚数・選んでいる札を付けて落とす
 async function clickWhenReady(page, id) {
   const ok = await page.waitForFunction((i) => { const b = document.getElementById(i); return !b.disabled && b.getAttribute("aria-disabled") !== "true"; }, id, { timeout: 8000 }).then(() => true, () => false);
-  if (!ok) assert.fail(`#${id} が押せない：案内「${await page.textContent("#tutLine")}」取る枚数 ${await page.evaluate(() => __KJ.game.me.takes)}・選んでいる札 ${await page.evaluate(() => [...document.querySelectorAll(".tile.sel")].map((e) => e.title).join("")) }`);
+  if (!ok) assert.fail(`#${id} が押せない：段「${await page.textContent("#tutStep")}」案内「${await page.textContent("#tutLine")}」取る枚数 ${await page.evaluate(() => __KJ.game.me.takes)}・選び ${await page.evaluate(() => JSON.stringify(__KJ.row))}・手札 ${await page.evaluate(() => __KJ.game.me.cards.map((x) => x.c).join(""))}`);
   await page.click("#" + id);
 }
 // 放ったあと（段3 以降）は山札から自動で取る（KJ-055）。取りきって（取る枚数が 0・自動取りが止まる）、案内が次に替わるまで待つ
@@ -400,12 +390,13 @@ test("チュートリアルの画面", { skip }, async (t) => {
     const word = await page.evaluate(() => {
       const g = __KJ.game, T = __KJ.tables, K = window.KJ;
       const cs = g.me.cards;
-      for (const a of cs) for (const b of cs) { if (a.id === b.id) continue; const r = g.canRelease(g.me, [a.id, b.id]); if (r.ok) return [a.c, b.c]; }
+      for (const a of cs) for (const b of cs) { if (a.id === b.id || a.c === b.c) continue; // 同じ字2枚だと tile(字) が同じ札を2回押して選びが外れる（KJ-159：揺れの元）
+        const r = g.canRelease(g.me, [a.id, b.id]); if (r.ok) return [a.c, b.c]; }
       return null;
     });
     if (word) {
       for (const ch of word) await tile(page, ch).click();
-      await page.click("#bRelease");
+      await clickWhenReady(page, "bRelease");
       await page.waitForTimeout(900);
       assert.equal(await page.evaluate(() => __KJ.game.me.takes), 2, "本番は人が取るまで取らない");
     } else t.diagnostic(`本番の手札で2字の言葉が見つからず、本番の確かめは省いた（${hand.join("")}）`);
