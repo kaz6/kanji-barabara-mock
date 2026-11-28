@@ -1975,8 +1975,11 @@ test("画面", { skip }, async (t) => {
       // 先着でぶつかった（409）ときにブラウザが出す読み込みの失敗の文だけは、決まりどおりの動きなので除く
       assert.deepEqual(P.errors.filter((e) => !/status of 409/.test(e)), []);
     }
-    // 「もう一度」は、はじめる前の画面へ（部屋を作り直す）
+    // KJ-141：終わったあとの「もう一度」は、同じ相手ともう一試合（二人とも押したら始まる。くわしくは tests/rematch.browser.test.mjs）。押したら待つ。「設定を変える」で、はじめる前の画面へ（部屋を作り直す）
     await A.page.click("#again");
+    await A.page.waitForFunction(() => document.getElementById("msg").textContent === "相手を待っています");
+    assert.equal(await A.page.isVisible("#setup"), false, "待つだけ。はじめる前の画面へは戻らない");
+    await A.page.click("#bSetup");
     assert.equal(await A.page.isVisible("#setup"), true);
     assert.equal(await A.page.isVisible("#act"), true);
     assert.equal(await A.page.locator("#act input:checked").count(), 0, "作る／入るはどちらも選ばれていない");

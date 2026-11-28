@@ -183,6 +183,9 @@
 | `roomHostSet` | 作った人の設定：レベル N5・5分 | Host's settings: level N5, 5分 |
 | `howtoSum` | しくみ | How it works |
 | `again` | もう一度 | Play again |
+| `rematchWait` | 相手を待っています（合言葉の部屋で「もう一度」を押したあと。KJ-141・仮） | Waiting for your opponent... |
+| `rematchLeft` | 相手が抜けた（KJ-141・仮） | Your opponent left |
+| `TALLY`（js/strings.js） | この相手と 2勝1敗（引き分けがあれば 2勝1敗1分。KJ-141・仮） | vs this player: 2W 1L 1D |
 | `setupBtn` | 設定を変える | Change settings |
 | `logBtn` | ログ | Log |
 | `copyBtn` | コピー | Copy |

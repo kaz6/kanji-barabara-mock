@@ -11,7 +11,7 @@
 
 ## 中身の分け方
 
-- `js/core.js`：遊びの決まり（表引き・割る・くっつける・放つ・点数・場から取る・引き直し・待ち時間・勝ち・CPU・ログ）。DOM に触らない。ブラウザでは `window.KJ`、Node では `require`。合言葉の部屋（人と対戦。KJ-033）の先着は `createMatchClient`、部屋を作る／入るは `hostRoom`・`findRoom`・`joinRoom`・`roomWaiter`（つなぎは差し替え。テストは `memoryClaims`。本物のつなぎ〔kj_claims の REST と Realtime〕は index.html。KJ-140：自分の上の段の字を `handTiles`・`handPayload`・`parseHandTiles`・`sendHand`〔event の type hand。0.3秒まとめ〕で相手へ送り、相手の行の下に見せる）
+- `js/core.js`：遊びの決まり（表引き・割る・くっつける・放つ・点数・場から取る・引き直し・待ち時間・勝ち・CPU・ログ）。DOM に触らない。ブラウザでは `window.KJ`、Node では `require`。合言葉の部屋（人と対戦。KJ-033）の先着は `createMatchClient`、部屋を作る／入るは `hostRoom`・`findRoom`・`joinRoom`・`roomWaiter`（つなぎは差し替え。テストは `memoryClaims`。本物のつなぎ〔kj_claims の REST と Realtime〕は index.html。KJ-140：自分の上の段の字を `handTiles`・`handPayload`・`parseHandTiles`・`sendHand`〔event の type hand。0.3秒まとめ〕で相手へ送り、相手の行の下に見せる。KJ-141：終わったあとの「もう一度」で同じ相手と再戦＝`createRematch`〔event の type again・go・leave。次の試合は新しい match_id〕・何勝何敗＝`tallyNew`・`tallyAdd`・`tallyLine`・ログの頭の「この相手と ○戦目」）
 - `index.html`：画面だけ。決まりは core.js を呼ぶ
 - `css/`：画面の見た目（もとは index.html の style 要素。KJ-152。base＝色・字体・紙／table＝卓・札・ボタン／screens＝はじめる前・終わり・設定など）。見た目を触るときだけ開く
 - `data/parts.json` の `reach`：山に入らない「行き先だけの字」（KJ-077。氷・丸・刃・凡・勺。丶 の行き先。KJ-113 で 旧＝｜＋日、KJ-137 で 良＝丶＋艮 を足した）。割り方（`parts`）とは別の表。左右の部品が両方そのレベルで手に入るときだけ `T.REACH` として使う（`makeTables` と `tools/build_data.py` の `holdable` を同じ決め方に）。字として見せるので `jouyou` にも入れる。形は split_shapes。テストは tests/reach.test.js
@@ -46,6 +46,7 @@ npm test
 - `tests/data.test.js`：データの整合（レベル・部品表〔輪がない〕・対義・巡り・偏の形・同じ読み・語・特別な語・決まり）
 - `tests/game.test.js`：割る・くっつける・待ち時間・放つ・点数・使用済み・取る・引き直し・勝ち・CPU・ログ。時計と乱数は差し替えている（`tests/helpers.js`）
 - `tests/match.test.js`：合言葉の部屋の先着（場の札・言葉・勝ちの点・時間切れ・相手が抜けた）と、部屋を作る／入る・届いた行の確かめ・insert の時間切れ。つなぎは偽物（`KJ.memoryClaims`）。本物の Supabase には出さない
+- `tests/rematch.test.js`・`tests/rematch.browser.test.mjs`：合言葉の部屋の再戦と何勝何敗（KJ-141。二人とも「もう一度」で go が1つ・同じ次の match_id・押す順は問わない・片方だけなら待つ・抜けたら知らせる・送り直し・壊れた行を無視・何勝何敗の数え方と文・ログの頭「この相手と ○戦目」／画面：2つのページで3戦〔1勝0敗→1勝1敗→引き分け〕・「相手を待っています」〔終わりの画面にも〕・2戦目も場の先着が働く・「相手が抜けた」→「もう一度」ではじめる前の画面へ・作り直すと 0 から・CPU 戦には出ない）。`KJ_SHOT_REMATCH=<フォルダ>` で画像を書く
 - `tests/counters.test.js`・`tests/counters.browser.test.mjs`：数＋助数詞（KJ-022。データ・読み・十円 が放てる・使った助数詞は使えない〔辞書の語にも・CPU も・二人とも〕・動けない・言い方／画面：否 の判子と「〇円は一度きり！」が真ん中に出て消える・ほかのはじかれ方でも出る）
 - `tests/vibrate.test.js`・`tests/vibrate.browser.test.mjs`：スマホの振動（KJ-074。形の選び方・手ごとの形・切なら震えない・相手の手で震えない・`navigator.vibrate` が無い端末で落ちない。`navigator.vibrate` は差し替え）
 - `tests/radical.test.js`・`tests/radical.browser.test.mjs`：部品の札の意味（KJ-021。部品すべてに行がある・radical_forms と食い違わない・一行の形・一覧にそろっている／画面：部品の札を選ぶと台の行に出る・字の札では出ない・外すと消える）
