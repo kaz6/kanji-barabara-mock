@@ -425,3 +425,11 @@
 - テスト：tests/parts10.test.js・tests/parts10.browser.test.mjs（`KJ_SHOT_PARTS10=<フォルダ>` で画像）。語数などの期待値だけ直した：game・grade1・reach・g1help
 - 戻し方：この PR の merge コミットを revert（data/words.json も戻る。端末に残るものは無い）
 
+### R-166 index.html の CSS を css/ に出す（KJ-152。受け箱 P-152。組み直しの1枚目。参謀の返事 漢字版 3・作者「おけ」）
+- 目的：係が毎回読む index.html（168KB・1900行）のうち style 要素の約4.4万字を別のファイルに出し、見た目を触らないカードでは読まずに済ませる
+- 決まり（スキル code-kumikae）：遊び・見た目・画面の動きを変えない。localStorage・通信・URL は触らない。ビルドの仕組みは足さない
+- したこと：style 要素の中身を、そのまま css/base.css（色・字体・紙・背景の記事・演出。131行）・css/table.css（場・卓・ボタン・ゲージ・ヒント。147行）・css/screens.css（はじめる前・チュートリアル・ログ・終わり・戦況・小さい画面。198行）に移し、head に link を3つ（効く順は今のまま）。中身は1字も変えていない（移す前後をつなげた CSS の diff が空）
+- 直した読み先：CSS の文字を index.html から読んでいた試験（tests/paper.test.js・tests/fxfont.test.js）と tools/build_paper_fonts.py（画面の字の拾い先）に css/ を足した。試験の中身は変えていない
+- 確かめ：npm test 767 件すべて通る（前と同じ件数）。375×667・320px の はじめる前・試合中・終わりを main と並べて撮り、画素の差は 0
+- JS（script 要素）は分けない（次の組み直しで相談チャットが決める）。使っていない規則の削除はしない
+- 戻し方：この PR の merge コミットを revert（端末に残るものは無い）

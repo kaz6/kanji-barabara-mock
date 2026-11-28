@@ -75,7 +75,7 @@ test("字体：號数の太い字体（KJ-134。Kaisei Tokumin 700）は、第�
   const want = new Set([..."第號壱弐参肆伍陸漆捌玖拾佰阡"].map((c) => c.codePointAt(0)));
   assert.deepEqual([...f.set].sort((a, b) => a - b), [...want].sort((a, b) => a - b), "要る字だけ（號数の字）");
   assert.ok(fs.statSync(path.join(ROOT, "fonts", f.src)).size < 20 * 1024, "要る字だけなので小さい");
-  const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
+  const html = ["index.html", "css/base.css", "css/table.css", "css/screens.css"].map((n) => fs.readFileSync(path.join(ROOT, n), "utf8")).join("\n"); // KJ-152：CSS は css/ に出した
   assert.match(html, /#mastNo\{[^}]*font-family:"KJ Kaisei Bold","KJ Kaisei"[^}]*font-weight:700/, "表紙の號数は 700（KJ Kaisei Bold）");
   assert.ok(!faces().some((x) => x.fam === "KJ Kaisei" && x.weight !== 400), "KJ Kaisei に 400 以外の字体を足さない（札の字＋太字の所が Shippori に落ちる）");
 });
@@ -136,7 +136,7 @@ test("字体：画面の字（Zen）は、ボタンの英字・数字と、画�
 });
 
 test("字体：index.html は字体の CSS を読み、札の字は <html data-face> で替わる（初期は大正風＝Kaisei が先）", () => {
-  const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
+  const html = ["index.html", "css/base.css", "css/table.css", "css/screens.css"].map((n) => fs.readFileSync(path.join(ROOT, n), "utf8")).join("\n"); // KJ-152：CSS は css/ に出した
   assert.ok(html.includes('href="fonts/kj-paper.css"'));
   assert.match(html, /--kanji:"KJ Kaisei","KJ Shippori","KJ Glyphs"/, "初期の札の字は Kaisei → Shippori → kj-glyphs");
   assert.match(html, /:root\[data-face="mincho"\]\{--kanji:"KJ Shippori","KJ Kaisei","KJ Glyphs"/, "明朝は Shippori → Kaisei → kj-glyphs");

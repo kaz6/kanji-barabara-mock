@@ -1,0 +1,147 @@
+/* 場（3枚。取ったところは同じ位置に山から出る） */
+.field{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-width:240px}
+.field .tile{cursor:default}
+.field.can .tile{cursor:pointer}
+.field:not(.can) .tile:hover{border-color:var(--line)}
+/* 放ったあと、場から取りきるまで（KJ-039。仮決め）：場の札が光り、ほかのボタンは押せない。KJ-046：金（--hint。ヒント・チュートリアルの「ここを押す」と同じ色。仮）の太い枠にして、場の見出しも金。赤は選んだ札と Play だけなので使わない */
+.field.glow .tile{border:3px solid var(--hint);box-shadow:0 0 0 1px var(--hint),0 0 10px 2px rgba(217,154,0,.55);animation:kjTake 1s ease-in-out infinite alternate}
+.table .fieldside.take .side-head b{color:var(--hint)}
+@keyframes kjTake{from{box-shadow:0 0 0 1px var(--hint),0 0 3px 0 rgba(217,154,0,.3)}to{box-shadow:0 0 0 1px var(--hint),0 0 12px 3px rgba(217,154,0,.75)}}
+/* KJ-119：取る番のあいだ、取れない所（台・操作・手札・ストック・戻す／引き直し）を薄くして山札の3枚だけをはっきり見せる。入った瞬間に山札の札を一度だけ弾ませる（0.3秒）。動きを減らす設定では弾ませない（薄くするのは残す）。金の色は変えない */
+body.taking .stage,body.taking #meHand,body.taking #meTray,body.taking #trayHead,body.taking #meSide .bkrd{opacity:.45;transition:opacity .15s}
+.field.pop .tile{animation:kjTakePop .3s ease-out var(--popd,0s) 1,kjTake 1s ease-in-out infinite alternate}
+@keyframes kjTakePop{0%{transform:scale(1)}40%{transform:scale(1.22)}100%{transform:scale(1)}}
+.takeshort{display:inline-block;min-width:4.6em;margin-left:8px;white-space:nowrap;font-size:13px;font-weight:700;color:var(--ink)}
+@media (prefers-reduced-motion:reduce){.field.glow .tile,.field.pop .tile{animation:none}}
+/* 明朝体の演出（KJ-131）：替わる前の見た目の写し（.flip-f）を上に重ね、下は明朝に替えてから、写しを右端を軸に左へめくって消す（0.8秒。仮。数は --flip-ms と js の FLIP_MS）。めくれる紙の裏（.flip-b）は紙の色。めくれている間だけ下に薄い影（.flip-sh）。写しは押せない（pointer-events:none）ので、めくっている間も遊べる */
+.flip{position:fixed;z-index:60;pointer-events:none;perspective:1400px}
+.flip-sh{position:absolute;inset:0;background:linear-gradient(to left,rgba(42,38,34,.30),rgba(42,38,34,0) 65%);opacity:0;animation:flipSh var(--flip-ms,800ms) ease-in-out forwards}
+.flip-pg{position:absolute;inset:0;transform-origin:100% 50%;transform-style:preserve-3d;animation:flipTurn var(--flip-ms,800ms) cubic-bezier(.45,.05,.55,.95) forwards}
+.flip-f,.flip-b{position:absolute;inset:0;overflow:hidden;background:var(--bg);backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.flip-b{transform:rotateY(180deg)}
+.flip-f>#game{margin:0;pointer-events:none}
+@keyframes flipTurn{to{transform:rotateY(180deg)}}
+@keyframes flipSh{0%{opacity:0}40%{opacity:1}100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.flip{display:none}}
+@media (max-width:540px){
+  .me .tile{font-size:26px}
+  .cpu .hand{grid-template-columns:repeat(8,1fr)}
+  .tile .mk{font-size:10px}
+}
+/* 表紙の題字（KJ-093。作者「題字は表紙に回します〜」）：題字を二重罫線で挟み、すぐ下の行に 第○號（左）・今日の日付（中）。行の下にも二重罫線。試合の画面には出さない。題字の後ろの絵柄は KJ-095（昇る日と放射。下の .mast-sun） */
+/* KJ-101：表紙を詰めた。数はここ（.mast）で直せる＝絵柄の箱の高さ・題字の枠の上からの間・題字の大きさ（374px 以下は --mast-fs-s）・筋の回る速さ（--mast-spin。KJ-125） */
+.mast{--mast-spin:120s;--mast-h:130px;--mast-top:12px;--mast-fs:28px;--mast-fs-s:24px;--mast-ruby:9px;--mast-sub:11px;margin:0 0 12px}
+.mast-title{position:relative;height:var(--mast-h);overflow:hidden;background:var(--tile);border:6px double var(--ink)}
+.mast-sun{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
+.mast-rays{transform-box:view-box;transform-origin:181px 210px;animation:mastspin var(--mast-spin,120s) linear infinite} /* KJ-125：筋だけを半円の中心（181,210）を軸に時計回りに回す。1周の秒数は --mast-spin の1か所（.mast）。筋は反対側にも同じ並びを足してある（回しても枠の中に筋の無い所が出ない）。半円・題字の箱は動かさない */
+@keyframes mastspin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.mast-rays{animation:none}}
+.mast-name{position:absolute;left:0;right:0;top:var(--mast-top);z-index:1;text-align:center}
+.mast-name>span{display:inline-block;background:var(--tile);border:2px solid var(--ink);padding:6px 8px 6px calc(8px + .12em);font-size:var(--mast-fs);font-weight:900;letter-spacing:.12em;line-height:1.3;white-space:nowrap}
+.mast-name .mast-ruby,.mast-name .mast-sub,.mast-name .mast-main{display:block}
+.mast-name .mast-ruby{font-size:var(--mast-ruby);font-weight:400;letter-spacing:.3em;line-height:1.2;margin-bottom:1px}
+.mast-name .mast-main{font-weight:900}
+.mast-name .mast-sub{font-size:var(--mast-sub);font-weight:400;letter-spacing:.04em;line-height:1.2;margin-top:2px}
+.mast-line{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;font-size:13px;padding:5px 2px;border-bottom:6px double var(--ink)}
+.mast-line #mastNo{justify-self:start;font-family:"KJ Kaisei Bold","KJ Kaisei",var(--ui);font-weight:700;white-space:nowrap} /* KJ-124：號数は説明の1行目（.lead）と同じ字体。KJ-134：太さだけ 700（family "KJ Kaisei Bold"＝kj-kaisei-700。第號と大字だけの同梱。"KJ Kaisei" に足さないのは、札の字＋太字の所が Shippori に落ちるため）。大きさ・位置は変えない */
+body.playing .mast{display:none}
+@media (max-width:374px){.mast-line{font-size:12px}.mast-name>span{font-size:var(--mast-fs-s)}}
+/* 台（高さを固定する） */
+/* 卓（KJ-042）：場と台が乗る真ん中を墨色の単色の面に。囲み線はやめ、色の面で分ける */
+.table{position:relative;background:var(--table-ground);color:var(--on-table);border-radius:0;border-top:3px solid var(--ink);border-bottom:3px solid var(--ink);padding:10px 0 12px 28px;margin:10px 0}
+/* 卓の左の縦書きの見出し「卓に並ぶ」（KJ-093。新聞の囲み記事の見出し。字は飾りなので読み上げには出ない・押せない） */
+.table::before{content:"卓に並ぶ";position:absolute;left:0;top:0;bottom:0;width:20px;writing-mode:vertical-rl;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;letter-spacing:.35em;border-right:1px solid var(--ink);pointer-events:none}
+.table .side{margin:0 0 8px}
+.table .side-head{height:auto;margin-bottom:0}
+.table .side-head b{color:var(--on-table)}
+.stage{position:relative}
+/* 台の行：札の行（row）だけ（KJ-090。Back は卓の外の「あなた」の行へ出した） */
+.rowline{display:flex;gap:6px;align-items:center}
+.rowline .row{flex:1 1 auto;min-width:0}
+/* Back（KJ-090。作者 2026-11-25「バックまで、指が遠い」）：卓から出して、「あなた ○点 手札」の行の Redraw のすぐ左へ。高さは Redraw と同じ（行を伸ばして揃える）・幅は 44px 以上・Redraw との間は 8px 以上 */
+.bkrd{display:flex;align-items:stretch;gap:10px;margin-left:auto;flex:none}
+#bBack{flex:none;display:inline-flex;align-items:center;justify-content:center;gap:4px;min-width:56px;min-height:40px;padding:4px 10px;background:transparent;border:1px solid var(--ink);color:var(--ink);font-size:14px;line-height:1.25}
+#bBack:not(:disabled){box-shadow:inset 0 -3px 0 var(--accent)} /* KJ-115：押せるときだけ、操作5つと同じ弁柄の下線 */
+#bBack:disabled{background:transparent;border-color:var(--line);color:var(--dim);cursor:default}
+#bBack .ic{flex:none}
+/* Redraw（KJ-078）：卓の外。「あなた ○点 手札 ○/8」の行の右端。長押しで引き直す＝押している間、地が左から埋まり、埋まりきったら引き直す（長さは index.html の REDRAW_HOLD_MS） */
+.me .side-head{height:auto;min-height:44px;align-items:center;overflow:visible}
+.rdwrap{position:relative;flex:none;display:flex}
+#bRedraw{position:relative;isolation:isolate;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;min-width:64px;min-height:40px;padding:4px 10px;line-height:1.25;background:transparent;border:1px solid var(--ink);color:var(--ink);touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#bRedraw:disabled,#bRedraw[aria-disabled=true]{background:transparent;border-color:var(--line);color:var(--dim)}
+#bRedraw::before{content:"";position:absolute;left:0;top:0;bottom:0;width:0;background:var(--accent);opacity:.45;z-index:-1;pointer-events:none}
+#bRedraw.holding::before{width:100%;transition:width var(--holdms,600ms) linear}
+#bRedraw .cdv{display:block;width:auto;white-space:nowrap;font-size:11px;text-align:center}
+.rdnote{position:absolute;right:0;bottom:calc(100% + 4px);z-index:5;white-space:nowrap;font-size:12px;line-height:1.3;padding:2px 8px;border-radius:0;background:var(--ink);color:var(--bg);pointer-events:none}
+.rdnote:empty{display:none}
+#bRedraw.hint.lift,#bRedraw.hint.lift:disabled,#bRedraw.hint.lift[aria-disabled=true]{background:#fff1c4;color:var(--ink);border-color:var(--hint)} /* ヒントで光るとき（卓の外なので .table の規則が効かない） */
+.row{display:flex;gap:6px;height:76px;align-items:center;overflow-x:auto;overflow-y:hidden;background:var(--table-2);border:1px solid var(--line);border-radius:0;padding:0 6px}
+.row .tile{width:64px;height:64px;font-size:40px;flex:none}
+.row .empty{color:var(--ink);font-size:13px}
+.info{height:46px;margin:6px 0 8px;color:var(--on-table);font-size:14px;line-height:23px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.info .w{font-family:var(--kanji);font-size:18px}
+.info .l1{display:block;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} /* 1行目：部品の意味＋くっつく相手（KJ-083） */
+.info .l1 .rad{display:inline;overflow:visible}
+.info .rad{display:block;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} /* 部品の札の意味（KJ-021）。1行目に出す */
+.info .no{color:var(--on-table-sub)}
+.table .info .no{color:#4a443b} /* KJ-145：卓の濃い地の上でも 4.5 以上（--on-table-sub は紙の上の色） */
+.info .rev{color:var(--on-table);font-weight:700}
+.info .pts{color:var(--on-table);font-weight:700}
+.ops{display:flex;flex-direction:column;gap:6px}
+.ops-main,.ops-set{display:flex;gap:6px}
+.ops-main{display:block} /* Play は卓の幅いっぱいの1段（KJ-078） */
+.ops-main button.op.main{display:block;width:100%}
+button.op{font:inherit;font-size:14px;padding:8px 12px;border:1px solid var(--ink);background:var(--tile);color:var(--ink);border-radius:0;cursor:pointer;min-width:64px}
+button.op:disabled,button.op[aria-disabled=true]{border-color:var(--line);color:var(--dim);cursor:default}
+button.op.main{background:var(--accent);border-color:var(--ink);color:var(--bg);font-weight:700}
+button.op.main:disabled,button.op.main[aria-disabled=true]{background:var(--tile);border-color:var(--line);color:var(--dim);font-weight:400}
+/* 卓の上のボタン（KJ-042）。重さは3段。押せないボタンは灰色に溶かさず、形を残して少し暗く（文字は読める明暗差を保つ） */
+/* 操作5つ（Split・Join・Flip・Cycle・Same reading）は、罫線で仕切った一続きの段（KJ-093）。Play は弁柄の地に紙色の字 */
+.table button.op{border:0;background:var(--btn);color:var(--ink);min-width:0}
+.table button.op:disabled,.table button.op[aria-disabled=true]{background:var(--btn-off);color:var(--btn-off-ink)}
+.table .ops-set{gap:0;border:1px solid var(--ink)}
+.table .ops-set button.op{flex:1 1 auto;padding:7px 6px;min-height:44px;white-space:nowrap;border-right:1px solid var(--ink)} /* 指で押す高さ 44px 以上（KJ-097。Back・Redraw・Play と同じ） */
+.table .ops-set button.op:last-child{border-right:0}
+/* KJ-099：卓の操作5つ（Split・Join・Flip・Cycle・Same reading）の押せる／押せないの見え方。見え方は下線の1つだけ（KJ-102。白抜きと設定「ボタン」は消した。kj-btn は読まない）。Play・Redraw・はじめる前の画面のボタンは今のまま（Back は押せるときだけ弁柄の下線。KJ-115）。
+   押せない＝札の地に墨の不透明度 .35 の字（KJ-145：卓の中は無地の濃い地の上なので、押せないボタンの地は札の色。押せない部品は明暗差の決まりの外）。押せる＝札の色の地に墨の太字＋弁柄の太い下線 */
+:root .table .ops-set button.op{background:var(--tile);color:var(--ink);font-weight:700;box-shadow:inset 0 -3px 0 var(--accent)}
+:root .table .ops-set button.op:disabled,:root .table .ops-set button.op[aria-disabled=true]{background:var(--tile);color:rgba(42,38,34,.35);font-weight:400;box-shadow:none}
+/* 待ち時間のゲージ・ヒントの光りは、見える：待ち中は字を墨に戻して緑のゲージの上で読む／ヒントは薄い金の地に墨の字 */
+:root .table .ops-set button.op.cd:disabled,:root .table .ops-set button.op.cd[aria-disabled=true]{color:var(--on-table)}
+:root .table .ops-set button.op.hint.lift,:root .table .ops-set button.op.hint.lift:disabled,:root .table .ops-set button.op.hint.lift[aria-disabled=true]{background:#fff1c4;color:var(--ink);font-weight:700}
+/* ヒントの金の縁（動きを減らす設定では、これだけが光りになる）は、押せない・下線の影に消されないよう戻す。下線の形の押せるボタンは、金の縁と下線を並べる */
+:root .table .ops-set button.op.hint,:root .table .ops-set button.op.hint:disabled,:root .table .ops-set button.op.hint[aria-disabled=true]{box-shadow:0 0 0 2px var(--hint),0 0 10px 2px rgba(217,154,0,.55)}
+:root .table .ops-set button.op.hint:not(:disabled):not([aria-disabled=true]){box-shadow:0 0 0 2px var(--hint),0 0 10px 2px rgba(217,154,0,.55),inset 0 -3px 0 var(--accent)}
+.table .ops-set button.op#bHomo{flex:2 1 auto}
+.table button.op.main{flex:1 1 auto;font-size:17px;padding:14px 12px 6px;background:var(--accent);border:2px solid var(--ink);color:var(--bg);letter-spacing:.12em}
+.table button.op.main:disabled,.table button.op.main[aria-disabled=true]{background:var(--tile);border-color:var(--ink);color:rgba(42,38,34,.35);font-weight:400} /* KJ-117：Play の押せない見え方は操作5つと同じ考え（札の地・墨の枠・墨 0.35 の字）。押せるときは弁柄の地 */
+.table button.op.quiet{background:transparent;border-bottom:0;color:var(--on-table);padding:6px 10px}
+.table button.op.quiet:disabled,.table button.op.quiet[aria-disabled=true]{background:transparent;color:var(--dim)}
+.table button.op.quiet.cd{background:var(--slot);color:var(--ink)}
+.cdv{display:inline-block;width:2.2em;text-align:left;font-variant-numeric:tabular-nums;font-size:12px}
+#bRedraw .cdv{width:auto;white-space:nowrap}
+/* 待ち時間のゲージ（KJ-034）：使ったあと、ボタンの地が左から右へ満ちていく。満ちたら押せる。満ちた瞬間に小さく光る（色は仮決め） */
+button.op.cd{position:relative;isolation:isolate}
+.table button.op.cd{color:var(--on-table)}
+button.op.cd::before{content:"";position:absolute;left:0;top:0;bottom:0;width:calc(var(--g,0) * 100%);background:var(--gauge);opacity:.4;z-index:-1;transition:width .25s linear;pointer-events:none} /* 紙の上では薄く敷く（字が読める） */
+button.op.full{animation:kjGaugeFull .6s ease-out}
+@keyframes kjGaugeFull{0%{box-shadow:0 0 0 0 rgba(47,107,79,.55)}100%{box-shadow:0 0 0 6px rgba(47,107,79,0)}}
+@media (prefers-reduced-motion:reduce){button.op.full{animation:none}} /* 動きを減らす設定：光るのだけやめる（ゲージの満ち方は出す） */
+/* ヒント（KJ-037）：続けて3回はじかれたら、使う札と操作のボタンが金色に光る（10秒か次の操作まで）。言葉は文字で出さない */
+/* KJ-065：自動のヒントは10秒のあいだ残る。見えるように、地の色を薄い金にし、札とボタンを上に数 px ゆっくり上下させる（.lift。チュートリアルの「ここを押す」には付けない）。動きを減らす設定では動かさず、縁と地の色だけ */
+.tile.hint,button.op.hint{border-color:var(--hint);box-shadow:0 0 0 2px var(--hint),0 0 10px 2px rgba(217,154,0,.55);animation:kjHint 1.2s ease-in-out infinite alternate}
+.tile.hint.lift,button.op.hint.lift{animation:kjHint 1.2s ease-in-out infinite alternate,kjLift 2s ease-in-out infinite alternate}
+.tile.hint.lift{background:#fff1c4}
+.tile.hint.lift.jt{animation:kjHint 1.2s ease-in-out infinite alternate} /* くっつけ先（.jt。1.5倍）のあいだは持ち上げを止める（アニメーションの transform が .jt に勝つため） */
+.table button.op.hint.lift,.table button.op.hint.lift:disabled,.table button.op.hint.lift[aria-disabled=true],.table button.op.hint.lift.quiet,.table button.op.hint.lift.quiet.cd{background:#fff1c4;color:var(--ink);border-bottom-color:var(--hint)} /* 押せない・quiet・待ち中のボタンでも薄い金の地（文字は墨色） */
+.tile.sel.hint,.tile.sel.hint.lift{border-color:var(--accent);background:var(--tile)} /* 選んだ札は札の色のまま（薄い金の地にしない） */
+@keyframes kjHint{from{box-shadow:0 0 0 2px var(--hint),0 0 4px 0 rgba(217,154,0,.3)}to{box-shadow:0 0 0 2px var(--hint),0 0 12px 3px rgba(217,154,0,.7)}}
+@keyframes kjLift{from{transform:translateY(-2px)}to{transform:translateY(-6px)}}
+@media (prefers-reduced-motion:reduce){.tile.hint,button.op.hint,.tile.hint.lift,.tile.hint.lift.jt,button.op.hint.lift{animation:none}}
+.hint-tag{display:inline-block;margin-right:8px;padding:0 8px;border:1px solid var(--hint);border-radius:0;color:#7a5600;background:#fff6dc;font-size:12px;font-weight:700;line-height:18px;vertical-align:1px}
+/* 選ぶ札（同音・くっつけて2通り）は台の下に重ねて出す。手札を押し下げない */
+.choices{display:none;position:absolute;left:-28px;right:0;top:calc(100% + 12px);z-index:5;background:var(--table);color:var(--on-table);border:1px solid var(--ink);border-top:0;border-radius:0;padding:8px 12px 12px}
+.choices.on{display:block}
+.choices .g{margin:4px 0;display:flex;flex-wrap:wrap;align-items:center;gap:4px}
+.choices .g span{font-size:12px;color:var(--on-table-sub);min-width:64px}
+.choices button{font-family:var(--kanji);font-size:22px;width:44px;height:44px;border:1px solid var(--edge);background:var(--tile);color:var(--ink);border-radius:0;cursor:pointer}
