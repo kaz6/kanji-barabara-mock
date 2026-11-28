@@ -112,3 +112,18 @@ test("エモートの数値・言葉の置き場：index.html に言葉を直書
   const core = fs.readFileSync(path.join(__dirname, "..", "js", "core.js"), "utf8");
   for (const w of WORDS) assert.equal(core.includes(w), false, `core.js に ${w} を直書きしない`);
 });
+
+test("エモートの字が画面の字体にある：判子とボタンは Kaisei（大正風）・そのほかの画面は Zen の範囲に、言葉の字が全部入っている（字を足したら tools/build_paper_fonts.py）", () => {
+  const css = fs.readFileSync(path.join(__dirname, "..", "fonts", "kj-paper.css"), "utf8");
+  const range = (family) => {
+    const set = new Set();
+    for (const m of css.matchAll(new RegExp(`font-family:"${family}";font-weight:400;[^}]*unicode-range:([^;}]*)`, "g"))) for (const u of m[1].split(",")) set.add(parseInt(u.replace("U+", ""), 16));
+    return set;
+  };
+  const kaisei = range("KJ Kaisei"), zen = range("KJ Zen");
+  for (const w of WORDS) for (const c of w) {
+    if (c === "！") { assert.ok(zen.has(c.codePointAt(0)), "！ は Zen に"); continue; } // Kaisei の！は無く、Zen に落ちる
+    assert.ok(kaisei.has(c.codePointAt(0)), `${c} が Kaisei に無い`);
+    assert.ok(zen.has(c.codePointAt(0)), `${c} が Zen に無い`);
+  }
+});

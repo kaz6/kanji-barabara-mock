@@ -1624,7 +1624,7 @@
     let handN = 0, sentHand = null, sentTiles = null, lastHandSeq = -1, lastHandAt = -Infinity, handBusy = false;
     let oppNonce = null, oppHandNonce = null, oppHandSeq = -1;
     // エモート（KJ-142）：決まった言葉の番号だけを 'event' で送る。送ったあと cooldown_sec は続けて送れない。言葉そのものは js/strings.js の EMOTES（画面が opts.emoteWords で渡す。ログの言葉に使う）
-    const EM = R.emote || { words: 4, cooldown_sec: 3 };
+    const EM = R.emote;
     let emoteN = 0, emoteAt = -Infinity;
     const emoteSeen = new Set();
     const emoteWord = (i) => (Array.isArray(opts.emoteWords) && opts.emoteWords[i]) || String(i);

@@ -68,7 +68,13 @@ def lead_chars():
 
 def stamp_chars():
     """はじかれたときの判子（#nope .no-ic。KJ-104）の字「否」。札の字の切り替えに関わらず、いつも大正風（Kaisei）で出す"""
-    return {"否"}
+    return {"否"} | emote_chars()
+
+
+def emote_chars():
+    """エモート（KJ-142）の言葉（js/strings.js の EMOTES）の字。判子（.emstamp）と言葉のボタン（.emw）は、札の字の切り替えに関わらずいつも大正風（Kaisei）で出す"""
+    m = re.search(r"EMOTES\s*=\s*Object\.freeze\(\[(.*?)\]\)", read("js/strings.js"), re.S)
+    return {c for c in (m.group(1) if m else "") if ord(c) >= 0x3000}
 
 
 def issue_chars():

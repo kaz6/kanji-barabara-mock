@@ -201,6 +201,21 @@ test("KJ-142 合言葉の部屋のエモート（画面）", { skip, timeout: 12
     await B.page.click("#bLog");
   });
 
+  await t.test("320px でも判子が画面に収まる（相手の行の下・自分の行の上）", async () => {
+    await A.page.waitForFunction(() => !document.getElementById("bEmote").disabled, null, { timeout: 5000 });
+    for (const P of [A, B]) await P.page.setViewportSize({ width: 320, height: 640 });
+    await A.page.click("#bEmote");
+    await A.page.click('#emoteRow .emw[data-i="2"]');
+    await A.page.waitForSelector("#emMe.on");
+    await B.page.waitForSelector("#emOpp.on", { timeout: 5000 });
+    for (const [P, id] of [[A, "emMe"], [B, "emOpp"]]) {
+      const r = await P.page.evaluate((i) => { const b = document.getElementById(i).getBoundingClientRect(); return [b.left, b.right, document.documentElement.clientWidth]; }, id);
+      assert.ok(r[0] >= 0 && r[1] <= r[2], `${id} が 320px に収まる ${r}`);
+    }
+    if (SHOT) { await A.page.screenshot({ path: path.join(SHOT, "emote-stamp-me-320.png") }); await B.page.screenshot({ path: path.join(SHOT, "emote-stamp-opp-320.png") }); }
+    for (const P of [A, B]) await P.page.setViewportSize({ width: 375, height: 667 });
+  });
+
   await t.test("English のときも言葉は日本語のまま（ボタンの読み上げは English）", async () => {
     await A.page.evaluate(() => localStorage.setItem("kj-lang", "en"));
     assert.deepEqual(await A.page.evaluate(() => window.KJ_STR.EMOTES.slice()), ["上手！", "矢場！", "雑魚！", "降参！"]);
