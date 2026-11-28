@@ -1,6 +1,6 @@
 // CPU 対戦で相手の上の段を見せる（KJ-092。作者 2026-11-25「相手の手札見れるように」「21いいですね」）：
 // CPU の行のすぐ下に上の段（8マス）を小さく・字だけ・見るだけ。ストックは見せない。動くとその場で変わる。
-// 合言葉の部屋は tests/browser.test.mjs の部屋のテストで、ひとり・チュートリアルは下で見る。
+// 合言葉の部屋でも出る（KJ-140）。その試験は tests/browser.test.mjs の部屋のテスト。ひとり・チュートリアルは下で見る。
 // Playwright の Chromium がないと skip になる。skip は「通った」ではない
 import test from "node:test";
 import assert from "node:assert/strict";

@@ -512,6 +512,7 @@
   // つなぎの技術の値（遊びの数値ではない。KJ-033 後半・R-059）
   const MATCH_INSERT_TIMEOUT_SEC = 8; // insert の返事を待つ秒数。過ぎたら「つながらない」（試合は止めない）
   const MATCH_PING_SEC = 8; // 相手に「まだいる」を送る間隔
+  const MATCH_HAND_SEC = 0.3; // 自分の上の段の字の並びを相手へ送る間隔（KJ-140。続けて変わるときはまとめて送る。仮）
   const MATCH_GONE_SEC = 25; // 相手の行がこの秒数届かなければ「相手の通信が切れた」と見せる（試合は時間どおり進む）
   const ROOM_LOBBY_TTL_SEC = 30 * 60; // 合言葉が効く長さ（作ってからこの秒数まで）
   // 試合ごとに一意の match_id（"m-" ＋ 英数字 16）。合言葉（4けた）は使い回すので、match_id は合言葉と別に作る
@@ -1028,6 +1029,13 @@
       g.lostWord = (p, text) => {
         g.used.add(text);
         if (!g.over) addLog(p.name, "ためした", [...text], [], 0, "相手が先に放った");
+      };
+      // 相手の上の段の字の並び（相手の 'hand' 行。KJ-140）。見せるだけ（画面の #cpuHand）。ストックは届かない
+      g.remoteHand = (tiles) => {
+        const a = Array.isArray(g.cpu.peek) ? g.cpu.peek.join("") : null;
+        if (a === tiles.join("")) return false;
+        g.cpu.peek = tiles;
+        return true;
       };
       // 相手の点・手札の枚数（相手の 'event' 行）
       g.remoteState = (st) => {
@@ -1578,6 +1586,20 @@
     return tut;
   }
 
+  // ---------- 相手の上の段を見せる（KJ-140）：送る中身の形（ここ1か所） ----------
+  // 'event' 行の payload { type: "hand", seq, tiles }。tiles は上の段の字の並び（1字ずつの文字列。空きは並びの後ろ。最大 hand_max）。
+  // ストック・選んでいる札・割れ目の印は送らない。ping にも { hs, tiles } で同じ並びを載せる（届かなかった・入り直したときの自然な補い）
+  function handTiles(cards, handMax) {
+    return cards.filter((x) => !x.tray).map((x) => x.c).slice(0, handMax);
+  }
+  function handPayload(tiles, seq) { return { type: "hand", seq, tiles: tiles.slice() }; }
+  // 届いた tiles の確かめ。形が合わなければ null（古い版・壊れた行は捨てる）
+  function parseHandTiles(v, handMax) {
+    if (!Array.isArray(v) || v.length > handMax) return null;
+    for (const t of v) { if (typeof t !== "string" || t.length === 0 || t.length > 2 || [...t].length !== 1) return null; }
+    return v.slice();
+  }
+
   // ---------- 合言葉の部屋（KJ-033・D-049）：先着の決め方 ----------
   // 表 public.kj_claims（match_id, kind, key, player, payload, created_at。主キー (match_id, kind, key)。入れる・読むだけ）を使う。
   //   取る＝(match_id, "card", 場の列の番号)／放つ＝(match_id, "word", 言葉)／勝ちの点に届いた＝(match_id, "end", "score")
@@ -1593,10 +1615,13 @@
     const nonce = opts.nonce || Math.floor((opts.rand || Math.random)() * 1e9).toString(36);
     const graceSec = typeof opts.graceSec === "number" ? opts.graceSec : MATCH_END_GRACE_SEC;
     const timeoutSec = typeof opts.timeoutSec === "number" ? opts.timeoutSec : MATCH_INSERT_TIMEOUT_SEC;
+    const handSec = typeof opts.handSec === "number" ? opts.handSec : MATCH_HAND_SEC;
     const pingSec = typeof opts.pingSec === "number" ? opts.pingSec : MATCH_PING_SEC;
     const goneSec = typeof opts.goneSec === "number" ? opts.goneSec : MATCH_GONE_SEC;
     const totalMax = R.hand_max + R.split_extra;
     const startAt = g.endsAt - g.timeLimit;
+    let handN = 0, sentHand = null, sentTiles = null, lastHandSeq = -1, lastHandAt = -Infinity, handBusy = false;
+    let oppNonce = null, oppHandNonce = null, oppHandSeq = -1;
     let seq = 0, sent = null, oppSeq = -1, timeSent = false, endScoreSent = false, pingN = 0, lastPing = startAt, stopped = false;
     const oppTime = { got: false, score: null };
     const mine = new Set(); // 届いた自分の行（返事だけ落ちて押し直したとき、ぶつかった相手が自分の行かを見分ける）
@@ -1672,7 +1697,22 @@
     }
     c.redraw = async () => { const r = g.redraw(g.me); if (r.ok) await c.sendState(); return r; };
     // まだいる（相手の画面の「通信が切れた」の判定に使う）。抜ける（もう一度・設定を変える で捨てたとき）
-    c.ping = () => send("event", `${role}-${nonce}-p${pingN++}`, { type: "ping" });
+    // 上の段の字の並びを相手へ（KJ-140）。変わったときだけ。続けて変わるときは handSec あけてまとめて送る（間のぶんは次の tick で）
+    c.sendHand = async () => {
+      if (handBusy) return { ok: true, skipped: true };
+      const tiles = handTiles(g.me.cards, R.hand_max), key = tiles.join("");
+      if (sentHand === key) return { ok: true, skipped: true };
+      if (g.now() - lastHandAt < handSec) return { ok: true, skipped: true, wait: true };
+      lastHandAt = g.now();
+      handBusy = true;
+      const n = handN++;
+      const r = await send("event", `${role}-${nonce}-h${n}`, handPayload(tiles, n));
+      handBusy = false;
+      if (r.ok) { sentHand = key; sentTiles = tiles; lastHandSeq = n; } // 届かなければ、次に呼んだときに送り直す
+      else sentHand = null; // 返事だけ落ちて表には入っていた場合に、並びが前回の形へ戻ると送らなくなるのを防ぐ
+      return r;
+    };
+    c.ping = () => send("event", `${role}-${nonce}-p${pingN++}`, sentTiles ? { type: "ping", hs: lastHandSeq, tiles: sentTiles } : { type: "ping" });
     c.leave = () => send("event", `${role}-${nonce}-leave`, { type: "leave" });
     // 相手の通信が切れたか（抜けた行が来た／相手の行が goneSec 届かない）。試合は時間どおり進む
     c.oppGone = () => c.oppLeft || g.now() - (c.lastOppRowAt === null ? startAt : c.lastOppRowAt) > goneSec;
@@ -1698,6 +1738,8 @@
         if (row.key === "score") return ROLES.includes(p.winner) && (p.score === undefined || scoreOk(p.score));
         return p.score === undefined || scoreOk(p.score);
       }
+      if (row.kind === "event" && p.type === "hand") return nat(p.seq, 1e9) && !!parseHandTiles(p.tiles, R.hand_max);
+      if (row.kind === "event" && p.type === "ping" && p.tiles !== undefined) return nat(p.hs, 1e9) && !!parseHandTiles(p.tiles, R.hand_max);
       if (row.kind === "event" && p.type === "state") return nat(p.seq, 1e9) && scoreOk(p.score) && nat(p.count, totalMax) && (p.hand === undefined || nat(p.hand, R.hand_max));
       return true;
     }
@@ -1714,12 +1756,23 @@
         return false;
       }
       if (row.player !== oppRole) return false; // 自分の行は、もう手元で反映している
+      // 相手が入り直した（送り主の nonce が変わった）ら、今の並びをもう一度送る（KJ-140）
+      const mn = /^(?:host|guest)-([0-9a-z]+)-/.exec(row.key), on = mn ? mn[1] : null;
+      if (on && oppNonce !== null && on !== oppNonce) { sentHand = null; lastHandAt = -Infinity; }
+      if (on) oppNonce = on;
       if (row.kind === "card") return g.markTaken(Number(row.key));
       if (row.kind === "word") return g.remoteRelease(row.key, scoreOf(D, g.T, row.key).pts, p.score); // 点の重みはこちらの表で数える
       if (row.kind === "event" && p.type === "state") {
         if (p.seq <= oppSeq) return false;
         oppSeq = p.seq;
         return g.remoteState(p);
+      }
+      if (row.kind === "event" && (p.type === "hand" || (p.type === "ping" && p.tiles !== undefined))) {
+        const sq = p.type === "hand" ? p.seq : p.hs;
+        if (on !== oppHandNonce) { oppHandNonce = on; oppHandSeq = -1; } // 入り直した相手は番号が 0 から
+        if (sq < oppHandSeq) return false;
+        oppHandSeq = sq;
+        return g.remoteHand(parseHandTiles(p.tiles, R.hand_max));
       }
       if (row.kind === "event" && p.type === "leave") { const was = c.oppLeft; c.oppLeft = true; return !was; }
       return false;
@@ -1731,6 +1784,7 @@
       if (g.hold) return false; // 先着の返事待ち。反映してから次の tick で
       const changed = g.tick();
       if (changed || sent === null || sent.score !== g.me.score || sent.count !== g.me.cards.length || sent.hand !== g.handCount(g.me)) await c.sendState();
+      if (!g.closed) c.sendHand(); // 待たない（回線が悪くても tick を止めない）。字の並びは見せるだけ
       if (!g.closed && g.me.score >= R.win.score) { await claimWin(); if (g.over) return true; }
       if (g.now() < g.endsAt) {
         if (pingSec > 0 && g.now() - lastPing >= pingSec) { lastPing = g.now(); c.ping(); } // 待たない（回線が悪くても tick を止めない）
@@ -2093,7 +2147,7 @@
     kansuji, daiji, aoriLine, aoriShareLine, issueLabel, kansujiDate, shareResultText, siteUrl, toKatakana, senkyoLines,
     FILES, OPPONENTS, PLAY_MODES, CPU_POWERS, readOpponent, opponentKey, LEVELS, timeChoices, normTime, vibratePattern, timeLabel, levelLabel, levelShort, makeTables, isN5, isLevelChar, isChar, radicalNote, radicalFormNote, joinPartners, joinNote, JOIN_NOTE_MODES, splitOnce, canSplit, delivered, joinResults, joinReversed,
     releasable, effectText, counterParts, usedCounters, counterBlocked, counterReading, rejectText, scoreOf, kanaOf, kanaText, romaji, charReading, charReadingLine, wordReadingLine, wordCharOk, KANA_ONLY_WHY, homoChars, marks, markKinds, cutSpec, FACES, FACE_LABEL, faceJoins, faceResults, rulesLabel, opponentLabel, createGame, createTutorial, TUTORIAL_OPPONENT, playLogRow, endShow, kotobankUrl, END_LABELS, logSendAllowed, playLogResult, PLAY_LOG_LIMITS,
-    strSeed, seededRand, matchRand, ROLES, ROOM_OPPONENT, MATCH_END_GRACE_SEC, MATCH_INSERT_TIMEOUT_SEC, MATCH_PING_SEC, MATCH_GONE_SEC, ROOM_LOBBY_TTL_SEC,
+    strSeed, seededRand, matchRand, ROLES, ROOM_OPPONENT, MATCH_END_GRACE_SEC, MATCH_INSERT_TIMEOUT_SEC, MATCH_PING_SEC, MATCH_HAND_SEC, MATCH_GONE_SEC, handTiles, handPayload, parseHandTiles, ROOM_LOBBY_TTL_SEC,
     createMatchClient, memoryClaims, newMatchId, newRoomCode, roomCodeFromSearch, roomShareUrl, roomLobbyId, findRoom, hostRoom, joinRoom, startRoom, roomStartAt, bgmPlan, roomWaiter,
   };
 });

@@ -1917,13 +1917,26 @@ test("画面", { skip }, async (t) => {
     }
     const roles = await Promise.all([A, B].map((P) => P.page.evaluate(() => __KJ.game.match.role)));
     assert.deepEqual(roles, ["host", "guest"]);
-    for (const P of [A, B]) assert.equal(await P.page.evaluate(() => getComputedStyle(document.getElementById("cpuHand")).display), "none", "合言葉の部屋（人どうし）では相手の上の段を出さない（KJ-092）");
+    // KJ-140：合言葉の部屋でも相手の上の段（8マス・字だけ・押せない）を見せる。相手の端末が送る字の並びが届く
+    const peekOf = (P) => P.page.evaluate(() => [...document.querySelectorAll("#cpuHand > *")].map((e) => (e.classList.contains("slot") ? "_" : e.firstChild.textContent)).join(""));
+    const upperOf = (P) => P.page.evaluate(() => __KJ.game.me.cards.filter((x) => !x.tray).map((x) => x.c).join(""));
+    for (const P of [A, B]) {
+      assert.notEqual(await P.page.evaluate(() => getComputedStyle(document.getElementById("cpuHand")).display), "none", "合言葉の部屋でも相手の上の段を出す（KJ-140）");
+      assert.equal(await P.page.evaluate(() => getComputedStyle(document.getElementById("cpuHand")).pointerEvents), "none", "見るだけ（押せない）");
+    }
+    for (const [P, Q] of [[A, B], [B, A]]) await P.page.waitForFunction((u) => [...document.querySelectorAll("#cpuHand .tile")].map((e) => e.firstChild.textContent).join("") === u, await upperOf(Q), { timeout: 8000 });
+    assert.equal(await A.page.evaluate(() => document.querySelectorAll("#cpuHand > *").length), 8, "8マス");
     const left = await Promise.all([A, B].map((P) => P.page.evaluate(() => __KJ.game.timeLeft())));
     assert.ok(Math.abs(left[0] - left[1]) < 2, "二人の残り時間がそろう " + left.join(" "));
     const fieldOf = (P) => P.page.evaluate(() => __KJ.game.field.map((x) => x.n + x.c).join(" "));
     assert.equal(await fieldOf(A), await fieldOf(B), "場は二人で同じ3枚");
     // 二人とも取れる枚数1・手札に空き。同じ場の札（左の1枚）を A が先に押す
     for (const P of [A, B]) await P.page.evaluate(() => { const G = __KJ.game; G.me.cards = G.me.cards.slice(0, 5); G.me.takes = 1; __KJ.render(); });
+    // KJ-140：A の上の段が変わる（5枚にした・ストックを1枚足す）と B の peek が変わる。ストックは届かない
+    await A.page.evaluate(() => { const G = __KJ.game; G.me.cards.push({ id: 9999, c: "龍", t: 0, fresh: false, tray: true }); __KJ.render(); });
+    await B.page.waitForFunction(() => [...document.querySelectorAll("#cpuHand .tile")].length === 5, null, { timeout: 8000 });
+    assert.equal(await peekOf(B), (await upperOf(A)).padEnd(8, "_"), "A の上の段が B の peek に出る（空きは _）");
+    assert.ok(!(await peekOf(B)).includes("龍"), "ストックは相手に見せない");
     await A.page.click("#field .tile >> nth=0");
     await A.page.waitForFunction(() => __KJ.game.me.takes === 0);
     await B.page.waitForFunction(() => !__KJ.game.field.some((x) => x.n === 0), null, { timeout: 5000 });
