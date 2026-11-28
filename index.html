@@ -1136,16 +1136,16 @@ const REDRAW_HOLD_MS=600; // 長押しの長さ（ms。仮決め。ここ1か所
 let rdTimer=null,rdFired=false,rdNoteT=null;
 function doRedraw(){
   row=[];hideChoices();if(MC){const mc=MC;mc.redraw().then(()=>{if(!stale(mc))afterChange()});afterChange();return}G.redraw(G.me);afterChange()} // 部屋：手札はすぐ入れ替わる。点の送りの返事は待たずに描く
-// 押している間の揺れ（KJ-143）：左右に小さく揺れ、揺れ幅は押し始めの小さい値から埋まるにつれて大きい値へ（rules.redraw_hold.shake_px・shake_ms）。離したら止めて元の位置へ。reduced-motion では揺らさない（ゲージと振動は今のまま）
+// 押している間の揺れ（KJ-143。translate で動かす：ヒントの持ち上げ kjLift が transform を使うので、ヒントで光っていても揺れる）：左右に小さく揺れ、揺れ幅は押し始めの小さい値から埋まるにつれて大きい値へ（rules.redraw_hold.shake_px・shake_ms）。離したら止めて元の位置へ。reduced-motion では揺らさない（ゲージと振動は今のまま）
 let rdRaf=0,rdVib=false;
-function rdShakeStop(){if(rdRaf){cancelAnimationFrame(rdRaf);rdRaf=0}const b=$("bRedraw");b.style.transform="";b.removeAttribute("data-shake")}
+function rdShakeStop(){if(rdRaf){cancelAnimationFrame(rdRaf);rdRaf=0}const b=$("bRedraw");b.style.translate="";b.removeAttribute("data-shake")}
 function rdShakeStart(b){
   rdShakeStop();
   const H=D.rules&&D.rules.redraw_hold;if(!H||reduceMotion())return;
   const [a0,a1]=H.shake_px,per=H.shake_ms,t0=performance.now();
   const step=now=>{
     const t=Math.min(1,(now-t0)/REDRAW_HOLD_MS),amp=a0+(a1-a0)*t;
-    b.style.transform=`translateX(${(Math.sin((now-t0)/per*2*Math.PI)*amp).toFixed(2)}px)`;b.dataset.shake=amp.toFixed(2);
+    b.style.translate=`${(Math.sin((now-t0)/per*2*Math.PI)*amp).toFixed(2)}px 0`;b.dataset.shake=amp.toFixed(2);
     rdRaf=requestAnimationFrame(step)};
   rdRaf=requestAnimationFrame(step);
 }

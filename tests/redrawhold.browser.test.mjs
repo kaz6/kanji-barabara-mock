@@ -63,7 +63,7 @@ const shot = async (page, name) => { if (process.env.KJ_SHOT_REDRAWHOLD) await p
 const handIds = (page) => page.evaluate(() => __KJ.game.me.cards.map((c) => c.id).join(","));
 const box = (page, sel) => page.evaluate((s) => { const r = document.querySelector(s).getBoundingClientRect(); return { l: r.left, t: r.top, w: r.width, h: r.height }; }, sel);
 async function down(page) { const b = await box(page, "#bRedraw"); await page.mouse.move(b.l + b.w / 2, b.t + b.h / 2); await page.mouse.down(); }
-const shake = (page) => page.evaluate(() => { const b = document.getElementById("bRedraw"); return { amp: parseFloat(b.dataset.shake || "0"), tf: b.style.transform }; });
+const shake = (page) => page.evaluate(() => { const b = document.getElementById("bRedraw"); return { amp: parseFloat(b.dataset.shake || "0"), tf: b.style.translate }; });
 const maxAmp = async (page, ms) => { let m = 0; const t0 = Date.now(); while (Date.now() - t0 < ms) { m = Math.max(m, (await shake(page)).amp); await page.waitForTimeout(15); } return m; };
 
 test("Redraw の長押し（KJ-143）", { skip }, async (t) => {
@@ -95,7 +95,7 @@ test("Redraw の長押し（KJ-143）", { skip }, async (t) => {
     const late = await maxAmp(page, 380);
     assert.ok(early > 0 && early < 1.3, `押し始めは小さい（${early}）`);
     assert.ok(late > early + 0.8 && late <= 3.01, `埋まるにつれて大きくなる（${early} → ${late}）`);
-    assert.match((await shake(page)).tf, /translateX/, "左右に動く");
+    assert.match((await shake(page)).tf, /px/, "左右に動く");
     await shot(page, "kj-143-375-holding.png");
     await page.mouse.up();
     await page.waitForTimeout(80);
@@ -119,7 +119,7 @@ test("Redraw の長押し（KJ-143）", { skip }, async (t) => {
     await ctx.close();
   });
 
-  await t.test("スマホの振動：押すと rules の形で1回呼ぶ／離すと止める／引き直しきったあとは止めに行かない", async () => {
+  await t.test("スマホの振動：押すと rules の形で1回呼ぶ／途中で離すと止める／押しきったあとは止めに行かない", async () => {
     const { ctx, page, errors } = await open(browser, url);
     await begin(page);
     const R = await page.evaluate(() => __KJ.D ? __KJ.D.rules.vibrate.redraw_hold : null);
@@ -132,6 +132,11 @@ test("Redraw の長押し（KJ-143）", { skip }, async (t) => {
     if (R) assert.deepEqual(v1[0], R);
     await page.mouse.up();
     assert.deepEqual((await vib(page)).at(-1), 0, "途中で離すと振動を止める");
+    await page.evaluate(() => { window.__vib = []; });
+    await down(page);
+    await page.waitForTimeout(800);
+    await page.mouse.up();
+    assert.deepEqual((await vib(page)).filter((x) => x === 0), [], "押しきったあと（引き直したあと）は止めに行かない");
     await ctx.close();
     assert.deepEqual(errors, []);
   });
@@ -151,6 +156,20 @@ test("Redraw の長押し（KJ-143）", { skip }, async (t) => {
       assert.deepEqual(errors, []);
       await ctx.close();
     }
+  });
+
+  await t.test("ヒントで Redraw が光っている（持ち上げのアニメーション）あいだも揺れる", async () => {
+    const { ctx, page, errors } = await open(browser, url);
+    await begin(page);
+    await page.evaluate(() => { const b = document.getElementById("bRedraw"); b.classList.add("hint", "lift"); });
+    assert.match(await page.evaluate(() => getComputedStyle(document.getElementById("bRedraw")).animationName), /kjLift/, "持ち上げが動いている");
+    await down(page);
+    assert.ok(await maxAmp(page, 300) > 0.5, "揺れの値が出る");
+    const m = await page.evaluate(() => { const b = document.getElementById("bRedraw"); return { tr: getComputedStyle(b).translate, st: b.style.translate }; });
+    assert.notEqual(m.tr, "none", `translate が効いている（${m.tr}）`);
+    await page.mouse.up();
+    assert.deepEqual(errors, []);
+    await ctx.close();
   });
 
   await t.test("reduced-motion では揺らさない（ゲージと振動は今のまま）", async () => {
