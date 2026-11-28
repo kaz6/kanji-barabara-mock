@@ -11,7 +11,7 @@
 
 ## 中身の分け方
 
-- `js/core.js`：遊びの決まり（表引き・割る・くっつける・放つ・点数・場から取る・引き直し・待ち時間・勝ち・CPU・ログ）。DOM に触らない。ブラウザでは `window.KJ`、Node では `require`。合言葉の部屋（人と対戦。KJ-033）の先着は `createMatchClient`、部屋を作る／入るは `hostRoom`・`findRoom`・`joinRoom`・`roomWaiter`（つなぎは差し替え。テストは `memoryClaims`。本物のつなぎ〔kj_claims の REST と Realtime〕は index.html。KJ-140：自分の上の段の字を `handTiles`・`handPayload`・`parseHandTiles`・`sendHand`〔event の type hand。0.3秒まとめ〕で相手へ送り、相手の行の下に見せる。KJ-141：終わったあとの「もう一度」で同じ相手と再戦＝`createRematch`〔event の type again・go・leave。次の試合は新しい match_id〕・何勝何敗＝`tallyNew`・`tallyAdd`・`tallyLine`・ログの頭の「この相手と ○戦目」）
+- `js/core.js`：遊びの決まり（表引き・割る・くっつける・放つ・点数・場から取る・引き直し・待ち時間・勝ち・CPU・ログ）。DOM に触らない。ブラウザでは `window.KJ`、Node では `require`。合言葉の部屋（人と対戦。KJ-033）の先着は `createMatchClient`、部屋を作る／入るは `hostRoom`・`findRoom`・`joinRoom`・`roomWaiter`（つなぎは差し替え。テストは `memoryClaims`。本物のつなぎ〔kj_claims の REST と Realtime〕は index.html。KJ-140：自分の上の段の字を `handTiles`・`handPayload`・`parseHandTiles`・`sendHand`〔event の type hand。0.3秒まとめ〕で相手へ送り、相手の行の下に見せる。KJ-141：終わったあとの「もう一度」で同じ相手と再戦＝`createRematch`〔event の type again・go・leave。次の試合は新しい match_id〕・何勝何敗＝`tallyNew`・`tallyAdd`・`tallyLine`・ログの頭の「この相手と ○戦目」。KJ-142：エモート〔決まった4つの言葉〕＝`sendEmote`・`emoteWait`・opts の `onEmote`〔event の type emote・i は言葉の番号。待ち時間・判子の秒は rules の `emote`。言葉は js/strings.js の `EMOTES`〕）
 - `index.html`：画面だけ。決まりは core.js を呼ぶ
 - `css/`：画面の見た目（もとは index.html の style 要素。KJ-152。base＝色・字体・紙／table＝卓・札・ボタン／screens＝はじめる前・終わり・設定など）。見た目を触るときだけ開く
 - `data/parts.json` の `reach`：山に入らない「行き先だけの字」（KJ-077。氷・丸・刃・凡・勺。丶 の行き先。KJ-113 で 旧＝｜＋日、KJ-137 で 良＝丶＋艮 を足した）。割り方（`parts`）とは別の表。左右の部品が両方そのレベルで手に入るときだけ `T.REACH` として使う（`makeTables` と `tools/build_data.py` の `holdable` を同じ決め方に）。字として見せるので `jouyou` にも入れる。形は split_shapes。テストは tests/reach.test.js
@@ -48,6 +48,7 @@ npm test
 - `tests/match.test.js`：合言葉の部屋の先着（場の札・言葉・勝ちの点・時間切れ・相手が抜けた）と、部屋を作る／入る・届いた行の確かめ・insert の時間切れ。つなぎは偽物（`KJ.memoryClaims`）。本物の Supabase には出さない
 - `tests/rematch.test.js`・`tests/rematch.browser.test.mjs`：合言葉の部屋の再戦と何勝何敗（KJ-141。二人とも「もう一度」で go が1つ・同じ次の match_id・押す順は問わない・片方だけなら待つ・抜けたら知らせる・送り直し・壊れた行を無視・何勝何敗の数え方と文・ログの頭「この相手と ○戦目」／画面：2つのページで3戦〔1勝0敗→1勝1敗→引き分け〕・「相手を待っています」〔終わりの画面にも〕・2戦目も場の先着が働く・「相手が抜けた」→「もう一度」ではじめる前の画面へ・作り直すと 0 から・CPU 戦には出ない）。`KJ_SHOT_REMATCH=<フォルダ>` で画像を書く
 - `tests/counters.test.js`・`tests/counters.browser.test.mjs`：数＋助数詞（KJ-022。データ・読み・十円 が放てる・使った助数詞は使えない〔辞書の語にも・CPU も・二人とも〕・動けない・言い方／画面：否 の判子と「〇円は一度きり！」が真ん中に出て消える・ほかのはじかれ方でも出る）
+- `tests/emote.test.js`・`tests/emote.browser.test.mjs`：合言葉の部屋のエモート（KJ-142。数値と言葉の置き場・送ると二人に届く・ログ・3秒は続けて送れない・範囲外や壊れた行・二度届いても一度・「動いた」に数えない／画面：自分の行のボタン→4つの言葉→朱の判子が二人の画面に約1.5秒・押せない・375／320px・歯車で切〔kj-emote〕・CPU 戦で出ない・English でも日本語のまま）。`KJ_SHOT_EMOTE=<フォルダ>` で画像を書く
 - `tests/vibrate.test.js`・`tests/vibrate.browser.test.mjs`：スマホの振動（KJ-074。形の選び方・手ごとの形・切なら震えない・相手の手で震えない・`navigator.vibrate` が無い端末で落ちない。`navigator.vibrate` は差し替え）
 - `tests/radical.test.js`・`tests/radical.browser.test.mjs`：部品の札の意味（KJ-021。部品すべてに行がある・radical_forms と食い違わない・一行の形・一覧にそろっている／画面：部品の札を選ぶと台の行に出る・字の札では出ない・外すと消える）
 - `tests/reach.test.js`：丶 の行き先（KJ-077。行き先だけの字・レベルごとの出番〔勺は出番なし〕・くっつける・割る・面で落とす・語・ストック）。KJ-113：旧＝｜＋日（くっつける・割る・面で落とす・語・CPU・ヒント）と、画面の tests/kyuu.browser.test.mjs（中 を割って ｜ を出し、日 と Join で 旧。日｜ の並びは押せない。`KJ_SHOT_KYUU=<フォルダ>` で画像を書く）。KJ-137：良＝丶＋艮（N4 でだけ出番・逆順は通らない・割る・面で落とす〔top／bottom〕・語37）と、画面の tests/ryou.browser.test.mjs（N4 で 銀 を割って 艮 を出し、丶 と Join で 良。艮丶 の並びは押せない。`KJ_SHOT_RYOU=<フォルダ>` で画像を書く）

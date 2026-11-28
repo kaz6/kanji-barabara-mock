@@ -25,7 +25,7 @@
   <section class="setup" id="setup">
     <div class="sethead"><h2 data-t="setHead"></h2><span class="shbtns"><button type="button" class="langbtn" id="bLang" aria-expanded="false" aria-controls="langPanel"></button><button type="button" class="gear" id="bGear" hidden aria-expanded="false" aria-controls="setPanel"></button></span></div>
     <div class="setpanel" id="langPanel" hidden><span class="opp" id="langPick" role="radiogroup" data-t-aria="langBtn"></span></div><!-- KJ-127：言語の切り替え（日本語・English）。見出しの行の右の JP／EN を押すとここが開き、選ぶと閉じる -->
-    <div class="setpanel" id="setPanel" hidden><div class="grp" id="grpBgm"><p class="gt" data-t="lblBgm"></p><span class="opp" id="bgm" role="radiogroup" data-t-aria="lblBgm"></span></div><div class="grp" id="grpVib"><p class="gt" data-t="lblVib"></p><span class="opp" id="vib" role="radiogroup" data-t-aria="lblVib"></span></div></div>
+    <div class="setpanel" id="setPanel" hidden><div class="grp" id="grpBgm"><p class="gt" data-t="lblBgm"></p><span class="opp" id="bgm" role="radiogroup" data-t-aria="lblBgm"></span></div><div class="grp" id="grpVib"><p class="gt" data-t="lblVib"></p><span class="opp" id="vib" role="radiogroup" data-t-aria="lblVib"></span></div><div class="grp" id="grpEmote"><p class="gt" data-t="lblEmote"></p><span class="opp" id="emoteSet" role="radiogroup" data-t-aria="lblEmote"></span></div></div>
     <div class="grp"><p class="gt" data-t="lblPlay"></p><span class="opp" id="opp" role="radiogroup" data-t-aria="lblPlay"></span></div>
     <div class="grp" id="powBox" hidden><p class="gt" data-t="lblPower"></p><span class="opp" id="pow" role="radiogroup" data-t-aria="lblPower"></span></div>
     <div id="setSlot"><!-- レベル・時間。友達と対戦のときも作る／入るの上のまま。［部屋に入る］のときだけ隠す（KJ-136） -->
@@ -106,6 +106,8 @@
 
   <section class="side me" id="meSide">
     <div class="side-head"><b>あなた</b><span class="score" id="meScore"></span><span class="count" id="meCount"></span>
+      <!-- エモート（KJ-142。合言葉の部屋の試合中だけ）。押すと決まった言葉が並び、選ぶと送って閉じる。送ったあと数秒は押せない -->
+      <span class="emote" id="emote" hidden><button type="button" class="op quiet" id="bEmote" aria-expanded="false" aria-controls="emoteRow" data-t-aria="emoteBtn"><svg viewBox="0 0 24 20" width="22" height="18" aria-hidden="true" focusable="false"><path d="M3 2h18v12h-10l-5 4v-4H3z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 5.5v4M12 11.8v.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button><span class="emorow" id="emoteRow" hidden></span></span>
       <!-- Redraw は長押しで引き直す（KJ-078）。押している間、地が左から埋まる。1回タップだけなら rdNote に小さく出す -->
       <span class="bkrd"><button class="op quiet back" id="bBack"><span class="lb"></span></button><span class="rdwrap"><span class="rdnote" id="rdNote" role="status" aria-live="polite"></span><button class="op quiet" id="bRedraw"><span class="lb"></span><span class="cdv" id="cdRedraw"></span></button></span></span>
     </div>
@@ -140,6 +142,7 @@
     <p class="credit">データ：JMdict・KANJIDIC2（© Electronic Dictionary Research and Development Group, EDRDG。CC BY-SA 3.0。<a href="https://www.edrdg.org/edrdg/licence.html">ライセンス</a>）。jamdict-data 経由で取り込み、語・字・読みを抜き出して加工しています。N5 の字は KANJIDIC2 の旧4級（103字）で代用。</p>
   </details>
 </main>
+<div id="emStamps" role="status" aria-live="polite"><div class="emstamp" id="emMe"></div><div class="emstamp" id="emOpp"></div></div><!-- KJ-142：エモートの判子。押せない（pointer-events: none） -->
 <div id="nope" role="status" aria-live="polite"><div class="no-ic" aria-hidden="true">否</div><div class="no-why" id="nopeWhy"></div></div>
 <div id="count" hidden aria-hidden="true"><span id="countChar"></span></div><!-- KJ-133：はじまりの数え下げ（参・弐・壱。1秒ずつ）。画面いっぱいを紙の地で覆い、押せない -->
 <div id="fx"><div class="who" id="fxWho"></div><div id="fxChars" style="display:flex;gap:2vw"></div></div>
@@ -163,6 +166,7 @@ const LVL_KEY="kj-level";
 let level=null;     // レベル（"G1"〔小1〕／"N5"／"N4"）。はじめるときに効く。端末に覚える
 let row=[];         // 選んだ札の id（選んだ順。台にはその写しを左から並べる）
 let lastTried="";
+const EMOTE_KEY="kj-emote";let emoteOn=true;
 const OPP_KEY="kj-opponent",TIME_KEY="kj-time",VIB_KEY="kj-vibe",FACE_KEY="kj-face",BGM_KEY="kj-bgm",ISSUE_KEY="kj-issue",LANG_KEY="kj-lang";
 let opponent=null;  // 相手のキー（weak・fair・normal・room。solo は画面から外した〔KJ-056〕）。端末に覚える（KJ-007）。画面では「遊び方」と「強さ」の2段で選ぶ（KJ-045）
 let cpuPower="weak"; // 「CPU戦」のときの強さ。遊び方を行き来しても覚えている
@@ -195,6 +199,7 @@ function loadSettings(){
   const l=lsGet(LVL_KEY);level=K.LEVELS.some(x=>x.key===l)?l:(D.rules.level_default||"N4");
   timeLimit=K.normTime(D,lsGet(TIME_KEY));
   vibeOn=lsGet(VIB_KEY)!=="0"; // 振動の入り切り（KJ-074）。覚えていなければ入
+  emoteOn=lsGet(EMOTE_KEY)!=="0"; // エモートの入り切り（KJ-142）。覚えていなければ入
   bgmOn=lsGet(BGM_KEY)!=="0"; // 試合の曲の入り切り（KJ-133）。覚えていなければ入
   setFace(lsGet(FACE_KEY)==="mincho"?"mincho":"taisho"); // 札の字（KJ-093）。覚えていなければ大正風
 }
@@ -292,7 +297,7 @@ function radios(box,name,items,cur,onPick){
   }
 }
 function buildPickers(){
-  for(const id of ["opp","pow","lvl","tim","face","act","vib","bgm","langPick"])$(id).textContent=""; // 言語を替えたとき作り直す（KJ-127）
+  for(const id of ["opp","pow","lvl","tim","face","act","vib","emoteSet","bgm","langPick"])$(id).textContent=""; // 言語を替えたとき作り直す（KJ-127）
   radios($("langPick"),"lang",STR.LANGS.map(o=>({value:o.key,label:o.label})),STR.getLang(),setLangTo);
   radios($("opp"),"opp",K.PLAY_MODES.map(o=>({value:o.key,label:STR.tr(o.label)})),playMode(),v=>{cancelRoom();roomAct=null;opponent=K.opponentKey(v,cpuPower);lsSet(OPP_KEY,opponent);roomUi()});
   radios($("pow"),"pow",K.CPU_POWERS.map(o=>({value:o.key,label:STR.tr(o.label)})),cpuPower,v=>{cpuPower=v;opponent=K.opponentKey("cpu",v);lsSet(OPP_KEY,opponent)});
@@ -302,6 +307,7 @@ function buildPickers(){
   $("bGear").hidden=false; // KJ-133：曲の入／切があるので、歯車はいつも出す（振動の欄だけ、振動が使えない端末では出さない）
   $("grpVib").hidden=!canVibe();
   if(canVibe())radios($("vib"),"vib",[{value:"1",label:STR.t("on")},{value:"0",label:STR.t("off")}],vibeOn?"1":"0",v=>{vibeOn=v==="1";lsSet(VIB_KEY,v);if(vibeOn)buzz("take")}); // 入にしたとき、1回だけ試しに震える
+  radios($("emoteSet"),"emoteSet",[{value:"1",label:STR.t("on")},{value:"0",label:STR.t("off")}],emoteOn?"1":"0",v=>{emoteOn=v==="1";lsSet(EMOTE_KEY,v);if(G)render()});
   radios($("bgm"),"bgm",[{value:"1",label:STR.t("on")},{value:"0",label:STR.t("off")}],bgmOn?"1":"0",v=>{bgmOn=v==="1";lsSet(BGM_KEY,v);bgmUnlock();bgmSetupSync()});
   radios($("tim"),"tim",K.timeChoices(D).map(sec=>({value:sec,label:STR.timeLabel(sec)})),timeLimit,v=>{timeLimit=+v;lsSet(TIME_KEY,v);buildHowto()});
 }
@@ -309,7 +315,7 @@ const playMode=()=>K.readOpponent(D,opponent).mode; // cpu／room
 function tablesFor(lv){return TABLES[lv]||(TABLES[lv]=K.makeTables(D,lv))}
 function showCounts(){$("setupInfo").textContent=STR.t("counts",T.CHARS.size,T.WORDS.size,STR.tr(K.levelLabel(T.level)))}
 // 画面は2つ：はじめる前の画面と、遊ぶ画面。「もう一度」は同じ設定ですぐ始まる。「設定を変える」で前の画面へ戻る
-function showScreen(playing){syncFace();closeEnd();$("setup").hidden=playing;$("game").hidden=!playing;document.body.classList.toggle("playing",playing);if(playing)bgmNoiseStop(0);else{cancelCount();bgmSongStop();bgmSetupSync()}}
+function showScreen(playing){hideEmotes();syncFace();closeEnd();$("setup").hidden=playing;$("game").hidden=!playing;document.body.classList.toggle("playing",playing);if(playing)bgmNoiseStop(0);else{cancelCount();bgmSongStop();bgmSetupSync()}}
 // ---------- 試合の曲と針の音・はじまりの数え下げ（KJ-133・D-131・D-133） ----------
 // はじめる前：ノイズの輪を小さく流す（最初に画面を触ったときから。スマホは触る前に音を鳴らせない）→「参」で針の音→「弐」「壱」→「壱」が消えて試合が始まる瞬間に、曲が鳴り出す。
 // 曲は元の録音を頭（針のノイズ）から鳴らし、曲が鳴り出す所（rules.bgm.onset_sec）が試合の始まりに重なる。終わったら頭に戻って鳴らし直す。最後の1分は少し速く。試合が終わったら1秒ほどで小さくして止める。
@@ -937,13 +943,50 @@ function beginRoom(startRow){
   T=tablesFor(rm.level);
   LASTEND=null;
   G=K.createGame(D,T,{now:clock,timeLimit:rm.timeLimit,match:{id:rm.matchId,role:rm.role,startAt,entry:rm.entry,round:RS.round}});
-  MC=K.createMatchClient(G,CLAIMS,{rand:cryptoRand});
+  MC=K.createMatchClient(G,CLAIMS,{rand:cryptoRand,emoteWords:STR.EMOTES,onEmote:showEmote});
   countIssue();
   row=[];lastTried="";hideNope();
   showMsg(rm.role==="guest"?STR.t("roomHostSet",STR.tr(K.levelShort(rm.level)),STR.timeLabel(rm.timeLimit)):"");
   $("bCopyEnd").hidden=$("bShareEnd").hidden=true;hideChoices();setRoomMsg("");
   buildHowto();showScreen(true);render();
   if(cnt)runCount(startAt0,rm.timeLimit,()=>render());
+}
+
+// ---------- エモート（KJ-142）：合言葉の部屋の試合中だけ。言葉は js/strings.js の EMOTES・数値は rules の emote ----------
+function buildEmote(){
+  const box=$("emoteRow");box.textContent="";
+  STR.EMOTES.forEach((w,i)=>{const b=document.createElement("button");b.type="button";b.className="op emw";b.textContent=w;b.dataset.i=i;b.onclick=()=>sendEmote(i);box.appendChild(b)});
+}
+function emoteOpen(on){$("emoteRow").hidden=!on;$("bEmote").setAttribute("aria-expanded",on?"true":"false")}
+function emoteVis(){
+  const on=!!(MC&&G&&G.match&&!G.over&&!TUT&&emoteOn);
+  $("emote").hidden=!on;
+  if(!on){emoteOpen(false);return}
+  const wait=MC.emoteWait()>0; // 送ったあと数秒は押せない
+  $("bEmote").disabled=wait;
+  if(wait)emoteOpen(false);
+}
+$("bEmote").onclick=()=>{if(MC&&MC.emoteWait()<=0)emoteOpen($("emoteRow").hidden)};
+function sendEmote(i){
+  const mc=MC;if(!mc)return;
+  emoteOpen(false);
+  mc.sendEmote(i).then(()=>{if(MC===mc)emoteVis()});
+}
+const emoteTimers={};
+function hideEmotes(){for(const k of ["emMe","emOpp"]){clearTimeout(emoteTimers[k]);$(k).classList.remove("on")}}
+// 送った言葉は、送った人の行の近くに朱の角判で出す（自分の行のすぐ上・相手の行のすぐ下）。押せない
+function showEmote(who,i){
+  if(who==="opp"&&!emoteOn)return; // 切のときは相手のエモートを出さない
+  const word=STR.EMOTES[i];if(!word)return;
+  const el=$(who==="me"?"emMe":"emOpp"),head=$(who==="me"?"meSide":"cpuSide").querySelector(".side-head");
+  if(!head||$("game").hidden)return;
+  const r=head.getBoundingClientRect();
+  el.textContent=word;
+  el.style.left=Math.max(4,r.left+8)+"px";
+  el.style.top=(who==="me"?r.top-4:r.bottom+4)+"px";
+  el.dataset.from=who;
+  el.classList.remove("on");void el.offsetWidth;el.classList.add("on");
+  clearTimeout(emoteTimers[el.id]);emoteTimers[el.id]=setTimeout(()=>el.classList.remove("on"),D.rules.emote.show_sec*1000);
 }
 
 // ---------- 人の操作 ----------
@@ -1300,6 +1343,7 @@ function render(){
   syncFace(); // 試合の中で 明朝体 が放たれていれば明朝、終わったら設定（KJ-131）
   row=row.filter(id=>G.byId(G.me,id));
   $("cpuSide").hidden=G.solo;
+  emoteVis();
   $("cpuName").textContent=G.cpu.name;
   $("cpuHand").classList.toggle("peek",!G.solo); // 相手の上の段を見せるのは CPU 対戦と合言葉の部屋（ひとり・チュートリアルでは出さない。KJ-092・KJ-140）
   // 合言葉の部屋の相手の札はこの端末に無い。相手の端末が送ってきた字の並び（G.cpu.peek）だけを見せる。届くまでは空きマス（KJ-140）
@@ -1367,6 +1411,7 @@ function renderOps(){
   const s=rowState(),lc=lastCard(),one=lc?lc.c:null,me=G.me,live=!G.over&&!G.locked(G.me); // 放ったあと、場から取りきるまでは、ほかのボタンは全部押せない（KJ-039）
   const fit1=G.fits(me,row,1),lid=lc?[lc.id]:[],fitL=n=>G.fits(me,lid,n); // 1枚に効く操作の空きは、最後に選んだ札で見る（KJ-054）
   const cds=[["割る","split"],["反転","invert"],["巡り","cycle"],["同音","homophone"]].map(([n,k])=>cdText(G.cpu,k)&&`${n} ${cdText(G.cpu,k)}`).filter(Boolean);
+  emoteVis();
   const gone=!!(MC&&MC.oppGone()&&!G.over);
   $("cpuCds").textContent=gone?"相手の通信が切れた":cds.length?"待ち："+cds.join("・"):"";
   $("cpuCds").classList.toggle("gone",gone);
@@ -1457,7 +1502,7 @@ window.__KJ={get game(){return G},get tut(){return TUT},get row(){return row},ge
 STR.setLang(STR.detectLang(lsGet(LANG_KEY),navigator.language));applyStatic(); // 言語（KJ-127）。データを待たずに文を入れる
 fillNews();window.addEventListener("resize",fillNews); // 背景の記事（KJ-094）。データを待たずに敷く
 Promise.all(K.FILES.map(f=>fetch(`data/${f}.json`).then(r=>r.json()).then(j=>D[f]=j)))
-  .then(()=>{preloadFx();loadSettings();if(bgmOn&&bgmCfg())bgmLoad();applyRoomLink();refreshMast();T=tablesFor(level);buildPickers();buildHowto();showCounts();roomUi();tutorialBtn();$("bTutorial").hidden=false;if(linkCode)enterRoom(true)}) // KJ-149
+  .then(()=>{preloadFx();loadSettings();if(bgmOn&&bgmCfg())bgmLoad();applyRoomLink();refreshMast();T=tablesFor(level);buildEmote();buildPickers();buildHowto();showCounts();roomUi();tutorialBtn();$("bTutorial").hidden=false;if(linkCode)enterRoom(true)}) // KJ-149
   .catch(e=>{$("setupInfo").textContent=STR.t("dataFail")});
 </script>
 </body>

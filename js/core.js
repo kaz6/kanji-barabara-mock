@@ -681,9 +681,9 @@
     g.cdFrac = (p, k) => frac(g.cdLeft(p, k), R.cooldown_sec[k]);
     const useCd = (p, k) => { p.cd[k] = now() + R.cooldown_sec[k]; };
 
-    const QUIET = new Set(["はじまり", "ためした", "ヒント", "終わり", "動けない", "動ける", "入れ替え", "移す", "段", "とばす", "札の字"]);
+    const QUIET = new Set(["はじまり", "ためした", "ヒント", "終わり", "動けない", "動ける", "入れ替え", "移す", "段", "とばす", "札の字", "エモート"]);
     // 小1 の見逃しの光り（KJ-067）：人が最後に手をした時刻。ヒント・動けない・終わりなど、手でないログは数えない
-    const NOT_MOVE = new Set(["はじめ", "はじまり", "ヒント", "終わり", "動けない", "動ける", "札の字"]);
+    const NOT_MOVE = new Set(["はじめ", "はじまり", "ヒント", "終わり", "動けない", "動ける", "札の字", "エモート"]);
     let idleFrom = t0;
     let timedFrom = t0; // 時限ヒント（KJ-086）：人が最後に放った・引き直した・ヒントが出た時刻（はじめは試合のはじめ）
     function addLog(who, op, from, to, pts, note) {
@@ -1623,6 +1623,12 @@
     const startAt = g.endsAt - g.timeLimit;
     let handN = 0, sentHand = null, sentTiles = null, lastHandSeq = -1, lastHandAt = -Infinity, handBusy = false;
     let oppNonce = null, oppHandNonce = null, oppHandSeq = -1;
+    // エモート（KJ-142）：決まった言葉の番号だけを 'event' で送る。送ったあと cooldown_sec は続けて送れない。言葉そのものは js/strings.js の EMOTES（画面が opts.emoteWords で渡す。ログの言葉に使う）
+    const EM = R.emote || { words: 4, cooldown_sec: 3 };
+    let emoteN = 0, emoteAt = -Infinity;
+    const emoteSeen = new Set();
+    const emoteWord = (i) => (Array.isArray(opts.emoteWords) && opts.emoteWords[i]) || String(i);
+    const onEmote = (who, i) => { if (typeof opts.onEmote === "function") { try { opts.onEmote(who, i, emoteWord(i)); } catch (e) { /* 画面の都合は止めない */ } } };
     let seq = 0, sent = null, oppSeq = -1, timeSent = false, endScoreSent = false, pingN = 0, lastPing = startAt, stopped = false;
     const oppTime = { got: false, score: null };
     const mine = new Set(); // 届いた自分の行（返事だけ落ちて押し直したとき、ぶつかった相手が自分の行かを見分ける）
@@ -1713,6 +1719,20 @@
       else sentHand = null; // 返事だけ落ちて表には入っていた場合に、並びが前回の形へ戻ると送らなくなるのを防ぐ
       return r;
     };
+    // エモートを送る（i＝言葉の番号 0〜）。続けて送れない（待ち時間のあいだは { ok: false, why: "待ち時間", wait } ）。自分の側の判子・ログは送れたときに
+    c.emoteWait = () => Math.max(0, emoteAt + EM.cooldown_sec - g.now());
+    c.sendEmote = async (i) => {
+      if (g.over || stopped) return { ok: false, why: "試合が終わっている" };
+      if (!Number.isInteger(i) || i < 0 || i >= EM.words) return { ok: false, why: "言葉がない" };
+      const w = c.emoteWait();
+      if (w > 0) return { ok: false, why: "待ち時間", wait: w };
+      emoteAt = g.now(); // 返事を待つあいだにもう1回押されても、送らない
+      const r = await send("event", `${role}-${nonce}-e${emoteN++}`, { type: "emote", i });
+      if (!r.ok) { emoteAt = -Infinity; return r; }
+      g.addLog(g.me.name, "エモート", [], [], 0, emoteWord(i));
+      onEmote("me", i);
+      return { ok: true, i };
+    };
     c.ping = () => send("event", `${role}-${nonce}-p${pingN++}`, sentTiles ? { type: "ping", hs: lastHandSeq, tiles: sentTiles } : { type: "ping" });
     c.leave = () => send("event", `${role}-${nonce}-leave`, { type: "leave" });
     // 相手の通信が切れたか（抜けた行が来た／相手の行が goneSec 届かない）。試合は時間どおり進む
@@ -1741,6 +1761,7 @@
       }
       if (row.kind === "event" && p.type === "hand") return nat(p.seq, 1e9) && !!parseHandTiles(p.tiles, R.hand_max);
       if (row.kind === "event" && p.type === "ping" && p.tiles !== undefined) return nat(p.hs, 1e9) && !!parseHandTiles(p.tiles, R.hand_max);
+      if (row.kind === "event" && p.type === "emote") return nat(p.i, EM.words - 1);
       if (row.kind === "event" && p.type === "state") return nat(p.seq, 1e9) && scoreOk(p.score) && nat(p.count, totalMax) && (p.hand === undefined || nat(p.hand, R.hand_max));
       return true;
     }
@@ -1774,6 +1795,13 @@
         if (sq < oppHandSeq) return false;
         oppHandSeq = sq;
         return g.remoteHand(parseHandTiles(p.tiles, R.hand_max));
+      }
+      if (row.kind === "event" && p.type === "emote") { // 相手のエモート（KJ-142）。同じ行が二度届いても一度だけ
+        if (g.over || emoteSeen.has(row.key)) return false;
+        emoteSeen.add(row.key);
+        g.addLog(g.cpu.name, "エモート", [], [], 0, emoteWord(p.i));
+        onEmote("opp", p.i);
+        return false; // 点も札も変わらない。判子は onEmote で出す
       }
       if (row.kind === "event" && p.type === "leave") { const was = c.oppLeft; c.oppLeft = true; return !was; }
       return false;
