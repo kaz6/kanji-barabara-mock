@@ -1,6 +1,6 @@
 // 取る番の帯（KJ-146）：台の上に黒地に白抜きの帯「山札ヨリ 弐枚 取レ」。取るごとに数が減り、取りきると消える・
 // 数は大字・押せない（山札は押せる）・動きを減らす設定では動かさない・English は「Take 2 from the deck」・
-// 台の上に収まる（375／320px）・ひとり・CPU 戦で出る・チュートリアルでも出る。
+// 台の上に収まる（375／320px）・CPU 戦で出る。ひとり・チュートリアル・合言葉の部屋は同じ renderField を通るが、この試験では開いていない（PR に書いた）。3字は takes を直に書いて見る。
 // Playwright の Chromium がないと skip になる。KJ_SHOT_TORUBAND=<フォルダ> で画像を書く
 import test from "node:test";
 import assert from "node:assert/strict";
