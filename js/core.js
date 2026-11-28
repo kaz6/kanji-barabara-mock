@@ -1709,6 +1709,7 @@
       const r = await send("event", `${role}-${nonce}-h${n}`, handPayload(tiles, n));
       handBusy = false;
       if (r.ok) { sentHand = key; sentTiles = tiles; lastHandSeq = n; } // 届かなければ、次に呼んだときに送り直す
+      else sentHand = null; // 返事だけ落ちて表には入っていた場合に、並びが前回の形へ戻ると送らなくなるのを防ぐ
       return r;
     };
     c.ping = () => send("event", `${role}-${nonce}-p${pingN++}`, sentTiles ? { type: "ping", hs: lastHandSeq, tiles: sentTiles } : { type: "ping" });

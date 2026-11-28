@@ -11,7 +11,7 @@
 
 ## 中身の分け方
 
-- `js/core.js`：遊びの決まり（表引き・割る・くっつける・放つ・点数・場から取る・引き直し・待ち時間・勝ち・CPU・ログ）。DOM に触らない。ブラウザでは `window.KJ`、Node では `require`。合言葉の部屋（人と対戦。KJ-033）の先着は `createMatchClient`、部屋を作る／入るは `hostRoom`・`findRoom`・`joinRoom`・`roomWaiter`（つなぎは差し替え。テストは `memoryClaims`。本物のつなぎ〔kj_claims の REST と Realtime〕は index.html）
+- `js/core.js`：遊びの決まり（表引き・割る・くっつける・放つ・点数・場から取る・引き直し・待ち時間・勝ち・CPU・ログ）。DOM に触らない。ブラウザでは `window.KJ`、Node では `require`。合言葉の部屋（人と対戦。KJ-033）の先着は `createMatchClient`、部屋を作る／入るは `hostRoom`・`findRoom`・`joinRoom`・`roomWaiter`（つなぎは差し替え。テストは `memoryClaims`。本物のつなぎ〔kj_claims の REST と Realtime〕は index.html。KJ-140：自分の上の段の字を `handTiles`・`handPayload`・`parseHandTiles`・`sendHand`〔event の type hand。0.3秒まとめ〕で相手へ送り、相手の行の下に見せる）
 - `index.html`：画面だけ。決まりは core.js を呼ぶ
 - `data/parts.json` の `reach`：山に入らない「行き先だけの字」（KJ-077。氷・丸・刃・凡・勺。丶 の行き先。KJ-113 で 旧＝｜＋日、KJ-137 で 良＝丶＋艮 を足した）。割り方（`parts`）とは別の表。左右の部品が両方そのレベルで手に入るときだけ `T.REACH` として使う（`makeTables` と `tools/build_data.py` の `holdable` を同じ決め方に）。字として見せるので `jouyou` にも入れる。形は split_shapes。テストは tests/reach.test.js
 - `data/kanji.json`・`words.json`：字と語に `lv`（N5／N4）と、小1（KJ-044。小学1年の80字）の印 `g1`（N5・N4 のどちらにも無い小1 の字は `lv`＝G1）。遊ぶときは `makeTables(D, level)` でレベルに絞る。字には読み `on`（音。カタカナ）・`kun`（訓。送りがななし。多くて2つずつ。KJ-130）も付く（English のときのローマ字のもと。`K.romaji`・`K.charReadingLine`・`K.wordReadingLine`）。作り直しは `python3 tools/build_data.py`（`pip install jamdict-data`。`--level N5` で N5 だけ）。手作りの表（parts など）はこのスクリプトでは作らない。N4 で足した割り方の一覧は docs/N4_TABLES.md、小1 の字と割り方は docs/G1_TABLES.md
@@ -63,7 +63,7 @@ npm test
 - `tests/mincho.test.js`・`tests/mincho.browser.test.mjs`：「明朝体」を放つと、その試合の札の字が明朝に（KJ-131。`data/special.json` の `effects` の op `face`・target `both`・value `mincho`。決まりは core.js の `g.face`・`g.applyFace`・出来事 `face`・ログの手 `札の字`。人・CPU・合言葉の部屋の相手が放っても二人とも替わる・2回目は何もしない・大正 は何も起きない・点は普通／画面：`#game` の写し `.flip` を右端を軸に左へめくる〔0.8秒。`FLIP_MS`・`--flip-ms`〕・めくっている間も札を押せる・reduced-motion では写しが出ず一度に替わる・設定 `kj-face` は書き換えず、試合が終わる・はじめる前の画面へ戻ると設定に戻る・戦況に「明朝体！札ノ字ガ明朝ニ」〔`STR.SENKYO.face`〕・合言葉の部屋の相手のページも替わる）。`KJ_SHOT_MINCHO=<フォルダ>` で画像を書く
 - `tests/tutorial.test.js`・`tests/tutorial.browser.test.mjs`：チュートリアル（8段を通せる・その手だけ通す・時間なし CPU なし・ログ／画面で通し・とばす・ボタンから・合言葉では出ない）
 - `tests/layout.browser.test.mjs`：試合の画面の置き場（KJ-078・KJ-090。Back は「あなた」の行の Redraw の左・上の3つは「しくみ」の行・残り時間は CPU の行の右端・Play は幅いっぱい・Redraw は卓の外／Redraw の1回タップ・長押し〔ゲージは弁柄。KJ-115〕・途中で離す）
-- `tests/cpuhand.browser.test.mjs`：CPU 対戦で相手の上の段を見せる（KJ-092。CPU の行の下に8マス・字だけ・ストックは出さない・押せない・CPU が動くと変わる・375×667 に自分の手札が収まる・ひとりとチュートリアルでは出ない。合言葉の部屋で出ないことは tests/browser.test.mjs）
+- `tests/cpuhand.browser.test.mjs`：CPU 対戦で相手の上の段を見せる（KJ-092。CPU の行の下に8マス・字だけ・ストックは出さない・押せない・CPU が動くと変わる・375×667 に自分の手札が収まる・ひとりとチュートリアルでは出ない。合言葉の部屋でも出る〔KJ-140〕ことは tests/browser.test.mjs）
 - `tests/joinmark.browser.test.mjs`：Join のボタンの印（KJ-103。Jo｜in が Split の逆に傾く〔+5／−5 度〕・継ぎ目の真上に墨の放射3本〔線3本・太さ1.6・端は丸〕・根元と字の上端の間 0〜3px・字に重ならない・押せないとき 0.35・375／320px ではみ出さない・読み上げは Join・押せばくっつく）。`KJ_SHOT_JOIN=<フォルダ>` で画像を書く
 - `tests/oigashira.test.js`・`tests/oigashira.browser.test.mjs`：耂 を 土＋ノ に割る（KJ-114。N4 でだけ・輪がない・割る／くっつける〔土＋ノ→耂。逆順は通らない〕・面では落とせない・台の行・CPU が 土ノ子 を 耂子 に・ヒント／画面：教→孝→耂→土ノ→耂 を 375×667 で）。`KJ_SHOT_OIGASHIRA=<フォルダ>` で画像を書く
 - `tests/playmark.browser.test.mjs`：Play のボタンの印（KJ-120。点線の弧と矢の SVG〔54×16・太さ1.6・端は丸・点線 3 3〕・字の上端に重ならない・押せない／押せるで字と同じ色・ボタンの中に収まる・高さが変わらない・読み上げは Play・375／320px）。`KJ_SHOT_PLAY=<フォルダ>` で画像を書く
