@@ -112,9 +112,9 @@ test("地名・名字：CPU が知っている語（common）は増やさない�
   assert.ok(!T4.COMMON_WORDS.some((w) => w.w === "東京都"), "足した 東京都 は CPU が使わない");
 });
 
-test("全レベルで外す語：買春・売春・売女・売色・火病る・夜の女 は語に無く、どのレベルでも放てない", () => {
+test("全レベルで外す語：買春・売春・売女・売色・火病る・夜の女・不良外人・白丁 は語に無く、どのレベルでも放てない", () => {
   assert.ok(BLOCKED.version);
-  assert.deepEqual(BLOCKED.words, ["買春", "売春", "売女", "売色", "火病る", "夜の女"]);
+  assert.deepEqual(BLOCKED.words, ["買春", "売春", "売女", "売色", "火病る", "夜の女", "不良外人", "白丁"]);
   for (const t of BLOCKED.words) {
     assert.ok(!W.has(t), `${t} は words に無い`);
     for (const lv of ["G1", "N5", "N4"]) {
@@ -124,5 +124,16 @@ test("全レベルで外す語：買春・売春・売女・売色・火病る�
       setHand(g, g.me, t);
       assert.equal(g.canRelease(g.me, g.me.cards.map((c) => c.id)).ok, false, `${t} を ${lv} で放てない`);
     }
+  }
+});
+
+test("KJ-148：不良外人・白丁 は外す。不良・不良少年・丁半・丁丁・白丁花 など近い語は残す（外すのは作者が決めた語だけ）", () => {
+  for (const t of ["不良外人", "白丁"]) assert.ok(!W.has(t), `${t} は words に無い`);
+  for (const t of ["不良", "不良品", "不良少年", "不良少女", "丁半", "丁丁", "白丁花"]) assert.ok(W.has(t), `${t} は残す`);
+  // N4 で 不・良・外・人 を並べても放てない（不良外人 は N4 の語。良 が N4 でだけ手に入る）。白・丁 も N5・N4
+  for (const [lv, t] of [["N4", "不良外人"], ["N5", "白丁"], ["N4", "白丁"]]) {
+    const g = K.createGame(D, TT[lv], opts);
+    setHand(g, g.me, t);
+    assert.equal(g.canRelease(g.me, g.me.cards.map((c) => c.id)).ok, false, `${t} を ${lv} で放てない`);
   }
 });
