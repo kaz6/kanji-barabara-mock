@@ -15,20 +15,20 @@
  },
  "stats": {
   "hold_by_level": {
-   "N5": 144,
+   "N5": 145,
    "N4": 359,
    "G1": 141
   },
   "by_level": {
    "N5": {
-    "total": 2679,
+    "total": 2701,
     "by_length": {
      "1": 97,
-     "2": 1821,
-     "3": 588,
+     "2": 1838,
+     "3": 593,
      "4": 173
     },
-    "common": 757,
+    "common": 760,
     "yoji": 44,
     "pn": 17,
     "kana": {
@@ -2672,7 +2672,7 @@
   },
   {
    "w": "一丁",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "いっちょう",
    "en": [
     "one sheet; one page",
@@ -3344,7 +3344,7 @@
   },
   {
    "w": "丁目",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "ちょうめ",
    "en": [
     "district of a town; city block (of irregular size)"
@@ -6470,7 +6470,7 @@
   },
   {
    "w": "八丁",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "はっちょう",
    "en": [
     "skillfulness"
@@ -21975,7 +21975,7 @@
   },
   {
    "w": "丁丁",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "ちょうちょう",
    "en": [
     "clashing of swords; felling of trees"
@@ -21984,7 +21984,7 @@
   },
   {
    "w": "丁丑",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "ひのとのうし",
    "en": [
     "Fire Ox (14th year of the sexagenary cycle, e.g. 1937, 1997, 2057)"
@@ -21992,7 +21992,7 @@
   },
   {
    "w": "丁亥",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "ていがい",
    "en": [
     "Fire Boar (24th year of the sexagenary cycle, e.g. 1947, 2007, 2067)"
@@ -22000,7 +22000,7 @@
   },
   {
    "w": "丁半",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "ちょうはん",
    "en": [
     "even and odd numbers (on dice)",
@@ -22010,7 +22010,7 @@
   },
   {
    "w": "丁卯",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "ひのとう",
    "en": [
     "Fire Rabbit (4th year of the sexagenary cycle, e.g. 1927, 1987, 2047)"
@@ -22034,7 +22034,7 @@
   },
   {
    "w": "丁子",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "ちょうじ",
    "en": [
     "clove (Syzygium aromaticum)"
@@ -22052,7 +22052,7 @@
   },
   {
    "w": "丁巳",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "ひのとみ",
    "en": [
     "Fire Snake (54th year of the sexagenary cycle, e.g. 1917, 1977, 2037)"
@@ -22060,7 +22060,7 @@
   },
   {
    "w": "丁年",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "ていねん",
    "en": [
     "adulthood (i.e. age 20 in Japan); one's majority"
@@ -22069,7 +22069,7 @@
   },
   {
    "w": "丁未",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "ひのとひつじ",
    "en": [
     "Fire Sheep (44th year of the sexagenary cycle, e.g. 1907, 1967, 2027)"
@@ -22086,7 +22086,7 @@
   },
   {
    "w": "丁酉",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "ひのととり",
    "en": [
     "Fire Rooster (34th year of the sexagenary cycle, e.g. 1957, 2017, 2077)"
@@ -33386,7 +33386,7 @@
   },
   {
    "w": "四丁",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "しちょう",
    "en": [
     "ladder (in go)"
@@ -38837,7 +38837,7 @@
   },
   {
    "w": "少丁",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "しょうちょう",
    "en": [
     "men 17-20 years, subject to a quarter of the obligations of older men (ritsuryo system)"
@@ -50633,7 +50633,7 @@
   },
   {
    "w": "白丁",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "はくちょう",
    "en": [
     "young man of conscription age who has not yet undergone military training",
@@ -61410,7 +61410,7 @@
   },
   {
    "w": "馬丁",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "ばてい",
    "en": [
     "stable boy; stable hand"
@@ -65169,7 +65169,7 @@
   },
   {
    "w": "一丁前",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "いっちょまえ",
    "en": [
     "adult; grown-up",
@@ -71425,7 +71425,7 @@
   },
   {
    "w": "口八丁",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "くちはっちょう",
    "en": [
     "voluble; eloquent"
@@ -76388,7 +76388,7 @@
   },
   {
    "w": "手八丁",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "てはっちょう",
    "en": [
     "eloquence; cleverness in speaking"
@@ -78384,7 +78384,7 @@
   },
   {
    "w": "未丁年",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "みていねん",
    "en": [
     "below adult age; one's minority"
@@ -81053,7 +81053,7 @@
   },
   {
    "w": "白丁花",
-   "lv": "N4",
+   "lv": "N5",
    "kana": "はくちょうげ",
    "en": [
     "snowrose (Serissa japonica); tree of a thousand stars"

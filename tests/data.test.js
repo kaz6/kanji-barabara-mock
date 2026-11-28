@@ -151,7 +151,8 @@ test("レベルの外の字（十二支）：データにあり、読みがあ�
       assert.ok(!L.CHARS.has(c), `${lv}：${c} は山に入らない`);
       assert.ok(L.OUTSIDE.has(c) && L.HOLD.has(c) && K.isChar(L, c), `${lv}：${c} は手に持てる「字」`);
       assert.ok(L.NEXT.has(c), `${lv}：${c} は巡りで行ける`);
-      assert.ok(!(c in L.parts), `${lv}：${c} は割れない`);
+      if (c === "未" && lv === "N4") assert.deepEqual(L.parts[c], ["一", "木"], "KJ-139：N4 の 味 の中継ぎとして 未 は 一＋木 に割れる（巡りの字のまま）");
+      else assert.ok(!(c in L.parts), `${lv}：${c} は割れない`);
     }
   }
   assert.equal(D.kanji.count, D.kanji.kanji.length, "kanji の数は山の字だけ");
@@ -174,7 +175,7 @@ test("十二支の字を含む語：words.json にあり、字がすべて手に
   for (const w of ["未来", "申立", "辰年", "丑年", "上申書"]) assert.ok(D.words.words.some((x) => x.w === w), w);
   assert.equal(D.words.words.find((x) => x.w === "未来").lv, "N5");
   assert.ok(TT.N5.WORDS.has("未来") && TT.N5.WORDS.has("丑年"));
-  assert.ok(!TT.N5.WORDS.has("丁丑") && TT.N4.WORDS.has("丁丑"), "丁 は N4 の字なので N4 から");
+  assert.ok(TT.N5.WORDS.has("丁丑") && TT.N4.WORDS.has("丁丑"), "KJ-139：可＝丁＋口 で 丁 が N5 でも手に持てる字になり、N5 から");
 });
 
 test("偏の形：もとの字はデータの字か中継ぎか常用漢字で、どれかの字の左に来る", () => {
