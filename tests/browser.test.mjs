@@ -1026,7 +1026,7 @@ test("画面", { skip }, async (t) => {
     const rd = await page.evaluate(() => { const b = document.getElementById("bRedraw"); return { cd: b.classList.contains("cd"), g: b.style.getPropertyValue("--g"), text: b.textContent.trim() }; });
     assert.equal(rd.cd, false);
     assert.equal(rd.g, "");
-    assert.equal(rd.text, "Redraw-5pt あと4回"); // 2行に積む（KJ-078）。textContent では間の空白が無い
+    assert.equal(rd.text, "Redraw-5pt あと4回長押し"); // 3行に積む（KJ-078。3行目の「長押し」は KJ-143）。textContent では間の空白が無い
     assert.deepEqual(errors, []);
     await ctx.close();
   });

@@ -109,7 +109,7 @@
       <!-- エモート（KJ-142。合言葉の部屋の試合中だけ）。押すと決まった言葉が並び、選ぶと送って閉じる。送ったあと数秒は押せない -->
       <span class="emote" id="emote" hidden><button type="button" class="op quiet" id="bEmote" aria-expanded="false" aria-controls="emoteRow" data-t-aria="emoteBtn"><svg viewBox="0 0 24 20" width="22" height="18" aria-hidden="true" focusable="false"><path d="M3 2h18v12h-10l-5 4v-4H3z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 5.5v4M12 11.8v.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button><span class="emorow" id="emoteRow" hidden></span></span>
       <!-- Redraw は長押しで引き直す（KJ-078）。押している間、地が左から埋まる。1回タップだけなら rdNote に小さく出す -->
-      <span class="bkrd"><button class="op quiet back" id="bBack"><span class="lb"></span></button><span class="rdwrap"><span class="rdnote" id="rdNote" role="status" aria-live="polite"></span><button class="op quiet" id="bRedraw"><span class="lb"></span><span class="cdv" id="cdRedraw"></span></button></span></span>
+      <span class="bkrd"><button class="op quiet back" id="bBack"><span class="lb"></span></button><span class="rdwrap"><span class="rdnote" id="rdNote" role="status" aria-live="polite"></span><button class="op quiet" id="bRedraw"><span class="lb"></span><span class="cdv" id="cdRedraw"></span><span class="hold" id="rdHold" data-t="redrawHoldLabel"></span></button></span></span>
     </div>
     <div class="hand" id="meHand"></div>
     <div class="trayhead" id="trayHead"></div>
@@ -1136,14 +1136,29 @@ const REDRAW_HOLD_MS=600; // 長押しの長さ（ms。仮決め。ここ1か所
 let rdTimer=null,rdFired=false,rdNoteT=null;
 function doRedraw(){
   row=[];hideChoices();if(MC){const mc=MC;mc.redraw().then(()=>{if(!stale(mc))afterChange()});afterChange();return}G.redraw(G.me);afterChange()} // 部屋：手札はすぐ入れ替わる。点の送りの返事は待たずに描く
-function rdCancel(){clearTimeout(rdTimer);rdTimer=null;$("bRedraw").classList.remove("holding")}
+// 押している間の揺れ（KJ-143）：左右に小さく揺れ、揺れ幅は押し始めの小さい値から埋まるにつれて大きい値へ（rules.redraw_hold.shake_px・shake_ms）。離したら止めて元の位置へ。reduced-motion では揺らさない（ゲージと振動は今のまま）
+let rdRaf=0,rdVib=false;
+function rdShakeStop(){if(rdRaf){cancelAnimationFrame(rdRaf);rdRaf=0}const b=$("bRedraw");b.style.transform="";b.removeAttribute("data-shake")}
+function rdShakeStart(b){
+  rdShakeStop();
+  const H=D.rules&&D.rules.redraw_hold;if(!H||reduceMotion())return;
+  const [a0,a1]=H.shake_px,per=H.shake_ms,t0=performance.now();
+  const step=now=>{
+    const t=Math.min(1,(now-t0)/REDRAW_HOLD_MS),amp=a0+(a1-a0)*t;
+    b.style.transform=`translateX(${(Math.sin((now-t0)/per*2*Math.PI)*amp).toFixed(2)}px)`;b.dataset.shake=amp.toFixed(2);
+    rdRaf=requestAnimationFrame(step)};
+  rdRaf=requestAnimationFrame(step);
+}
+function rdCancel(){clearTimeout(rdTimer);rdTimer=null;$("bRedraw").classList.remove("holding");rdShakeStop();if(rdVib){rdVib=false;try{navigator.vibrate(0)}catch(e){}}}
 function rdStart(){
   rdFired=false;
   if(rdTimer||isOff("bRedraw")||!G||G.over)return; // 押せない見た目のときは長押しにしない（click で理由を出す）
   const b=$("bRedraw");
   b.style.setProperty("--holdms",REDRAW_HOLD_MS+"ms");
   b.classList.remove("holding");void b.offsetWidth;b.classList.add("holding");
-  rdTimer=setTimeout(()=>{rdTimer=null;b.classList.remove("holding");if(isOff("bRedraw")||!G||G.over)return;rdFired=true;doRedraw()},REDRAW_HOLD_MS);
+  rdShakeStart(b);
+  if(vibeOn&&canVibe()){buzz("redraw_hold");rdVib=true} // 短い振動をくり返し、だんだん間を詰める（形は rules.vibrate.redraw_hold）。切のとき・vibrate が無い端末では何もしない
+  rdTimer=setTimeout(()=>{rdTimer=null;rdVib=false;rdShakeStop();b.classList.remove("holding");if(isOff("bRedraw")||!G||G.over)return;rdFired=true;doRedraw()},REDRAW_HOLD_MS);
 }
 function rdNote(t){const n=$("rdNote");n.textContent=t;clearTimeout(rdNoteT);if(t)rdNoteT=setTimeout(()=>{n.textContent=""},1800)}
 {

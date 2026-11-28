@@ -172,6 +172,7 @@
     lblLevel: { ja: "レベル", en: "Level" },
     lblTime: { ja: "時間", en: "Time" },
     lblVib: { ja: "振動", en: "Vibration" },
+    redrawHoldLabel: { ja: "長押し", en: "Hold" }, // KJ-143：Redraw のボタンの3行目（いつも出す。長押しで引き直すと気づかせる）
     lblEmote: { ja: "エモート", en: "Emotes" }, // KJ-142：合言葉の部屋のエモートの入／切（歯車の欄）
     emoteBtn: { ja: "エモートを送る", en: "Send an emote" },
     lblBgm: { ja: "曲", en: "Music" }, // KJ-133：試合の曲と針の音の入／切（歯車の欄）
