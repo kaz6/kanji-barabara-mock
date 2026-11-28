@@ -1952,6 +1952,14 @@ test("画面", { skip }, async (t) => {
     await A.page.waitForFunction(() => __KJ.game.me.score === 3);
     await B.page.waitForFunction(() => /3 点/.test(document.getElementById("cpuScore").textContent), null, { timeout: 5000 });
     assert.match(await B.page.textContent("#released"), /相手.*学生/);
+    // KJ-150：A が放った 学生 の札が B の「相手の放った字」に並ぶ。B が取る番に1枚取ると、A の自分の段からも消える（先着の card 行は使わない）
+    await B.page.waitForFunction(() => [...document.querySelectorAll("#oppShedTiles .tile")].map((e) => e.firstChild.textContent).join("") === "学生", null, { timeout: 8000 });
+    await B.page.evaluate(() => { const G = __KJ.game; G.me.takes = 1; G.me.oppGot = 0; __KJ.render(); });
+    assert.equal(await B.page.evaluate(() => document.getElementById("oppShed").classList.contains("can")), true, "取る番は金の枠で押せる");
+    await B.page.locator("#oppShedTiles .tile").first().click();
+    await B.page.waitForFunction(() => __KJ.game.me.takes === 0);
+    await A.page.waitForFunction(() => __KJ.game.me.shed.map((x) => x.c).join("") === "生", null, { timeout: 5000 });
+    assert.deepEqual([...store.values()].filter((r) => r.kind === "event" && r.payload.type === "grab").map((r) => [r.player, r.payload.w, r.payload.c]), [["guest", "学生", "学"]]);
     // 時間切れ：二人とも終わりの時刻を今に
     for (const P of [A, B]) await P.page.evaluate(() => { const G = __KJ.game; G.endsAt = G.now() - 0.1; });
     await A.page.waitForFunction(() => /勝ち/.test(document.getElementById("msg").textContent), null, { timeout: 8000 });

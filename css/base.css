@@ -130,3 +130,13 @@ button.op.joinpop .jn-fx{animation:kjJnPop var(--jn-pop-time) ease-out}
 .cpu #cpuHand{gap:3px;pointer-events:none}
 .cpu #cpuHand .tile,.cpu #cpuHand .slot{aspect-ratio:auto;height:26px}
 .cpu #cpuHand .tile{font-size:17px;line-height:1}
+
+/* 相手の放った字（KJ-150）：相手の行の下に小さく1列。見るだけ→自分の取る番のあいだだけ金の枠で押せる（山札と同じ。D-122 金＝案内）。札は字だけ（印・割れ目は .cpu .tile の決まりで出さない） */
+.shedrow{display:flex;align-items:center;gap:6px;margin-top:3px}
+.shedrow[hidden]{display:none}
+.shedlb{flex:none;font-size:11px;font-weight:700;color:var(--ink);white-space:nowrap}
+.shedrow.can .shedlb{color:var(--hint)}
+.shed{display:flex;gap:3px;min-width:0;flex:0 1 auto;flex-wrap:nowrap}
+.shed .tile{width:26px;min-width:12px;height:26px;aspect-ratio:auto;font-size:17px;line-height:1;padding:0;flex:0 1 26px;cursor:default}
+.shedrow.can .shed .tile{cursor:pointer;border:2px solid var(--hint);box-shadow:0 0 0 1px var(--hint),0 0 8px 1px rgba(217,154,0,.55);animation:kjTake 1s ease-in-out infinite alternate}
+@media (prefers-reduced-motion:reduce){.shedrow.can .shed .tile{animation:none}}
