@@ -104,6 +104,8 @@
   // 戦果の共有の文（KJ-108。作者「共有機能って入れれる？ 合言葉の共有と、戦果の共有。」。文は新聞の見出し風・仮。作者が直す。ここ1か所）。字は js/core.js の K.shareResultText が組む。
   // 戦況（SENKYO）と同じく漢字カタカナ交じり・数は漢数字。{issue}＝号数／{who}＝相手／{me}・{opp}＝点／{word}・{pts}＝いちばん点の高かった言葉と点／{level}＝レベル。
   // 行は、勝ち・負け・引き分け・ひとりのどれか1行（head）→決め手（best。放った言葉が無ければ出さない）→レベル。相手の呼び名は who
+  // エモート（KJ-142。合言葉の部屋だけ）：作者が決めた4つの言葉（2026-11-27 23:52）。English のときも日本語のまま出す（仮）。言葉を直す所はここ1か所。個数は data/rules.json の emote.words と合わせる
+  const EMOTES = Object.freeze(["上手！", "矢場！", "雑魚！", "降参！"]);
   const SHARE_RESULT = Object.freeze({
     title: "{title} {issue}", // 1行目（{title}＝TEXT.masthead）
     win: "{who}ニ勝ツ {me}対{opp}",
@@ -170,6 +172,8 @@
     lblLevel: { ja: "レベル", en: "Level" },
     lblTime: { ja: "時間", en: "Time" },
     lblVib: { ja: "振動", en: "Vibration" },
+    lblEmote: { ja: "エモート", en: "Emotes" }, // KJ-142：合言葉の部屋のエモートの入／切（歯車の欄）
+    emoteBtn: { ja: "エモートを送る", en: "Send an emote" },
     lblBgm: { ja: "曲", en: "Music" }, // KJ-133：試合の曲と針の音の入／切（歯車の欄）
     lblFace: { ja: TEXT.faceLabel, en: "Card font" },
     faceTaisho: { ja: TEXT.faceTaisho, en: "Taisho style" },
@@ -331,5 +335,5 @@
     ]; },
   };
   const howto = (p) => HOWTO[lang === "en" ? "en" : "ja"](p);
-  return Object.freeze({ ICON_SHAPES, iconSvg, BUTTONS, LOGO, buttonHtml, redrawNote, TEXT, GEAR_SVG, SENKYO, SHARE_RESULT, SHARE_RESULT_EN, shareResult, TALLY, tally, hashtag, AORI, AORI_SHARE, NEWS, LANGS, normLang, detectLang, getLang, setLang, t, tr, timeLabel, howto, CORE_EN });
+  return Object.freeze({ EMOTES, ICON_SHAPES, iconSvg, BUTTONS, LOGO, buttonHtml, redrawNote, TEXT, GEAR_SVG, SENKYO, SHARE_RESULT, SHARE_RESULT_EN, shareResult, TALLY, tally, hashtag, AORI, AORI_SHARE, NEWS, LANGS, normLang, detectLang, getLang, setLang, t, tr, timeLabel, howto, CORE_EN });
 });
