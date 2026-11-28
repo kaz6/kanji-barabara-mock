@@ -58,7 +58,7 @@ body.playing .mast{display:none}
 /* 台の行：札の行（row）だけ（KJ-090。Back は卓の外の「あなた」の行へ出した） */
 .rowline{display:flex;gap:6px;align-items:center;position:relative}
 /* KJ-146：取る番の帯。台（row）の上に重ねる黒（--ink）地に白（--tile）抜き。押せない（山札は今どおり押せる）。薄くしない（body.taking の薄くする規則は row 側に付けた） */
-.takeband{position:absolute;left:0;top:0;right:0;bottom:0;z-index:2;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;column-gap:.45em;overflow:hidden;background:var(--ink);color:var(--tile);font-family:var(--ui);font-weight:700;font-size:clamp(20px,7vw,30px);line-height:1.15;letter-spacing:.06em;white-space:nowrap;pointer-events:none}
+.takeband{position:absolute;left:var(--rule-thin);top:var(--rule-thin);right:var(--rule-thin);bottom:var(--rule-thin);z-index:2;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;column-gap:.45em;overflow:hidden;background:var(--ink);color:var(--tile);font-family:var(--ui);font-weight:700;font-size:clamp(20px,7vw,30px);line-height:1.15;letter-spacing:.06em;white-space:nowrap;pointer-events:none}
 .takeband[hidden]{display:none}
 .takeband .n{font-size:1.25em}
 .takeband.in{animation:kjBandIn .2s ease-out 1}
@@ -82,7 +82,8 @@ body.playing .mast{display:none}
 .rdnote{position:absolute;right:0;bottom:calc(100% + 4px);z-index:5;white-space:nowrap;font-size:12px;line-height:1.3;padding:2px 8px;border-radius:0;background:var(--ink);color:var(--bg);pointer-events:none}
 .rdnote:empty{display:none}
 #bRedraw.hint.lift,#bRedraw.hint.lift:disabled,#bRedraw.hint.lift[aria-disabled=true]{background:#fff1c4;color:var(--ink);border-color:var(--hint)} /* ヒントで光るとき（卓の外なので .table の規則が効かない） */
-.row{display:flex;gap:6px;height:76px;align-items:center;overflow-x:auto;overflow-y:hidden;background:var(--table-2);border:1px solid var(--line);border-radius:0;padding:0 6px}
+/* KJ-147：台の枠＝子持ち罫。内側の細い線＝border（1px。台の大きさは今のまま）、外側の太い線＝outline（4px。3px の隙間をあけて外へ広げる）。色は墨だけ。太さ・隙間は base.css の :root の --rule-thick・--rule-gap・--rule-thin（ここ1か所で直す） */
+.row{display:flex;gap:6px;height:76px;align-items:center;overflow-x:auto;overflow-y:hidden;background:var(--table-2);border:var(--rule-thin) solid var(--ink);outline:var(--rule-thick) solid var(--ink);outline-offset:var(--rule-gap);border-radius:0;padding:0 6px}
 .row .tile{width:64px;height:64px;font-size:40px;flex:none}
 .row .empty{color:var(--ink);font-size:13px}
 .info{height:46px;margin:6px 0 8px;color:var(--on-table);font-size:14px;line-height:23px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
