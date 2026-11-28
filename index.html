@@ -52,6 +52,8 @@
   <!-- 試合が終わったときの表示（KJ-018）。タップで全部いっぺんに出す／出し終わったあとのタップで閉じる。文は js/core.js の END_LABELS -->
   <div id="endShow" role="status" aria-live="polite">
     <div id="esLabel"></div>
+    <div id="esTally"></div>
+    <div id="esRematch"></div>
     <div id="esAori"></div>
     <div id="esScore"></div>
     <ul id="esWords"></ul>
@@ -439,7 +441,15 @@ function begin(){
 }
 // はじめて「はじめる」を押した人（端末に印が無い人）は、チュートリアルから（KJ-043。人と対戦〔合言葉〕には「はじめる」が無いので出ない）
 $("start").onclick=()=>{if(tutorialSeen())start();else startTutorial()};
-$("again").onclick=()=>{if(G&&G.match)toSetup();else start()}; // 合言葉の部屋の「もう一度」は、はじめる前の画面へ（部屋を作り直す。仮）
+// 合言葉の部屋の「もう一度」（KJ-141）：試合が終わっているあいだは、同じ相手と同じレベル・時間でもう一試合（二人とも押したら始まる）。押したら「相手を待っています」。相手が抜けていたら、はじめる前の画面へ。試合の途中で押したときは今までどおり抜ける
+$("again").onclick=()=>{
+  if(G&&G.match){
+    if(!G.over||!RM||RM.rem.oppLeft){toSetup();return}
+    if(!RM.rem.pressed){RM.rem.again();rmShow()}
+    return;
+  }
+  start();
+};
 function toSetup(){refreshMast();clearTimeout(cpuTimer);sendAbandoned();leaveRoom();leaveTutorial();G=null;row=[];hideChoices();$("logPanel").classList.remove("on");showScreen(false);T=tablesFor(level);showCounts();buildHowto();roomUi()}
 $("bSetup").onclick=toSetup;
 // ---------- チュートリアル（KJ-043・D-057）----------
@@ -626,7 +636,11 @@ function end(winner,solo){
   syncFace(); // 試合が終わったら札の字を設定に戻す（KJ-131）
   LASTEND={d:K.endShow(G,T,winner),level:G.level,opponent:G.opponent}; // 戦果の共有（KJ-108）の文のもと。演出（#fx）を待たずに、終わった時点で決める
   sendLog(G);
-  if(MC){MC.stop();MC=null;LINK.closeAll();ROOM=null}
+  if(MC){ // 合言葉の部屋：つなぎは開けたまま、「もう一度」（再戦）の受け付けに替える（KJ-141）。何勝何敗も数える
+    const mt=G.match;MC.stop();MC=null;ROOM=null;
+    if(RS)RS.tally=K.tallyAdd(RS.tally,winner===G.me?"win":winner===G.cpu?"lose":"draw");
+    RM={rem:K.createRematch(CLAIMS,{matchId:mt.id,role:mt.role,rand:cryptoRand,onGo:goRematch,onChange:rmShow}),role:mt.role,level:G.level,timeLimit:G.timeLimit,matchId:mt.id};
+  }
   const m=$("msg");
   if(solo){
     m.textContent=STR.t("msgSolo",G.me.score);
@@ -639,6 +653,8 @@ function end(winner,solo){
   else if(winner===G.cpu){m.textContent=STR.t("msgLose",G.me.score,G.cpu.score);m.className="msg lose";buzz("lose")}
   else{m.textContent=STR.t("msgDraw",G.me.score,G.cpu.score);m.className="msg"}
   $("bCopyEnd").hidden=$("bShareEnd").hidden=false;
+  if(RM)RM.base=m.textContent;
+  rmShow();
   showEndAfterFx(winner);
 }
 // 試合が終わったときの表示（KJ-018・D-036／D-039）：最初に「勝ち！」「負け…」「引き分け」（ひとりでは「おわり」）と両方の点を大きく、
@@ -672,6 +688,8 @@ function showEnd(winner){
   const d=K.endShow(G,T,winner),el=$("endShow");
   closeEnd();
   const lab=$("esLabel");lab.textContent=STR.tr(d.label);lab.className=d.kind;
+  $("esTally").textContent=G.match&&RS?K.tallyLine(RS.tally,STR.tally()):""; // KJ-141：合言葉の部屋の何勝何敗
+  $("esRematch").textContent=rmText(); // KJ-141：「もう一度」を押したあとの一言（相手を待っています／相手が抜けた）
   const ao=$("esAori");ao.textContent="";if(!G.tutorial)for(const part of (K.aoriLine(d,STR.AORI).match(/[^、！]+[、！]?/g)||[])){if(!part)continue;const sp=document.createElement("span");sp.className="seg";sp.textContent=part;ao.append(sp)} // KJ-126
   $("esScore").innerHTML=d.kind==="solo"?`<span class="you">${d.me}</span><span class="t">${STR.t("esPts")}</span>`
     :`<span class="you">${d.me}</span><span class="t">${STR.t("esVs")}</span><span class="them">${d.cpu}</span>`;
@@ -787,6 +805,7 @@ const LINK=(()=>{
   return {
     deliver,
     subscribe(mid,fn){const s=subs.get(mid)||open(mid);s.fns.add(fn);for(const r of s.rows.slice())try{fn(r)}catch(e){}return()=>s.fns.delete(fn)},
+    close,
     closeAll(){for(const mid of [...subs.keys()])close(mid)},
     pollNow(){for(const mid of subs.keys())poll(mid)},
   };
@@ -799,6 +818,8 @@ let roomAct=null;  // 友達と対戦の［部屋を作る］"host"／［部屋�
 let linkCode=null; // ?room= のリンクで入っていた合言葉（入り方の統計。KJ-123）
 let MC=null;   // 合言葉の部屋の試合のつなぎ（KJ.createMatchClient）
 let ROOM=null; // 待っている部屋 { role, matchId, code, level, timeLimit }
+let RM=null;   // 終わった部屋の再戦の受け付け { rem（K.createRematch）, role, level, timeLimit, matchId }（KJ-141）
+let RS=null;   // 同じ部屋で続けて遊んでいるあいだの { tally（何勝何敗）, round（何戦目） }。部屋を出たら null（端末には覚えない）
 function setRoomMsg(t){$("roomMsg").textContent=t||""}
 function roomUi(){
   const on=opponent===K.ROOM_OPPONENT.key,wait=!!ROOM;
@@ -819,7 +840,23 @@ function roomUi(){
 }
 function cancelRoom(){if(MC)return;LINK.closeAll();ROOM=null;roomUi()}
 // 遊んでいる部屋から抜ける（もう一度・設定を変える）。相手の画面には「相手の通信が切れた」と出る
-function leaveRoom(){if(MC){if(G&&!G.over)MC.leave();MC.stop();MC=null}LINK.closeAll();ROOM=null}
+function leaveRoom(){if(MC){if(G&&!G.over)MC.leave();MC.stop();MC=null}if(RM){RM.rem.leave();RM.rem.stop();RM=null}RS=null;LINK.closeAll();ROOM=null}
+// 再戦（KJ-141）：二人とも「もう一度」を押したら、go 行の時刻から同じ設定で次の試合を始める。前の試合の通信は新しい試合を作ったあとに閉じる
+function goRematch(x){
+  const rm=RM;if(!rm)return;
+  ROOM={role:rm.role,matchId:x.next,level:rm.level,timeLimit:rm.timeLimit,entry:null};
+  RM=null;rm.rem.stop();
+  beginRoom({created_at:x.createdAt});
+  LINK.close(rm.matchId);
+}
+// 「もう一度」を押したあとの一言（相手を待っています／相手が抜けた）。何も無いときは今の一言のまま
+function rmText(){return RM&&G&&G.over&&G.match?(RM.rem.oppLeft?STR.t("rematchLeft"):RM.rem.pressed?STR.t("rematchWait"):""):""}
+function rmShow(){
+  if(!RM||!G||!G.over||!G.match)return;
+  const t=rmText(),m=$("msg");
+  if(t)m.textContent=(RM.base?RM.base+"　":"")+t; // 結果の一言（勝ち！ ○対○）は残して、後ろに足す
+  $("esRematch").textContent=t; // 終わりの画面（#endShow）が上に出ているあいだも見えるように、そこにも出す
+}
 // 合言葉の共有（KJ-107）：navigator.share で文とリンク（?room=合言葉）を渡す。無い端末は同じ文とリンクをクリップボードに写す
 // 共有の手伝い（KJ-107・KJ-108）：navigator.share で文とリンクを渡す。無い端末・閉じた以外の失敗は、同じ文とリンクをクリップボードに写す。
 // 戻り値："shared"（渡した）／"aborted"（閉じただけ。何も出さない）／"copied"（写した）／"failed"（どちらもできない）
@@ -892,13 +929,14 @@ $("bEnter").onclick=()=>enterRoom(false);
 // 二人とも 'start' 行が届いたときに始める。始まりの時刻はその行の created_at から
 function beginRoom(startRow){
   const rm=ROOM;if(!rm||!rm.matchId||MC)return;
+  if(!RS)RS={tally:K.tallyNew(),round:0};RS.round++; // 同じ部屋で何戦目か（KJ-141）
   clearTimeout(cpuTimer);sendAbandoned();leaveTutorial();
   const startAt0=K.roomStartAt(startRow.created_at,Date.now()/1000,clock());
   const cnt=countOn(),plan=cnt?K.bgmPlan(D.rules,startAt0,rm.timeLimit):null,startAt=cnt?plan.goAt:startAt0; // 数え下げのぶん、試合の始まりを後ろへ（二人とも 'start' 行の時刻が同じなので、同じ時刻に始まる）
   cancelCount();
   T=tablesFor(rm.level);
   LASTEND=null;
-  G=K.createGame(D,T,{now:clock,timeLimit:rm.timeLimit,match:{id:rm.matchId,role:rm.role,startAt,entry:rm.entry}});
+  G=K.createGame(D,T,{now:clock,timeLimit:rm.timeLimit,match:{id:rm.matchId,role:rm.role,startAt,entry:rm.entry,round:RS.round}});
   MC=K.createMatchClient(G,CLAIMS,{rand:cryptoRand});
   countIssue();
   row=[];lastTried="";hideNope();
@@ -1397,6 +1435,7 @@ function buildHowto(){
 }
 let roomBusy=false;
 function pump(){
+  if(RM&&G&&G.over){RM.rem.pump(false);return} // 終わった部屋：送れなかった「もう一度」を送り直す（KJ-141）
   if(!G||G.over)return;
   if(MC){ // 合言葉の部屋：時間切れ・点の送り・まだいる（ping）は MC.tick
     if(roomBusy)return;roomBusy=true;const mc=MC;
@@ -1413,7 +1452,7 @@ document.addEventListener("visibilitychange",()=>{
   if(!G.over&&!G.solo&&!G.match){clearTimeout(cpuTimer);scheduleCpu()} // 人と対戦は CPU を出さない
 });
 
-window.__KJ={get game(){return G},get tut(){return TUT},get row(){return row},get tables(){return T},get mc(){return MC},get room(){return ROOM},data:D,render,drain}; // ブラウザのテスト用
+window.__KJ={get game(){return G},get tut(){return TUT},get row(){return row},get tables(){return T},get mc(){return MC},get room(){return ROOM},get rematch(){return RM},get roomTally(){return RS},data:D,render,drain}; // ブラウザのテスト用
 
 STR.setLang(STR.detectLang(lsGet(LANG_KEY),navigator.language));applyStatic(); // 言語（KJ-127）。データを待たずに文を入れる
 fillNews();window.addEventListener("resize",fillNews); // 背景の記事（KJ-094）。データを待たずに敷く

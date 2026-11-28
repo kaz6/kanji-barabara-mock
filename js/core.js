@@ -563,7 +563,7 @@
       return ucS.has(p.counter);
     };
     g.timeLimit = normTime(D, env.timeLimit); // 制限時間（秒。KJ-007）
-    g.match = M ? { id: M.id, role: M.role, oppRole: M.role === "host" ? "guest" : "host", entry: M.role === "guest" && ENTRY_LABELS[M.entry] ? M.entry : null } : null; // entry：入った側の入り方（KJ-123。"link"＝?room= のリンク・"typed"＝部屋に入る で打った。作る側は null）
+    g.match = M ? { id: M.id, role: M.role, oppRole: M.role === "host" ? "guest" : "host", entry: M.role === "guest" && ENTRY_LABELS[M.entry] ? M.entry : null, round: Number.isInteger(M.round) && M.round >= 1 ? M.round : null } : null; // round：同じ部屋で何戦目か（KJ-141。ログの頭に出す）。entry：入った側の入り方（KJ-123。"link"＝?room= のリンク・"typed"＝部屋に入る で打った。作る側は null）
     g.hold = false; // 合言葉の部屋：先着の返事を待っているあいだ、自分の手を止める（createMatchClient が立てる）
     g.closed = false; // 合言葉の部屋：時間切れで点を送ったあと（相手の点を待つあいだ）。もう手を打てない
     const t0 = M && typeof M.startAt === "number" ? M.startAt : now();
@@ -1456,6 +1456,7 @@
       const head = [
         ...(g.match && g.match.entry ? [`# 入り方：${ENTRY_LABELS[g.match.entry]}`] : []), // KJ-123：合言葉の部屋に入った側だけ、ログの頭に1行（統計。play_logs の列は増やさない）
         "# 漢対普請瓦版 ログ（KJ-003 役づくりの競争・KJ-008 1字は放てない・KJ-006 レベル）",
+        ...(g.match && g.match.round ? [`# この相手と ${g.match.round}戦目`] : []), // KJ-141：ログの頭（題の次の行）。同じ部屋で続けて遊んだ何戦目か（play_logs の列は増やさない）
         `# はじめた時刻 ${ds}（端末の時計）`,
         `# レベル ${levelLabel(g.level)}`,
         `# 相手 ${opponentLabel(D, g.opponent, g.timeLimit)}`,
@@ -1919,6 +1920,84 @@
     };
   }
 
+  // ---------- 合言葉の部屋の再戦（KJ-141）：同じ相手ともう一度・何勝何敗 ----------
+  // 表・列は増やさない。終わった試合の match_id に 'event' 行（payload.type）で伝える：
+  //   もう一度を押した＝(match_id, "event", "<役>-again")／二人とも押したら作った側が (match_id, "event", "host-go") に { type: "go", next: 次の match_id } を入れる
+  //   二人ともその go 行が届いたときに次の試合を始める（始まりの時刻は go 行の created_at から。部屋を作ったときの start 行と同じやり方）
+  //   抜ける＝(match_id, "event", "<役>-leave2") { type: "leave" }（試合の途中で抜けた行 type leave も同じに読む）
+  // 何勝何敗は部屋にいるあいだだけ（端末には覚えない）。DOM に触らない。文は js/strings.js の TALLY
+  const tallyNew = () => ({ w: 0, l: 0, d: 0 });
+  function tallyAdd(t, kind) {
+    const n = { w: t.w, l: t.l, d: t.d };
+    if (kind === "win") n.w++; else if (kind === "lose") n.l++; else n.d++;
+    return n;
+  }
+  // 例：「この相手と 2勝1敗」「…2勝1敗1分」（引き分けが無ければ分は出さない）。tpl は { pre, w, l, d, sep }
+  function tallyLine(t, tpl) {
+    if (!t || !tpl) return "";
+    const parts = [`${t.w}${tpl.w}`, `${t.l}${tpl.l}`];
+    if (t.d > 0) parts.push(`${t.d}${tpl.d}`);
+    return tpl.pre + parts.join(tpl.sep || "");
+  }
+  const REMATCH_RETRY_SEC = 2; // 送れなかった again・go を送り直す間隔
+  function createRematch(claims, o) {
+    const mid = o.matchId, role = o.role;
+    if (!mid || !ROLES.includes(role)) throw new Error("再戦の部屋が決まらない");
+    const oppRole = role === "host" ? "guest" : "host";
+    const timeoutSec = typeof o.timeoutSec === "number" ? o.timeoutSec : MATCH_INSERT_TIMEOUT_SEC;
+    const now = o.now || (() => Date.now() / 1000);
+    const r = { pressed: false, oppAgain: false, oppLeft: false, went: false, stopped: false, nextId: null };
+    let againSent = false, goSent = false, busy = false, lastTry = -Infinity;
+    const timed = (p) => new Promise((res) => {
+      let done = false;
+      const t = setTimeout(() => { if (!done) { done = true; res({ ok: false, error: "時間切れ" }); } }, timeoutSec * 1000);
+      Promise.resolve(p).then((v) => { if (!done) { done = true; clearTimeout(t); res(v && typeof v === "object" ? v : { ok: false, error: "返事が変" }); } },
+        (e) => { if (!done) { done = true; clearTimeout(t); res({ ok: false, error: String(e) }); } });
+    });
+    const send = (key, payload) => {
+      try { return timed(claims.insert({ match_id: mid, kind: "event", key, player: role, payload })); } catch (e) { return Promise.resolve({ ok: false, error: String(e) }); }
+    };
+    const changed = () => { if (typeof o.onChange === "function") { try { o.onChange(r); } catch (e) { /* 画面の都合は止めない */ } } };
+    // 送る：again（押したあと）・go（作った側が、二人とも押したあと）。届かなければ REMATCH_RETRY_SEC あけて送り直す（画面が定期的に呼ぶ）
+    r.pump = async (force) => {
+      if (r.stopped || r.went || busy) return;
+      if (!force && now() - lastTry < REMATCH_RETRY_SEC) return;
+      busy = true; lastTry = now();
+      try {
+        if (r.pressed && !againSent && !r.oppLeft) {
+          const x = await send(`${role}-again`, { type: "again" });
+          if (x.ok || x.conflict) againSent = true; // ぶつかった＝自分の行が入っている（この役の行は自分しか入れない）
+        }
+        if (role === "host" && againSent && r.oppAgain && !goSent && !r.oppLeft && !r.went && !r.stopped) {
+          if (!r.nextId) r.nextId = newMatchId(o.rand);
+          const x = await send("host-go", { type: "go", next: r.nextId });
+          if (x.ok || x.conflict) goSent = true;
+        }
+      } finally { busy = false; }
+    };
+    r.again = async () => { if (r.stopped || r.went) return; r.pressed = true; changed(); await r.pump(true); };
+    r.leave = () => send(`${role}-leave2`, { type: "leave" });
+    const go = (row) => {
+      r.went = true; changed();
+      if (typeof o.onGo === "function") o.onGo({ next: row.payload.next, createdAt: row.created_at });
+      return true;
+    };
+    const goOk = (row, p) => p.type === "go" && row.player === "host" && r.pressed && !r.went && MATCH_ID_RE.test(String(p.next));
+    r.onRow = (row) => {
+      if (r.stopped || !row || typeof row !== "object" || row.match_id !== mid || row.kind !== "event" || !ROLES.includes(row.player)) return false;
+      const p = row.payload;
+      if (!p || typeof p !== "object" || Array.isArray(p)) return false;
+      if (goOk(row, p)) return go(row); // 作った側は自分の go 行も（subscribe で）受け取って始める。入る側は作った側の行で始める
+      if (row.player === role) { if (p.type === "again" && !r.pressed) { r.pressed = true; againSent = true; changed(); return true; } return false; }
+      if (p.type === "leave") { if (r.oppLeft) return false; r.oppLeft = true; changed(); return true; }
+      if (p.type === "again") { if (r.oppAgain) return false; r.oppAgain = true; changed(); r.pump(true); return true; }
+      return false;
+    };
+    const unsub = claims.subscribe(mid, r.onRow);
+    r.stop = () => { r.stopped = true; if (typeof unsub === "function") unsub(); };
+    return r;
+  }
+
   // ---------- ログの自動送信（KJ-020。D-038）----------
   // 送る中身の形と、送ってよい場所の判定。送る処理そのもの（fetch・端末への保存）は index.html
   const PLAY_LOG_LIMITS = { device_id: 64, result: 200, log: 200000 };
@@ -2148,6 +2227,6 @@
     FILES, OPPONENTS, PLAY_MODES, CPU_POWERS, readOpponent, opponentKey, LEVELS, timeChoices, normTime, vibratePattern, timeLabel, levelLabel, levelShort, makeTables, isN5, isLevelChar, isChar, radicalNote, radicalFormNote, joinPartners, joinNote, JOIN_NOTE_MODES, splitOnce, canSplit, delivered, joinResults, joinReversed,
     releasable, effectText, counterParts, usedCounters, counterBlocked, counterReading, rejectText, scoreOf, kanaOf, kanaText, romaji, charReading, charReadingLine, wordReadingLine, wordCharOk, KANA_ONLY_WHY, homoChars, marks, markKinds, cutSpec, FACES, FACE_LABEL, faceJoins, faceResults, rulesLabel, opponentLabel, createGame, createTutorial, TUTORIAL_OPPONENT, playLogRow, endShow, kotobankUrl, END_LABELS, logSendAllowed, playLogResult, PLAY_LOG_LIMITS,
     strSeed, seededRand, matchRand, ROLES, ROOM_OPPONENT, MATCH_END_GRACE_SEC, MATCH_INSERT_TIMEOUT_SEC, MATCH_PING_SEC, MATCH_HAND_SEC, MATCH_GONE_SEC, handTiles, handPayload, parseHandTiles, ROOM_LOBBY_TTL_SEC,
-    createMatchClient, memoryClaims, newMatchId, newRoomCode, roomCodeFromSearch, roomShareUrl, roomLobbyId, findRoom, hostRoom, joinRoom, startRoom, roomStartAt, bgmPlan, roomWaiter,
+    createMatchClient, createRematch, tallyNew, tallyAdd, tallyLine, memoryClaims, newMatchId, newRoomCode, roomCodeFromSearch, roomShareUrl, roomLobbyId, findRoom, hostRoom, joinRoom, startRoom, roomStartAt, bgmPlan, roomWaiter,
   };
 });

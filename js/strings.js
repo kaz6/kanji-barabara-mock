@@ -200,6 +200,8 @@
     roomHostSet: { ja: (l, t) => `作った人の設定：レベル ${l}・${t}`, en: (l, t) => `Host's settings: level ${l}, ${t}` },
     howtoSum: { ja: "しくみ", en: "How it works" },
     again: { ja: "もう一度", en: "Play again" },
+    rematchWait: { ja: "相手を待っています", en: "Waiting for your opponent..." }, // KJ-141：合言葉の部屋で「もう一度」を押したあと（仮）
+    rematchLeft: { ja: "相手が抜けた", en: "Your opponent left" }, // KJ-141：もう一度で、はじめる前の画面へ戻れる（仮）
     setupBtn: { ja: "設定を変える", en: "Change settings" },
     logBtn: { ja: "ログ", en: "Log" },
     copyBtn: { ja: "コピー", en: "Copy" },
@@ -280,6 +282,9 @@
     whoCpu: { weak: "CPU (very weak)", fair: "CPU (normal)", normal: "CPU (strong)" },
     whoRoom: "a friend",
   });
+  // 同じ部屋で続けて遊んだ何勝何敗（KJ-141。文は仮。組み立ては js/core.js の K.tallyLine）
+  const TALLY = { ja: { pre: "この相手と ", w: "勝", l: "敗", d: "分", sep: "" }, en: { pre: "vs this player: ", w: "W", l: "L", d: "D", sep: " " } };
+  const tally = () => (lang === "en" ? TALLY.en : TALLY.ja);
   const shareResult = () => (lang === "en" ? SHARE_RESULT_EN : SHARE_RESULT);
   const hashtag = () => t("hashtag");
   // 遊び方の説明（しくみ。KJ-127 で index.html から移した）。p＝{R:rules, S:rules.score, p.min:分, levelLabel, chars, words, cycles:[巡りの名前], radKeys, radVals}。1行ずつ HTML
@@ -326,5 +331,5 @@
     ]; },
   };
   const howto = (p) => HOWTO[lang === "en" ? "en" : "ja"](p);
-  return Object.freeze({ ICON_SHAPES, iconSvg, BUTTONS, LOGO, buttonHtml, redrawNote, TEXT, GEAR_SVG, SENKYO, SHARE_RESULT, SHARE_RESULT_EN, shareResult, hashtag, AORI, AORI_SHARE, NEWS, LANGS, normLang, detectLang, getLang, setLang, t, tr, timeLabel, howto, CORE_EN });
+  return Object.freeze({ ICON_SHAPES, iconSvg, BUTTONS, LOGO, buttonHtml, redrawNote, TEXT, GEAR_SVG, SENKYO, SHARE_RESULT, SHARE_RESULT_EN, shareResult, TALLY, tally, hashtag, AORI, AORI_SHARE, NEWS, LANGS, normLang, detectLang, getLang, setLang, t, tr, timeLabel, howto, CORE_EN });
 });
