@@ -58,12 +58,12 @@ for (const [name, rm] of [["動きあり", "no-preference"], ["動きを減ら�
     const srv = await serve(); const browser = await chromium.launch();
     try {
       const { ctx, page, errors } = await start(browser, `http://127.0.0.1:${srv.address().port}/index.html`, rm);
-      for (const s of [".stage", "#meHand", "#meTray", ".bkrd"]) assert.equal(await op(page, s), 1, `${s}：取る番でないときは濃い`);
+      for (const s of ["#row", ".info", ".ops", "#meHand", "#meTray", ".bkrd"]) assert.equal(await op(page, s), 1, `${s}：取る番でないときは濃い`);
       assert.equal(await page.textContent("#takeShort"), "");
       assert.equal(await page.getAttribute("#field", "data-pops"), null, "まだ弾んでいない");
       await release(page);
       await page.waitForTimeout(400);
-      for (const s of [".stage", "#meHand", "#meTray", ".bkrd"]) assert.ok(Math.abs(await op(page, s) - 0.45) < 0.02, `${s}：取る番は薄い（0.45）`);
+      for (const s of ["#row", ".info", ".ops", "#meHand", "#meTray", ".bkrd"]) assert.ok(Math.abs(await op(page, s) - 0.45) < 0.02, `${s}：取る番は薄い（0.45）`);
       for (const s of ["#field", "#fieldSide", "#cpuSide"]) assert.equal(await op(page, s), 1, `${s}：山札と相手は濃いまま`);
       const n = await page.evaluate(() => __KJ.game.me.takes);
       assert.equal(await page.textContent("#takeShort"), `あと ${n} 枚`);
@@ -81,12 +81,12 @@ for (const [name, rm] of [["動きあり", "no-preference"], ["動きを減ら�
       // 1枚目を取っても取る番は続く（薄いまま）、取りきると戻る
       await page.locator("#field .tile").first().click();
       await page.waitForFunction(() => __KJ.game.me.takes === 1);
-      assert.ok(Math.abs(await op(page, ".stage") - 0.45) < 0.02, "あと1枚：まだ薄い");
+      assert.ok(Math.abs(await op(page, "#row") - 0.45) < 0.02, "あと1枚：まだ薄い");
       if (rm !== "reduce") assert.equal(await page.getAttribute("#field", "data-pops"), "1", "1枚取っても弾み直さない");
       await page.locator("#field .tile").first().click();
       await page.waitForFunction(() => __KJ.game.me.takes === 0);
       await page.waitForTimeout(400);
-      for (const s of [".stage", "#meHand", "#meTray", ".bkrd"]) assert.equal(await op(page, s), 1, `${s}：取りきると戻る`);
+      for (const s of ["#row", ".info", ".ops", "#meHand", "#meTray", ".bkrd"]) assert.equal(await op(page, s), 1, `${s}：取りきると戻る`);
       assert.equal(await page.textContent("#takeShort"), "");
       assert.deepEqual(errors, []);
       await ctx.close();

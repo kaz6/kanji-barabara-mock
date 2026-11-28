@@ -8,7 +8,7 @@
 .table .fieldside.take .side-head b{color:var(--hint)}
 @keyframes kjTake{from{box-shadow:0 0 0 1px var(--hint),0 0 3px 0 rgba(217,154,0,.3)}to{box-shadow:0 0 0 1px var(--hint),0 0 12px 3px rgba(217,154,0,.75)}}
 /* KJ-119：取る番のあいだ、取れない所（台・操作・手札・ストック・戻す／引き直し）を薄くして山札の3枚だけをはっきり見せる。入った瞬間に山札の札を一度だけ弾ませる（0.3秒）。動きを減らす設定では弾ませない（薄くするのは残す）。金の色は変えない */
-body.taking .stage,body.taking #meHand,body.taking #meTray,body.taking #trayHead,body.taking #meSide .bkrd{opacity:.45;transition:opacity .15s}
+body.taking .stage>.rowline>.row,body.taking .stage>.info,body.taking .stage>.ops,body.taking #meHand,body.taking #meTray,body.taking #trayHead,body.taking #meSide .bkrd{opacity:.45;transition:opacity .15s}
 .field.pop .tile{animation:kjTakePop .3s ease-out var(--popd,0s) 1,kjTake 1s ease-in-out infinite alternate}
 @keyframes kjTakePop{0%{transform:scale(1)}40%{transform:scale(1.22)}100%{transform:scale(1)}}
 .takeshort{display:inline-block;min-width:4.6em;margin-left:8px;white-space:nowrap;font-size:13px;font-weight:700;color:var(--ink)}
@@ -56,7 +56,14 @@ body.playing .mast{display:none}
 .table .side-head b{color:var(--on-table)}
 .stage{position:relative}
 /* 台の行：札の行（row）だけ（KJ-090。Back は卓の外の「あなた」の行へ出した） */
-.rowline{display:flex;gap:6px;align-items:center}
+.rowline{display:flex;gap:6px;align-items:center;position:relative}
+/* KJ-146：取る番の帯。台（row）の上に重ねる黒（--ink）地に白（--tile）抜き。押せない（山札は今どおり押せる）。薄くしない（body.taking の薄くする規則は row 側に付けた） */
+.takeband{position:absolute;left:0;top:0;right:0;bottom:0;z-index:2;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;column-gap:.45em;overflow:hidden;background:var(--ink);color:var(--tile);font-family:var(--ui);font-weight:700;font-size:clamp(20px,7vw,30px);line-height:1.15;letter-spacing:.06em;white-space:nowrap;pointer-events:none}
+.takeband[hidden]{display:none}
+.takeband .n{font-size:1.25em}
+.takeband.in{animation:kjBandIn .2s ease-out 1}
+@keyframes kjBandIn{from{opacity:0;transform:scaleY(.6)}to{opacity:1;transform:scaleY(1)}}
+@media (prefers-reduced-motion:reduce){.takeband.in{animation:none}}
 .rowline .row{flex:1 1 auto;min-width:0}
 /* Back（KJ-090。作者 2026-11-25「バックまで、指が遠い」）：卓から出して、「あなた ○点 手札」の行の Redraw のすぐ左へ。高さは Redraw と同じ（行を伸ばして揃える）・幅は 44px 以上・Redraw との間は 8px 以上 */
 .bkrd{display:flex;align-items:stretch;gap:10px;margin-left:auto;flex:none}
