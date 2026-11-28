@@ -21,10 +21,10 @@
   },
   "by_level": {
    "N5": {
-    "total": 2701,
+    "total": 2700,
     "by_length": {
      "1": 97,
-     "2": 1838,
+     "2": 1837,
      "3": 593,
      "4": 173
     },
@@ -38,12 +38,12 @@
     }
    },
    "N4": {
-    "total": 11073,
+    "total": 11071,
     "by_length": {
      "1": 253,
-     "2": 6734,
+     "2": 6733,
      "3": 2870,
-     "4": 1216
+     "4": 1215
     },
     "common": 2492,
     "yoji": 206,
@@ -55,10 +55,10 @@
     }
    },
    "G1": {
-    "total": 2817,
+    "total": 2816,
     "by_length": {
      "1": 78,
-     "2": 1921,
+     "2": 1920,
      "3": 626,
      "4": 192
     },
@@ -72,12 +72,12 @@
     }
    }
   },
-  "total": 11119,
+  "total": 11117,
   "by_length": {
    "1": 261,
-   "2": 6755,
+   "2": 6754,
    "3": 2882,
-   "4": 1221
+   "4": 1220
   },
   "common": 2504,
   "yoji": 208,
@@ -50632,16 +50632,6 @@
    ]
   },
   {
-   "w": "白丁",
-   "lv": "N5",
-   "kana": "はくちょう",
-   "en": [
-    "young man of conscription age who has not yet undergone military training",
-    "man with no title and no rank (under the ritsuryo system); commoner"
-   ],
-   "g1": true
-  },
-  {
    "w": "白亜",
    "lv": "N4",
    "kana": "はくあ",
@@ -88294,14 +88284,6 @@
     "getting mixed up with the wrong people; getting into bad company"
    ],
    "yoji": true
-  },
-  {
-   "w": "不良外人",
-   "lv": "N4",
-   "kana": "ふりょうがいじん",
-   "en": [
-    "undesirable alien"
-   ]
   },
   {
    "w": "不良少女",
