@@ -59,8 +59,24 @@ const enabled = (page) => page.evaluate((ids) => ids.filter((id) => { const b = 
 const pressOff = (page, id) => page.locator(`#${id}`).click({ force: true }); // 押せない見た目（aria-disabled）のボタンも、指なら押せる
 const stepText = (page) => page.textContent("#tutStep");
 const lineText = (page) => page.textContent("#tutLine");
+// 場の左の札を1枚ずつ取る。押した札が描き直しで作り替わると、押した（down）と離した（up）が別の札になり click が起きないことがある（揺れの元の見立て。KJ-159）。
+// 押したら「取る枚数」が減るのを待ち、減らなければ押し直す。取れなかったら、いまの様子を付けて落とす（30 秒の時間切れにしない）
 async function takeTwo(page) {
-  for (let i = 0; i < 2; i++) await page.locator("#field .tile").first().click();
+  for (let i = 0; i < 2; i++) {
+    const before = await page.evaluate(() => __KJ.game.me.takes);
+    let ok = false;
+    for (let k = 0; k < 6 && !ok; k++) {
+      await page.locator("#field .tile").first().click();
+      ok = await page.waitForFunction((b) => __KJ.game.me.takes < b, before, { timeout: 1500 }).then(() => true, () => false);
+    }
+    assert.ok(ok, `場の札を押しても取れない（取る枚数 ${before}・案内 ${await page.textContent("#tutLine")}）`);
+  }
+}
+// 押せるようになるのを待つ。待ちきれなかったら、案内・取る枚数・選んでいる札を付けて落とす
+async function clickWhenReady(page, id) {
+  const ok = await page.waitForFunction((i) => { const b = document.getElementById(i); return !b.disabled && b.getAttribute("aria-disabled") !== "true"; }, id, { timeout: 8000 }).then(() => true, () => false);
+  if (!ok) assert.fail(`#${id} が押せない：案内「${await page.textContent("#tutLine")}」取る枚数 ${await page.evaluate(() => __KJ.game.me.takes)}・選んでいる札 ${await page.evaluate(() => [...document.querySelectorAll(".tile.sel")].map((e) => e.title).join("")) }`);
+  await page.click("#" + id);
 }
 // 放ったあと（段3 以降）は山札から自動で取る（KJ-055）。取りきって（取る枚数が 0・自動取りが止まる）、案内が次に替わるまで待つ
 async function autoTaken(page) {
@@ -371,7 +387,7 @@ test("チュートリアルの画面", { skip }, async (t) => {
     await page.click("#start");
     await tile(page, "大").click(); await tile(page, "雨").click(); await page.click("#bRelease");
     await takeTwo(page);
-    await tile(page, "好").click(); await page.click("#bSplit"); await page.click("#bRelease");
+    await tile(page, "好").click(); await page.click("#bSplit"); await clickWhenReady(page, "bRelease");
     await page.click("#tutSkip"); // 自動で取る前（250ms の間）にとばす
     await page.waitForTimeout(900);
     assert.equal(await page.isVisible("#tut"), false);
